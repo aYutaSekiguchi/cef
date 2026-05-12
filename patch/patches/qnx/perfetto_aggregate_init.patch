@@ -1,0 +1,36 @@
+diff --git a/third_party/perfetto/src/tracing/service/tracing_service_impl.cc b/third_party/perfetto/src/tracing/service/tracing_service_impl.cc
+--- a/third_party/perfetto/src/tracing/service/tracing_service_impl.cc
++++ b/third_party/perfetto/src/tracing/service/tracing_service_impl.cc
+@@ -2921,8 +2921,14 @@ void TracingServiceImpl::MaybeFilterPackets(TracingSession* tracing_session,
+     filter_input.clear();
+     filter_input.resize(packet_slices.size());
+     ++tracing_session->filter_input_packets;
+     tracing_session->filter_input_bytes += input_packet_size;
+-    for (size_t i = 0; i < packet_slices.size(); ++i)
+-      filter_input[i] = {packet_slices[i].start, packet_slices[i].size};
++    for (size_t i = 0; i < packet_slices.size(); ++i) {
++#if PERFETTO_BUILDFLAG(PERFETTO_OS_QNX)
++      filter_input[i] = protozero::MessageFilter::InputSlice{
++          packet_slices[i].start, packet_slices[i].size};
++#else
++      filter_input[i] = {packet_slices[i].start, packet_slices[i].size};
++#endif
++    }
+     auto filtered_packet = trace_filter.FilterMessageFragments(
+         &filter_input[0], filter_input.size());
+ 
+@@ -3002,7 +3008,13 @@ bool TracingServiceImpl::WriteIntoFile(TracingSession* tracing_session,
+       // take a non-const ptr because it's the same struct used by readv().
+       // Hence the const_cast here.
+       char* start = static_cast<char*>(const_cast<void*>(slice.start));
+       bytes_about_to_be_written += slice.size;
++#if PERFETTO_BUILDFLAG(PERFETTO_OS_QNX)
++      iovecs[num_iovecs].iov_base = start;
++      iovecs[num_iovecs].iov_len = slice.size;
++      ++num_iovecs;
++#else
+       iovecs[num_iovecs++] = {start, slice.size};
++#endif
+     }
+ 
+     if (tracing_session->bytes_written_into_file + bytes_about_to_be_written >=
