@@ -1,0 +1,48 @@
+diff --git a/third_party/googletest/src/googletest/src/gtest-death-test.cc b/third_party/googletest/src/googletest/src/gtest-death-test.cc
+index 15472f1a..c4b2b0c5 100644
+--- a/third_party/googletest/src/googletest/src/gtest-death-test.cc
++++ b/third_party/googletest/src/googletest/src/gtest-death-test.cc
+@@ -1260,7 +1260,7 @@ static pid_t ExecDeathTestSpawnChild(char* const* argv, int close_fd) {
+ #ifdef GTEST_OS_QNX
+   // Obtains the current directory and sets it to be closed in the child
+   // process.
+-  const int cwd_fd = open(".", O_RDONLY);
++  const int cwd_fd = open(".", O_RDONLY | O_DIRECTORY);
+   GTEST_DEATH_TEST_CHECK_(cwd_fd != -1);
+   GTEST_DEATH_TEST_CHECK_SYSCALL_(fcntl(cwd_fd, F_SETFD, FD_CLOEXEC));
+   // We need to execute the test program in the same environment where
+@@ -1281,11 +1281,15 @@ static pid_t ExecDeathTestSpawnChild(char* const* argv, int close_fd) {
+   GTEST_DEATH_TEST_CHECK_SYSCALL_(
+       fcntl(close_fd, F_SETFD, fd_flags | FD_CLOEXEC));
+   struct inheritance inherit = {0};
++  // Reap any zombie child processes from previous death tests before
++  // spawning a new one.  This prevents resource exhaustion (PID table
++  // full) on QNX after many sequential death tests.
++  while (waitpid(-1, nullptr, WNOHANG) > 0) {}
++  // Small delay to allow kernel to release process resources.
++  usleep(1000);
+   // spawn is a system call.
+   child_pid = spawn(args.argv[0], 0, nullptr, &inherit, args.argv, environ);
+   // Restores the current working directory.
+-  GTEST_DEATH_TEST_CHECK_(fchdir(cwd_fd) != -1);
+-  GTEST_DEATH_TEST_CHECK_SYSCALL_(close(cwd_fd));
+
+ #else  // GTEST_OS_QNX
+ #ifdef GTEST_OS_LINUX
+@@ -1391,6 +1395,16 @@ DeathTest::TestRole ExecDeathTest::AssumeRole() {
+   std::vector<char*> argv = CreateArgvFromArgs(args);
+   const pid_t child_pid = ExecDeathTestSpawnChild(argv.data(), pipe_fd[0]);
+   GTEST_DEATH_TEST_CHECK_SYSCALL_(close(pipe_fd[1]));
++  if (child_pid == -1) {
++    // Spawn failed (e.g. resource exhaustion on QNX).  Don't set
++    // spawned() to true so Wait() returns immediately without reading
++    // the pipe or calling waitpid on -1.
++    set_read_fd(pipe_fd[0]);
++    close(pipe_fd[0]);
++    set_child_pid(-1);
++    set_spawned(false);
++    return OVERSEE_TEST;
++  }
+   set_child_pid(child_pid);
+   set_read_fd(pipe_fd[0]);
+   set_spawned(true);
