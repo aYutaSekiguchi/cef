@@ -1,5 +1,3 @@
-diff --git base/debug/stack_trace.cc base/debug/stack_trace.cc
-index ebde49a9ffe9c..ed311def6e9db 100644
 --- base/debug/stack_trace.cc
 +++ base/debug/stack_trace.cc
 @@ -306,10 +306,10 @@ bool StackTrace::WillSymbolizeToStreamForTesting() {

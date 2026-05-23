@@ -1,5 +1,3 @@
-diff --git base/memory/platform_shared_memory_region_posix.cc base/memory/platform_shared_memory_region_posix.cc
-index ebdaab8cada6c..07a671d547aa6 100644
 --- base/memory/platform_shared_memory_region_posix.cc
 +++ base/memory/platform_shared_memory_region_posix.cc
 @@ -41,6 +41,7 @@ enum class FDAccessModeError {
