@@ -1,6 +1,7 @@
 --- build/config/compiler/BUILD.gn
 +++ build/config/compiler/BUILD.gn
-@@ -2411,7 +2411,7 @@
+@@ -2409,7 +2409,7 @@
+       "__STDC_FORMAT_MACROS",
      ]
  
 -    if (!is_debug && !using_sanitizer && current_cpu != "s390x" &&
