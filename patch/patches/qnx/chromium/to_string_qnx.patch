@@ -1,0 +1,30 @@
+diff --git a/base/strings/to_string.h b/base/strings/to_string.h
+index da1db6682a134..e854a10aa1e3d 100644
+--- a/base/strings/to_string.h
++++ b/base/strings/to_string.h
+@@ -73,6 +73,25 @@ struct ToStringHelper<T> {
+   }
+ };
+ 
++#if BUILDFLAG(IS_QNX)
++// QNX libc++ ostream doesn't add "0x" prefix for void* formatting.
++// Add explicit specialisation for object pointers to ensure consistent output.
++// Exclude character pointers (const char*, const wchar_t*, etc.) which have
++// their own operator<< that prints the string content.
++template <typename T>
++  requires(std::is_object_v<T> &&
++           !std::is_same_v<const char*, const T*> &&
++           !std::is_same_v<const wchar_t*, const T*> &&
++           !std::is_same_v<const char8_t*, const T*> &&
++           !std::is_same_v<const char16_t*, const T*> &&
++           !std::is_same_v<const char32_t*, const T*>)
++struct ToStringHelper<T*> {
++  static void Stringify(T* const& v, std::ostringstream& ss) {
++    ss << "0x" << reinterpret_cast<const void*>(v);
++  }
++};
++#endif
++
+ // Integral types that can't stream, like char16_t.
+ template <typename T>
+   requires(!SupportsOstreamOperator<const T&> && std::is_integral_v<T>)

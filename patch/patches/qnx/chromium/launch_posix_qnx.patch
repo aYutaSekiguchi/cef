@@ -1,0 +1,25 @@
+diff --git a/base/process/launch_posix.cc b/base/process/launch_posix.cc
+index 4f9ffed9d90a2..1137ea18f4c00 100644
+--- a/base/process/launch_posix.cc
++++ b/base/process/launch_posix.cc
+@@ -14,7 +14,10 @@
+ #include <stdint.h>
+ #include <stdlib.h>
+ #include <sys/resource.h>
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_ANDROID) || \
++    BUILDFLAG(IS_AIX)
+ #include <sys/syscall.h>
++#endif
+ #include <sys/time.h>
+ #include <sys/types.h>
+ #include <sys/wait.h>
+@@ -210,7 +213,8 @@ struct ScopedDIRClose {
+ // Automatically closes |DIR*|s.
+ typedef std::unique_ptr<DIR, ScopedDIRClose> ScopedDIR;
+ 
+-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_AIX)
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_AIX) || \
++    BUILDFLAG(IS_QNX)
+ static const char kFDDir[] = "/proc/self/fd";
+ #elif BUILDFLAG(IS_SOLARIS)
+ static const char kFDDir[] = "/dev/fd";

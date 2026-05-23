@@ -1,0 +1,46 @@
+diff --git a/base/memory/platform_shared_memory_region_posix.cc b/base/memory/platform_shared_memory_region_posix.cc
+index ebdaab8cada6c..07a671d547aa6 100644
+--- a/base/memory/platform_shared_memory_region_posix.cc
++++ b/base/memory/platform_shared_memory_region_posix.cc
+@@ -41,6 +41,7 @@ enum class FDAccessModeError {
+   kMismatch,
+ };
+ 
++#if !BUILDFLAG(IS_QNX)
+ std::optional<FDAccessModeError> CheckFDAccessMode(int fd, int expected_mode) {
+   int fd_status = fcntl(fd, F_GETFL);
+   if (fd_status == -1) {
+@@ -56,6 +57,7 @@ std::optional<FDAccessModeError> CheckFDAccessMode(int fd, int expected_mode) {
+ 
+   return std::nullopt;
+ }
++#endif
+ 
+ }  // namespace
+ 
+@@ -272,6 +274,17 @@ PlatformSharedMemoryRegion::CheckPlatformHandlePermissionsCorrespondToMode(
+     PlatformSharedMemoryHandle handle,
+     Mode mode,
+     size_t size) {
++#if BUILDFLAG(IS_QNX)
++  // On QNX, fcntl(F_GETFL) returns incorrect access mode values for shared
++  // memory file descriptors (always returning 0 = O_RDONLY), so we cannot
++  // reliably detect permission mismatches. The readonly_fd heuristic also
++  // doesn't work because Unsafe regions intentionally have no readonly_fd.
++  // Skip all permission checks on QNX.
++  //
++  // Note: TakeOrFail() still validates the readonly_fd presence for kWritable
++  // mode, which correctly handles ConvertToReadOnly() cases.
++  return ok();
++#else
+   if (auto result = CheckFDAccessMode(
+           handle.fd, mode == Mode::kReadOnly ? O_RDONLY : O_RDWR);
+       result.has_value()) {
+@@ -304,6 +317,7 @@ PlatformSharedMemoryRegion::CheckPlatformHandlePermissionsCorrespondToMode(
+   }
+ 
+   return ok();
++#endif
+ }
+ 
+ PlatformSharedMemoryRegion::PlatformSharedMemoryRegion(

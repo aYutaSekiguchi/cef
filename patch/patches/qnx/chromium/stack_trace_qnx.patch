@@ -1,0 +1,19 @@
+diff --git a/base/debug/stack_trace.cc b/base/debug/stack_trace.cc
+index ebde49a9ffe9c..ed311def6e9db 100644
+--- a/base/debug/stack_trace.cc
++++ b/base/debug/stack_trace.cc
+@@ -306,10 +306,10 @@ bool StackTrace::WillSymbolizeToStreamForTesting() {
+   // Official Mac OS X builds contain enough information to unwind the stack,
+   // but not enough to symbolize the output.
+   return false;
+-#elif BUILDFLAG(IS_FUCHSIA) || BUILDFLAG(IS_ANDROID)
+-  // Under Fuchsia and Android, StackTrace emits executable build-Ids and
+-  // address offsets which are symbolized on the test host system, rather than
+-  // being symbolized in-process.
++#elif BUILDFLAG(IS_FUCHSIA) || BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_QNX)
++  // Under Fuchsia, Android and QNX, StackTrace emits raw addresses which
++  // are symbolized on the test host system, rather than being symbolized
++  // in-process.
+   return false;
+ #elif BUILDFLAG(PRINT_UNSYMBOLIZED_STACK_TRACES)
+   // Typically set in sanitizer configurations (ASan, TSan, MSan), which emit
