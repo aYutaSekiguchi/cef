@@ -1,0 +1,10 @@
+--- build/config/compiler/BUILD.gn
++++ build/config/compiler/BUILD.gn
+@@ -2411,7 +2411,7 @@
+     ]
+ 
+-    if (!is_debug && !using_sanitizer && current_cpu != "s390x" &&
++    if (!is_debug && !using_sanitizer && !is_qnx && current_cpu != "s390x" &&
+         current_cpu != "ppc64" && current_cpu != "mips" &&
+         current_cpu != "mips64" && current_cpu != "riscv64" &&
+         current_cpu != "loong64") {
