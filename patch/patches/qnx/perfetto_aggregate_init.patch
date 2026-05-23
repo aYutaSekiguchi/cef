@@ -1,5 +1,5 @@
---- third_party/perfetto/src/tracing/service/tracing_service_impl.cc
-+++ third_party/perfetto/src/tracing/service/tracing_service_impl.cc
+--- src/tracing/service/tracing_service_impl.cc
++++ src/tracing/service/tracing_service_impl.cc
 @@ -2921,8 +2921,14 @@
      filter_input.resize(packet_slices.size());
      ++tracing_session->filter_input_packets;

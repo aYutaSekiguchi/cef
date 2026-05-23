@@ -1,5 +1,5 @@
---- third_party/perfetto/src/base/test/vm_test_utils.cc
-+++ third_party/perfetto/src/base/test/vm_test_utils.cc
+--- src/base/test/vm_test_utils.cc
++++ src/base/test/vm_test_utils.cc
 @@ -92,6 +92,10 @@ bool IsMapped(void* start, size_t size) {
    // Fuchsia doesn't yet support paging (b/119503290).
    ignore_result(page_size);

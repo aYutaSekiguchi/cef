@@ -114,9 +114,12 @@ echo ""
 # Step 2: Apply QNX-specific patches
 echo "Step 2: Applying QNX-specific patches..."
 PYTHON3="${PYTHON3:-python3}"
-"${PYTHON3}" "${SCRIPT_DIR}/patcher.py" --patch-file qnx/googletest_death_test || true
-"${PYTHON3}" "${SCRIPT_DIR}/patcher.py" --patch-file qnx/perfetto_aggregate_init || true
-"${PYTHON3}" "${SCRIPT_DIR}/patcher.py" --patch-file qnx/perfetto_mincore || true
+# Submodule patches must be applied from the submodule root with submodule-
+# relative paths.
+"${PYTHON3}" "${SCRIPT_DIR}/patcher.py" --patch-file qnx/googletest_death_test --patch-dir third_party/googletest/src || true
+"${PYTHON3}" "${SCRIPT_DIR}/patcher.py" --patch-file qnx/perfetto_aggregate_init --patch-dir third_party/perfetto || true
+"${PYTHON3}" "${SCRIPT_DIR}/patcher.py" --patch-file qnx/perfetto_mincore --patch-dir third_party/perfetto || true
+"${PYTHON3}" "${SCRIPT_DIR}/patcher.py" --patch-file qnx/perfetto_unix_socket --patch-dir third_party/perfetto || true
 
 # Apply additional QNX patches from cef/patch/patches/qnx/chromium/
 if [[ -d "${CEF_DIR}/patch/patches/qnx/chromium" ]]; then

@@ -1,5 +1,5 @@
---- third_party/googletest/src/googletest/src/gtest-death-test.cc
-+++ third_party/googletest/src/googletest/src/gtest-death-test.cc
+--- googletest/src/gtest-death-test.cc
++++ googletest/src/gtest-death-test.cc
 @@ -1260,7 +1260,7 @@ static pid_t ExecDeathTestSpawnChild(char* const* argv, int close_fd) {
  #ifdef GTEST_OS_QNX
    // Obtains the current directory and sets it to be closed in the child
