@@ -1,6 +1,5 @@
-diff --git a/third_party/perfetto/src/tracing/service/tracing_service_impl.cc b/third_party/perfetto/src/tracing/service/tracing_service_impl.cc
---- a/third_party/perfetto/src/tracing/service/tracing_service_impl.cc
-+++ b/third_party/perfetto/src/tracing/service/tracing_service_impl.cc
+--- third_party/perfetto/src/tracing/service/tracing_service_impl.cc
++++ third_party/perfetto/src/tracing/service/tracing_service_impl.cc
 @@ -2921,8 +2921,14 @@ void TracingServiceImpl::MaybeFilterPackets(TracingSession* tracing_session,
      filter_input.clear();
      filter_input.resize(packet_slices.size());
