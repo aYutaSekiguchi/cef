@@ -1,6 +1,6 @@
 --- third_party/perfetto/src/tracing/service/tracing_service_impl.cc
 +++ third_party/perfetto/src/tracing/service/tracing_service_impl.cc
-@@ -2923,4 +2923,10 @@ void TracingServiceImpl::MaybeFilterPackets(TracingSession* tracing_session,
+@@ -2923,6 +2923,12 @@ void TracingServiceImpl::MaybeFilterPackets(TracingSession* tracing_session,
      tracing_session->filter_input_bytes += input_packet_size;
 -    for (size_t i = 0; i < packet_slices.size(); ++i)
 -      filter_input[i] = {packet_slices[i].start, packet_slices[i].size};
@@ -15,7 +15,7 @@
      auto filtered_packet = trace_filter.FilterMessageFragments(
          &filter_input[0], filter_input.size());
  
-@@ -3003,4 +3009,10 @@ bool TracingServiceImpl::WriteIntoFile(TracingSession* tracing_session,
+@@ -3002,7 +3002,13 @@ bool TracingServiceImpl::WriteIntoFile(TracingSession* tracing_session,
        // Hence the const_cast here.
        char* start = static_cast<char*>(const_cast<void*>(slice.start));
        bytes_about_to_be_written += slice.size;
