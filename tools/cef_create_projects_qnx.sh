@@ -58,6 +58,19 @@ if [[ ! -d "${QNX_SDP_ROOT}/target/qnx" ]]; then
   exit 1
 fi
 
+# Initialize submodules if needed
+echo "Checking submodules..."
+cd "${CHROMIUM_SRC_DIR}"
+if [[ ! -f "third_party/googletest/src/googletest/src/gtest-death-test.cc" ]]; then
+  echo "  Initializing googletest submodule..."
+  git submodule update --init third_party/googletest/src || true
+fi
+if [[ ! -f "third_party/perfetto/src/base/test/vm_test_utils.cc" ]]; then
+  echo "  Initializing perfetto submodule..."
+  git submodule update --init third_party/perfetto || true
+fi
+cd "${CEF_DIR}"
+
 echo "CEF QNX Project Creator"
 echo "======================="
 echo "Build type: ${BUILD_TYPE}"
