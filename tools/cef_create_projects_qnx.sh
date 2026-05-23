@@ -17,7 +17,8 @@ CHROMIUM_SRC_DIR="$(cd "${CEF_DIR}/.." && pwd)"
 # Default values
 BUILD_TYPE="Release"
 QNX_SDP_ROOT="${QNX_SDP_ROOT:-$HOME/qnx800}"
-QNX_TARGET="${QNX_TARGET:-qnx}"  # or "qnx-sdp8"
+QNX_TARGET="${QNX_TARGET:-${QNX_SDP_ROOT}/target/qnx}"
+QNX_HOST="${QNX_HOST:-${QNX_SDP_ROOT}/host/linux/x86_64}"
 
 # Parse command-line arguments
 while [[ $# -gt 0 ]]; do
@@ -34,13 +35,18 @@ while [[ $# -gt 0 ]]; do
       QNX_TARGET="$2"
       shift 2
       ;;
+    --qnx-host)
+      QNX_HOST="$2"
+      shift 2
+      ;;
     --help)
       echo "Usage: $0 [options]"
       echo ""
       echo "Options:"
       echo "  --build-type <type>     Build type: Debug or Release (default: Release)"
       echo "  --qnx-sdp-root <path>   QNX SDP installation root (default: ~/qnx800)"
-      echo "  --qnx-target <target>   QNX target: qnx or qnx-sdp8 (default: qnx)"
+      echo "  --qnx-target <path>     QNX target sysroot (default: <sdp>/target/qnx)"
+      echo "  --qnx-host <path>       QNX host tools dir (default: <sdp>/host/linux/x86_64)"
       echo "  --help                  Show this help message"
       exit 0
       ;;
@@ -55,6 +61,14 @@ done
 if [[ ! -d "${QNX_SDP_ROOT}/target/qnx" ]]; then
   echo "ERROR: QNX SDP not found at ${QNX_SDP_ROOT}"
   echo "Please set QNX_SDP_ROOT environment variable or use --qnx-sdp-root"
+  exit 1
+fi
+if [[ ! -d "${QNX_TARGET}" ]]; then
+  echo "ERROR: QNX target sysroot not found at ${QNX_TARGET}"
+  exit 1
+fi
+if [[ ! -d "${QNX_HOST}" ]]; then
+  echo "ERROR: QNX host tools not found at ${QNX_HOST}"
   exit 1
 fi
 
@@ -76,6 +90,7 @@ echo "======================="
 echo "Build type: ${BUILD_TYPE}"
 echo "QNX SDP: ${QNX_SDP_ROOT}"
 echo "QNX Target: ${QNX_TARGET}"
+echo "QNX Host: ${QNX_HOST}"
 echo ""
 
 # Step 1: Install new QNX platform files
@@ -153,7 +168,6 @@ v8_symbol_level = 0
 
 # QNX toolchain
 qnx_sdp_root = "${QNX_SDP_ROOT}"
-qnx_target = "${QNX_TARGET}"
 
 # Disable features not supported on QNX
 enable_print_preview = false
@@ -218,6 +232,7 @@ cd "${CHROMIUM_SRC_DIR}"
 # Set up environment for gn
 export QNX_SDP_ROOT
 export QNX_TARGET
+export QNX_HOST
 
 # Run gn gen. args.gn is already written above, so do not inline it via
 # --args=... because collapsing newlines would make '#' comments comment out
