@@ -183,6 +183,7 @@ v8_enable_sandbox = false
 enable_base_tracing = false
 use_custom_libcxx = false
 use_custom_libcxx_for_host = true
+chrome_pgo_phase = 0
 
 # QNX-specific overrides
 use_qt = false
