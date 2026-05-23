@@ -140,6 +140,11 @@ is_debug = $([[ "$BUILD_TYPE" == "Debug" ]] && echo "true" || echo "false")
 is_component_build = false
 is_official_build = $([[ "$BUILD_TYPE" == "Release" ]] && echo "true" || echo "false")
 
+# QNX baseline must avoid ThinLTO. Do not force use_lld=false here because
+# global use_lld overrides can break host tool builds.
+use_thin_lto = false
+thin_lto_enable_optimizations = false
+
 # QNX non-component builds should avoid symbol_level=2 unless using debug
 # fission. Keep symbols lightweight and compatible.
 symbol_level = 1
