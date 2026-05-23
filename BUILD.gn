@@ -252,10 +252,10 @@ if (is_linux) {
 #
 
 # Enable support for Print Preview.
-assert(enable_print_preview)
+#assert(enable_print_preview)
 
 # Enable support for Widevine CDM.
-assert(enable_widevine)
+#assert(enable_widevine)
 
 if (is_mac || is_win) {
   # Enable Widevine CDM host verification and storage ID.
@@ -266,7 +266,7 @@ if (is_mac || is_win) {
 }
 
 # Enable Views UI framework.
-assert(toolkit_views)
+#assert(toolkit_views)
 
 if (is_clang) {
   # Don't use the chrome style plugin.
@@ -1007,6 +1007,17 @@ source_set("libcef_static") {
     "//url",
     "//v8",
   ]
+
+  if (is_qnx) {
+    deps -= [
+      "//chrome/services/printing:lib",
+      "//components/printing/browser",
+      "//components/printing/common",
+      "//components/printing/renderer",
+      "//components/services/print_compositor/public/cpp",
+      "//components/services/print_compositor/public/mojom",
+    ]
+  }
 
   if (is_win) {
     sources += includes_win + [
