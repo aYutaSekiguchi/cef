@@ -140,6 +140,12 @@ is_debug = $([[ "$BUILD_TYPE" == "Debug" ]] && echo "true" || echo "false")
 is_component_build = false
 is_official_build = $([[ "$BUILD_TYPE" == "Release" ]] && echo "true" || echo "false")
 
+# QNX non-component builds should avoid symbol_level=2 unless using debug
+# fission. Keep symbols lightweight and compatible.
+symbol_level = 1
+blink_symbol_level = 0
+v8_symbol_level = 0
+
 # QNX toolchain
 qnx_sdp_root = "${QNX_SDP_ROOT}"
 qnx_target = "${QNX_TARGET}"
