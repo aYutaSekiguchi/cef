@@ -1,0 +1,26 @@
+#ifndef CHROMIUM_BUILD_CONFIG_QNX_SHIM_FSTREAM_
+#define CHROMIUM_BUILD_CONFIG_QNX_SHIM_FSTREAM_
+
+#include_next <__config>
+
+// QNX SDP 8's libc++ headers declare several fstream members in a way that
+// makes callers reference ABI-tagless symbols, while the shipped libc++.so
+// exports only the ABI-tagged variants. Force these definitions inline in the
+// header so callers don't emit unresolved out-of-line references.
+#undef _LIBCPP_HIDE_FROM_ABI
+#define _LIBCPP_HIDE_FROM_ABI _LIBCPP_ALWAYS_INLINE
+#include_next <fstream>
+#undef _LIBCPP_HIDE_FROM_ABI
+
+#ifndef _LIBCPP_NO_ABI_TAG
+#define _LIBCPP_HIDE_FROM_ABI                                                   \
+  _LIBCPP_HIDDEN _LIBCPP_EXCLUDE_FROM_EXPLICIT_INSTANTIATION                    \
+      __attribute__((__abi_tag__(_LIBCPP_TOSTRING(_LIBCPP_ODR_SIGNATURE))))
+#elif defined(__QNX__)
+#define _LIBCPP_HIDE_FROM_ABI __attribute__((__abi_tag__("v160006")))
+#else
+#define _LIBCPP_HIDE_FROM_ABI \
+  _LIBCPP_HIDDEN _LIBCPP_EXCLUDE_FROM_EXPLICIT_INSTANTIATION
+#endif
+
+#endif  // CHROMIUM_BUILD_CONFIG_QNX_SHIM_FSTREAM_

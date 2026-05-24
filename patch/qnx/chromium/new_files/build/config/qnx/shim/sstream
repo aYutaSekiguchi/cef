@@ -1,0 +1,12 @@
+#ifndef CHROMIUM_BUILD_CONFIG_QNX_SHIM_SSTREAM_
+#define CHROMIUM_BUILD_CONFIG_QNX_SHIM_SSTREAM_
+
+// QNX SDP 8's libc++ headers declare C++20 sstream ref-qualified str()
+// overloads, but the shipped libc++.so only exports the older `str() const`
+// symbols. Force the header down the library-building declarations path so
+// callers reference the exported symbols.
+#define _LIBCPP_BUILDING_LIBRARY 1
+#include_next <sstream>
+#undef _LIBCPP_BUILDING_LIBRARY
+
+#endif  // CHROMIUM_BUILD_CONFIG_QNX_SHIM_SSTREAM_

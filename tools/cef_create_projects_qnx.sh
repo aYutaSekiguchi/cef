@@ -100,14 +100,17 @@ if [[ -d "${NEW_FILES_DIR}" ]]; then
   while IFS= read -r -d '' file; do
     rel_path="${file#${NEW_FILES_DIR}/}"
     target_file="${CHROMIUM_SRC_DIR}/${rel_path}"
+    mkdir -p "$(dirname "${target_file}")"
     if [[ ! -f "${target_file}" ]]; then
       echo "  Installing: ${rel_path}"
-      mkdir -p "$(dirname "${target_file}")"
+      cp "${file}" "${target_file}"
+    elif ! cmp -s "${file}" "${target_file}"; then
+      echo "  Updating:   ${rel_path}"
       cp "${file}" "${target_file}"
     else
-      echo "  Skipping (exists): ${rel_path}"
+      echo "  Keeping:    ${rel_path}"
     fi
-  done < <(find "${NEW_FILES_DIR}" -type f -print0)
+  done < <(find "${NEW_FILES_DIR}" -type f -print0 | sort -z)
 fi
 echo ""
 
@@ -242,12 +245,32 @@ export QNX_HOST
 # the rest of the file.
 gn gen "${BUILD_DIR}"
 
+# Write helper scripts so build-time tools inherit the same QNX SDK env.
+cat > "${BUILD_DIR}/qnx_env.sh" << EOF
+export QNX_SDP_ROOT="${QNX_SDP_ROOT}"
+export QNX_TARGET="${QNX_TARGET}"
+export QNX_HOST="${QNX_HOST}"
+EOF
+
+cat > "${BUILD_DIR}/ninja_qnx.sh" << EOF
+#!/bin/bash
+set -e
+SCRIPT_DIR="\$(cd "\$(dirname "$0")" && pwd)"
+source "\${SCRIPT_DIR}/qnx_env.sh"
+cd "${CHROMIUM_SRC_DIR}"
+exec ninja -C "${BUILD_DIR}" "$@"
+EOF
+chmod +x "${BUILD_DIR}/ninja_qnx.sh"
+
 echo ""
 echo "Success! QNX CEF project files created."
 echo ""
 echo "Build directory: ${BUILD_DIR}"
 echo ""
 echo "To build:"
-echo "  cd ${CHROMIUM_SRC_DIR}"
+echo "  ${BUILD_DIR}/ninja_qnx.sh cef"
+echo ""
+echo "Or in your current shell:"
+echo "  source ${BUILD_DIR}/qnx_env.sh"
 echo "  ninja -C ${BUILD_DIR} cef"
 echo ""

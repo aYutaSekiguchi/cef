@@ -1,0 +1,84 @@
+// -*- C++ -*-
+// Copyright 2026 The Chromium Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+//
+// QNX sysroot shim for <csetjmp>.
+//
+// Problem: QNX SDP 8's libc++ csetjmp header declares longjmp with the
+// C++11 attribute [[noreturn]] *after* the C header setjmp.h has already
+// declared it with __attribute__((__noreturn__)). Clang 23 treats this as
+// a hard error ("'noreturn' attribute does not appear on the first
+// declaration", diagnostic err_attribute_after_definition) which cannot be
+// suppressed with any -Wno-* flag.
+//
+// Fix: This shim replaces the QNX sysroot's csetjmp by being found first
+// via a -I path that precedes the sysroot's c++/v1 directory. The only
+// change is using __attribute__((__noreturn__)) in the QNX-specific longjmp
+// redeclaration so that both declarations use the same attribute style and
+// Clang's consistency check passes.
+//
+// This file must be placed at:
+//   build/config/qnx/shim/csetjmp   (no .h extension)
+// and build/toolchain/qnx/BUILD.gn must add:
+//   -I<path_to_this_directory>
+// BEFORE -I<qnx_sysroot>/usr/include/c++/v1.
+
+#ifndef _LIBCPP_CSETJMP
+#define _LIBCPP_CSETJMP
+
+/*
+    csetjmp synopsis
+
+Macros:
+
+    setjmp
+
+namespace std
+{
+
+Types:
+
+    jmp_buf
+
+void longjmp(jmp_buf env, int val);
+
+}  // std
+
+*/
+
+#include <__assert>  // all public C++ headers provide the assertion handler
+#include <__config>
+
+// <setjmp.h> is not provided by libc++
+#if __has_include(<setjmp.h>)
+#  include <setjmp.h>
+#  ifdef _LIBCPP_SETJMP_H
+#    error "If libc++ starts defining <setjmp.h>, the __has_include check should move to libc++'s <setjmp.h>"
+#  endif
+#endif
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#  pragma GCC system_header
+#endif
+
+#if defined(__QNX__)
+// QNX sysroot fix: use __attribute__((__noreturn__)) here to match the
+// declaration style already used by setjmp.h. The original QNX csetjmp uses
+// [[noreturn]] which causes Clang 23 to emit a hard error because the
+// attribute form on the redeclaration differs from the first declaration.
+#  undef longjmp
+__attribute__((__noreturn__)) inline void longjmp(jmp_buf __env, int __val)
+{
+    ::siglongjmp(__env, __val);
+}
+#endif
+
+_LIBCPP_BEGIN_NAMESPACE_STD
+
+using ::jmp_buf _LIBCPP_USING_IF_EXISTS;
+using ::longjmp _LIBCPP_USING_IF_EXISTS;
+
+_LIBCPP_END_NAMESPACE_STD
+
+#endif  // _LIBCPP_CSETJMP

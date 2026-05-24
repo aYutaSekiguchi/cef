@@ -1,0 +1,304 @@
+--- build/config/BUILDCONFIG.gn
++++ build/config/BUILDCONFIG.gn
+@@ -276,6 +276,9 @@
+   _default_toolchain = "//build/toolchain/aix:$target_cpu"
+ } else if (target_os == "zos") {
+   _default_toolchain = "//build/toolchain/zos:$target_cpu"
++} else if (target_os == "qnx") {
++  assert(host_os == "linux", "QNX builds are only supported on Linux.")
++  _default_toolchain = "//build/toolchain/qnx:clang_$target_cpu"
+ } else if (target_os == "emscripten") {
+   # Because it's too hard to remove all targets from //BUILD.gn that do not work with it.
+   assert(
+@@ -312,10 +315,11 @@
+ # current_os value directly.
+ 
+ is_android = current_os == "android"
++is_qnx = current_os == "qnx"
+ is_chromeos = current_os == "chromeos"
+ is_fuchsia = current_os == "fuchsia"
+ is_ios = current_os == "ios"
+-is_linux = current_os == "linux"
++is_linux = current_os == "linux" || is_qnx
+ is_mac = current_os == "mac"
+ is_wasm = current_os == "emscripten"
+ is_watchos = current_os == "watchos"
+--- build/config/sysroot.gni
++++ build/config/sysroot.gni
+@@ -29,6 +29,8 @@
+ 
+     # Android uses unified headers, and thus a single compile time sysroot
+     sysroot = "$android_toolchain_root/sysroot"
++  } else if (is_qnx) {
++    sysroot = getenv("QNX_TARGET")
+   } else if ((is_linux || is_chromeos) && use_sysroot) {
+     # By default build against a sysroot image downloaded from Cloud Storage
+     # during gclient runhooks.
+--- build/config/compiler/compiler.gni
++++ build/config/compiler/compiler.gni
+@@ -56,6 +56,11 @@
+       !is_high_end_android && (is_android || is_castos || is_fuchsia)
+ }
+ 
++# QNX uses QCC as the linker driver, which does not support LLD.
++if (current_os == "qnx") {
++  use_lld = false
++}
++
+ if (is_mac && use_lld) {
+   declare_args() {
+     # Enables the `--read-workers` flag for LLD.
+--- build/config/BUILD.gn
++++ build/config/BUILD.gn
+@@ -209,6 +209,15 @@
+     # Targets should choose to explicitly link frameworks they require. Since
+     # linking can have run-time side effects, nothing should be listed here.
+     libs = []
++  } else if (is_qnx) {
++    libs = [
++      "c++",
++      "m",
++      "regex",
++      "socket",
++      "fsnotify",
++      "eventfd",
++    ]
+   } else if (is_linux || is_chromeos) {
+     libs = [
+       "dl",
+--- build/config/posix/BUILD.gn
++++ build/config/posix/BUILD.gn
+@@ -37,7 +37,9 @@
+       defines += [ "CR_SYSROOT_KEY=$cr_sysroot_key" ]
+     }
+     asmflags += sysroot_flags
+-    ldflags += sysroot_flags
++    if (current_os != "qnx") {
++      ldflags += sysroot_flags
++    }
+ 
+     # When use_custom_libcxx=true, some -isystem flags get passed to
+     # cflags_cc to set up libc++ include paths.  We want to make sure
+--- build/config/clang/BUILD.gn
++++ build/config/clang/BUILD.gn
+@@ -184,6 +184,14 @@
+         }
+       } else if (is_apple) {
+         _dir = "darwin"
++      } else if (is_qnx) {
++        if (current_cpu == "x64") {
++          _dir = "x86_64-unknown-nto"
++        } else if (current_cpu == "arm64") {
++          _dir = "aarch64-unknown-nto"
++        } else {
++          assert(false)  # Unhandled cpu type
++        }
+       } else if (is_linux || is_chromeos) {
+         if (current_cpu == "x64") {
+           _dir = "x86_64-unknown-linux-gnu"
+--- build/config/rust.gni
++++ build/config/rust.gni
+@@ -211,7 +211,15 @@
+ # (see '*_toolchain_supports_platform above') to enable experimentation with
+ # other toolchains.
+ rust_abi_target = ""
+-if (is_linux || is_chromeos) {
++if (is_qnx) {
++  if (current_cpu == "arm64") {
++    rust_abi_target = "aarch64-unknown-nto-qnx800"
++  } else if (current_cpu == "x64") {
++    rust_abi_target = "x86_64-pc-nto-qnx800"
++  } else {
++    assert(false, "Architecture not supported")
++  }
++} else if (is_linux || is_chromeos) {
+   if (current_cpu == "arm64") {
+     rust_abi_target = "aarch64-unknown-linux-gnu"
+   } else if (current_cpu == "x86") {
+--- build/rust/known-target-triples.txt
++++ build/rust/known-target-triples.txt
+@@ -41,5 +41,7 @@
+ x86_64-pc-windows-msvc
+ x86_64-unknown-fuchsia
+ x86_64-unknown-linux-gnu
++x86_64-pc-nto-qnx800
++aarch64-unknown-nto-qnx800
+ powerpc64le-unknown-linux-gnu
+ s390x-unknown-linux-gnu
+--- build/toolchain/gcc_toolchain.gni
++++ build/toolchain/gcc_toolchain.gni
+@@ -415,7 +415,26 @@
+         # -soname flag is not available on aix ld
+         soname_flag = "-Wl,-soname=\"$soname\""
+       }
+-      link_command = "$ld -shared $soname_flag {{ldflags}}${extra_ldflags} -o \"$unstripped_sofile\" @\"$rspfile\" {{rlibs}}"
++      start_group_flag = ""
++      end_group_flag = ""
++      if (current_os != "aix") {
++        start_group_flag = "-Wl,--start-group"
++        end_group_flag = "-Wl,--end-group "
++      }
++      if (current_os == "qnx") {
++        # QNX's qcc/ld behaves like a left-to-right, single-pass linker here.
++        # Rust rlibs are alpha-sorted, and native -lfoo dependencies are also
++        # emitted from the rspfile, so the command line order matters: if a
++        # native library is seen before the Rust crate that needs it, the
++        # linker may not revisit it. Wrap {{rlibs}} and {{libs}} in
++        # --start-group/--end-group so the linker can revisit them to resolve
++        # circular/forward Rust crate references.
++        link_command =
++            "$ld -shared $soname_flag {{ldflags}}${extra_ldflags} -o \"$unstripped_sofile\" @\"$rspfile\" $start_group_flag {{rlibs}} {{libs}} $end_group_flag"
++      } else {
++        link_command =
++            "$ld -shared $soname_flag {{ldflags}}${extra_ldflags} -o \"$unstripped_sofile\" @\"$rspfile\" {{rlibs}}"
++      }
+ 
+       # Generate a map file to be used for binary size analysis.
+       # Map file adds ~10% to the link time on a z620.
+@@ -447,7 +466,9 @@
+       }
+       command = "\"$python_path\" \"$solink_wrapper\" --readelf=\"$readelf\" --nm=\"$nm\" $strip_switch$dwp_switch --sofile=\"$unstripped_sofile\" --tocfile=\"$tocfile\"$map_switch --output=\"$sofile\" -- $link_command $solink_extra_flags"
+ 
+-      if (target_cpu == "mipsel" && is_component_build && is_android) {
++      if (current_os == "qnx") {
++        rspfile_content = "-Wl,--whole-archive {{inputs}} {{solibs}} -Wl,--no-whole-archive"
++      } else if (target_cpu == "mipsel" && is_component_build && is_android) {
+         rspfile_content = "-Wl,--start-group -Wl,--whole-archive {{inputs}} {{solibs}} -Wl,--no-whole-archive {{libs}} -Wl,--end-group"
+       } else if (current_os == "aix") {
+         # --whole-archive, --no-whole-archive flags are not available on the aix
+@@ -591,7 +612,16 @@
+       # We need to specify link groups, at least, for single pass linkers. I.e.
+       # Rust libraries are alpha-sorted instead of by dependencies so they fail
+       # to link if not properly ordered or grouped.
+-      link_command = "$ld {{ldflags}}${extra_ldflags} -o \"$unstripped_outfile\" $start_group_flag @\"$rspfile\" $end_group_flag {{solibs}} {{libs}} $start_group_flag {{rlibs}} $end_group_flag"
++      if (current_os == "qnx") {
++        # QNX's single-pass linker needs all inputs in one --start-group so it
++        # can revisit archives when resolving symbols. Rust rlibs reference C++
++        # symbols from static libraries inside the rspfile, and vice versa.
++        link_command =
++            "$ld {{ldflags}}${extra_ldflags} -o \"$unstripped_outfile\" $start_group_flag @\"$rspfile\" {{solibs}} {{rlibs}} {{libs}} $end_group_flag"
++      } else {
++        link_command =
++            "$ld {{ldflags}}${extra_ldflags} -o \"$unstripped_outfile\" $start_group_flag @\"$rspfile\" $end_group_flag {{solibs}} {{libs}} $start_group_flag {{rlibs}} $end_group_flag"
++      }
+ 
+       # Generate a map file to be used for binary size analysis.
+       # Map file adds ~10% to the link time on a z620.
+--- build/config/linux/atk/BUILD.gn
++++ build/config/linux/atk/BUILD.gn
+@@ -10,7 +10,7 @@
+ assert(!is_chromeos)
+ 
+ # These packages should _only_ be expected when building for a target.
+-assert(current_toolchain == default_toolchain)
++# assert(current_toolchain == default_toolchain)
+ 
+ if (use_atk) {
+   assert(use_glib, "use_atk=true requires that use_glib=true")
+--- build/config/linux/atspi2/BUILD.gn
++++ build/config/linux/atspi2/BUILD.gn
+@@ -6,7 +6,7 @@
+ import("//build/config/ui.gni")
+ 
+ # These packages should _only_ be expected when building for a target.
+-assert(current_toolchain == default_toolchain)
++# assert(current_toolchain == default_toolchain)
+ 
+ if (use_atk) {
+   pkg_config("atspi2") {
+--- build/config/win/visual_studio_version.gni
++++ build/config/win/visual_studio_version.gni
+@@ -5,15 +5,14 @@
+ declare_args() {
+   # Path to Visual Studio. If empty, the default is used which is to use the
+   # automatic toolchain in depot_tools. If set, you must also set the
+-  # visual_studio_version, wdk_path and windows_sdk_version.
++  # visual_studio_version, visual_studio_runtime_dirs and windows_sdk_version.
+   visual_studio_path = ""
+ 
+   # Version of Visual Studio pointed to by the visual_studio_path.
+   visual_studio_version = ""
+ 
+-  # Directory of the Windows driver kit. If visual_studio_path is empty, this
+-  # will be auto-filled.
+-  wdk_path = ""
++  # Path to Visual Studio runtime libraries.
++  visual_studio_runtime_dirs = ""
+ 
+   # Full path to the Windows SDK, not including a backslash at the end.
+   # This value is the default location, override if you have a different
+@@ -31,16 +30,15 @@
+   windows_sdk_version = toolchain_data.sdk_version
+   windows_sdk_path = toolchain_data.sdk_path
+   visual_studio_version = toolchain_data.vs_version
+-  wdk_path = toolchain_data.wdk_dir
+   visual_studio_runtime_dirs = toolchain_data.runtime_dirs
+ } else {
+   assert(visual_studio_version != "",
+          "You must set the visual_studio_version if you set the path")
++  assert(visual_studio_runtime_dirs != "",
++         "You must set the visual_studio_runtime_dirs if you set the visual " +
++         "studio path")
+   assert(windows_sdk_version != "",
+          "You must set the windows_sdk_version if you set the path")
+-  assert(wdk_path != "",
+-         "You must set the wdk_path if you set the visual studio path")
+-  visual_studio_runtime_dirs = []
+ }
+ 
+ visual_studio_version_logs = [ "windows_sdk_version=${windows_sdk_version}" ]
+--- build/toolchain/win/setup_toolchain.py
++++ build/toolchain/win/setup_toolchain.py
+@@ -168,13 +168,17 @@ def _LoadToolchainEnv(cpu, toolchain_root, sdk_dir, target_store):
+           del os.environ['LIB']
+         if 'LIBPATH' in os.environ:
+           del os.environ['LIBPATH']
+-      other_path = os.path.normpath(
++      script_path = os.path.normpath(
+           os.path.join(os.environ['GYP_MSVS_OVERRIDE_PATH'],
+                        'VC/Auxiliary/Build/vcvarsall.bat'))
+-      if not os.path.exists(other_path):
+-        raise Exception('%s is missing - make sure VC++ tools are installed.' %
+-                        script_path)
+-      script_path = other_path
++    if not os.path.exists(script_path):
++      # Compiler environment variables must already be specified.
++      variables = []
++      for k in sorted(os.environ.keys()):
++        variables.append('%s=%s' % (str(k), str(os.environ[k])))
++      variables = '\n'.join(variables)
++      return _ExtractImportantEnvironment(variables)
++
+     cpu_arg = "amd64"
+     if (cpu != 'x64'):
+       # x64 is default target CPU thus any other CPU requires a target set
+--- build/vs_toolchain.py
++++ build/vs_toolchain.py
+@@ -138,9 +138,16 @@ def SetEnvironmentAndGetRuntimeDllDirs():
+     runtime_path = os.path.pathsep.join(vs_runtime_dll_dirs)
+     os.environ['PATH'] = runtime_path + os.path.pathsep + os.environ['PATH']
+   elif sys.platform == 'win32' and not depot_tools_win_toolchain:
++    has_override_path = True
+     if not 'GYP_MSVS_OVERRIDE_PATH' in os.environ:
++      has_override_path = False
+       os.environ['GYP_MSVS_OVERRIDE_PATH'] = DetectVisualStudioPath()
+ 
++    if has_override_path:
++      # Don't attempt to copy DLLs when using a custom toolchain.
++      # The DLLs should already be discoverable via the PATH env variable.
++      return None
++
+     # When using an installed toolchain these files aren't needed in the output
+     # directory in order to run binaries locally, but they are needed in order
+     # to create isolates or the mini_installer. Copying them to the output
+@@ -224,6 +231,10 @@ def _CheckIfVersionInstalled(version):
+ def GetVisualStudioVersion():
+   """Return best available version of Visual Studio.
+   """
++  # Return the explicitly requested version, if any.
++  if 'GYP_MSVS_VERSION' in os.environ:
++    return os.environ['GYP_MSVS_VERSION']
++
+   supported_versions = list(MSVS_VERSIONS.keys())
+ 
+   # VS installed in depot_tools for Googlers

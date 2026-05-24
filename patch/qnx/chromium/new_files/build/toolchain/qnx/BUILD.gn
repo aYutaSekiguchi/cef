@@ -1,0 +1,77 @@
+# Copyright 2025 The Chromium Authors
+# Use of this source code is governed by a BSD-style license
+# found in the LICENSE file.
+
+import("//build/toolchain/gcc_toolchain.gni")
+
+template("qnx_clang_toolchain") {
+  # GN can't do nested scope dereference, so copy to local var first.
+  assert(defined(invoker.toolchain_args),
+         "toolchain_args must be defined")
+  invoker_toolchain_args = invoker.toolchain_args
+
+  if (invoker_toolchain_args.current_cpu == "arm64") {
+    _target = "aarch64-unknown-nto"
+    _cpu_def = "-D__AARCH64EL__"
+  } else {
+    _target = "x86_64-unknown-nto"
+    _cpu_def = "-D__X86_64__"
+  }
+
+  _qnx_host = getenv("QNX_HOST")
+  _qnx_target = getenv("QNX_TARGET")
+
+  # Polyfill header for C++23 features missing from QNX libc++
+  _qnx_std_polyfill = rebase_path("//build/config/qnx/qnx_std_polyfill.h",
+                                  root_build_dir)
+
+  # Shim directory that overrides broken QNX sysroot headers.
+  # Must be resolved to an absolute path so ninja can use it directly.
+  _qnx_shim_dir = rebase_path("//build/config/qnx/shim", root_build_dir)
+
+  # Rebase clang path to absolute path (required for ninja commands)
+  _clang_path = rebase_path("$clang_base_path/bin", root_build_dir)
+
+  gcc_toolchain(target_name) {
+    cc = "${_clang_path}/clang"
+    cxx = "${_clang_path}/clang++"
+
+    ld = "${_qnx_host}/usr/bin/qcc"
+    ar = "${_qnx_host}/usr/bin/ntox86_64-ar"
+    readelf = "${_qnx_host}/usr/bin/ntox86_64-readelf"
+    nm = "${_qnx_host}/usr/bin/ntox86_64-nm"
+
+    _target_flags =
+        "--target=${_target} -D__QNXNTO__ -D__QNX__ -DQNX_LIBM_BUILTINS -D__LITTLEENDIAN__ -D__EXT_XOPEN_EX -D_QNX_SOURCE -D_POSIX_C_SOURCE=200809L ${_cpu_def} -Uisinf -Uisnan --sysroot=${_qnx_target}"
+
+    extra_cflags = "${_target_flags} -include time.h"
+    extra_cppflags = "${_target_flags} -include time.h"
+    extra_cxxflags = "${_target_flags} -I${_qnx_shim_dir} -I${_qnx_target}/usr/include/c++/v1 -include time.h -include ${_qnx_std_polyfill}"
+
+    ld = "${_qnx_host}/usr/bin/qcc"
+
+    # QCC does not accept clang driver flags like --target= or --sysroot=.
+    # Use the QNX compiler variant flag instead.
+    extra_ldflags = "-Vgcc_ntox86_64_cxx"
+
+    toolchain_args = {
+      forward_variables_from(invoker_toolchain_args, "*")
+      current_os = "qnx"
+      is_qnx = true
+      is_clang = true
+      use_lld = false
+    }
+  }
+}
+
+qnx_clang_toolchain("clang_x64") {
+  toolchain_args = {
+    current_cpu = "x64"
+  }
+}
+
+qnx_clang_toolchain("clang_arm64") {
+  toolchain_args = {
+    current_cpu = "arm64"
+  }
+}
