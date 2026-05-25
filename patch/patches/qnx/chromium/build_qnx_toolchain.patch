@@ -34,6 +34,50 @@
    } else if ((is_linux || is_chromeos) && use_sysroot) {
      # By default build against a sysroot image downloaded from Cloud Storage
      # during gclient runhooks.
+--- build/config/compiler/BUILD.gn
++++ build/config/compiler/BUILD.gn
+@@ -1313,7 +1313,11 @@ config("compiler_cpu_abi") {
+     # CPU architecture. We may or may not be doing a cross compile now, so for
+     # simplicity we always explicitly set the architecture.
+     if (current_cpu == "x64") {
+-      if (is_clang && !is_android && !is_fuchsia && !is_chromeos_device) {
++      if (is_qnx) {
++        # QNX target selection is handled by //build/toolchain/qnx. Do not pass
++        # Linux clang or generic -m64 flags to qcc when linking.
++      } else if (is_clang && !is_android && !is_fuchsia &&
++                 !is_chromeos_device) {
+         cflags += [ "--target=x86_64-unknown-linux-gnu" ]
+         ldflags += [ "--target=x86_64-unknown-linux-gnu" ]
+       } else {
+@@ -1348,7 +1352,8 @@ config("compiler_cpu_abi") {
+         "-mfloat-abi=$arm_float_abi",
+       ]
+     } else if (current_cpu == "arm64") {
+-      if (is_clang && !is_android && !is_fuchsia && !is_chromeos_device) {
++      if (is_clang && !is_android && !is_fuchsia && !is_chromeos_device &&
++          !is_qnx) {
+         cflags += [ "--target=aarch64-linux-gnu" ]
+         ldflags += [ "--target=aarch64-linux-gnu" ]
+       }
+@@ -1739,7 +1744,7 @@ config("compiler_deterministic") {
+     # directly there, not through the compiler driver.
+     # We don't link on RBE, so this change is just for cleaner
+     # internal linker invocations, for people who work on the build.
+-    if (!is_win) {
++    if (!is_win && !is_qnx) {
+       ldflags += [ "-no-canonical-prefixes" ]
+     }
+   }
+@@ -2601,7 +2606,8 @@ config("thin_archive") {
+ # 2. Remove the thin_archive config, so that the .a file actually contains all
+ #    .o files, instead of just references to .o files in the build directoy
+ config("thin_archive") {
+-  if ((is_apple && use_lld) || (is_linux && !is_clang) || current_os == "aix") {
++  if ((is_apple && use_lld) || (is_linux && !is_clang) ||
++      current_os == "aix" || is_qnx) {
+     # The macOS and iOS linker ld64.ldd doesn't support thin archive without
+     # symbol table, gcc on linux also throws the error `archive has no index`.
+     # AIX does support -s option, not -S option.
 --- build/config/compiler/compiler.gni
 +++ build/config/compiler/compiler.gni
 @@ -56,6 +56,11 @@

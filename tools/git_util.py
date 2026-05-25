@@ -172,38 +172,46 @@ def git_apply_patch_file(patch_path, patch_dir):
   if not is_checkout(patch_dir):
     return _patch_apply_patch_string(patch_dir, patch_string)
 
-  config = '-p0 --ignore-whitespace'
+  configs = ['-p0 --ignore-whitespace', '-p1 --ignore-whitespace']
+  first_check_error = None
 
-  # Output patch contents.
-  cmd = '%s apply %s --numstat' % (git_exe, config)
-  result = exec_cmd(cmd, patch_dir, patch_string)
-  write_indented_output(result['out'].replace('<stdin>', patch_name))
+  for config in configs:
+    # Output patch contents.
+    cmd = '%s apply %s --numstat' % (git_exe, config)
+    result = exec_cmd(cmd, patch_dir, patch_string)
+    if result['out'] != '':
+      write_indented_output(result['out'].replace('<stdin>', patch_name))
 
-  # Reverse check to see if the patch has already been applied.
-  cmd = '%s apply %s --reverse --check' % (git_exe, config)
-  result = exec_cmd(cmd, patch_dir, patch_string)
-  if result['err'].find('error:') < 0:
-    sys.stdout.write('... already applied (skipping).\n')
-    sys.stdout.flush()
-    return 'skip'
+    # Reverse check to see if the patch has already been applied.
+    cmd = '%s apply %s --reverse --check' % (git_exe, config)
+    result = exec_cmd(cmd, patch_dir, patch_string)
+    if result['err'].find('error:') < 0:
+      sys.stdout.write('... already applied (skipping).\n')
+      sys.stdout.flush()
+      return 'skip'
 
-  # Normal check to see if the patch can be applied cleanly.
-  cmd = '%s apply %s --check' % (git_exe, config)
-  result = exec_cmd(cmd, patch_dir, patch_string)
-  if result['err'].find('error:') >= 0:
-    sys.stdout.write('... failed to apply:\n')
-    write_indented_output(result['err'].replace('<stdin>', patch_name))
-    return 'fail'
+    # Normal check to see if the patch can be applied cleanly.
+    cmd = '%s apply %s --check' % (git_exe, config)
+    result = exec_cmd(cmd, patch_dir, patch_string)
+    if result['err'].find('error:') >= 0:
+      if first_check_error is None:
+        first_check_error = result['err']
+      continue
 
-  # Apply the patch file. This should always succeed because the previous
-  # command succeeded.
-  cmd = '%s apply %s' % (git_exe, config)
-  result = exec_cmd(cmd, patch_dir, patch_string)
-  if result['err'] == '':
-    sys.stdout.write('... successfully applied.\n')
-    sys.stdout.flush()
-  else:
-    sys.stdout.write('... successfully applied (with warnings):\n')
-    sys.stdout.flush()
-    write_indented_output(result['err'].replace('<stdin>', patch_name))
-  return 'apply'
+    # Apply the patch file. This should always succeed because the previous
+    # command succeeded.
+    cmd = '%s apply %s' % (git_exe, config)
+    result = exec_cmd(cmd, patch_dir, patch_string)
+    if result['err'] == '':
+      sys.stdout.write('... successfully applied.\n')
+      sys.stdout.flush()
+    else:
+      sys.stdout.write('... successfully applied (with warnings):\n')
+      sys.stdout.flush()
+      write_indented_output(result['err'].replace('<stdin>', patch_name))
+    return 'apply'
+
+  sys.stdout.write('... failed to apply:\n')
+  if first_check_error is not None:
+    write_indented_output(first_check_error.replace('<stdin>', patch_name))
+  return 'fail'

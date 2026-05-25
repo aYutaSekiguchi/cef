@@ -4,9 +4,10 @@
 # in the LICENSE file.
 #
 # This script creates QNX-specific CEF project files by:
-# 1. Applying QNX-specific patches from cef/patch/patches/qnx/
-# 2. Setting up QNX-specific GN arguments
-# 3. Running gn gen with QNX toolchain
+# 1. Installing QNX-specific new files from cef/patch/qnx/chromium/new_files/
+# 2. Applying QNX-specific patches from cef/patch/patches/qnx/
+# 3. Setting up QNX-specific GN arguments
+# 4. Running gn gen with QNX toolchain
 
 set -e
 
@@ -72,7 +73,7 @@ if [[ ! -d "${QNX_HOST}" ]]; then
   exit 1
 fi
 
-# Initialize submodules if needed
+# Initialize submodules if needed.
 echo "Checking submodules..."
 cd "${CHROMIUM_SRC_DIR}"
 if [[ ! -f "third_party/googletest/src/googletest/src/gtest-death-test.cc" ]]; then
@@ -82,6 +83,14 @@ fi
 if [[ ! -f "third_party/perfetto/src/base/test/vm_test_utils.cc" ]]; then
   echo "  Initializing perfetto submodule..."
   git submodule update --init third_party/perfetto || true
+fi
+if [[ ! -f "third_party/boringssl/src/crypto/rand/internal.h" ]]; then
+  echo "  Initializing boringssl submodule..."
+  git submodule update --init third_party/boringssl/src || true
+fi
+if [[ ! -f "third_party/ced/src/util/basictypes.h" ]]; then
+  echo "  Initializing ced submodule..."
+  git submodule update --init third_party/ced/src || true
 fi
 cd "${CEF_DIR}"
 
@@ -93,7 +102,7 @@ echo "QNX Target: ${QNX_TARGET}"
 echo "QNX Host: ${QNX_HOST}"
 echo ""
 
-# Step 1: Install new QNX platform files
+# Step 1: Install new QNX platform files.
 echo "Step 1: Installing new QNX platform files..."
 NEW_FILES_DIR="${CEF_DIR}/patch/qnx/chromium/new_files"
 if [[ -d "${NEW_FILES_DIR}" ]]; then
@@ -114,39 +123,53 @@ if [[ -d "${NEW_FILES_DIR}" ]]; then
 fi
 echo ""
 
-# Step 2: Apply QNX-specific patches
+# Step 2: Apply QNX-specific patches.
 echo "Step 2: Applying QNX-specific patches..."
 PYTHON3="${PYTHON3:-python3}"
+
 # Submodule patches must be applied from the submodule root with submodule-
 # relative paths.
-"${PYTHON3}" "${SCRIPT_DIR}/patcher.py" --patch-file qnx/googletest_death_test --patch-dir third_party/googletest/src || true
-"${PYTHON3}" "${SCRIPT_DIR}/patcher.py" --patch-file qnx/perfetto_aggregate_init --patch-dir third_party/perfetto || true
-"${PYTHON3}" "${SCRIPT_DIR}/patcher.py" --patch-file qnx/perfetto_mincore --patch-dir third_party/perfetto || true
-"${PYTHON3}" "${SCRIPT_DIR}/patcher.py" --patch-file qnx/perfetto_unix_socket --patch-dir third_party/perfetto || true
+"${PYTHON3}" "${SCRIPT_DIR}/patcher.py" --patch-file qnx/googletest_death_test --patch-dir third_party/googletest/src
+"${PYTHON3}" "${SCRIPT_DIR}/patcher.py" --patch-file qnx/perfetto_aggregate_init --patch-dir third_party/perfetto
+"${PYTHON3}" "${SCRIPT_DIR}/patcher.py" --patch-file qnx/perfetto_mincore --patch-dir third_party/perfetto
+"${PYTHON3}" "${SCRIPT_DIR}/patcher.py" --patch-file qnx/perfetto_unix_socket --patch-dir third_party/perfetto
+"${PYTHON3}" "${SCRIPT_DIR}/patcher.py" --patch-file qnx/boringssl_qnx_support --patch-dir third_party/boringssl/src
+"${PYTHON3}" "${SCRIPT_DIR}/patcher.py" --patch-file qnx/ced_qnx_basictypes --patch-dir third_party/ced/src
 
-# Apply additional QNX patches from cef/patch/patches/qnx/chromium/
+# Apply additional Chromium QNX patches.
 if [[ -d "${CEF_DIR}/patch/patches/qnx/chromium" ]]; then
   echo "Applying Chromium QNX patches..."
   for patch_file in "${CEF_DIR}/patch/patches/qnx/chromium"/*.patch; do
-    if [[ -f "$patch_file" ]]; then
-      patch_name="$(basename "$patch_file" .patch)"
+    if [[ -f "${patch_file}" ]]; then
+      patch_name="$(basename "${patch_file}" .patch)"
       echo "  - ${patch_name}"
-      "${PYTHON3}" "${SCRIPT_DIR}/patcher.py" --patch-file "qnx/chromium/${patch_name}" || true
+      "${PYTHON3}" "${SCRIPT_DIR}/patcher.py" --patch-file "qnx/chromium/${patch_name}"
     fi
   done
 fi
 
+# Some QNX support files introduce new submodule paths not present at the
+# compatibility tag. Initialize them after patch application.
+cd "${CHROMIUM_SRC_DIR}"
+if [[ -f ".gitmodules" ]] && grep -q 'third_party/epoll/src' .gitmodules; then
+  if [[ ! -e "third_party/epoll/src/epoll.c" ]]; then
+    echo "  Initializing epoll submodule..."
+    git submodule update --init third_party/epoll/src || true
+  fi
+fi
+cd "${CEF_DIR}"
+
 echo ""
 
-# Step 2: Set up build directory
+# Step 3: Set up build directory.
 BUILD_DIR="${CHROMIUM_SRC_DIR}/out/qnx_${BUILD_TYPE,,}"
 mkdir -p "${BUILD_DIR}"
 
-echo "Step 2: Build directory: ${BUILD_DIR}"
+echo "Step 3: Build directory: ${BUILD_DIR}"
 echo ""
 
-# Step 3: Create GN args file
-echo "Step 3: Creating GN args..."
+# Step 4: Create GN args file.
+echo "Step 4: Creating GN args..."
 
 GN_ARGS_FILE="${BUILD_DIR}/args.gn"
 cat > "${GN_ARGS_FILE}" << EOF
@@ -157,9 +180,9 @@ target_os = "qnx"
 target_cpu = "x64"
 
 # Build type
-is_debug = $([[ "$BUILD_TYPE" == "Debug" ]] && echo "true" || echo "false")
+is_debug = $([[ "${BUILD_TYPE}" == "Debug" ]] && echo "true" || echo "false")
 is_component_build = false
-is_official_build = $([[ "$BUILD_TYPE" == "Release" ]] && echo "true" || echo "false")
+is_official_build = $([[ "${BUILD_TYPE}" == "Release" ]] && echo "true" || echo "false")
 
 # QNX baseline must avoid ThinLTO. Do not force use_lld=false here because
 # global use_lld overrides can break host tool builds.
@@ -231,11 +254,11 @@ EOF
 echo "GN args written to: ${GN_ARGS_FILE}"
 echo ""
 
-# Step 4: Run gn gen
-echo "Step 4: Running gn gen..."
+# Step 5: Run gn gen.
+echo "Step 5: Running gn gen..."
 cd "${CHROMIUM_SRC_DIR}"
 
-# Set up environment for gn
+# Set up environment for gn.
 export QNX_SDP_ROOT
 export QNX_TARGET
 export QNX_HOST
@@ -255,10 +278,10 @@ EOF
 cat > "${BUILD_DIR}/ninja_qnx.sh" << EOF
 #!/bin/bash
 set -e
-SCRIPT_DIR="\$(cd "\$(dirname "$0")" && pwd)"
+SCRIPT_DIR="\$(cd "\$(dirname "\$0")" && pwd)"
 source "\${SCRIPT_DIR}/qnx_env.sh"
 cd "${CHROMIUM_SRC_DIR}"
-exec ninja -C "${BUILD_DIR}" "$@"
+exec ninja -C "${BUILD_DIR}" "\$@"
 EOF
 chmod +x "${BUILD_DIR}/ninja_qnx.sh"
 

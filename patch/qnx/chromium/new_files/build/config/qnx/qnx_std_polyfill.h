@@ -27,6 +27,7 @@
     __cpp_lib_ranges_contains < 202207L
 
 #include <algorithm>
+#include <utility>
 
 // NOTE: We avoid depending on std::ranges concepts (indirect_binary_predicate,
 // projected, etc.) because QNX libc++ 18.1 also lacks those.  The polyfill
