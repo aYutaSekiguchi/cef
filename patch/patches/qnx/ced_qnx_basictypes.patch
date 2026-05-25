@@ -1,0 +1,26 @@
+diff --git a/util/basictypes.h b/util/basictypes.h
+index af391c7..1f0b363 100644
+--- a/util/basictypes.h
++++ b/util/basictypes.h
+@@ -33,7 +33,9 @@ typedef signed char         int8;
+ typedef short               int16;
+ // TODO(mbelshe) Remove these type guards.  These are
+ //               temporary to avoid conflicts with npapi.h.
+-#ifndef _INT32
++#if defined(__QNX__)
++typedef _INT32              int32;
++#elif !defined(_INT32)
+ #define _INT32
+ typedef int                 int32;
+ #endif
+@@ -56,7 +58,9 @@ typedef unsigned char      uint8;
+ typedef unsigned short     uint16;
+ // TODO(mbelshe) Remove these type guards.  These are
+ //               temporary to avoid conflicts with npapi.h.
+-#ifndef _UINT32
++#if defined(__QNX__)
++typedef _UINT32            uint32;
++#elif !defined(_UINT32)
+ #define _UINT32
+ typedef unsigned int       uint32;
+ #endif

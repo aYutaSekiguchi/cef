@@ -1,0 +1,551 @@
+diff --git a/base/allocator/partition_allocator/partition_alloc.gni b/base/allocator/partition_allocator/partition_alloc.gni
+index fc8889f39808f..f20e16fdc4900 100644
+--- a/base/allocator/partition_allocator/partition_alloc.gni
++++ b/base/allocator/partition_allocator/partition_alloc.gni
+@@ -496,7 +496,7 @@ assert(!use_asan_backup_ref_ptr || use_raw_ptr_hookable_impl,
+ # dependencies that use partition_allocator are compiled in AOSP against a
+ # version of glibc that does not include pkeys syscall numbers.
+ is_pkeys_available =
+-    (is_linux || is_chromeos) && current_cpu == "x64" && !is_cronet_build
++    (is_linux || is_chromeos) && current_cpu == "x64" && !is_cronet_build && !is_qnx
+ declare_args() {
+   enable_pkeys = is_pkeys_available
+ }
+diff --git a/base/allocator/partition_allocator/src/partition_alloc/BUILD.gn b/base/allocator/partition_allocator/src/partition_alloc/BUILD.gn
+index 275d6dbe1b05f..9cbe3038a066c 100644
+--- a/base/allocator/partition_allocator/src/partition_alloc/BUILD.gn
++++ b/base/allocator/partition_allocator/src/partition_alloc/BUILD.gn
+@@ -480,13 +480,18 @@ if (is_clang_or_gcc) {
+       "thread_cache.cc",
+       "thread_cache.h",
+       "thread_isolation/alignment.h",
+-      "thread_isolation/pkey.cc",
+-      "thread_isolation/pkey.h",
+       "thread_isolation/thread_isolation.cc",
+       "thread_isolation/thread_isolation.h",
+       "yield_processor.h",
+     ]
+ 
++    if (!is_qnx) {
++      sources += [
++        "thread_isolation/pkey.cc",
++        "thread_isolation/pkey.h",
++      ]
++    }
++
+     defines = []
+     if (is_win) {
+       sources += [
+@@ -979,7 +984,7 @@ if (is_clang_or_gcc) {
+ # TODO(crbug.com/40158212): Consider supporting building tests outside of
+ # chromium and having a dedicated 'partition_alloc_unittests' target.
+ if (build_with_chromium) {
+-  if (is_linux || is_chromeos || is_android) {
++  if ((is_linux && !is_qnx) || is_chromeos || is_android) {
+     source_set("debug_proc_maps") {
+       testonly = true
+ 
+@@ -1002,7 +1007,7 @@ if (build_with_chromium) {
+     sources = [ "partition_alloc_base/test/gtest_util.h" ]
+     deps = []
+ 
+-    if (is_linux || is_chromeos || is_android) {
++    if ((is_linux && !is_qnx) || is_chromeos || is_android) {
+       deps += [ ":debug_proc_maps" ]
+     }
+ 
+@@ -1130,7 +1135,7 @@ if (build_with_chromium) {
+     sources = [ "partition_alloc_base/test/gtest_util.h" ]
+     deps = []
+ 
+-    if (is_linux || is_chromeos || is_android) {
++    if ((is_linux && !is_qnx) || is_chromeos || is_android) {
+       deps += [ ":debug_proc_maps" ]
+     }
+ 
+diff --git a/base/allocator/partition_allocator/src/partition_alloc/page_allocator.h b/base/allocator/partition_allocator/src/partition_alloc/page_allocator.h
+index 0711808209459..96f3f474b96ad 100644
+--- a/base/allocator/partition_allocator/src/partition_alloc/page_allocator.h
++++ b/base/allocator/partition_allocator/src/partition_alloc/page_allocator.h
+@@ -279,7 +279,7 @@ bool DecommitAndZeroSystemPages(void* address,
+ // recommitted. Do not assume that this will not change over time.
+ constexpr PA_COMPONENT_EXPORT(
+     PARTITION_ALLOC) bool DecommittedMemoryIsAlwaysZeroed() {
+-#if PA_BUILDFLAG(IS_APPLE)
++#if PA_BUILDFLAG(IS_APPLE) || PA_BUILDFLAG(IS_QNX)
+   return false;
+ #else
+   return true;
+diff --git a/base/allocator/partition_allocator/src/partition_alloc/page_allocator_internals_posix.h b/base/allocator/partition_allocator/src/partition_alloc/page_allocator_internals_posix.h
+index d3ae5c58d6e9d..9e96eb39dcc7e 100644
+--- a/base/allocator/partition_allocator/src/partition_alloc/page_allocator_internals_posix.h
++++ b/base/allocator/partition_allocator/src/partition_alloc/page_allocator_internals_posix.h
+@@ -5,8 +5,14 @@
+ #ifndef PARTITION_ALLOC_PAGE_ALLOCATOR_INTERNALS_POSIX_H_
+ #define PARTITION_ALLOC_PAGE_ALLOCATOR_INTERNALS_POSIX_H_
+ 
++#if defined(__QNX__)
++#include "build/config/qnx/qnx_macros.h"
++#endif
++
+ #include <sys/mman.h>
++#if !defined(__QNX__)
+ #include <sys/syscall.h>
++#endif
+ 
+ #include <algorithm>
+ #include <atomic>
+@@ -32,6 +38,7 @@
+ #include <sys/resource.h>
+ #endif
+ 
++// QNX macros are already defined via qnx_macros.h include above.
+ #ifndef MAP_ANONYMOUS
+ #define MAP_ANONYMOUS MAP_ANON
+ #endif
+diff --git a/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/debug/stack_trace_posix.cc b/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/debug/stack_trace_posix.cc
+index ae1070defaa2a..4fc80593386c0 100644
+--- a/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/debug/stack_trace_posix.cc
++++ b/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/debug/stack_trace_posix.cc
+@@ -14,7 +14,9 @@
+ #include "partition_alloc/partition_alloc_base/posix/eintr_wrapper.h"
+ #include "partition_alloc/partition_alloc_base/strings/safe_sprintf.h"
+ 
+-#if !PA_BUILDFLAG(IS_ANDROID) && !PA_BUILDFLAG(IS_APPLE)
++#if defined(__QNX__)
++#include "build/config/qnx/qnx_macros.h"
++#elif !PA_BUILDFLAG(IS_ANDROID) && !PA_BUILDFLAG(IS_APPLE)
+ #include <link.h>  // For ElfW() macro.
+ #endif
+ 
+@@ -427,4 +429,4 @@ void OutputStackTrace(unsigned index,
+ }
+ #endif  // !PA_BUILDFLAG(IS_ANDROID)
+ 
+-}  // namespace partition_alloc::internal::base::debug
++}  // namespace partition_alloc::internal::base::debug
+\ No newline at end of file
+diff --git a/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/rand_util_posix.cc b/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/rand_util_posix.cc
+index db79a65284dab..f4067b8b23bb3 100644
+--- a/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/rand_util_posix.cc
++++ b/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/rand_util_posix.cc
+@@ -5,7 +5,6 @@
+ #include "partition_alloc/partition_alloc_base/rand_util.h"
+ 
+ #include <fcntl.h>
+-#include <sys/syscall.h>
+ #include <unistd.h>
+ 
+ #include <cerrno>
+@@ -24,6 +23,8 @@
+ // TODO(crbug.com/40641285): Waiting for this header to appear in the iOS SDK.
+ // (See below.)
+ #include <sys/random.h>
++#elif !defined(__QNX__)
++#include <sys/syscall.h>
+ #endif
+ 
+ namespace {
+@@ -96,6 +97,9 @@ void RandBytes(void* output, size_t output_length) {
+     PA_MSAN_UNPOISON(output, output_length);
+     return;
+   }
++#elif defined(__QNX__)
++  // QNX does not have getrandom(2) syscall. Fall through to /dev/urandom.
++  // QNX's /dev/urandom uses the Fortuna CSPRNG algorithm.
+ #elif PA_BUILDFLAG(IS_MAC)
+   // TODO(crbug.com/40641285): Enable this on iOS too, when sys/random.h arrives
+   // in its SDK.
+diff --git a/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/time/time_now_posix.cc b/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/time/time_now_posix.cc
+index 04d5b3246059e..b33f0d2f65da5 100644
+--- a/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/time/time_now_posix.cc
++++ b/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/time/time_now_posix.cc
+@@ -67,8 +67,12 @@ int64_t ClockNow(clockid_t clk_id) {
+ namespace subtle {
+ Time TimeNowIgnoringOverride() {
+   struct timeval tv;
++#if defined(__QNX__)
++  PA_BASE_CHECK(gettimeofday(&tv, nullptr) == 0);
++#else
+   struct timezone tz = {0, 0};  // UTC
+   PA_BASE_CHECK(gettimeofday(&tv, &tz) == 0);
++#endif
+   // Combine seconds and microseconds in a 64-bit field containing microseconds
+   // since the epoch.  That's enough for nearly 600 centuries.  Adjust from
+   // Unix (1970) to Windows (1601) epoch.
+diff --git a/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_config.h b/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_config.h
+index 2ebe1f417c401..93f2cb3749ffc 100644
+--- a/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_config.h
++++ b/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_config.h
+@@ -55,8 +55,15 @@ static_assert(sizeof(void*) != 8, "");
+    PA_BUILDFLAG(IS_ANDROID))
+ 
+ // Need TLS support.
++#if PA_BUILDFLAG(IS_QNX)
++// QNX libc's pthread_key_create() may internally call calloc(), which
++// reenters the allocator shim and causes infinite recursion during
++// PartitionRoot::Init. Disable the thread cache on QNX to avoid this.
++#define PA_CONFIG_THREAD_CACHE_SUPPORTED() 0
++#else
+ #define PA_CONFIG_THREAD_CACHE_SUPPORTED() \
+   (PA_BUILDFLAG(IS_POSIX) || PA_BUILDFLAG(IS_WIN) || PA_BUILDFLAG(IS_FUCHSIA))
++#endif
+ 
+ // Too expensive for official builds, as it adds cache misses to all
+ // allocations. On the other hand, we want wide metrics coverage to get
+diff --git a/base/allocator/partition_allocator/src/partition_alloc/partition_tls.h b/base/allocator/partition_allocator/src/partition_alloc/partition_tls.h
+index 619115520aec1..4fbaea1ad5297 100644
+--- a/base/allocator/partition_allocator/src/partition_alloc/partition_tls.h
++++ b/base/allocator/partition_allocator/src/partition_alloc/partition_tls.h
+@@ -6,6 +6,7 @@
+ #define PARTITION_ALLOC_PARTITION_TLS_H_
+ 
+ #include "partition_alloc/build_config.h"
++#include "partition_alloc/allocation_guard.h"
+ #include "partition_alloc/partition_alloc_base/compiler_specific.h"
+ #include "partition_alloc/partition_alloc_base/component_export.h"
+ #include "partition_alloc/partition_alloc_base/immediate_crash.h"
+@@ -64,7 +65,15 @@ PA_ALWAYS_INLINE void* FastTlsGet(PartitionTlsKey index) {
+ 
+ PA_ALWAYS_INLINE bool PartitionTlsCreate(PartitionTlsKey* key,
+                                          void (*destructor)(void*)) {
++#if PA_BUILDFLAG(IS_QNX)
++  // QNX libc's pthread_key_create() may internally call calloc(), which
++  // reenters the allocator shim and hits the ScopedDisallowAllocations guard.
++  // Allow allocations during key creation to avoid the reentrancy crash.
++  partition_alloc::ScopedAllowAllocations allow;
+   return !pthread_key_create(key, destructor);
++#else
++  return !pthread_key_create(key, destructor);
++#endif
+ }
+ 
+ PA_ALWAYS_INLINE void* PartitionTlsGet(PartitionTlsKey key) {
+diff --git a/base/allocator/partition_allocator/src/partition_alloc/pointers/raw_ptr_unittest.cc b/base/allocator/partition_allocator/src/partition_alloc/pointers/raw_ptr_unittest.cc
+index 9b932955f7174..fdb85ec00fed8 100644
+--- a/base/allocator/partition_allocator/src/partition_alloc/pointers/raw_ptr_unittest.cc
++++ b/base/allocator/partition_allocator/src/partition_alloc/pointers/raw_ptr_unittest.cc
+@@ -1198,6 +1198,18 @@ TEST_F(RawPtrTest, SetLookupUsesGetForComparison) {
+ 
+   RawPtrCountingImpl::ClearCounters();
+   set.emplace(ptr);
++#if BUILDFLAG(IS_QNX)
++  // QNX libc++ std::set uses 4 comparisons and 2 std::less calls internally
++  // instead of the 2 comparisons + 0 std::less calls on other platforms.
++  EXPECT_THAT((CountingRawPtrExpectations{
++                  .wrap_raw_ptr_cnt = 0,
++                  .get_for_dereference_cnt = 0,
++                  .get_for_extraction_cnt = 0,
++                  .get_for_comparison_cnt = 4,
++                  .wrapped_ptr_less_cnt = 2,
++              }),
++              CountersMatch());
++#else
+   EXPECT_THAT((CountingRawPtrExpectations{
+                   .wrap_raw_ptr_cnt = 0,
+                   .get_for_dereference_cnt = 0,
+@@ -1208,6 +1220,7 @@ TEST_F(RawPtrTest, SetLookupUsesGetForComparison) {
+                   .wrapped_ptr_less_cnt = 0,
+               }),
+               CountersMatch());
++#endif
+ 
+   RawPtrCountingImpl::ClearCounters();
+   std::ignore = set.count(&x);
+@@ -1225,6 +1238,19 @@ TEST_F(RawPtrTest, SetLookupUsesGetForComparison) {
+ 
+   RawPtrCountingImpl::ClearCounters();
+   std::ignore = set.count(ptr);
++#if BUILDFLAG(IS_QNX)
++  // QNX libc++ std::set::count uses 4 comparisons and 2 std::less calls
++  // internally instead of the 2 comparisons + 0 std::less calls on other
++  // platforms.
++  EXPECT_THAT((CountingRawPtrExpectations{
++                  .wrap_raw_ptr_cnt = 0,
++                  .get_for_dereference_cnt = 0,
++                  .get_for_extraction_cnt = 0,
++                  .get_for_comparison_cnt = 4,
++                  .wrapped_ptr_less_cnt = 2,
++              }),
++              CountersMatch());
++#else
+   EXPECT_THAT((CountingRawPtrExpectations{
+                   .wrap_raw_ptr_cnt = 0,
+                   .get_for_dereference_cnt = 0,
+@@ -1235,6 +1261,7 @@ TEST_F(RawPtrTest, SetLookupUsesGetForComparison) {
+                   .wrapped_ptr_less_cnt = 0,
+               }),
+               CountersMatch());
++#endif
+ }
+ 
+ TEST_F(RawPtrTest, ComparisonOperatorUsesGetForComparison) {
+diff --git a/base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_default_dispatch_to_partition_alloc.cc b/base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_default_dispatch_to_partition_alloc.cc
+index b114fc27cc55d..3462921c22409 100644
+--- a/base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_default_dispatch_to_partition_alloc.cc
++++ b/base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_default_dispatch_to_partition_alloc.cc
+@@ -1105,7 +1105,7 @@ extern "C" {
+ 
+ SHIM_ALWAYS_EXPORT void malloc_stats(void) __THROW {}
+ 
+-SHIM_ALWAYS_EXPORT int mallopt(int cmd, int value) __THROW {
++SHIM_ALWAYS_EXPORT int mallopt(int cmd, QNX_MALLOPT_ARG_TYPE value) __THROW {
+   return 0;
+ }
+ 
+diff --git a/base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_internals.h b/base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_internals.h
+index 905b9f9be1027..fe3d9f5006c56 100644
+--- a/base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_internals.h
++++ b/base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_internals.h
+@@ -7,7 +7,9 @@
+ 
+ #include "partition_alloc/build_config.h"
+ 
+-#if defined(__GNUC__)
++#if defined(__QNX__)
++#include "build/config/qnx/qnx_macros.h"
++#elif defined(__GNUC__)
+ 
+ #if PA_BUILDFLAG(IS_POSIX)
+ #include <sys/cdefs.h>  // for __THROW
+@@ -21,6 +23,8 @@
+ #endif  // !_NOEXCEPT
+ #endif
+ 
++#endif  // __QNX__ || __GNUC__
++
+ // Shim layer symbols need to be ALWAYS exported, regardless of component build.
+ //
+ // If an exported symbol is linked into a DSO, it may be preempted by a
+@@ -45,13 +49,11 @@
+ // In the long run we probably want to avoid linking the allocator bits into
+ // DSOs altogether. This will save a little space and stop giving DSOs the false
+ // impression that they can hook the allocator.
++#if defined(__QNX__) || defined(__GNUC__)
+ #define SHIM_ALWAYS_EXPORT __attribute__((used, visibility("default"), noinline))
+-
+-#elif PA_BUILDFLAG(IS_WIN)  // __GNUC__
+-
++#elif PA_BUILDFLAG(IS_WIN)
+ #define __THROW
+ #define SHIM_ALWAYS_EXPORT __declspec(noinline) __attribute__((used))
+-
+-#endif  // __GNUC__
++#endif
+ 
+ #endif  // PARTITION_ALLOC_SHIM_ALLOCATOR_SHIM_INTERNALS_H_
+diff --git a/base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_override_cpp_symbols.h b/base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_override_cpp_symbols.h
+index 1ba4cca8db9ee..53cd6e330b640 100644
+--- a/base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_override_cpp_symbols.h
++++ b/base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_override_cpp_symbols.h
+@@ -34,6 +34,13 @@
+ #define SHIM_CPP_SYMBOLS_EXPORT PA_NOINLINE
+ #endif
+ 
++// On QNX, some operator new variants need noexcept explicitly.
++#if defined(__QNX__)
++#define __CXX_THROW noexcept
++#else
++#define __CXX_THROW
++#endif
++
+ SHIM_CPP_SYMBOLS_EXPORT void* operator new(size_t size) {
+ #if PA_BUILDFLAG(FORWARD_THROUGH_MALLOC)
+   return malloc(size);
+@@ -67,7 +74,7 @@ SHIM_CPP_SYMBOLS_EXPORT void operator delete[](void* p) __THROW {
+ }
+ 
+ SHIM_CPP_SYMBOLS_EXPORT void* operator new(size_t size,
+-                                           const std::nothrow_t&) __THROW {
++                                           const std::nothrow_t&) __CXX_THROW {
+ #if PA_BUILDFLAG(FORWARD_THROUGH_MALLOC)
+   return malloc(size);
+ #else
+@@ -76,7 +83,7 @@ SHIM_CPP_SYMBOLS_EXPORT void* operator new(size_t size,
+ }
+ 
+ SHIM_CPP_SYMBOLS_EXPORT void* operator new[](size_t size,
+-                                             const std::nothrow_t&) __THROW {
++                                             const std::nothrow_t&) __CXX_THROW {
+ #if PA_BUILDFLAG(FORWARD_THROUGH_MALLOC)
+   return malloc(size);
+ #else
+@@ -133,7 +140,7 @@ SHIM_CPP_SYMBOLS_EXPORT void* operator new(std::size_t size,
+ 
+ SHIM_CPP_SYMBOLS_EXPORT void* operator new(std::size_t size,
+                                            std::align_val_t alignment,
+-                                           const std::nothrow_t&) __THROW {
++                                           const std::nothrow_t&) __CXX_THROW {
+ #if PA_BUILDFLAG(FORWARD_THROUGH_MALLOC)
+   return aligned_alloc(static_cast<size_t>(alignment), size);
+ #else
+@@ -187,7 +194,7 @@ SHIM_CPP_SYMBOLS_EXPORT void* operator new[](std::size_t size,
+ 
+ SHIM_CPP_SYMBOLS_EXPORT void* operator new[](std::size_t size,
+                                              std::align_val_t alignment,
+-                                             const std::nothrow_t&) __THROW {
++                                             const std::nothrow_t&) __CXX_THROW {
+ #if PA_BUILDFLAG(FORWARD_THROUGH_MALLOC)
+   return aligned_alloc(static_cast<size_t>(alignment), size);
+ #else
+diff --git a/base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_unittest.cc b/base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_unittest.cc
+index b8e0f69584df0..657aad98f58e1 100644
+--- a/base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_unittest.cc
++++ b/base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_unittest.cc
+@@ -507,7 +507,7 @@ TEST_F(AllocatorShimTest, InterceptLibcSymbols) {
+   ASSERT_GE(allocs_intercepted_by_alignment[128], 1u);
+   ASSERT_GE(allocs_intercepted_by_size[53], 1u);
+ 
+-#if PA_BUILDFLAG(IS_POSIX) && !PA_BUILDFLAG(IS_ANDROID)
++#if PA_BUILDFLAG(IS_POSIX) && !PA_BUILDFLAG(IS_ANDROID) && !PA_BUILDFLAG(IS_QNX)
+   void* pvalloc_ptr = pvalloc(67);
+   ASSERT_NE(nullptr, pvalloc_ptr);
+   ASSERT_EQ(0u, reinterpret_cast<uintptr_t>(pvalloc_ptr) % kPageSize);
+@@ -561,7 +561,7 @@ TEST_F(AllocatorShimTest, InterceptLibcSymbols) {
+   free(memalign_ptr);
+   ASSERT_GE(frees_intercepted_by_addr[Hash(memalign_ptr)], 1u);
+ 
+-#if PA_BUILDFLAG(IS_POSIX) && !PA_BUILDFLAG(IS_ANDROID)
++#if PA_BUILDFLAG(IS_POSIX) && !PA_BUILDFLAG(IS_ANDROID) && !PA_BUILDFLAG(IS_QNX)
+   free(pvalloc_ptr);
+   ASSERT_GE(frees_intercepted_by_addr[Hash(pvalloc_ptr)], 1u);
+ #endif  // PA_BUILDFLAG(IS_POSIX) && !PA_BUILDFLAG(IS_ANDROID)
+diff --git a/base/allocator/partition_allocator/src/partition_alloc/stack/stack.cc b/base/allocator/partition_allocator/src/partition_alloc/stack/stack.cc
+index 81f0876bdf233..e6bb980c6383f 100644
+--- a/base/allocator/partition_allocator/src/partition_alloc/stack/stack.cc
++++ b/base/allocator/partition_allocator/src/partition_alloc/stack/stack.cc
+@@ -18,6 +18,12 @@
+ #include <pthread.h>
+ #endif
+ 
++#if defined(__QNX__)
++#include <fcntl.h>
++#include <sys/procfs.h>
++#include <unistd.h>
++#endif
++
+ #if PA_BUILDFLAG(PA_LIBC_GLIBC)
+ extern "C" void* __libc_stack_end;
+ #endif
+@@ -50,6 +56,48 @@ void* GetStackTop() {
+   return pthread_get_stackaddr_np(pthread_self());
+ }
+ 
++#elif defined(__QNX__)
++
++void* GetStackTop() {
++  char path[64];
++  snprintf(path, sizeof(path), "/proc/%d/as", getpid());
++  int fd = open(path, O_RDONLY);
++  if (fd < 0) return nullptr;
++
++  // First, get the number of memory segments.
++  int num_segments = 0;
++  devctl(fd, DCMD_PROC_MAPINFO, nullptr, 0, &num_segments);
++  if (num_segments <= 0) {
++    close(fd);
++    return nullptr;
++  }
++
++  procfs_mapinfo* maps = new procfs_mapinfo[num_segments];
++  int actual_segments = num_segments;
++  int status = devctl(fd, DCMD_PROC_MAPINFO, maps,
++                      num_segments * sizeof(procfs_mapinfo), &actual_segments);
++  close(fd);
++  if (status != EOK) {
++    delete[] maps;
++    return nullptr;
++  }
++
++  void* stack_ptr = __builtin_frame_address(0);
++  void* stack_top = nullptr;
++  for (int i = 0; i < actual_segments; ++i) {
++    if (reinterpret_cast<uintptr_t>(maps[i].vaddr) <=
++            reinterpret_cast<uintptr_t>(stack_ptr) &&
++        reinterpret_cast<uintptr_t>(stack_ptr) <
++            reinterpret_cast<uintptr_t>(maps[i].vaddr) + maps[i].size) {
++      stack_top = reinterpret_cast<void*>(
++          reinterpret_cast<uintptr_t>(maps[i].vaddr) + maps[i].size);
++      break;
++    }
++  }
++  delete[] maps;
++  return stack_top;
++}
++
+ #elif PA_BUILDFLAG(IS_POSIX) || PA_BUILDFLAG(IS_FUCHSIA)
+ 
+ void* GetStackTop() {
+@@ -177,4 +225,4 @@ void* StackTopRegistry::GetCurrentThreadStackTop() const {
+   return it != stack_tops_.end() ? it->second : nullptr;
+ }
+ 
+-}  // namespace partition_alloc::internal
++}  // namespace partition_alloc::internal
+\ No newline at end of file
+diff --git a/base/allocator/partition_allocator/src/partition_alloc/extended_api.cc b/base/allocator/partition_allocator/src/partition_alloc/extended_api.cc
+index 91180deb08311..7f6f1d5dfac9f 100644
+--- a/base/allocator/partition_allocator/src/partition_alloc/extended_api.cc
++++ b/base/allocator/partition_allocator/src/partition_alloc/extended_api.cc
+@@ -165,6 +165,18 @@ ThreadCacheProcessScopeForTesting::~ThreadCacheProcessScopeForTesting() {
+   ThreadCache::SwapForTesting(nullptr, kDefaultRootThreadCacheIndex);
+ #endif  // PA_BUILDFLAG(USE_PARTITION_ALLOC_AS_MALLOC)
+ }
++
++#else  // PA_CONFIG(THREAD_CACHE_SUPPORTED)
++
++ThreadCacheProcessScopeForTesting::ThreadCacheProcessScopeForTesting(
++    PartitionRoot* root)
++    : root_(root), regular_was_enabled_(false) {
++  (void)root_;
++  (void)regular_was_enabled_;
++}
++
++ThreadCacheProcessScopeForTesting::~ThreadCacheProcessScopeForTesting() = default;
++
+ #endif  // PA_CONFIG(THREAD_CACHE_SUPPORTED)
+ 
+ }  // namespace partition_alloc::internal
+diff --git a/base/allocator/partition_allocator/src/partition_alloc/scheduler_loop_quarantine_unittest.cc b/base/allocator/partition_allocator/src/partition_alloc/scheduler_loop_quarantine_unittest.cc
+index 25f73e868e00e..7454fde2aacaa 100644
+--- a/base/allocator/partition_allocator/src/partition_alloc/scheduler_loop_quarantine_unittest.cc
++++ b/base/allocator/partition_allocator/src/partition_alloc/scheduler_loop_quarantine_unittest.cc
+@@ -6,6 +6,7 @@
+ 
+ #include "partition_alloc/extended_api.h"
+ #include "partition_alloc/partition_alloc_base/check.h"
++#include "partition_alloc/partition_alloc_config.h"
+ #include "partition_alloc/partition_alloc_for_testing.h"
+ #include "partition_alloc/partition_page.h"
+ #include "partition_alloc/partition_root.h"
+@@ -56,6 +57,10 @@ class SchedulerLoopQuarantineTest : public testing::Test {
+         std::make_unique<PartitionAllocatorForTesting>(PartitionOptions{});
+     root_.emplace(*allocator_->root());
+     if constexpr (QuarantineBranch::kThreadBound) {
++      if (!PA_CONFIG(THREAD_CACHE_SUPPORTED)) {
++        GTEST_SKIP() << "Thread cache not supported on this platform";
++        return;
++      }
+       scoped_tcache_swap_.emplace(allocator_->root());
+     }
+     branch_ = GetBranchFromAllocatorRoot<QuarantineBranch::kThreadBound>(
+@@ -70,6 +75,10 @@ class SchedulerLoopQuarantineTest : public testing::Test {
+   }
+ 
+   void TearDown() override {
++    if (!branch_) {
++      // SetUp was skipped (e.g. thread cache not supported on this platform).
++      return;
++    }
+     branch_->Purge();
+     branch_ = nullptr;
+     root_.reset();
+@@ -106,7 +115,7 @@ class SchedulerLoopQuarantineTest : public testing::Test {
+ 
+   std::unique_ptr<PartitionAllocatorForTesting> allocator_;
+   std::optional<QuarantineRoot> root_;
+-  QuarantineBranch* branch_;
++  QuarantineBranch* branch_ = nullptr;
+   std::optional<internal::ThreadCacheProcessScopeForTesting>
+       scoped_tcache_swap_;
+ };

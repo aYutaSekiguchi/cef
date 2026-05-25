@@ -1,0 +1,20 @@
+diff --git a/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_unittest.cc b/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_unittest.cc
+index 7141840824641..a369097eaab80 100644
+--- a/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_unittest.cc
++++ b/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_unittest.cc
+@@ -6435,6 +6435,7 @@ TEST_P(PartitionAllocTest, SwitchBucketDistributionAfterAlloc) {
+   root->Free(ptr);
+ }
+ 
++#if PA_CONFIG(THREAD_CACHE_SUPPORTED)
+ TEST_P(PartitionAllocTest, MultipleThreadCachePerThread) {
+   // Use thread cache indices which are not used by default partitions.
+   constexpr size_t index1 = kNumDefaultPartitions;
+@@ -6465,6 +6466,7 @@ TEST_P(PartitionAllocTest, MultipleThreadCachePerThread) {
+       internal::SlotStart::Unchecked(ptr2).Untag(), bucket_index, pos2));
+   EXPECT_EQ(pos2, 0u);
+ }
++#endif  // PA_CONFIG(THREAD_CACHE_SUPPORTED)
+ }  // namespace partition_alloc::internal
+ 
+ #endif  // !defined(MEMORY_TOOL_REPLACES_ALLOCATOR)

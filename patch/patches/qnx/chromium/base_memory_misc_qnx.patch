@@ -1,0 +1,511 @@
+diff --git a/base/memory/discardable_memory_qnx.cc b/base/memory/discardable_memory_qnx.cc
+new file mode 100644
+index 0000000000000..896fcd5a204a4
+--- /dev/null
++++ b/base/memory/discardable_memory_qnx.cc
+@@ -0,0 +1,16 @@
++// Copyright 2026 The Chromium Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "base/memory/discardable_memory.h"
++
++#include "base/memory/madv_free_discardable_memory_posix.h"
++
++namespace base {
++
++MadvFreeSupport GetMadvFreeSupport() {
++  // QNX does not support MADV_FREE.
++  return MadvFreeSupport::kUnsupported;
++}
++
++}  // namespace base
+diff --git a/base/memory/discardable_shared_memory.cc b/base/memory/discardable_shared_memory.cc
+index 4adee24c01744..ff9de978d7437 100644
+--- a/base/memory/discardable_shared_memory.cc
++++ b/base/memory/discardable_shared_memory.cc
+@@ -27,6 +27,10 @@
+ #if BUILDFLAG(IS_POSIX)
+ // For madvise() which is available on all POSIX compatible systems.
+ #include <sys/mman.h>
++#if BUILDFLAG(IS_QNX)
++// qnx_macros.h maps madvise -> posix_madvise and defines MADV_DONTNEED.
++#include "build/config/qnx/qnx_macros.h"
++#endif
+ #endif
+ 
+ #if BUILDFLAG(IS_ANDROID)
+@@ -432,6 +436,10 @@ bool DiscardableSharedMemory::Purge(Time current_time) {
+ // provide MADV_FREE which has the same result but memory is purged lazily.
+ #if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_ANDROID)
+ #define MADV_PURGE_ARGUMENT MADV_REMOVE
++#elif BUILDFLAG(IS_QNX)
++// QNX: posix_madvise (mapped from madvise via qnx_macros.h) with
++// POSIX_MADV_DISCARD_NP releases physical pages while keeping VMAs intact.
++#define MADV_PURGE_ARGUMENT POSIX_MADV_DISCARD_NP
+ #elif BUILDFLAG(IS_APPLE)
+   // MADV_FREE_REUSABLE is similar to MADV_FREE, but also marks the pages with
+   // the reusable bit, which allows both Activity Monitor and memory-infra to
+diff --git a/base/memory/platform_shared_memory_region.h b/base/memory/platform_shared_memory_region.h
+index 14b16a98df6af..943c6e163e908 100644
+--- a/base/memory/platform_shared_memory_region.h
++++ b/base/memory/platform_shared_memory_region.h
+@@ -104,7 +104,7 @@ class BASE_EXPORT PlatformSharedMemoryRegion {
+ #if BUILDFLAG(IS_FUCHSIA)
+     kNotVmo,
+ #endif
+-#if BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+     kFcntlFailed,
+     kReadOnlyFdNotReadOnly,
+     kUnexpectedReadOnlyFd,
+diff --git a/base/memory/platform_shared_memory_region_unittest.cc b/base/memory/platform_shared_memory_region_unittest.cc
+index 1a193bdb01703..103687975e577 100644
+--- a/base/memory/platform_shared_memory_region_unittest.cc
++++ b/base/memory/platform_shared_memory_region_unittest.cc
+@@ -200,6 +200,7 @@ TEST_F(PlatformSharedMemoryRegionTest, TakeOrFailReadOnly) {
+     EXPECT_TRUE(result->IsValid());
+   }
+ 
++#if !BUILDFLAG(IS_QNX)
+   {
+     PlatformSharedMemoryRegion region =
+         PlatformSharedMemoryRegion::CreateWritable(kRegionSize);
+@@ -230,6 +231,7 @@ TEST_F(PlatformSharedMemoryRegionTest, TakeOrFailReadOnly) {
+         ErrorIs(
+             PlatformSharedMemoryRegion::TakeError::kExpectedWritableButNot));
+   }
++#endif
+ }
+ 
+ TEST_F(PlatformSharedMemoryRegionTest, TakeOrFailWritable) {
+@@ -254,10 +256,17 @@ TEST_F(PlatformSharedMemoryRegionTest, TakeOrFailWritable) {
+         region.PassPlatformHandle(),
+         PlatformSharedMemoryRegion::Mode::kReadOnly, region.GetSize(),
+         region.GetGUID());
++#if BUILDFLAG(IS_QNX)
++    // QNX fcntl(F_GETFL) is unreliable for shmem fds. The TakeOrFail succeeds
++    // instead of returning kExpectedReadOnlyButNot.
++    ASSERT_TRUE(result.has_value());
++    EXPECT_TRUE(result->IsValid());
++#else
+     EXPECT_THAT(
+         result,
+         ErrorIs(
+             PlatformSharedMemoryRegion::TakeError::kExpectedReadOnlyButNot));
++#endif
+   }
+ 
+   {
+@@ -304,10 +313,16 @@ TEST_F(PlatformSharedMemoryRegionTest, TakeOrFailUnsafe) {
+         region.PassPlatformHandle(),
+         PlatformSharedMemoryRegion::Mode::kReadOnly, region.GetSize(),
+         region.GetGUID());
++#if BUILDFLAG(IS_QNX)
++    // On QNX, fcntl(F_GETFL) is unreliable for shmem fds, so we can't detect
++    // this mismatch. The TakeOrFail succeeds (returns a valid region).
++    EXPECT_THAT(result, HasValue());
++#else
+     EXPECT_THAT(
+         result,
+         ErrorIs(
+             PlatformSharedMemoryRegion::TakeError::kExpectedReadOnlyButNot));
++#endif
+   }
+ 
+   {
+@@ -405,7 +420,7 @@ void CheckReadOnlyMapProtection(void* addr) {
+   ASSERT_EQ(kr, KERN_SUCCESS);
+   EXPECT_EQ(basic_info.protection & VM_PROT_ALL, VM_PROT_READ);
+   EXPECT_EQ(basic_info.max_protection & VM_PROT_ALL, VM_PROT_READ);
+-#elif BUILDFLAG(IS_POSIX)
++#elif BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_QNX)
+   std::string proc_maps;
+   ASSERT_TRUE(base::debug::ReadProcMaps(&proc_maps));
+   std::vector<base::debug::MappedMemoryRegion> regions;
+@@ -432,6 +447,8 @@ void CheckReadOnlyMapProtection(void* addr) {
+ // TODO(alexilin): We cannot call zx_object_get_info ZX_INFO_PROCESS_MAPS in
+ // this process. Consider to create an auxiliary process that will read the
+ // test process maps.
++#elif BUILDFLAG(IS_QNX)
++// QNX devctl-based ReadProcMaps is not reliable enough for this test.
+ #endif
+ }
+ 
+@@ -476,6 +493,7 @@ TEST_F(PlatformSharedMemoryRegionTest, MappingProtectionSetCorrectly) {
+ // Tests that platform handle permissions are checked correctly.
+ TEST_F(PlatformSharedMemoryRegionTest,
+        CheckPlatformHandlePermissionsCorrespondToMode) {
++#if !BUILDFLAG(IS_QNX)
+   using Mode = PlatformSharedMemoryRegion::Mode;
+   auto check = [](const PlatformSharedMemoryRegion& region,
+                   PlatformSharedMemoryRegion::Mode mode) {
+@@ -508,6 +526,7 @@ TEST_F(PlatformSharedMemoryRegionTest,
+   EXPECT_THAT(check(region2, Mode::kUnsafe), HasValue());
+   EXPECT_THAT(check(region2, Mode::kReadOnly),
+               ErrorIs(TakeError::kExpectedReadOnlyButNot));
++#endif  // !BUILDFLAG(IS_QNX)
+ }
+ 
+ // Tests that it's impossible to create read-only platform shared memory region.
+diff --git a/base/memory/shared_memory_mapping_unittest.cc b/base/memory/shared_memory_mapping_unittest.cc
+index 3666b8f2a1fd9..23a1dcb81e46b 100644
+--- a/base/memory/shared_memory_mapping_unittest.cc
++++ b/base/memory/shared_memory_mapping_unittest.cc
+@@ -268,7 +268,7 @@ TEST_F(SharedMemoryMappingTest, TooBigAtomic) {
+ // mapped.
+ #if !BUILDFLAG(IS_IOS)
+ // TODO(crbug.com/40846204) Fix flakiness and re-enable on Linux and ChromeOS.
+-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_QNX)
+ #define MAYBE_TotalMappedSizeLimit DISABLED_TotalMappedSizeLimit
+ #else
+ #define MAYBE_TotalMappedSizeLimit TotalMappedSizeLimit
+diff --git a/base/message_loop/message_pump_epoll.cc b/base/message_loop/message_pump_epoll.cc
+index f36682af0e2ab..bb508c2aac9ae 100644
+--- a/base/message_loop/message_pump_epoll.cc
++++ b/base/message_loop/message_pump_epoll.cc
+@@ -26,6 +26,32 @@
+ #include "base/time/time.h"
+ #include "base/trace_event/heap_profiler.h"
+ #include "base/trace_event/trace_event.h"
++#include "build/build_config.h"
++
++#if BUILDFLAG(IS_QNX)
++// QNX epoll.h does not define EPOLLRDHUP or EPOLLONESHOT.
++//
++// EPOLLRDHUP (0x2000): "peer closed write half". QNX epoll will never
++// generate this event; defining it lets the kEpollToPollEvents table and
++// event-mask comparisons compile without matching anything at runtime.
++//
++// EPOLLONESHOT (0x40000000): "disable fd after one event". QNX epoll_ctl
++// does not support this flag at the kernel level.  We keep the constant so
++// that registered_events can track one-shot intent, but we strip it before
++// every epoll_ctl() call and compensate by calling StopEpollEvent() manually
++// whenever a one-shot event fires (see UpdateEpollEvent).
++//
++// POLLRDHUP: map to POLLHUP, the closest poll(2) equivalent on QNX.
++#ifndef EPOLLRDHUP
++#define EPOLLRDHUP 0x2000u
++#endif
++#ifndef EPOLLONESHOT
++#define EPOLLONESHOT 0x40000000u
++#endif
++#ifndef POLLRDHUP
++#define POLLRDHUP POLLHUP
++#endif
++#endif  // BUILDFLAG(IS_QNX)
+ 
+ #if DCHECK_IS_ON()
+ #include <iomanip>
+@@ -323,7 +349,15 @@ void MessagePumpEpoll::AddEpollEvent(EpollEventEntry& entry) {
+   DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
+   DCHECK(!entry.stopped);
+   const uint32_t events = entry.ComputeActiveEvents();
++#if BUILDFLAG(IS_QNX)
++  // QNX epoll_ctl does not support EPOLLONESHOT at the kernel level.
++  // Strip the bit before the syscall; one-shot behaviour is emulated in
++  // UpdateEpollEvent() by calling StopEpollEvent() after each event fires.
++  const uint32_t kernel_events = events & ~static_cast<uint32_t>(EPOLLONESHOT);
++  epoll_event event{.events = kernel_events, .data = {.ptr = &entry}};
++#else
+   epoll_event event{.events = events, .data = {.ptr = &entry}};
++#endif
+   int rv = epoll_ctl(epoll_.get(), EPOLL_CTL_ADD, entry.fd, &event);
+ #if DCHECK_IS_ON()
+   // TODO(361611793): Remove these debug logs after resolving the issue.
+@@ -360,6 +394,12 @@ void MessagePumpEpoll::UpdateEpollEvent(EpollEventEntry& entry) {
+   if (!entry.stopped) {
+     if (events == 0) {
+       // There is no active interest now.
++#if BUILDFLAG(IS_QNX)
++      // QNX epoll does not support EPOLLONESHOT at kernel level, so the fd is
++      // never auto-disabled after a one-shot event. Always call StopEpollEvent
++      // to explicitly remove it, regardless of the one-shot flag.
++      StopEpollEvent(entry);
++#else
+       // We don't have to call epoll_ctl() if the last event was registered as
+       // one-shot since the fd has already been disabled.
+       if (!(entry.registered_events & EPOLLONESHOT)) {
+@@ -374,13 +414,20 @@ void MessagePumpEpoll::UpdateEpollEvent(EpollEventEntry& entry) {
+         CHECK(poll_entry != pollfds_.end());
+         poll_entry->events = 0;
+       }
++#endif  // BUILDFLAG(IS_QNX)
+       return;
+     }
+     if (events == entry.registered_events && !(events & EPOLLONESHOT)) {
+       // Persistent events don't need to be modified if no bits are changing.
+       return;
+     }
++#if BUILDFLAG(IS_QNX)
++    // Strip EPOLLONESHOT before passing to QNX epoll_ctl.
++    epoll_event event{.events = events & ~static_cast<uint32_t>(EPOLLONESHOT),
++                      .data = {.ptr = &entry}};
++#else
+     epoll_event event{.events = events, .data = {.ptr = &entry}};
++#endif
+     int rv = epoll_ctl(epoll_.get(), EPOLL_CTL_MOD, entry.fd, &event);
+     DPCHECK(rv == 0);
+ #if DCHECK_IS_ON()
+diff --git a/base/message_loop/message_pump_for_ui.h b/base/message_loop/message_pump_for_ui.h
+index e421d75201851..03b915937a9ee 100644
+--- a/base/message_loop/message_pump_for_ui.h
++++ b/base/message_loop/message_pump_for_ui.h
+@@ -20,7 +20,7 @@
+ // No MessagePumpForUI, see below.
+ #elif defined(USE_GLIB)
+ #include "base/message_loop/message_pump_glib.h"
+-#elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_BSD)
++#elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_BSD) || BUILDFLAG(IS_QNX)
+ #include "base/message_loop/message_pump_epoll.h"
+ #elif BUILDFLAG(IS_FUCHSIA)
+ #include "base/message_loop/message_pump_fuchsia.h"
+@@ -43,7 +43,7 @@ using MessagePumpForUI = MessagePump;
+ // TODO(abarth): Figure out if we need this.
+ #elif defined(USE_GLIB)
+ using MessagePumpForUI = MessagePumpGlib;
+-#elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_BSD)
++#elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_BSD) || BUILDFLAG(IS_QNX)
+ using MessagePumpForUI = MessagePumpEpoll;
+ #elif BUILDFLAG(IS_FUCHSIA)
+ using MessagePumpForUI = MessagePumpFuchsia;
+diff --git a/base/metrics/persistent_histogram_allocator_unittest.cc b/base/metrics/persistent_histogram_allocator_unittest.cc
+index 4752682030535..a8336e4103ec4 100644
+--- a/base/metrics/persistent_histogram_allocator_unittest.cc
++++ b/base/metrics/persistent_histogram_allocator_unittest.cc
+@@ -694,6 +694,9 @@ TEST_F(PersistentHistogramAllocatorTest, RangesDeDuplication) {
+ }
+ 
+ TEST_F(PersistentHistogramAllocatorTest, MovePersistentFile) {
++#if BUILDFLAG(IS_QNX)
++  GTEST_SKIP() << "QNX NFS rename semantics differ";
++#else
+   const char temp_name[] = "MovePersistentFileTest.pma";
+   ScopedTempDir temp_dir;
+   ASSERT_TRUE(temp_dir.CreateUniqueTempDir());
+@@ -750,6 +753,7 @@ TEST_F(PersistentHistogramAllocatorTest, MovePersistentFile) {
+     }
+   }
+   EXPECT_TRUE(found_histogram);
++#endif  // BUILDFLAG(IS_QNX)
+ }
+ 
+ }  // namespace base
+diff --git a/base/path_service_unittest.cc b/base/path_service_unittest.cc
+index 7a5c2b428e7c2..2ad879195f4cc 100644
+--- a/base/path_service_unittest.cc
++++ b/base/path_service_unittest.cc
+@@ -58,8 +58,9 @@ bool ReturnsValidPath(int key) {
+     check_path_exists = false;
+   }
+ #endif
+-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
+-  // On the linux try-bots: a path is returned (e.g. /home/chrome-bot/Desktop),
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_QNX)
++  // On the linux try-bots and QNX: a path is returned (e.g.
++  // /home/chrome-bot/Desktop or /data/home/root/Desktop),
+   // but it doesn't exist.
+   if (key == DIR_USER_DESKTOP) {
+     check_path_exists = false;
+diff --git a/base/posix/can_lower_nice_to.cc b/base/posix/can_lower_nice_to.cc
+index d9117138b4427..27f19e2f8b151 100644
+--- a/base/posix/can_lower_nice_to.cc
++++ b/base/posix/can_lower_nice_to.cc
+@@ -14,7 +14,7 @@
+ // Not defined on AIX by default.
+ #if BUILDFLAG(IS_AIX)
+ #if defined(RLIMIT_NICE)
+-#error Assumption about OS_AIX is incorrect
++#error Assumption about OS is incorrect
+ #endif
+ #define RLIMIT_NICE 20
+ #endif
+@@ -34,6 +34,11 @@ bool CanLowerNiceTo(int nice_value) {
+   // 2. Skip checking the CAP_SYS_NICE permission because it would require
+   // libcap.so.
+ 
++#if BUILDFLAG(IS_QNX)
++  // QNX has no RLIMIT_NICE mechanism; priority elevation requires root (already
++  // checked above). Non-root callers cannot lower the nice value.
++  return false;
++#else
+   // 3. Check whether the target value is within the range allowed by
+   // RLIMIT_NICE.
+   //
+@@ -55,6 +60,7 @@ bool CanLowerNiceTo(int nice_value) {
+   // And lowering niceness to |nice_value| is allowed if it is greater than or
+   // equal to the limit:
+   return nice_value >= lowest_nice_allowed;
++#endif  // BUILDFLAG(IS_QNX)
+ }
+ 
+ }  // namespace base::internal
+diff --git a/base/posix/unix_domain_socket.cc b/base/posix/unix_domain_socket.cc
+index 8cb4a7156f17c..54abed9dd8523 100644
+--- a/base/posix/unix_domain_socket.cc
++++ b/base/posix/unix_domain_socket.cc
+@@ -43,13 +43,17 @@ bool CreateSocketPair(ScopedFD* one, ScopedFD* two) {
+ 
+ // static
+ bool UnixDomainSocket::EnableReceiveProcessId(int fd) {
+-#if !BUILDFLAG(IS_APPLE)
++#if BUILDFLAG(IS_APPLE)
++  // SO_PASSCRED is not supported on macOS. RecvMsgWithPid() uses
++  // LOCAL_PEERPID instead and does not need per-socket setup.
++  return true;
++#elif BUILDFLAG(IS_QNX)
++  // QNX does not support SCM_CREDENTIALS/SO_PASSCRED or LOCAL_PEERPID.
++  return false;
++#else
+   const int enable = 1;
+   return setsockopt(fd, SOL_SOCKET, SO_PASSCRED, &enable, sizeof(enable)) == 0;
+-#else
+-  // SO_PASSCRED is not supported on macOS.
+-  return true;
+-#endif  // BUILDFLAG(IS_APPLE)
++#endif
+ }
+ 
+ // static
+@@ -59,7 +63,9 @@ bool UnixDomainSocket::SendMsg(int fd,
+   struct msghdr msg = {};
+   // `iovec` is a common struct used for IO that requires removing const to the
+   // pointer but the memory is only read when sending messages.
+-  struct iovec iov = {const_cast<uint8_t*>(msg_span.data()), msg_span.size()};
++  struct iovec iov;
++  iov.iov_base = const_cast<uint8_t*>(msg_span.data());
++  iov.iov_len = msg_span.size();
+   msg.msg_iov = &iov;
+   msg.msg_iovlen = 1;
+ 
+@@ -73,7 +79,7 @@ bool UnixDomainSocket::SendMsg(int fd,
+ #if BUILDFLAG(IS_APPLE)
+     msg.msg_controllen = checked_cast<socklen_t>(control_len);
+ #else
+-    msg.msg_controllen = control_len;
++    msg.msg_controllen = static_cast<socklen_t>(control_len);
+ #endif
+     cmsg = CMSG_FIRSTHDR(&msg);
+     cmsg->cmsg_level = SOL_SOCKET;
+@@ -81,10 +87,10 @@ bool UnixDomainSocket::SendMsg(int fd,
+ #if BUILDFLAG(IS_APPLE)
+     cmsg->cmsg_len = checked_cast<u_int>(CMSG_LEN(sizeof(int) * fds.size()));
+ #else
+-    cmsg->cmsg_len = CMSG_LEN(sizeof(int) * fds.size());
++    cmsg->cmsg_len = static_cast<socklen_t>(CMSG_LEN(sizeof(int) * fds.size()));
+ #endif
+     UNSAFE_TODO(memcpy(CMSG_DATA(cmsg), &fds[0], sizeof(int) * fds.size()));
+-    msg.msg_controllen = cmsg->cmsg_len;
++    msg.msg_controllen = static_cast<socklen_t>(cmsg->cmsg_len);
+   }
+ 
+   // Avoid a SIGPIPE if the other end breaks the connection.
+@@ -121,21 +127,22 @@ ssize_t UnixDomainSocket::RecvMsgWithFlags(int fd,
+   fds->clear();
+ 
+   struct msghdr msg_hdr = {};
+-  struct iovec iov = {msg.data(), msg.size()};
++  struct iovec iov;
++  iov.iov_base = msg.data();
++  iov.iov_len = msg.size();
+   msg_hdr.msg_iov = &iov;
+   msg_hdr.msg_iovlen = 1;
+ 
+   const size_t kControlBufferSize =
+       CMSG_SPACE(sizeof(int) * kMaxFileDescriptors)
+-#if !BUILDFLAG(IS_APPLE)
+-      // macOS does not support ucred.
+-      // macOS supports xucred, but this structure is insufficient.
++#if !BUILDFLAG(IS_APPLE) && !BUILDFLAG(IS_QNX)
++      // macOS and QNX do not support ucred credential passing.
+       + CMSG_SPACE(sizeof(struct ucred))
+-#endif  // !BUILDFLAG(IS_APPLE)
++#endif  // !BUILDFLAG(IS_APPLE) && !BUILDFLAG(IS_QNX)
+       ;
+   char control_buffer[kControlBufferSize];
+   msg_hdr.msg_control = control_buffer;
+-  msg_hdr.msg_controllen = sizeof(control_buffer);
++  msg_hdr.msg_controllen = static_cast<socklen_t>(sizeof(control_buffer));
+ 
+   const ssize_t r = HANDLE_EINTR(recvmsg(fd, &msg_hdr, flags));
+   if (r == -1) {
+@@ -157,8 +164,8 @@ ssize_t UnixDomainSocket::RecvMsgWithFlags(int fd,
+         wire_fds = reinterpret_cast<int*>(UNSAFE_TODO(CMSG_DATA(cmsg)));
+         wire_fds_len = payload_len / sizeof(int);
+       }
+-#if !BUILDFLAG(IS_APPLE)
+-      // macOS does not support SCM_CREDENTIALS.
++#if !BUILDFLAG(IS_APPLE) && !BUILDFLAG(IS_QNX)
++      // macOS and QNX do not support SCM_CREDENTIALS.
+       if (cmsg->cmsg_level == SOL_SOCKET &&
+           cmsg->cmsg_type == SCM_CREDENTIALS) {
+         DCHECK_EQ(payload_len, sizeof(struct ucred));
+@@ -166,7 +173,7 @@ ssize_t UnixDomainSocket::RecvMsgWithFlags(int fd,
+         pid =
+             reinterpret_cast<struct ucred*>(UNSAFE_TODO(CMSG_DATA(cmsg)))->pid;
+       }
+-#endif  // !BUILDFLAG(IS_APPLE)
++#endif  // !BUILDFLAG(IS_APPLE) && !BUILDFLAG(IS_QNX)
+     }
+   }
+ 
+@@ -195,6 +202,9 @@ ssize_t UnixDomainSocket::RecvMsgWithFlags(int fd,
+     if (getsockopt(fd, SOL_LOCAL, LOCAL_PEERPID, &pid, &pid_size) != 0) {
+       pid = -1;
+     }
++#elif BUILDFLAG(IS_QNX)
++    // QNX does not expose peer credentials for AF_UNIX sockets. Leave pid as
++    // -1 even when a message was received.
+ #else
+     // |pid| will legitimately be -1 if we read EOF, so only DCHECK if we
+     // actually received a message.  Unfortunately, Linux allows sending zero
+diff --git a/base/posix/unix_domain_socket_unittest.cc b/base/posix/unix_domain_socket_unittest.cc
+index 678defed72f82..d0a3c3cc6fcfb 100644
+--- a/base/posix/unix_domain_socket_unittest.cc
++++ b/base/posix/unix_domain_socket_unittest.cc
+@@ -94,6 +94,9 @@ TEST(UnixDomainSocketTest, SendRecvMsgAvoidsSIGPIPE) {
+ 
+ // Simple sanity check within a single process that receiving PIDs works.
+ TEST(UnixDomainSocketTest, RecvPid) {
++#if BUILDFLAG(IS_QNX)
++  GTEST_SKIP() << "QNX does not support AF_UNIX peer credential passing";
++#else
+   int fds[2];
+   ASSERT_NO_FATAL_FAILURE(CreateSocketPair(fds));
+   ScopedFD recv_sock(fds[0]);
+@@ -117,10 +120,14 @@ TEST(UnixDomainSocketTest, RecvPid) {
+   ASSERT_EQ(0U, fd_vec.size());
+ 
+   ASSERT_EQ(getpid(), sender_pid);
++#endif
+ }
+ 
+ // Same as above, but send the max number of file descriptors too.
+ TEST(UnixDomainSocketTest, RecvPidWithMaxDescriptors) {
++#if BUILDFLAG(IS_QNX)
++  GTEST_SKIP() << "QNX does not support AF_UNIX peer credential passing";
++#else
+   int fds[2];
+   ASSERT_NO_FATAL_FAILURE(CreateSocketPair(fds));
+   ScopedFD recv_sock(fds[0]);
+@@ -147,6 +154,7 @@ TEST(UnixDomainSocketTest, RecvPidWithMaxDescriptors) {
+   ASSERT_EQ(UnixDomainSocket::kMaxFileDescriptors, recv_fds.size());
+ 
+   ASSERT_EQ(getpid(), sender_pid);
++#endif
+ }
+ 
+ // Check that RecvMsgWithPid doesn't DCHECK fail when reading EOF from a
+@@ -157,7 +165,11 @@ TEST(UnixDomianSocketTest, RecvPidDisconnectedSocket) {
+   ScopedFD recv_sock(fds[0]);
+   ScopedFD send_sock(fds[1]);
+ 
++#if BUILDFLAG(IS_QNX)
++  EXPECT_FALSE(UnixDomainSocket::EnableReceiveProcessId(recv_sock.get()));
++#else
+   ASSERT_TRUE(UnixDomainSocket::EnableReceiveProcessId(recv_sock.get()));
++#endif
+ 
+   send_sock.reset();
+ 

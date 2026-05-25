@@ -1,0 +1,258 @@
+diff --git a/base/BUILD.gn b/base/BUILD.gn
+index c9811ba7835ed..e47baf4fd3b47 100644
+--- a/base/BUILD.gn
++++ b/base/BUILD.gn
+@@ -167,7 +167,7 @@ buildflag_header("ios_cronet_buildflags") {
+   flags = [ "CRONET_BUILD=$is_cronet_build" ]
+ }
+ 
+-use_epoll = is_linux || is_chromeos || is_android
++use_epoll = is_linux || is_chromeos || is_android || is_qnx
+ 
+ generate_allowlist_from_histograms_file("memory_dump_provider_name_variants") {
+   namespace = "trace_event_metrics"
+@@ -1019,7 +1019,7 @@ component("base") {
+     ]
+   }
+ 
+-  if (is_linux || is_chromeos) {
++  if ((is_linux && !is_qnx) || is_chromeos) {
+     sources += [
+       "debug/proc_maps_linux.cc",
+       "debug/proc_maps_linux.h",
+@@ -1048,7 +1048,23 @@ component("base") {
+     ]
+   }
+ 
+-  if (is_linux || is_chromeos || is_android) {
++  if (is_qnx) {
++    sources += [
++      "debug/proc_maps_qnx.cc",
++      "debug/proc_maps_linux.h",
++      "debug/stack_trace_qnx.cc",
++      "memory/discardable_memory_qnx.cc",
++      "process/memory_qnx.cc",
++      "process/process_iterator_qnx.cc",
++      "process/process_metrics_qnx.cc",
++      "process/process_qnx.cc",
++      "system/sys_info_qnx.cc",
++      "threading/platform_thread_qnx.cc",
++      "threading/platform_thread_metrics_qnx.cc",
++    ]
++  }
++
++  if (is_linux || is_chromeos || is_android || is_qnx) {
+     sources += [
+       "files/file_path_watcher_inotify.cc",
+       "files/file_path_watcher_inotify.h",
+@@ -1062,6 +1078,10 @@ component("base") {
+   libs = []
+   frameworks = []
+ 
++  if (is_qnx) {
++    libs += [ "backtrace" ]
++  }
++
+   configs += [
+     "//build/config:precompiled_headers",
+     "//build/config/compiler:prevent_unsafe_narrowing",
+@@ -1092,6 +1112,10 @@ component("base") {
+     "//third_party/rust/serde_json_lenient/v0_2/wrapper",
+   ]
+ 
++  if (is_qnx) {
++    deps += [ "//third_party/epoll:epoll" ]
++  }
++
+   if (use_asan_backup_ref_ptr) {
+     # Used by raw_ptr_service.cc to override {malloc,free,ignore_free} hooks.
+     sources += [
+@@ -1689,7 +1713,7 @@ component("base") {
+       "memory/page_size_posix.cc",
+     ]
+ 
+-    if (!is_apple) {
++    if (!is_apple && !is_qnx) {
+       sources += [ "files/drive_info_posix.cc" ]
+     }
+   }
+@@ -1717,7 +1741,33 @@ component("base") {
+     ]
+   }
+ 
+-  if (is_posix && !is_android) {
++  # madv_free discardable memory uses mincore() which is absent on QNX.
++  # The feature is FEATURE_DISABLED_BY_DEFAULT so this has no functional impact.
++  # Phase 2: exclude files that are incompatible with QNX.
++  # - madv_free: uses mincore() which is absent on QNX; feature is
++  #   FEATURE_DISABLED_BY_DEFAULT so no functional impact.
++  # - process/launch_posix.cc: replaced by launch_qnx.cc (spawn-based).
++  # - profiler/*: use Linux-specific headers (linux/futex.h), ucontext
++  #   register definitions (REG_R14..REG_R15), and signal API not
++  #   available on QNX. Profiling infra not needed for QNX port.
++  if (is_qnx) {
++    sources -= [
++      "memory/madv_free_discardable_memory_allocator_posix.cc",
++      "memory/madv_free_discardable_memory_allocator_posix.h",
++      "memory/madv_free_discardable_memory_posix.cc",
++      "memory/madv_free_discardable_memory_posix.h",
++      "process/launch_posix.cc",
++      "profiler/stack_copier_signal.cc",
++      "profiler/stack_copier_signal.h",
++      "profiler/thread_delegate_posix.cc",
++      "profiler/thread_delegate_posix.h",
++    ]
++    sources += [
++      "process/launch_qnx.cc",
++    ]
++  }
++
++  if (is_posix && !is_android && !is_qnx) {
+     sources += [ "debug/stack_trace_posix.cc" ]
+   }
+ 
+@@ -2367,6 +2417,18 @@ component("base") {
+     }
+   }
+ 
++  if (is_qnx) {
++    sources -= [
++      "linux_util.cc",
++      "linux_util.h",
++      "memory/available_memory_monitor.cc",
++      "memory/available_memory_monitor.h",
++      # sys_info_linux.cc uses /proc/meminfo and Linux-specific APIs.
++      # sys_info_qnx.cc provides QNX-native implementations instead.
++      "system/sys_info_linux.cc",
++    ]
++  }
++
+   if (use_blink) {
+     sources += [
+       "files/file_path_watcher.cc",
+@@ -2404,6 +2466,12 @@ component("base") {
+       "time/time_now_posix.cc",
+     ]
+ 
++    if (is_qnx) {
++      # QNX lacks CLOCK_MONOTONIC_COARSE; use dedicated implementation.
++      sources -= [ "time/time_now_posix.cc" ]
++      sources += [ "time/time_now_qnx.cc" ]
++    }
++
+     # TODO(b/167763382) Find an alternate solution for Chromecast devices, since
+     # adding the icui18n and icuuc deps significantly increases the binary size.
+     # This dependency was added to deal with Y2038 problem where time_t is
+@@ -3507,7 +3575,6 @@ test("base_unittests") {
+     "environment_unittest.cc",
+     "feature_list_unittest.cc",
+     "files/block_tests_writing_to_special_dirs_unittest.cc",
+-    "files/drive_info_unittest.cc",
+     "files/file_enumerator_unittest.cc",
+     "files/file_error_or_unittest.cc",
+     "files/file_path_unittest.cc",
+@@ -3558,7 +3625,6 @@ test("base_unittests") {
+     "logging_unittest.cc",
+     "macros/is_empty_unittest.cc",
+     "memory/aligned_memory_unittest.cc",
+-    "memory/available_memory_monitor_unittest.cc",
+     "memory/discardable_memory_backing_field_trial_unittest.cc",
+     "memory/discardable_shared_memory_unittest.cc",
+     "memory/memory_pressure_listener_unittest.cc",
+@@ -4053,10 +4119,11 @@ test("base_unittests") {
+     configs += [ ":delayload_esent_dll" ]
+   }
+ 
+-  if (is_linux || is_chromeos) {
++  if ((is_linux && !is_qnx) || is_chromeos) {
+     sources += [
+       "debug/proc_maps_linux_unittest.cc",
+       "files/scoped_file_linux_unittest.cc",
++      "memory/available_memory_monitor_unittest.cc",
+       "nix/mime_util_xdg_unittest.cc",
+       "process/set_process_title_linux_unittest.cc",
+       "version_info/nix/version_extra_utils_unittest.cc",
+@@ -4065,22 +4132,38 @@ test("base_unittests") {
+     deps += [ ":stack_canary_linux_unittests" ]
+   }
+ 
+-  sources += [ "test/test_trace_processor_example_unittest.cc" ]
++  # Drive info is not implemented on QNX.
++  if (!is_qnx) {
++    sources += [ "files/drive_info_unittest.cc" ]
++  }
++
++  if (!is_qnx) {
++    sources += [ "test/test_trace_processor_example_unittest.cc" ]
++  }
+ 
+   if (is_posix) {
+     sources += [
+       "files/dir_reader_posix_unittest.cc",
+       "files/file_descriptor_watcher_posix_unittest.cc",
+-      "memory/madv_free_discardable_memory_allocator_posix_unittest.cc",
+-      "memory/madv_free_discardable_memory_posix_unittest.cc",
+       "message_loop/fd_watch_controller_posix_unittest.cc",
+       "message_loop/io_watcher_fd_unittest.cc",
+       "posix/file_descriptor_shuffle_unittest.cc",
+       "posix/unix_domain_socket_unittest.cc",
+     ]
++    # MadvFree discardable memory uses mincore() which QNX lacks.
++    if (!is_qnx) {
++      sources += [
++        "memory/madv_free_discardable_memory_allocator_posix_unittest.cc",
++        "memory/madv_free_discardable_memory_posix_unittest.cc",
++      ]
++    }
+     if (!is_apple) {
+       sources += [
+         "profiler/stack_base_address_posix_unittest.cc",
++      ]
++    }
++    if (!is_apple && !is_qnx) {
++      sources += [
+         "profiler/stack_copier_signal_unittest.cc",
+         "profiler/thread_delegate_posix_unittest.cc",
+       ]
+@@ -4295,7 +4378,7 @@ test("base_unittests") {
+     }
+   }
+ 
+-  if (is_linux) {
++  if (is_linux && !is_qnx) {
+     sources += [
+       "linux_util_unittest.cc",
+       "nix/xdg_util_unittest.cc",
+@@ -4445,7 +4528,10 @@ test("base_unittests") {
+         [ "//third_party/perfetto/include/perfetto/trace_processor:storage" ]
+   }
+ 
+-  if (enable_nocompile_tests) {
++  if (enable_nocompile_tests && !is_qnx) {
++    # QNX nocompile actions do not inherit the QNX libc++ include path/shim
++    # setup from the C++ compiler toolchain, so they fail on missing standard
++    # headers before reaching the intended expected-error diagnostics.
+     deps += [ ":base_nocompile_tests" ]
+   }
+ 
+@@ -4459,7 +4545,10 @@ source_set("hardening_tests") {
+ 
+   sources = [ "protobuf_hardening_test.cc" ]
+ 
+-  if (use_safe_libcxx || use_safe_libstdcxx) {
++  if ((use_safe_libcxx || use_safe_libstdcxx) && !is_qnx) {
++    # libcpp_hardening_test.cc checks that _LIBCPP_HARDENING_MODE_EXTENSIVE
++    # or _LIBCPP_ENABLE_ASSERTIONS is set. QNX builds use HARDENING_MODE_NONE
++    # (qcc/GCC baseline) so this meta-test cannot pass on QNX by design.
+     sources += [ "libcpp_hardening_test.cc" ]
+   }
+ 
+@@ -4528,7 +4617,7 @@ source_set("build_time") {
+   public = [ "build_time.h" ]
+ }
+ 
+-if (enable_nocompile_tests) {
++if (enable_nocompile_tests && !is_qnx) {
+   nocompile_source_set("base_nocompile_tests") {
+     sources = [
+       "allocator/partition_allocator/src/partition_alloc/partition_alloc_base/thread_annotations_pa_nocompile.nc",
