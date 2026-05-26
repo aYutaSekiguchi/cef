@@ -1,6 +1,6 @@
 # QNX QEMU test runners
 
-These scripts are the repo-managed replacement for the old `pi/.pi/` QNX helpers.
+These scripts are the repo-managed QNX helpers for the Chromium/CEF port.
 
 ## Files
 
@@ -69,7 +69,7 @@ Boot + mount only, leave QEMU running:
 To keep the pane visible after the run finishes:
 
 ```bash
-tmux new-session -s qnx-base 'bash -lc "cd /home/yuta/chromium/src && ./cef/tools/qnx_run_test.sh --timeout 7200 --kill-existing; code=$?; echo __EXIT_CODE__:$code; exec bash"'
+tmux new-session -s qnx-base 'bash -lc "cd <CHROMIUM_SRC_ROOT> && ./cef/tools/qnx_run_test.sh --timeout 7200 --kill-existing; code=$?; echo __EXIT_CODE__:$code; exec bash"'
 ```
 
 Attach later:
