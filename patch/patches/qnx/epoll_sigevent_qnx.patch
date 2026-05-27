@@ -1,0 +1,18 @@
+diff --git a/epoll-mgr.c b/epoll-mgr.c
+index 316cb34..add8bb0 100644
+--- a/epoll-mgr.c
++++ b/epoll-mgr.c
+@@ -298,10 +298,10 @@ _epoll_interest_fd_ionotify(struct _epoll_interest_fd *interest_fd, int action,
+ 		msg.i.flags |= exten_flag | extra_mask;
+ 
+ 		if (event)
+-#if __QNX__ < 800
+-			msg.i.event = *(struct __sigevent32 *)event;
+-#else
++#if defined(__QNXNTO__) || (defined(__QNX__) && __QNX__ >= 800)
+ 		  msg.i.event = *event;
++#else
++			msg.i.event = *(struct __sigevent32 *)event;
+ #endif
+ 		else
+ 			SIGEV_NONE_INIT(&msg.i.event);
