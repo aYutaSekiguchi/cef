@@ -1,0 +1,85 @@
+diff --git a/build/config/clang/BUILD.gn b/build/config/clang/BUILD.gn
+index e05032c0c66f1..7b34df06343b0 100644
+--- a/build/config/clang/BUILD.gn
++++ b/build/config/clang/BUILD.gn
+@@ -156,6 +156,56 @@ group("llvm-symbolizer_data") {
+   }
+ }
+ 
++if (is_qnx) {
++  _qnx_host = getenv("QNX_HOST")
++  _qnx_target = getenv("QNX_TARGET")
++  assert(_qnx_host != "", "QNX_HOST must be set for QNX compiler-rt builtins")
++  assert(_qnx_target != "",
++         "QNX_TARGET must be set for QNX compiler-rt builtins")
++
++  if (current_cpu == "x64") {
++    _qnx_compiler_rt_target = "x86_64-unknown-nto"
++    _qnx_ar = "${_qnx_host}/usr/bin/ntox86_64-ar"
++    _qnx_ranlib = "${_qnx_host}/usr/bin/ntox86_64-ranlib"
++  } else if (current_cpu == "arm64") {
++    _qnx_compiler_rt_target = "aarch64-unknown-nto"
++    _qnx_ar = "${_qnx_host}/usr/bin/ntoaarch64-ar"
++    _qnx_ranlib = "${_qnx_host}/usr/bin/ntoaarch64-ranlib"
++  } else {
++    assert(false, "Unhandled QNX cpu type: $current_cpu")
++  }
++
++  _qnx_compiler_rt_output =
++      "$root_out_dir/qnx_clang_rt/${_qnx_compiler_rt_target}/libclang_rt.builtins.a"
++
++  action("qnx_compiler_builtins") {
++    script = "//build/config/qnx/build_compiler_rt_builtins.py"
++    depfile = "$target_gen_dir/qnx_compiler_builtins.d"
++    outputs = [ _qnx_compiler_rt_output ]
++    args = [
++      "--clang",
++      rebase_path("$clang_base_path/bin/clang", root_build_dir),
++      "--ar",
++      _qnx_ar,
++      "--ranlib",
++      _qnx_ranlib,
++      "--sysroot",
++      _qnx_target,
++      "--target",
++      _qnx_compiler_rt_target,
++      "--arch",
++      current_cpu,
++      "--source-root",
++      rebase_path("//third_party/compiler-rt/src/lib/builtins", root_build_dir),
++      "--output",
++      rebase_path(_qnx_compiler_rt_output, root_build_dir),
++      "--depfile",
++      rebase_path(depfile, root_build_dir),
++    ]
++    inputs = [ script ]
++  }
++}
++
+ template("clang_lib") {
+   if (!defined(invoker.libname) || is_wasm) {
+     not_needed(invoker, "*")
+@@ -168,6 +218,7 @@ template("clang_lib") {
+       _prefix = "lib"
+       _suffix = ""
+       _ext = "a"
++      _clang_lib_dir = "$clang_base_path/lib/clang/$clang_version/lib"
+ 
+       if (is_win) {
+         _dir = "windows"
+@@ -192,6 +243,7 @@ template("clang_lib") {
+         } else {
+           assert(false)  # Unhandled cpu type
+         }
++        _clang_lib_dir = "$root_out_dir/qnx_clang_rt"
+       } else if (is_linux || is_chromeos) {
+         if (current_cpu == "x64") {
+           _dir = "x86_64-unknown-linux-gnu"
+@@ -239,7 +291,6 @@ template("clang_lib") {
+         assert(false)  # Unhandled target platform
+       }
+ 
+-      _clang_lib_dir = "$clang_base_path/lib/clang/$clang_version/lib"
+       _lib_file = "${_prefix}clang_rt.${_libname}${_suffix}.${_ext}"
+       libs = [ "$_clang_lib_dir/$_dir/$_lib_file" ]
+     }

@@ -48,6 +48,9 @@ A fresh session should normally work in this order:
    - do not reopen the three accepted exclusions unless they block a concrete goal
 4. **Keep CEF-managed ownership intact**
    - any durable fix should land in `cef/patch/...` or `cef/patch/qnx/chromium/new_files/...`
+5. **Fresh-environment bootstrap follow-up**
+   - the previous `libclang_rt.builtins.a` blocker is now addressed by generating QNX `clang_rt.builtins` during the build into `out/qnx_release/qnx_clang_rt/...`
+   - the next fresh-environment blocker appears to be missing `third_party/epoll/src/epoll.c` content / submodule population, not LLVM builtins
 
 ### Avoid spending time on these unless explicitly required
 
