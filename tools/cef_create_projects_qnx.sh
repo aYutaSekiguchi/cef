@@ -148,18 +148,18 @@ if [[ -d "${CEF_DIR}/patch/patches/qnx/chromium" ]]; then
   done
 fi
 
-# Some QNX support files introduce new submodule paths not present at the
-# compatibility tag. Initialize them after patch application.
+# Some QNX support files live in DEPS-managed repositories that are not present
+# at the compatibility tag checkout. Fetch them with qnx_sync_sources.sh before
+# running this bootstrap script, then apply any source-repo-local fixes here.
 cd "${CHROMIUM_SRC_DIR}"
 if [[ -f ".gitmodules" ]] && grep -q 'third_party/epoll/src' .gitmodules; then
   if [[ ! -e "third_party/epoll/src/epoll.c" ]]; then
-    echo "  Initializing epoll submodule..."
-    git submodule update --init third_party/epoll/src || true
+    echo "ERROR: third_party/epoll/src is missing."
+    echo "Run ./cef/tools/qnx_sync_sources.sh first, then rerun this script."
+    exit 1
   fi
-  if [[ -e "third_party/epoll/src/epoll.c" ]]; then
-    echo "  Applying epoll QNX patch..."
-    "${PYTHON3}" "${SCRIPT_DIR}/patcher.py" --patch-file qnx/epoll_sigevent_qnx --patch-dir third_party/epoll/src
-  fi
+  echo "  Applying epoll QNX patch..."
+  "${PYTHON3}" "${SCRIPT_DIR}/patcher.py" --patch-file qnx/epoll_sigevent_qnx --patch-dir third_party/epoll/src
 fi
 cd "${CEF_DIR}"
 

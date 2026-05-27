@@ -2,20 +2,27 @@
 
 ## Recommended bootstrap flow
 
-Use the CEF-managed bootstrap script to prepare a QNX-capable Chromium tree:
+Use the CEF-managed source-sync helper first, then run the bootstrap script:
 
 ```bash
 cd <CHROMIUM_SRC_ROOT>
+./cef/tools/qnx_sync_sources.sh
 ./cef/tools/cef_create_projects_qnx.sh --build-type Release --qnx-sdp-root <QNX_SDP_ROOT>
 ```
 
-This script is responsible for:
+`qnx_sync_sources.sh` is responsible for:
+
+1. applying the CEF-managed `.gitmodules` / `DEPS` QNX source-sync patch
+2. running `gclient sync` from the Chromium root so DEPS-managed QNX sources are present
+
+`cef_create_projects_qnx.sh` is responsible for:
 
 1. installing QNX-specific new files from `cef/patch/qnx/chromium/new_files/`
 2. applying QNX patch sets from `cef/patch/patches/qnx/`
-3. generating `out/qnx_release/args.gn`
-4. generating `out/qnx_release/qnx_env.sh` and `out/qnx_release/ninja_qnx.sh`
-5. running `gn gen`
+3. applying source-repo-local fixes for already-synced dependencies such as `third_party/epoll/src`
+4. generating `out/qnx_release/args.gn`
+5. generating `out/qnx_release/qnx_env.sh` and `out/qnx_release/ninja_qnx.sh`
+6. running `gn gen`
 
 ## Default environment
 

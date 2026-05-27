@@ -10,6 +10,7 @@ The current QNX port baseline has been validated against Chromium compatibility 
 |---|---|
 | validation date | 2026-05-25 |
 | checkout model | clean Chromium checkout at `147.0.7727.147` |
+| source sync | `cef/tools/qnx_sync_sources.sh` |
 | bootstrap | `cef/tools/cef_create_projects_qnx.sh --build-type Release --qnx-sdp-root <QNX_SDP_ROOT>` |
 | build | `./out/qnx_release/ninja_qnx.sh base_unittests` |
 | broad QEMU run | `./cef/tools/qnx_run_test.sh --timeout 7200 --kill-existing "*"` |
@@ -50,7 +51,8 @@ A fresh session should normally work in this order:
    - any durable fix should land in `cef/patch/...` or `cef/patch/qnx/chromium/new_files/...`
 5. **Fresh-environment bootstrap follow-up**
    - the previous `libclang_rt.builtins.a` blocker is now addressed by generating QNX `clang_rt.builtins` during the build into `out/qnx_release/qnx_clang_rt/...`
-   - the next fresh-environment blocker appears to be missing `third_party/epoll/src/epoll.c` content / submodule population, not LLVM builtins
+   - run `cef/tools/qnx_sync_sources.sh` before `cef_create_projects_qnx.sh` so DEPS-managed QNX sources such as `third_party/epoll/src` are present
+   - after the epoll source-sync fix, the next fresh-environment blocker is `-leventfd` link resolution, not missing epoll sources or LLVM builtins
 
 ### Avoid spending time on these unless explicitly required
 
@@ -62,6 +64,7 @@ A fresh session should normally work in this order:
 
 ```bash
 cd <CHROMIUM_SRC_ROOT>
+./cef/tools/qnx_sync_sources.sh
 ./cef/tools/cef_create_projects_qnx.sh --build-type Release --qnx-sdp-root <QNX_SDP_ROOT>
 ./out/qnx_release/ninja_qnx.sh base_unittests
 ```
@@ -80,11 +83,12 @@ Use this checklist when validating on another machine:
 
 1. Install QNX SDP 8 and confirm `QNX_HOST` / `QNX_TARGET` are valid under your local SDK root.
 2. Start from a clean Chromium checkout at compatibility tag `147.0.7727.147`.
-3. Run `cef/tools/cef_create_projects_qnx.sh`.
-4. Build `base_unittests` using `out/qnx_release/ninja_qnx.sh`.
-5. Run `sudo ./cef/tools/qnx_setup_env.sh`.
-6. Run `./cef/tools/qnx_run_test.sh --timeout 7200 --kill-existing "*"`.
-7. If any failures appear, check `fixes-and-decisions.md` first, then `history/` for deeper investigations.
+3. Run `cef/tools/qnx_sync_sources.sh`.
+4. Run `cef/tools/cef_create_projects_qnx.sh`.
+5. Build `base_unittests` using `out/qnx_release/ninja_qnx.sh`.
+6. Run `sudo ./cef/tools/qnx_setup_env.sh`.
+7. Run `./cef/tools/qnx_run_test.sh --timeout 7200 --kill-existing "*"`.
+8. If any failures appear, check `fixes-and-decisions.md` first, then `history/` for deeper investigations.
 
 ## Preserved historical branches
 
