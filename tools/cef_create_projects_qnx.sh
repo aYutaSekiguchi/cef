@@ -156,10 +156,6 @@ if [[ -f ".gitmodules" ]] && grep -q 'third_party/epoll/src' .gitmodules; then
     echo "  Initializing epoll submodule..."
     git submodule update --init third_party/epoll/src || true
   fi
-  if [[ -e "third_party/epoll/src/epoll.c" ]]; then
-    echo "  Applying epoll QNX patch..."
-    "${PYTHON3}" "${SCRIPT_DIR}/patcher.py" --patch-file qnx/epoll_sigevent_qnx --patch-dir third_party/epoll/src
-  fi
 fi
 cd "${CEF_DIR}"
 

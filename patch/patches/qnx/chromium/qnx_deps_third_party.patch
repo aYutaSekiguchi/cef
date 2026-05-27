@@ -197,10 +197,10 @@ index a5bd71da6de5a..162748143bc5c 100644
  #endif
 diff --git a/third_party/epoll/BUILD.gn b/third_party/epoll/BUILD.gn
 new file mode 100644
-index 0000000000000..390a9380a7a3f
+index 0000000000000..d8f4f0e0d1f76
 --- /dev/null
 +++ b/third_party/epoll/BUILD.gn
-@@ -0,0 +1,32 @@
+@@ -0,0 +1,39 @@
 +# Copyright 2025 The Chromium Authors
 +# Use of this source code is governed by a BSD-style license that can be
 +# found in the LICENSE file.
@@ -232,6 +232,13 @@ index 0000000000000..390a9380a7a3f
 +    "-Wno-pragma-pack",
 +    "-Wno-incompatible-pointer-types",
 +  ]
++
++  if (is_qnx) {
++    cflags += [
++      "-include",
++      rebase_path("//third_party/epoll/qnx_sigevent_fix.h", root_build_dir),
++    ]
++  }
 +}
 diff --git a/third_party/fontconfig/BUILD.gn b/third_party/fontconfig/BUILD.gn
 index 58e3e4e802edb..312c213f01f4c 100644
