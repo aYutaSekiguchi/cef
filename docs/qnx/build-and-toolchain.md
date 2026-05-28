@@ -4,6 +4,8 @@
 
 Use the CEF-managed source-sync helper first, then run the bootstrap script:
 
+**Important:** For QNX® SDP 8.0, you must install "Notification FD Interfaces" from QNX Software Center to ensure `libeventfd` is available. This is required for builds that link against eventfd.
+
 ```bash
 cd <CHROMIUM_SRC_ROOT>
 ./cef/tools/qnx_sync_sources.sh
