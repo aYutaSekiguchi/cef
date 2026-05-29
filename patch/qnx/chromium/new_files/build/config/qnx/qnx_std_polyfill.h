@@ -18,10 +18,10 @@
 
 // QNX sys/types.h defines minor() and major() macros under __EXT_UNIX_MISC
 // that collide with method names in protobuf-generated and perfetto-generated
-// C++ code. The macros are intended for C only, but some QNX SDK versions
-// lack the !defined(__cplusplus) guard. Undef them here to avoid collisions.
-// This is force-included early in the compile chain, before sys/types.h is
-// typically pulled in via perfetto or other headers.
+// C++ code. The macros are intended for C only, but QNX SDK versions lack the
+// !defined(__cplusplus) guard. Include sys/types.h here and undef them
+// immediately after to prevent collision in all downstream code.
+#include <sys/types.h>
 #ifdef minor
 #undef minor
 #endif
