@@ -1,5 +1,7 @@
---- base/debug/stack_trace.cc
-+++ base/debug/stack_trace.cc
+diff --git a/base/debug/stack_trace.cc b/base/debug/stack_trace.cc
+index ebde49a9ffe9c..ed311def6e9db 100644
+--- a/base/debug/stack_trace.cc
++++ b/base/debug/stack_trace.cc
 @@ -306,10 +306,10 @@ bool StackTrace::WillSymbolizeToStreamForTesting() {
    // Official Mac OS X builds contain enough information to unwind the stack,
    // but not enough to symbolize the output.

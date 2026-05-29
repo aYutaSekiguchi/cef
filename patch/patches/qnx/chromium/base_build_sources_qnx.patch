@@ -1,5 +1,5 @@
 diff --git a/base/BUILD.gn b/base/BUILD.gn
-index c9811ba7835ed..e47baf4fd3b47 100644
+index c9811ba7835ed..51abfc3ce236f 100644
 --- a/base/BUILD.gn
 +++ b/base/BUILD.gn
 @@ -167,7 +167,7 @@ buildflag_header("ios_cronet_buildflags") {
@@ -143,6 +143,15 @@ index c9811ba7835ed..e47baf4fd3b47 100644
      # TODO(b/167763382) Find an alternate solution for Chromecast devices, since
      # adding the icui18n and icuuc deps significantly increases the binary size.
      # This dependency was added to deal with Y2038 problem where time_t is
+@@ -2797,7 +2865,7 @@ buildflag_header("protected_memory_buildflags") {
+   header = "protected_memory_buildflags.h"
+   header_dir = "base/memory"
+ 
+-  protected_memory_enabled = !is_component_build && is_clang &&
++  protected_memory_enabled = !is_component_build && is_clang && !is_qnx &&
+                              (is_win || is_linux || is_android || is_mac)
+ 
+   flags = [ "PROTECTED_MEMORY_ENABLED=$protected_memory_enabled" ]
 @@ -3507,7 +3575,6 @@ test("base_unittests") {
      "environment_unittest.cc",
      "feature_list_unittest.cc",
@@ -256,3 +265,194 @@ index c9811ba7835ed..e47baf4fd3b47 100644
    nocompile_source_set("base_nocompile_tests") {
      sources = [
        "allocator/partition_allocator/src/partition_alloc/partition_alloc_base/thread_annotations_pa_nocompile.nc",
+diff --git a/base/atomicops.cc b/base/atomicops.cc
+index 7b6aca4d6c3c3..0ee3d99c85ac7 100644
+--- a/base/atomicops.cc
++++ b/base/atomicops.cc
+@@ -17,17 +17,18 @@ void RelaxedAtomicWriteMemcpy(base::span<uint8_t> dst,
+   uint8_t* dst_byte_ptr = dst.data();
+   const uint8_t* src_byte_ptr = src.data();
+   // Make sure that we can at least copy byte by byte with atomics.
+-  static_assert(std::atomic_ref<uint8_t>::required_alignment == 1);
++  // Note: std::atomic_ref is not available on QNX; use reinterpret_cast to
++  // std::atomic<T>* which has the same memory layout.
++  static_assert(alignof(uint8_t) == 1);
+ 
+   // Alignment for uintmax_t atomics that we use in the happy case.
+-  constexpr size_t kDesiredAlignment =
+-      std::atomic_ref<uintmax_t>::required_alignment;
++  constexpr size_t kDesiredAlignment = alignof(uintmax_t);
+ 
+   // Copy byte-by-byte until `dst_byte_ptr` is not properly aligned for
+   // the happy case.
+   while (bytes > 0 && !IsAligned(dst_byte_ptr, kDesiredAlignment)) {
+-    std::atomic_ref<uint8_t>(*dst_byte_ptr)
+-        .store(*src_byte_ptr, std::memory_order_relaxed);
++    reinterpret_cast<std::atomic<uint8_t>*>(dst_byte_ptr)
++        ->store(*src_byte_ptr, std::memory_order_relaxed);
+     // SAFETY: We check above that `dst_byte_ptr` and `src_byte_ptr` point
+     // to spans of sufficient size.
+     UNSAFE_BUFFERS(++dst_byte_ptr);
+@@ -39,8 +40,8 @@ void RelaxedAtomicWriteMemcpy(base::span<uint8_t> dst,
+   // aligned and the largest possible atomic is used for copying.
+   if (IsAligned(src_byte_ptr, kDesiredAlignment)) {
+     while (bytes >= sizeof(uintmax_t)) {
+-      std::atomic_ref<uintmax_t>(*reinterpret_cast<uintmax_t*>(dst_byte_ptr))
+-          .store(*reinterpret_cast<const uintmax_t*>(src_byte_ptr),
++      reinterpret_cast<std::atomic<uintmax_t>*>(dst_byte_ptr)
++          ->store(*reinterpret_cast<const uintmax_t*>(src_byte_ptr),
+                  std::memory_order_relaxed);
+       // SAFETY: We check above that `dst_byte_ptr` and `src_byte_ptr` point
+       // to spans of sufficient size.
+@@ -52,8 +53,8 @@ void RelaxedAtomicWriteMemcpy(base::span<uint8_t> dst,
+ 
+   // Copy what's left after the happy-case byte-by-byte.
+   while (bytes > 0) {
+-    std::atomic_ref<uint8_t>(*dst_byte_ptr)
+-        .store(*src_byte_ptr, std::memory_order_relaxed);
++    reinterpret_cast<std::atomic<uint8_t>*>(dst_byte_ptr)
++        ->store(*src_byte_ptr, std::memory_order_relaxed);
+     // SAFETY: We check above that `dst_byte_ptr` and `src_byte_ptr` point
+     // to spans of sufficient size.
+     UNSAFE_BUFFERS(++dst_byte_ptr);
+diff --git a/base/base_paths_posix.cc b/base/base_paths_posix.cc
+index 284e5382bf2fe..2824d7382501b 100644
+--- a/base/base_paths_posix.cc
++++ b/base/base_paths_posix.cc
+@@ -61,6 +61,16 @@ bool PathProviderPosix(int key, FilePath* result) {
+       }
+       *result = FilePath(bin_dir);
+       return true;
++#elif BUILDFLAG(IS_QNX)
++      // QNX's /proc/self/exefile is a regular file (not a symlink).
++      // Use CHROME_EXE_PATH if set, otherwise fall back to a reasonable default.
++      char* cpath;
++      if ((cpath = getenv("CHROME_EXE_PATH")) != NULL) {
++        *result = FilePath(cpath);
++      } else {
++        *result = FilePath("/usr/local/chrome/chrome");
++      }
++      return true;
+ #elif BUILDFLAG(IS_OPENBSD) || BUILDFLAG(IS_AIX)
+       // There is currently no way to get the executable path on OpenBSD
+       char* cpath;
+diff --git a/base/command_line.cc b/base/command_line.cc
+index 02796f0a53832..ec53dc9785960 100644
+--- a/base/command_line.cc
++++ b/base/command_line.cc
+@@ -433,11 +433,10 @@ void CommandLine::AppendSwitchNative(std::string_view switch_string,
+ #if BUILDFLAG(ENABLE_COMMANDLINE_SEQUENCE_CHECKS)
+   sequence_checker_.Check();
+ #endif
+-#if BUILDFLAG(IS_WIN)
+   const std::string switch_key = ToLowerASCII(switch_string);
++#if BUILDFLAG(IS_WIN)
+   StringType combined_switch_string(UTF8ToWide(switch_key));
+ #elif BUILDFLAG(IS_POSIX) || BUILDFLAG(IS_FUCHSIA)
+-  std::string_view switch_key = switch_string;
+   StringType combined_switch_string(switch_key);
+ #endif
+   size_t prefix_length = GetSwitchPrefixLength(combined_switch_string);
+diff --git a/base/command_line_unittest.cc b/base/command_line_unittest.cc
+index 23180c4dd1507..e44b25bf04367 100644
+--- a/base/command_line_unittest.cc
++++ b/base/command_line_unittest.cc
+@@ -92,7 +92,7 @@ TEST(CommandLineTest, CommandLineConstructor) {
+             cl.GetProgram().value());
+ 
+   EXPECT_TRUE(cl.HasSwitch("foo"));
+-#if BUILDFLAG(IS_WIN)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_QNX)
+   EXPECT_TRUE(cl.HasSwitch("bar"));
+ #else
+   EXPECT_FALSE(cl.HasSwitch("bar"));
+diff --git a/base/containers/to_value_list.h b/base/containers/to_value_list.h
+index 839dcf716777b..3facc5df309f9 100644
+--- a/base/containers/to_value_list.h
++++ b/base/containers/to_value_list.h
+@@ -14,6 +14,7 @@
+ #include <utility>
+ 
+ #include "base/values.h"
++#include "build/build_config.h"
+ 
+ namespace base {
+ 
+@@ -34,10 +35,18 @@ template <typename Range, typename Proj = std::identity>
+                std::indirect_result_t<Proj, std::ranges::iterator_t<Range>>>
+ ListValue ToValueList(Range&& range, Proj proj = {}) {
+   auto container = ListValue::with_capacity(std::ranges::size(range));
++#if BUILDFLAG(IS_QNX)
++  // QNX SDP 8's sysroot libc++ lacks std::ranges::for_each. Keep the
++  // workaround scoped to QNX so other platforms retain the upstream path.
++  for (auto&& value : std::forward<Range>(range)) {
++    container.Append(std::invoke(proj, std::forward<decltype(value)>(value)));
++  }
++#else
+   std::ranges::for_each(
+       std::forward<Range>(range),
+       [&]<typename T>(T&& value) { container.Append(std::forward<T>(value)); },
+       std::move(proj));
++#endif
+   return container;
+ }
+ 
+diff --git a/base/logging.cc b/base/logging.cc
+index d2354fd7b905b..e28d2e19723a0 100644
+--- a/base/logging.cc
++++ b/base/logging.cc
+@@ -426,7 +426,30 @@ void WriteToFd(int fd, const char* data, size_t length) {
+   }
+ }
+ 
++#if BUILDFLAG(IS_WIN)
++using SetLogFatalCrashKeyFunc = void (*)(const char* /*file*/,
++                                         int /*line*/,
++                                         const char* /*message*/);
++
++SetLogFatalCrashKeyFunc SetLogFatalCrashKeyFuncGetter() {
++  static SetLogFatalCrashKeyFunc log_fatal_crash_key_func = []() {
++    // Function exported by bootstrap.exe.
++    return reinterpret_cast<SetLogFatalCrashKeyFunc>(
++        GetProcAddress(GetModuleHandle(NULL), "SetLogFatalCrashKey"));
++  }();
++  return log_fatal_crash_key_func;
++}
++#endif  // BUILDFLAG(IS_WIN)
++
+ void SetLogFatalCrashKey(LogMessage* log_message) {
++#if BUILDFLAG(IS_WIN)
++  if (auto func = SetLogFatalCrashKeyFuncGetter()) {
++    func(log_message->file(), log_message->line(),
++         log_message->str().c_str() + log_message->message_start());
++    return;
++  }
++#endif
++
+   // In case of an out-of-memory condition, this code could be reentered when
+   // constructing and storing the key. Using a static is not thread-safe, but if
+   // multiple threads are in the process of a fatal crash at the same time, this
+@@ -496,6 +519,11 @@ bool BaseInitLoggingImpl(const LoggingSettings& settings) {
+   g_log_format = settings.log_format;
+ #endif
+ 
++#if BUILDFLAG(IS_WIN)
++  // Preload the function pointer so that we do minimal work while crashing.
++  SetLogFatalCrashKeyFuncGetter();
++#endif
++
+   MaybeInitializeVlogInfo();
+ 
+   g_logging_destination = settings.logging_dest;
+diff --git a/base/logging.h b/base/logging.h
+index 2d72f112e9b9f..0274e4addbada 100644
+--- a/base/logging.h
++++ b/base/logging.h
+@@ -537,6 +537,7 @@ class BASE_EXPORT LogMessage {
+   std::string str() const { return stream_.str(); }
+   const char* file() const { return file_; }
+   int line() const { return line_; }
++  size_t message_start() const { return message_start_; }
+ 
+   // Gets file:line: message in a format suitable for crash reporting.
+   std::string BuildCrashString() const;

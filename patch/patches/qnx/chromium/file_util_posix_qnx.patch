@@ -1,5 +1,7 @@
---- base/files/file_util_posix.cc
-+++ base/files/file_util_posix.cc
+diff --git a/base/files/file_util_posix.cc b/base/files/file_util_posix.cc
+index 455a73ac08ad4..9222c4cb4ac63 100644
+--- a/base/files/file_util_posix.cc
++++ b/base/files/file_util_posix.cc
 @@ -286,8 +286,32 @@ bool DoCopyDirectory(const FilePath& from_path,
    return true;
  }

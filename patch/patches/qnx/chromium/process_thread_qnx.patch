@@ -23,91 +23,6 @@ index f777ddc2dbc3d..da55c17025722 100644
    raw_ptr<const ProcessFilter> filter_;
  };
  
-diff --git a/base/process/process_iterator_qnx.cc b/base/process/process_iterator_qnx.cc
-new file mode 100644
-index 0000000000000..ffa414ed55d81
---- /dev/null
-+++ b/base/process/process_iterator_qnx.cc
-@@ -0,0 +1,79 @@
-+// Copyright 2026 The Chromium Authors
-+// Use of this source code is governed by a BSD-style license that can be
-+// found in the LICENSE file.
-+
-+#include "base/process/process_iterator.h"
-+
-+#include <dirent.h>
-+#include <fcntl.h>
-+#include <stdio.h>
-+#include <stdlib.h>
-+#include <sys/procfs.h>
-+#include <unistd.h>
-+
-+#include <devctl.h>
-+
-+namespace base {
-+
-+ProcessIterator::ProcessIterator(const ProcessFilter* filter)
-+    : procfs_dir_(nullptr, DIRClose()), filter_(filter) {
-+  procfs_dir_.reset(opendir("/proc"));
-+}
-+
-+ProcessIterator::~ProcessIterator() = default;
-+
-+bool ProcessIterator::CheckForNextProcess() {
-+  if (!procfs_dir_)
-+    return false;
-+  while (true) {
-+    struct dirent* dp = readdir(procfs_dir_.get());
-+    if (!dp)
-+      return false;
-+    // Skip non-numeric entries.
-+    if (dp->d_name[0] < '0' || dp->d_name[0] > '9')
-+      continue;
-+    int pid = atoi(dp->d_name);
-+    if (pid <= 0)
-+      continue;
-+
-+    char path[64];
-+    snprintf(path, sizeof(path), "/proc/%d/as", pid);
-+    int fd = open(path, O_RDONLY);
-+    if (fd == -1)
-+      continue;
-+    procfs_info info;
-+    int ret = devctl(fd, DCMD_PROC_INFO, &info, sizeof(info), nullptr);
-+    close(fd);
-+    if (ret != EOK)
-+      continue;
-+
-+    entry_.pid_ = pid;
-+    entry_.ppid_ = info.parent;
-+    entry_.gid_ = info.pgrp;
-+
-+    // QNX debug_process_t does not carry the executable path.
-+    // Read /proc/<pid>/cmdline as fallback.
-+    char cmdpath[64];
-+    snprintf(cmdpath, sizeof(cmdpath), "/proc/%d/cmdline", pid);
-+    int cfd = open(cmdpath, O_RDONLY);
-+    if (cfd != -1) {
-+      char buf[256] = {};
-+      ssize_t n = read(cfd, buf, sizeof(buf) - 1);
-+      close(cfd);
-+      if (n > 0) {
-+        buf[n] = '\0';
-+        const char* base = strrchr(buf, '/');
-+        entry_.exe_file_ = base ? base + 1 : buf;
-+      }
-+    }
-+    if (entry_.exe_file_.empty())
-+      entry_.exe_file_ = dp->d_name;
-+    return true;
-+  }
-+}
-+
-+bool NamedProcessIterator::IncludeEntry() {
-+  return entry_.exe_file_ == executable_name_;
-+}
-+
-+}  // namespace base
 diff --git a/base/process/process_metrics.h b/base/process/process_metrics.h
 index 5a6105d1b547d..725dc3ac24acf 100644
 --- a/base/process/process_metrics.h
@@ -144,76 +59,6 @@ index 205200021c674..000a6d9bdfe1f 100644
  #endif
  }
  
-diff --git a/base/process/process_metrics_qnx.cc b/base/process/process_metrics_qnx.cc
-new file mode 100644
-index 0000000000000..d43a228b15761
---- /dev/null
-+++ b/base/process/process_metrics_qnx.cc
-@@ -0,0 +1,64 @@
-+// Copyright 2026 The Chromium Authors
-+// Use of this source code is governed by a BSD-style license that can be
-+// found in the LICENSE file.
-+
-+#include "base/process/process_metrics.h"
-+
-+#include <fcntl.h>
-+#include <devctl.h>
-+#include <sys/procfs.h>
-+#include <unistd.h>
-+
-+#include "base/files/scoped_file.h"
-+#include "base/memory/ptr_util.h"
-+#include "base/types/expected.h"
-+
-+namespace base {
-+
-+ProcessMetrics::ProcessMetrics(ProcessHandle process) : process_(process) {}
-+
-+// static
-+std::unique_ptr<ProcessMetrics> ProcessMetrics::CreateProcessMetrics(
-+    ProcessHandle process) {
-+  return WrapUnique(new ProcessMetrics(process));
-+}
-+
-+size_t GetSystemCommitCharge() {
-+  // QNX does not have a concept of virtual memory overcommit.
-+  return 0;
-+}
-+
-+base::expected<TimeDelta, ProcessCPUUsageError>
-+ProcessMetrics::GetCumulativeCPUUsage() {
-+  char path[64];
-+  snprintf(path, sizeof(path), "/proc/%d/as", process_);
-+  int fd = open(path, O_RDONLY);
-+  if (fd == -1)
-+    return base::unexpected(ProcessCPUUsageError::kSystemError);
-+  procfs_info info;
-+  int ret = devctl(fd, DCMD_PROC_INFO, &info, sizeof(info), nullptr);
-+  close(fd);
-+  if (ret != EOK)
-+    return base::unexpected(ProcessCPUUsageError::kSystemError);
-+  // utime and stime are in nanoseconds.
-+  return Nanoseconds(info.utime + info.stime);
-+}
-+
-+base::expected<ProcessMemoryInfo, ProcessUsageError>
-+ProcessMetrics::GetMemoryInfo() const {
-+  char path[64];
-+  snprintf(path, sizeof(path), "/proc/%d/as", process_);
-+  int fd = open(path, O_RDONLY);
-+  if (fd == -1)
-+    return base::unexpected(ProcessUsageError::kSystemError);
-+  procfs_info info;
-+  int ret = devctl(fd, DCMD_PROC_INFO, &info, sizeof(info), nullptr);
-+  close(fd);
-+  if (ret != EOK)
-+    return base::unexpected(ProcessUsageError::kSystemError);
-+  ProcessMemoryInfo memory_info;
-+  memory_info.resident_set_bytes = info.private_mem;
-+  return memory_info;
-+}
-+
-+}  // namespace base
 diff --git a/base/process/process_unittest.cc b/base/process/process_unittest.cc
 index 2a3657ee8a8ba..c49c49e5ffe17 100644
 --- a/base/process/process_unittest.cc
@@ -481,82 +326,6 @@ index 20a2582f4ae50..34766d3dcc0d5 100644
  #else
    // Security concerns prevent the use of priority inheritance mutexes on Linux.
    //   * CVE-2010-0622 - Linux < 2.6.33-rc7, wake_futex_pi possible DoS.
-diff --git a/base/system/sys_info_qnx.cc b/base/system/sys_info_qnx.cc
-new file mode 100644
-index 0000000000000..b2b8fdbc09ded
---- /dev/null
-+++ b/base/system/sys_info_qnx.cc
-@@ -0,0 +1,70 @@
-+// Copyright 2026 The Chromium Authors
-+// Use of this source code is governed by a BSD-style license that can be
-+// found in the LICENSE file.
-+
-+// QNX SDP 8 implementation of SysInfo functions not covered by
-+// sys_info_posix.cc.  Uses POSIX sysconf() for memory queries (both
-+// _SC_PHYS_PAGES and _SC_AVPHYS_PAGES are confirmed available on QNX 8)
-+// and uname(2) for hardware identification.
-+
-+#include "base/system/sys_info.h"
-+
-+#include <stdint.h>
-+#include <sys/neutrino.h>
-+#include <sys/syspage.h>
-+#include <sys/utsname.h>
-+#include <unistd.h>
-+
-+#include "base/byte_size.h"
-+#include "base/numerics/safe_conversions.h"
-+
-+namespace base {
-+
-+namespace {
-+
-+// Helper: multiply two sysconf values, returning 0 on error.
-+ByteSize SysconfPages(int pages_name) {
-+  long pages = sysconf(pages_name);
-+  long page_size = sysconf(_SC_PAGESIZE);
-+  if (pages <= 0 || page_size <= 0) {
-+    return ByteSize(0);
-+  }
-+  return ByteSize(static_cast<uint64_t>(page_size)) *
-+         static_cast<uint64_t>(pages);
-+}
-+
-+}  // namespace
-+
-+// static
-+ByteSize SysInfo::AmountOfTotalPhysicalMemoryImpl() {
-+  // _SC_PHYS_PAGES: total physical pages in the system.
-+  // Confirmed available on QNX SDP 8 (confname.h line 260).
-+  return SysconfPages(_SC_PHYS_PAGES);
-+}
-+
-+// static
-+ByteSize SysInfo::AmountOfAvailablePhysicalMemoryImpl() {
-+  // _SC_AVPHYS_PAGES: physical pages not currently in use.
-+  // Confirmed available on QNX SDP 8 (confname.h line 218).
-+  return SysconfPages(_SC_AVPHYS_PAGES);
-+}
-+
-+// static
-+std::string SysInfo::CPUModelName() {
-+  // QNX does not expose /proc/cpuinfo.  Return the machine architecture
-+  // from uname(2) as a reasonable substitute (e.g. "x86_64", "aarch64").
-+  struct utsname info;
-+  if (uname(&info) == 0) {
-+    return std::string(info.machine);
-+  }
-+  return std::string();
-+}
-+
-+// static
-+SysInfo::HardwareInfo SysInfo::GetHardwareInfoSync() {
-+  // QNX SDP 8 does not expose DMI/SMBIOS hardware info via a standard
-+  // interface.  Return empty strings; this data is used for telemetry only.
-+  return HardwareInfo{};
-+}
-+
-+}  // namespace base
 diff --git a/base/system/sys_info_unittest.cc b/base/system/sys_info_unittest.cc
 index b45335751a562..3e1cafdbd1a4c 100644
 --- a/base/system/sys_info_unittest.cc
@@ -750,82 +519,6 @@ index f51333e43c61f..45bfad8a1b7b5 100644
    explicit PlatformThreadMetrics(PlatformThreadId tid) : tid_(tid) {}
  
    PlatformThreadId tid_;
-diff --git a/base/threading/platform_thread_metrics_qnx.cc b/base/threading/platform_thread_metrics_qnx.cc
-new file mode 100644
-index 0000000000000..673ccbb8ddea2
---- /dev/null
-+++ b/base/threading/platform_thread_metrics_qnx.cc
-@@ -0,0 +1,70 @@
-+// Copyright 2025 The Chromium Authors
-+// Use of this source code is governed by a BSD-style license that can be
-+// found in the LICENSE file.
-+
-+#include "base/threading/platform_thread_metrics.h"
-+
-+#include <devctl.h>
-+#include <fcntl.h>
-+#include <sys/debug.h>
-+#include <sys/procfs.h>
-+#include <unistd.h>
-+
-+#include <optional>
-+#include <string>
-+
-+#include "base/logging.h"
-+#include "base/memory/ptr_util.h"
-+#include "base/strings/string_number_conversions.h"
-+#include "base/time/time.h"
-+#include "base/trace_event/trace_event.h"
-+
-+namespace base {
-+
-+// static
-+std::unique_ptr<PlatformThreadMetrics>
-+PlatformThreadMetrics::CreateForCurrentThread() {
-+  return CreateFromId(PlatformThread::CurrentId());
-+}
-+
-+// static
-+std::unique_ptr<PlatformThreadMetrics> PlatformThreadMetrics::CreateFromId(
-+    PlatformThreadId tid) {
-+  if (tid == kInvalidThreadId) {
-+    return nullptr;
-+  }
-+  return WrapUnique(new PlatformThreadMetrics(tid));
-+}
-+
-+std::optional<TimeDelta> PlatformThreadMetrics::GetCumulativeCPUUsage() {
-+  TRACE_EVENT("base", "Thread::GetCumulativeCPUUsage");
-+
-+  // Open /proc/<pid>/as to query per-thread status via devctl.
-+  const std::string path =
-+      "/proc/" + NumberToString(getpid()) + "/as";
-+  const int fd = open(path.c_str(), O_RDONLY);
-+  if (fd == -1) {
-+    DPLOG(ERROR) << "open(" << path << ") failed";
-+    return std::nullopt;
-+  }
-+
-+  // DCMD_PROC_TIDSTATUS accepts a procfs_status (= debug_thread_t) with
-+  // tid pre-filled; the kernel fills in the rest including sutime.
-+  procfs_status status = {};
-+  status.tid = static_cast<pthread_t>(tid_.raw());
-+
-+  const int rc = devctl(fd, DCMD_PROC_TIDSTATUS, &status, sizeof(status),
-+                        nullptr);
-+  close(fd);
-+
-+  if (rc != EOK) {
-+    DPLOG(ERROR) << "devctl(DCMD_PROC_TIDSTATUS) failed for tid "
-+                 << tid_.raw();
-+    return std::nullopt;
-+  }
-+
-+  // sutime is thread system + user running time in nanoseconds.
-+  return Nanoseconds(static_cast<int64_t>(status.sutime));
-+}
-+
-+}  // namespace base
 diff --git a/base/threading/platform_thread_posix.cc b/base/threading/platform_thread_posix.cc
 index 620790a827423..49498c9548d5f 100644
 --- a/base/threading/platform_thread_posix.cc
@@ -933,6 +626,19 @@ index 299240e6d82e2..af511fbdaeee3 100644
      int error_counter = 0;
      int result = 0;
      // HANDLE_EINTR tries for 100 times. So following the same pattern.
+diff --git a/base/trace_event/process_memory_dump_unittest.cc b/base/trace_event/process_memory_dump_unittest.cc
+index c635ebcf08ea2..0d924584db1e4 100644
+--- a/base/trace_event/process_memory_dump_unittest.cc
++++ b/base/trace_event/process_memory_dump_unittest.cc
+@@ -47,7 +47,7 @@ void* Map(size_t size) {
+                         PAGE_READWRITE);
+ #elif BUILDFLAG(IS_POSIX) || BUILDFLAG(IS_FUCHSIA)
+   return ::mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON,
+-                0, 0);
++                -1, 0);
+ #endif
+ }
+ 
 diff --git a/base/types/optional_unittest.cc b/base/types/optional_unittest.cc
 index fc39a953626e0..e84748f825285 100644
 --- a/base/types/optional_unittest.cc

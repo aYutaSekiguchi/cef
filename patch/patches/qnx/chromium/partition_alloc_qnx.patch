@@ -63,6 +63,29 @@ index 275d6dbe1b05f..9cbe3038a066c 100644
        deps += [ ":debug_proc_maps" ]
      }
  
+diff --git a/base/allocator/partition_allocator/src/partition_alloc/extended_api.cc b/base/allocator/partition_allocator/src/partition_alloc/extended_api.cc
+index 91180deb08311..7f6f1d5dfac9f 100644
+--- a/base/allocator/partition_allocator/src/partition_alloc/extended_api.cc
++++ b/base/allocator/partition_allocator/src/partition_alloc/extended_api.cc
+@@ -165,6 +165,18 @@ ThreadCacheProcessScopeForTesting::~ThreadCacheProcessScopeForTesting() {
+   ThreadCache::SwapForTesting(nullptr, kDefaultRootThreadCacheIndex);
+ #endif  // PA_BUILDFLAG(USE_PARTITION_ALLOC_AS_MALLOC)
+ }
++
++#else  // PA_CONFIG(THREAD_CACHE_SUPPORTED)
++
++ThreadCacheProcessScopeForTesting::ThreadCacheProcessScopeForTesting(
++    PartitionRoot* root)
++    : root_(root), regular_was_enabled_(false) {
++  (void)root_;
++  (void)regular_was_enabled_;
++}
++
++ThreadCacheProcessScopeForTesting::~ThreadCacheProcessScopeForTesting() = default;
++
+ #endif  // PA_CONFIG(THREAD_CACHE_SUPPORTED)
+ 
+ }  // namespace partition_alloc::internal
 diff --git a/base/allocator/partition_allocator/src/partition_alloc/page_allocator.h b/base/allocator/partition_allocator/src/partition_alloc/page_allocator.h
 index 0711808209459..96f3f474b96ad 100644
 --- a/base/allocator/partition_allocator/src/partition_alloc/page_allocator.h
@@ -280,6 +303,49 @@ index 9b932955f7174..fdb85ec00fed8 100644
  }
  
  TEST_F(RawPtrTest, ComparisonOperatorUsesGetForComparison) {
+diff --git a/base/allocator/partition_allocator/src/partition_alloc/scheduler_loop_quarantine_unittest.cc b/base/allocator/partition_allocator/src/partition_alloc/scheduler_loop_quarantine_unittest.cc
+index 25f73e868e00e..7454fde2aacaa 100644
+--- a/base/allocator/partition_allocator/src/partition_alloc/scheduler_loop_quarantine_unittest.cc
++++ b/base/allocator/partition_allocator/src/partition_alloc/scheduler_loop_quarantine_unittest.cc
+@@ -6,6 +6,7 @@
+ 
+ #include "partition_alloc/extended_api.h"
+ #include "partition_alloc/partition_alloc_base/check.h"
++#include "partition_alloc/partition_alloc_config.h"
+ #include "partition_alloc/partition_alloc_for_testing.h"
+ #include "partition_alloc/partition_page.h"
+ #include "partition_alloc/partition_root.h"
+@@ -56,6 +57,10 @@ class SchedulerLoopQuarantineTest : public testing::Test {
+         std::make_unique<PartitionAllocatorForTesting>(PartitionOptions{});
+     root_.emplace(*allocator_->root());
+     if constexpr (QuarantineBranch::kThreadBound) {
++      if (!PA_CONFIG(THREAD_CACHE_SUPPORTED)) {
++        GTEST_SKIP() << "Thread cache not supported on this platform";
++        return;
++      }
+       scoped_tcache_swap_.emplace(allocator_->root());
+     }
+     branch_ = GetBranchFromAllocatorRoot<QuarantineBranch::kThreadBound>(
+@@ -70,6 +75,10 @@ class SchedulerLoopQuarantineTest : public testing::Test {
+   }
+ 
+   void TearDown() override {
++    if (!branch_) {
++      // SetUp was skipped (e.g. thread cache not supported on this platform).
++      return;
++    }
+     branch_->Purge();
+     branch_ = nullptr;
+     root_.reset();
+@@ -106,7 +115,7 @@ class SchedulerLoopQuarantineTest : public testing::Test {
+ 
+   std::unique_ptr<PartitionAllocatorForTesting> allocator_;
+   std::optional<QuarantineRoot> root_;
+-  QuarantineBranch* branch_;
++  QuarantineBranch* branch_ = nullptr;
+   std::optional<internal::ThreadCacheProcessScopeForTesting>
+       scoped_tcache_swap_;
+ };
 diff --git a/base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_default_dispatch_to_partition_alloc.cc b/base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_default_dispatch_to_partition_alloc.cc
 index b114fc27cc55d..3462921c22409 100644
 --- a/base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_default_dispatch_to_partition_alloc.cc
@@ -483,69 +549,3 @@ index 81f0876bdf233..e6bb980c6383f 100644
 -}  // namespace partition_alloc::internal
 +}  // namespace partition_alloc::internal
 \ No newline at end of file
-diff --git a/base/allocator/partition_allocator/src/partition_alloc/extended_api.cc b/base/allocator/partition_allocator/src/partition_alloc/extended_api.cc
-index 91180deb08311..7f6f1d5dfac9f 100644
---- a/base/allocator/partition_allocator/src/partition_alloc/extended_api.cc
-+++ b/base/allocator/partition_allocator/src/partition_alloc/extended_api.cc
-@@ -165,6 +165,18 @@ ThreadCacheProcessScopeForTesting::~ThreadCacheProcessScopeForTesting() {
-   ThreadCache::SwapForTesting(nullptr, kDefaultRootThreadCacheIndex);
- #endif  // PA_BUILDFLAG(USE_PARTITION_ALLOC_AS_MALLOC)
- }
-+
-+#else  // PA_CONFIG(THREAD_CACHE_SUPPORTED)
-+
-+ThreadCacheProcessScopeForTesting::ThreadCacheProcessScopeForTesting(
-+    PartitionRoot* root)
-+    : root_(root), regular_was_enabled_(false) {
-+  (void)root_;
-+  (void)regular_was_enabled_;
-+}
-+
-+ThreadCacheProcessScopeForTesting::~ThreadCacheProcessScopeForTesting() = default;
-+
- #endif  // PA_CONFIG(THREAD_CACHE_SUPPORTED)
- 
- }  // namespace partition_alloc::internal
-diff --git a/base/allocator/partition_allocator/src/partition_alloc/scheduler_loop_quarantine_unittest.cc b/base/allocator/partition_allocator/src/partition_alloc/scheduler_loop_quarantine_unittest.cc
-index 25f73e868e00e..7454fde2aacaa 100644
---- a/base/allocator/partition_allocator/src/partition_alloc/scheduler_loop_quarantine_unittest.cc
-+++ b/base/allocator/partition_allocator/src/partition_alloc/scheduler_loop_quarantine_unittest.cc
-@@ -6,6 +6,7 @@
- 
- #include "partition_alloc/extended_api.h"
- #include "partition_alloc/partition_alloc_base/check.h"
-+#include "partition_alloc/partition_alloc_config.h"
- #include "partition_alloc/partition_alloc_for_testing.h"
- #include "partition_alloc/partition_page.h"
- #include "partition_alloc/partition_root.h"
-@@ -56,6 +57,10 @@ class SchedulerLoopQuarantineTest : public testing::Test {
-         std::make_unique<PartitionAllocatorForTesting>(PartitionOptions{});
-     root_.emplace(*allocator_->root());
-     if constexpr (QuarantineBranch::kThreadBound) {
-+      if (!PA_CONFIG(THREAD_CACHE_SUPPORTED)) {
-+        GTEST_SKIP() << "Thread cache not supported on this platform";
-+        return;
-+      }
-       scoped_tcache_swap_.emplace(allocator_->root());
-     }
-     branch_ = GetBranchFromAllocatorRoot<QuarantineBranch::kThreadBound>(
-@@ -70,6 +75,10 @@ class SchedulerLoopQuarantineTest : public testing::Test {
-   }
- 
-   void TearDown() override {
-+    if (!branch_) {
-+      // SetUp was skipped (e.g. thread cache not supported on this platform).
-+      return;
-+    }
-     branch_->Purge();
-     branch_ = nullptr;
-     root_.reset();
-@@ -106,7 +115,7 @@ class SchedulerLoopQuarantineTest : public testing::Test {
- 
-   std::unique_ptr<PartitionAllocatorForTesting> allocator_;
-   std::optional<QuarantineRoot> root_;
--  QuarantineBranch* branch_;
-+  QuarantineBranch* branch_ = nullptr;
-   std::optional<internal::ThreadCacheProcessScopeForTesting>
-       scoped_tcache_swap_;
- };

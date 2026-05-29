@@ -241,6 +241,78 @@ index 2b15b4439c6bf..23d1315db0d11 100644
  }
  
  bool IsDirectoryEmpty(const FilePath& dir_path) {
+diff --git a/base/files/file_util_posix.cc b/base/files/file_util_posix.cc
+index 455a73ac08ad4..9222c4cb4ac63 100644
+--- a/base/files/file_util_posix.cc
++++ b/base/files/file_util_posix.cc
+@@ -286,8 +286,32 @@ bool DoCopyDirectory(const FilePath& from_path,
+   return true;
+ }
+ 
++#if BUILDFLAG(IS_QNX)
++
++bool IsQnxFreedBytePattern(uintptr_t value) {
++  return value == static_cast<uintptr_t>(0xcdcdcdcdcdcdcdcdULL);
++}
++
++void SanitizeQnxDirBeforeClose(DIR* dir) {
++  // QNX libc's DIR object has an internal cleanup list at offset 0x18 on
++  // x86_64 SDP 8. With Chromium's debug PartitionAlloc malloc shim, this field
++  // can contain PA's freed-memory pattern, and closedir() then dereferences
++  // 0xcdcdcdcdcdcdcdcd while walking that list. Clear that known-bad value so
++  // closedir() can still close the directory fd and free the DIR object.
++  auto* const words = reinterpret_cast<uintptr_t*>(dir);
++  constexpr size_t kQnxDirInternalListWord = 3;  // offset 0x18 on x86_64.
++  if (IsQnxFreedBytePattern(words[kQnxDirInternalListWord])) {
++    words[kQnxDirInternalListWord] = 0;
++  }
++}
++
++#endif  // BUILDFLAG(IS_QNX)
++
+ struct CloseDir {
+   void operator()(DIR* const p) const {
++#if BUILDFLAG(IS_QNX)
++    SanitizeQnxDirBeforeClose(p);
++#endif
+     if (IGNORE_EINTR(closedir(p)) < 0) {
+       PLOG(ERROR) << "Cannot close dir";
+     }
+@@ -382,7 +406,7 @@ bool DoDeleteFile(const FilePath& path, bool recursive) {
+   return DoDeleteFile(AT_FDCWD, path.value().c_str(), recursive);
+ }
+ 
+-#if !BUILDFLAG(IS_APPLE)
++#if !BUILDFLAG(IS_APPLE) && !BUILDFLAG(IS_QNX)
+ // Appends |mode_char| to |mode| before the optional character set encoding; see
+ // https://www.gnu.org/software/libc/manual/html_node/Opening-Streams.html for
+ // details.
+@@ -1071,9 +1095,10 @@ FILE* OpenFile(const FilePath& filename, base::cstring_view mode) {
+     return fdopen(fd, mode.c_str());
+   }
+ #endif
+-#if BUILDFLAG(IS_APPLE)
+-  // macOS does not provide a mode character to set O_CLOEXEC; see
+-  // https://developer.apple.com/legacy/library/documentation/Darwin/Reference/ManPages/man3/fopen.3.html.
++#if BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_QNX)
++  // macOS does not provide a mode character to set O_CLOEXEC; QNX's libc also
++  // behaves unreliably with extended mode strings such as "rbe". Use the raw
++  // mode and set FD_CLOEXEC explicitly after fopen().
+   const char* the_mode = mode.c_str();
+ #else
+   std::string mode_with_e(AppendModeCharacter(mode, 'e'));
+@@ -1082,8 +1107,9 @@ FILE* OpenFile(const FilePath& filename, base::cstring_view mode) {
+   do {
+     result = fopen(filename.value().c_str(), the_mode);
+   } while (!result && errno == EINTR);
+-#if BUILDFLAG(IS_APPLE)
+-  // Mark the descriptor as close-on-exec.
++#if BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_QNX)
++  // Mark the descriptor as close-on-exec. QNX's fopen() accepts the extended
++  // mode string but does not reliably set FD_CLOEXEC on the resulting fd.
+   if (result) {
+     SetCloseOnExec(fileno(result));
+   }
 diff --git a/base/files/file_util_unittest.cc b/base/files/file_util_unittest.cc
 index 2c774de5a6ef0..6178faaea25a7 100644
 --- a/base/files/file_util_unittest.cc

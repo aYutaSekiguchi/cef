@@ -1,25 +1,3 @@
-diff --git a/base/memory/discardable_memory_qnx.cc b/base/memory/discardable_memory_qnx.cc
-new file mode 100644
-index 0000000000000..896fcd5a204a4
---- /dev/null
-+++ b/base/memory/discardable_memory_qnx.cc
-@@ -0,0 +1,16 @@
-+// Copyright 2026 The Chromium Authors
-+// Use of this source code is governed by a BSD-style license that can be
-+// found in the LICENSE file.
-+
-+#include "base/memory/discardable_memory.h"
-+
-+#include "base/memory/madv_free_discardable_memory_posix.h"
-+
-+namespace base {
-+
-+MadvFreeSupport GetMadvFreeSupport() {
-+  // QNX does not support MADV_FREE.
-+  return MadvFreeSupport::kUnsupported;
-+}
-+
-+}  // namespace base
 diff --git a/base/memory/discardable_shared_memory.cc b/base/memory/discardable_shared_memory.cc
 index 4adee24c01744..ff9de978d7437 100644
 --- a/base/memory/discardable_shared_memory.cc
@@ -59,6 +37,52 @@ index 14b16a98df6af..943c6e163e908 100644
      kFcntlFailed,
      kReadOnlyFdNotReadOnly,
      kUnexpectedReadOnlyFd,
+diff --git a/base/memory/platform_shared_memory_region_posix.cc b/base/memory/platform_shared_memory_region_posix.cc
+index ebdaab8cada6c..07a671d547aa6 100644
+--- a/base/memory/platform_shared_memory_region_posix.cc
++++ b/base/memory/platform_shared_memory_region_posix.cc
+@@ -41,6 +41,7 @@ enum class FDAccessModeError {
+   kMismatch,
+ };
+ 
++#if !BUILDFLAG(IS_QNX)
+ std::optional<FDAccessModeError> CheckFDAccessMode(int fd, int expected_mode) {
+   int fd_status = fcntl(fd, F_GETFL);
+   if (fd_status == -1) {
+@@ -56,6 +57,7 @@ std::optional<FDAccessModeError> CheckFDAccessMode(int fd, int expected_mode) {
+ 
+   return std::nullopt;
+ }
++#endif
+ 
+ }  // namespace
+ 
+@@ -272,6 +274,17 @@ PlatformSharedMemoryRegion::CheckPlatformHandlePermissionsCorrespondToMode(
+     PlatformSharedMemoryHandle handle,
+     Mode mode,
+     size_t size) {
++#if BUILDFLAG(IS_QNX)
++  // On QNX, fcntl(F_GETFL) returns incorrect access mode values for shared
++  // memory file descriptors (always returning 0 = O_RDONLY), so we cannot
++  // reliably detect permission mismatches. The readonly_fd heuristic also
++  // doesn't work because Unsafe regions intentionally have no readonly_fd.
++  // Skip all permission checks on QNX.
++  //
++  // Note: TakeOrFail() still validates the readonly_fd presence for kWritable
++  // mode, which correctly handles ConvertToReadOnly() cases.
++  return ok();
++#else
+   if (auto result = CheckFDAccessMode(
+           handle.fd, mode == Mode::kReadOnly ? O_RDONLY : O_RDWR);
+       result.has_value()) {
+@@ -304,6 +317,7 @@ PlatformSharedMemoryRegion::CheckPlatformHandlePermissionsCorrespondToMode(
+   }
+ 
+   return ok();
++#endif
+ }
+ 
+ PlatformSharedMemoryRegion::PlatformSharedMemoryRegion(
 diff --git a/base/memory/platform_shared_memory_region_unittest.cc b/base/memory/platform_shared_memory_region_unittest.cc
 index 1a193bdb01703..103687975e577 100644
 --- a/base/memory/platform_shared_memory_region_unittest.cc

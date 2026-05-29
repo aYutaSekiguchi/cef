@@ -1,5 +1,7 @@
---- base/memory/platform_shared_memory_region_posix.cc
-+++ base/memory/platform_shared_memory_region_posix.cc
+diff --git a/base/memory/platform_shared_memory_region_posix.cc b/base/memory/platform_shared_memory_region_posix.cc
+index ebdaab8cada6c..07a671d547aa6 100644
+--- a/base/memory/platform_shared_memory_region_posix.cc
++++ b/base/memory/platform_shared_memory_region_posix.cc
 @@ -41,6 +41,7 @@ enum class FDAccessModeError {
    kMismatch,
  };

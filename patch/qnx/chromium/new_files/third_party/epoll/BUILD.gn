@@ -1,0 +1,32 @@
+# Copyright 2025 The Chromium Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# QNX epoll port from qnx-ports/epoll (Apache 2.0).
+# Provides Linux-compatible epoll API for QNX SDP 8.
+
+component("epoll") {
+  sources = [
+    "src/epoll.c",
+    "src/epoll-mgr.c",
+  ]
+
+  include_dirs = [
+    "src/public",
+    "src",
+  ]
+
+  defines = [
+    "SLOG2",
+  ]
+
+  # QNX epoll port uses QNX internal headers that reference
+  # Chromium polyfills when building under clang.
+  configs += [ "//build/config/compiler:no_chromium_code" ]
+
+  # Suppress warnings from qnx-ports epoll code.
+  cflags = [
+    "-Wno-pragma-pack",
+    "-Wno-incompatible-pointer-types",
+  ]
+}
