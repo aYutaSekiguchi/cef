@@ -269,6 +269,9 @@ chrome_pgo_phase = 0
 
 # UI: Ozone only, no desktop Linux frameworks
 use_ozone = true
+use_qt = false
+use_qt5 = false
+use_qt6 = false
 use_x11 = false
 use_glib = false
 use_gio = false
