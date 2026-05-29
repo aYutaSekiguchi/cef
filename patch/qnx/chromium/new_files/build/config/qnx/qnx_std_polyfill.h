@@ -16,6 +16,19 @@
 // This header is C++-only.  C compilation should skip entirely.
 #ifdef __cplusplus
 
+// QNX sys/types.h defines minor() and major() macros under __EXT_UNIX_MISC
+// that collide with method names in protobuf-generated and perfetto-generated
+// C++ code. The macros are intended for C only, but some QNX SDK versions
+// lack the !defined(__cplusplus) guard. Undef them here to avoid collisions.
+// This is force-included early in the compile chain, before sys/types.h is
+// typically pulled in via perfetto or other headers.
+#ifdef minor
+#undef minor
+#endif
+#ifdef major
+#undef major
+#endif
+
 #include <version>
 
 // std::ranges::contains was added in C++23 (P2302R1, feature-test macro
