@@ -336,23 +336,6 @@ index 284e5382bf2fe..2824d7382501b 100644
  #elif BUILDFLAG(IS_OPENBSD) || BUILDFLAG(IS_AIX)
        // There is currently no way to get the executable path on OpenBSD
        char* cpath;
-diff --git a/base/command_line.cc b/base/command_line.cc
-index 02796f0a53832..ec53dc9785960 100644
---- a/base/command_line.cc
-+++ b/base/command_line.cc
-@@ -433,11 +433,10 @@ void CommandLine::AppendSwitchNative(std::string_view switch_string,
- #if BUILDFLAG(ENABLE_COMMANDLINE_SEQUENCE_CHECKS)
-   sequence_checker_.Check();
- #endif
--#if BUILDFLAG(IS_WIN)
-   const std::string switch_key = ToLowerASCII(switch_string);
-+#if BUILDFLAG(IS_WIN)
-   StringType combined_switch_string(UTF8ToWide(switch_key));
- #elif BUILDFLAG(IS_POSIX) || BUILDFLAG(IS_FUCHSIA)
--  std::string_view switch_key = switch_string;
-   StringType combined_switch_string(switch_key);
- #endif
-   size_t prefix_length = GetSwitchPrefixLength(combined_switch_string);
 diff --git a/base/command_line_unittest.cc b/base/command_line_unittest.cc
 index 23180c4dd1507..e44b25bf04367 100644
 --- a/base/command_line_unittest.cc
@@ -397,62 +380,3 @@ index 839dcf716777b..3facc5df309f9 100644
    return container;
  }
  
-diff --git a/base/logging.cc b/base/logging.cc
-index d2354fd7b905b..e28d2e19723a0 100644
---- a/base/logging.cc
-+++ b/base/logging.cc
-@@ -426,7 +426,30 @@ void WriteToFd(int fd, const char* data, size_t length) {
-   }
- }
- 
-+#if BUILDFLAG(IS_WIN)
-+using SetLogFatalCrashKeyFunc = void (*)(const char* /*file*/,
-+                                         int /*line*/,
-+                                         const char* /*message*/);
-+
-+SetLogFatalCrashKeyFunc SetLogFatalCrashKeyFuncGetter() {
-+  static SetLogFatalCrashKeyFunc log_fatal_crash_key_func = []() {
-+    // Function exported by bootstrap.exe.
-+    return reinterpret_cast<SetLogFatalCrashKeyFunc>(
-+        GetProcAddress(GetModuleHandle(NULL), "SetLogFatalCrashKey"));
-+  }();
-+  return log_fatal_crash_key_func;
-+}
-+#endif  // BUILDFLAG(IS_WIN)
-+
- void SetLogFatalCrashKey(LogMessage* log_message) {
-+#if BUILDFLAG(IS_WIN)
-+  if (auto func = SetLogFatalCrashKeyFuncGetter()) {
-+    func(log_message->file(), log_message->line(),
-+         log_message->str().c_str() + log_message->message_start());
-+    return;
-+  }
-+#endif
-+
-   // In case of an out-of-memory condition, this code could be reentered when
-   // constructing and storing the key. Using a static is not thread-safe, but if
-   // multiple threads are in the process of a fatal crash at the same time, this
-@@ -496,6 +519,11 @@ bool BaseInitLoggingImpl(const LoggingSettings& settings) {
-   g_log_format = settings.log_format;
- #endif
- 
-+#if BUILDFLAG(IS_WIN)
-+  // Preload the function pointer so that we do minimal work while crashing.
-+  SetLogFatalCrashKeyFuncGetter();
-+#endif
-+
-   MaybeInitializeVlogInfo();
- 
-   g_logging_destination = settings.logging_dest;
-diff --git a/base/logging.h b/base/logging.h
-index 2d72f112e9b9f..0274e4addbada 100644
---- a/base/logging.h
-+++ b/base/logging.h
-@@ -537,6 +537,7 @@ class BASE_EXPORT LogMessage {
-   std::string str() const { return stream_.str(); }
-   const char* file() const { return file_; }
-   int line() const { return line_; }
-+  size_t message_start() const { return message_start_; }
- 
-   // Gets file:line: message in a format suitable for crash reporting.
-   std::string BuildCrashString() const;

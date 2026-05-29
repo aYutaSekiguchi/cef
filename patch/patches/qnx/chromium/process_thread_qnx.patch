@@ -102,10 +102,10 @@ index c36699aef7bcf..9e128feb1c69a 100644
  #endif  // !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_FUCHSIA)
  
 diff --git a/base/process/set_process_title.cc b/base/process/set_process_title.cc
-index aacd4a841f394..0844bb7050896 100644
+index f4488f8259836..0844bb7050896 100644
 --- a/base/process/set_process_title.cc
 +++ b/base/process/set_process_title.cc
-@@ -51,12 +51,12 @@ void SetProcessTitleFromCommandLine(const char** main_argv) {
+@@ -51,7 +51,10 @@ void SetProcessTitleFromCommandLine(const char** main_argv) {
    // by spaces. We can't actually keep them separate due to the way the
    // setproctitle() function works.
    std::string title;
@@ -115,13 +115,8 @@ index aacd4a841f394..0844bb7050896 100644
 +#endif
  
  #if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
--  DCHECK_EQ(base::PlatformThread::CurrentId(),
--            base::PlatformThreadId(getpid()));
--
    if (main_argv) {
-     setproctitle_init(main_argv);
-   }
-@@ -102,7 +102,9 @@ void SetProcessTitleFromCommandLine(const char** main_argv) {
+@@ -99,7 +102,9 @@ void SetProcessTitleFromCommandLine(const char** main_argv) {
      title += command_line->argv()[i];
    }
    // Disable prepending argv[0] with '-' if we prepended it ourselves above.
