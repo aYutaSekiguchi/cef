@@ -170,6 +170,9 @@ UNREGISTERED_CHROMIUM_PATCHES=(
   # Compiler / toolchain support
   "compiler_rt_builtins_qnx"
   "qnx_source_sync"
+  # V8
+  "v8_base64_atomic"
+  "v8_qnx_targeting"
 )
 
 for patch_name in "${UNREGISTERED_CHROMIUM_PATCHES[@]}"; do

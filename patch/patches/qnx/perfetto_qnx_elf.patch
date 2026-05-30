@@ -1,0 +1,28 @@
+diff --git a/src/trace_processor/util/elf/elf.h b/src/trace_processor/util/elf/elf.h
+index b566376d0e..29b0386257 100644
+--- a/src/trace_processor/util/elf/elf.h
++++ b/src/trace_processor/util/elf/elf.h
+@@ -39,7 +39,9 @@ constexpr auto ELFMAG1 = 'E';
+ constexpr auto ELFMAG2 = 'L';
+ constexpr auto ELFMAG3 = 'F';
+ constexpr auto ELFDATA2LSB = 1;
++#if !defined(EV_CURRENT)
+ constexpr auto EV_CURRENT = 1;
++#endif
+ constexpr auto EI_MAG0 = 0;
+ constexpr auto EI_MAG1 = 1;
+ constexpr auto EI_MAG2 = 2;
+diff --git a/src/trace_processor/util/symbolizer/elf.h b/src/trace_processor/util/symbolizer/elf.h
+index b9af8e108b..52a19a3648 100644
+--- a/src/trace_processor/util/symbolizer/elf.h
++++ b/src/trace_processor/util/symbolizer/elf.h
+@@ -40,7 +40,9 @@ constexpr auto ELFMAG1 = 'E';
+ constexpr auto ELFMAG2 = 'L';
+ constexpr auto ELFMAG3 = 'F';
+ constexpr auto ELFDATA2LSB = 1;
++#if !defined(EV_CURRENT)
+ constexpr auto EV_CURRENT = 1;
++#endif
+ constexpr auto EI_MAG0 = 0;
+ constexpr auto EI_MAG1 = 1;
+ constexpr auto EI_MAG2 = 2;

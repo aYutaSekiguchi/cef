@@ -63,5 +63,70 @@ template <class R, class T, class Proj = identity>
 
 #endif  // __cpp_lib_ranges_contains
 
+// std::atomic_ref was introduced in C++20 (P0019R8, feature-test macro
+// __cpp_lib_atomic_ref = 201806L).  QNX SDP 8 libc++ does not include it.
+// This polyfill delegates to std::atomic<T>* via reinterpret_cast, which is
+// safe because std::atomic<T> has the same object representation as T for
+// trivially copyable types.
+#if !defined(__cpp_lib_atomic_ref) || \
+    __cpp_lib_atomic_ref < 201806L
+
+namespace std {
+
+template <typename T>
+class atomic_ref {
+  static_assert(std::is_trivially_copyable_v<T>,
+                "atomic_ref requires trivially copyable type");
+
+  T* ptr_;
+
+ public:
+  explicit atomic_ref(T& obj) : ptr_(&obj) {}
+
+  void store(T value, memory_order order = memory_order_seq_cst) const {
+    reinterpret_cast<atomic<T>*>(ptr_)->store(value, order);
+  }
+
+  T load(memory_order order = memory_order_seq_cst) const {
+    return reinterpret_cast<const atomic<T>*>(
+        const_cast<const T*>(ptr_))->load(order);
+  }
+
+  T exchange(T value, memory_order order = memory_order_seq_cst) const {
+    return reinterpret_cast<atomic<T>*>(ptr_)->exchange(value, order);
+  }
+
+  bool compare_exchange_strong(T& expected, T desired,
+                               memory_order success,
+                               memory_order failure) const {
+    return reinterpret_cast<atomic<T>*>(ptr_)->compare_exchange_strong(
+        expected, desired, success, failure);
+  }
+
+  bool compare_exchange_strong(T& expected, T desired,
+                               memory_order order =
+                                   memory_order_seq_cst) const {
+    return reinterpret_cast<atomic<T>*>(ptr_)->compare_exchange_strong(
+        expected, desired, order);
+  }
+
+  T fetch_add(T value, memory_order order = memory_order_seq_cst) const {
+    return reinterpret_cast<atomic<T>*>(ptr_)->fetch_add(value, order);
+  }
+
+  T fetch_or(T value, memory_order order = memory_order_seq_cst) const {
+    return reinterpret_cast<atomic<T>*>(ptr_)->fetch_or(value, order);
+  }
+
+  static constexpr size_t required_alignment = alignof(T);
+};
+
+template <typename T>
+atomic_ref(T&) -> atomic_ref<T>;
+
+}  // namespace std
+
+#endif  // __cpp_lib_atomic_ref
+
 #endif  // __cplusplus
 #endif  // BUILD_CONFIG_QNX_QNX_STD_POLYFILL_H_

@@ -1,0 +1,170 @@
+--- a/v8/BUILD.gn
++++ b/v8/BUILD.gn
+@@ -1024,6 +1024,7 @@
+   "V8_TARGET_OS_MACOS",
+   "V8_TARGET_OS_WIN",
+   "V8_TARGET_OS_CHROMEOS",
++  "V8_TARGET_OS_QNX",
+   "V8_TARGET_ARCH_ARM64",
+   "V8_TARGET_ARCH_PPC64",
+   "V8_TARGET_ARCH_MIPS64",
+@@ -1108,6 +1109,9 @@
+ } else if (target_os == "chromeos") {
+   enabled_external_v8_defines += [ "V8_HAVE_TARGET_OS" ]
+   enabled_external_v8_defines += [ "V8_TARGET_OS_CHROMEOS" ]
++} else if (target_os == "qnx") {
++  enabled_external_v8_defines += [ "V8_HAVE_TARGET_OS" ]
++  enabled_external_v8_defines += [ "V8_TARGET_OS_QNX" ]
+ }
+ 
+ # Some V8_TARGET_ARCH_ defines that affect Api constants (see usages of
+@@ -5042,8 +5046,8 @@
+     if (v8_enable_webassembly) {
+       # iOS Xcode simulator builds run on an x64 target. iOS and macOS are both
+       # based on Darwin and thus POSIX-compliant to a similar degree.
+-      if (is_linux || is_chromeos || is_mac || is_ios ||
+-          target_os == "freebsd") {
++      if ((is_linux && !is_qnx) || is_chromeos || is_mac || is_ios ||
++          target_os == "freebsd") {
+         sources += [ "src/trap-handler/handler-inside-posix.h" ]
+       } else if (is_win) {
+         sources += [ "src/trap-handler/handler-inside-win.h" ]
+@@ -6529,8 +6533,8 @@
+     if (v8_enable_webassembly) {
+       # iOS Xcode simulator builds run on an x64 target. iOS and macOS are both
+       # based on Darwin and thus POSIX-compliant to a similar degree.
+-      if (is_linux || is_chromeos || is_mac || is_ios ||
+-          target_os == "freebsd") {
++      if ((is_linux && !is_qnx) || is_chromeos || is_mac || is_ios ||
++          target_os == "freebsd") {
+         sources += [
+           "src/trap-handler/handler-inside-posix.cc",
+           "src/trap-handler/handler-outside-posix.cc",
+@@ -7223,7 +7227,12 @@
+     }
+   }
+ 
+-  if (is_linux || is_chromeos) {
++  if (is_qnx) {
++    sources += [
++      "src/base/debug/stack_trace_posix.cc",
++      "src/base/platform/platform-qnx.cc",
++    ]
++  } else if (is_linux || is_chromeos) {
+     sources += [
+       "src/base/debug/stack_trace_posix.cc",
+       "src/base/platform/platform-linux.cc",
+--- a/v8/include/v8config.h
++++ b/v8/include/v8config.h
+@@ -196,6 +196,7 @@
+ //  V8_TARGET_OS_MACOS
+ //  V8_TARGET_OS_WIN
+ //  V8_TARGET_OS_CHROMEOS
++//  V8_TARGET_OS_QNX
+ //
+ // If not set explicitly, these fall back to corresponding V8_OS_ values.
+ 
+@@ -209,7 +210,8 @@
+   && !defined(V8_TARGET_OS_LINUX) \
+   && !defined(V8_TARGET_OS_MACOS) \
+   && !defined(V8_TARGET_OS_WIN) \
+-  && !defined(V8_TARGET_OS_CHROMEOS)
++  && !defined(V8_TARGET_OS_CHROMEOS) \
++  && !defined(V8_TARGET_OS_QNX)
+ #  error No known target OS defined.
+ # endif
+ 
+@@ -222,7 +224,8 @@
+   || defined(V8_TARGET_OS_LINUX) \
+   || defined(V8_TARGET_OS_MACOS) \
+   || defined(V8_TARGET_OS_WIN) \
+-  || defined(V8_TARGET_OS_CHROMEOS)
++  || defined(V8_TARGET_OS_CHROMEOS) \
++  || defined(V8_TARGET_OS_QNX)
+ #  error A target OS is defined but V8_HAVE_TARGET_OS is unset.
+ # endif
+ 
+@@ -253,6 +256,10 @@
+ 
+ #ifdef V8_OS_WIN
+ # define V8_TARGET_OS_WIN
++#endif
++
++#ifdef V8_OS_QNX
++# define V8_TARGET_OS_QNX
+ #endif
+ 
+ #endif  // V8_HAVE_TARGET_OS
+@@ -269,6 +276,8 @@
+ # define V8_TARGET_OS_STRING "macos"
+ #elif defined(V8_TARGET_OS_WINDOWS)
+ # define V8_TARGET_OS_STRING "windows"
++#elif defined(V8_TARGET_OS_QNX)
++# define V8_TARGET_OS_STRING "qnx"
+ #else
+ # define V8_TARGET_OS_STRING "unknown"
+ #endif
+--- a/v8/src/base/platform/platform-posix.cc
++++ b/v8/src/base/platform/platform-posix.cc
+@@ -74,7 +74,7 @@
+ #include <sys/resource.h>
+ #endif
+ 
+-#if !defined(_AIX) && !defined(V8_OS_FUCHSIA) && !V8_OS_ZOS
++#if !defined(_AIX) && !defined(V8_OS_FUCHSIA) && !V8_OS_ZOS && !V8_OS_QNX
+ #include <sys/syscall.h>
+ #endif
+ 
+@@ -929,6 +929,9 @@
+   return static_cast<int>(zx_thread_self());
+ #elif V8_OS_SOLARIS
+   return static_cast<int>(pthread_self());
++#elif V8_OS_QNX
++  // QNX: pthread_t is int, not a pointer type. reinterpret_cast would fail.
++  return static_cast<int>(static_cast<intptr_t>(pthread_self()));
+ #elif V8_OS_ZOS
+   return gettid();
+ #else
+@@ -1422,7 +1425,7 @@
+ // keep this version in POSIX as most Linux-compatible derivatives will
+ // support it. MacOS and FreeBSD are different here.
+ #if !defined(V8_OS_FREEBSD) && !defined(V8_OS_DARWIN) && !defined(_AIX) && \
+-    !defined(V8_OS_SOLARIS)
++    !defined(V8_OS_SOLARIS) && !defined(V8_OS_QNX)
+ 
+ namespace {
+ #if DEBUG
+--- a/v8/src/base/platform/platform-qnx.cc
++++ b/v8/src/base/platform/platform-qnx.cc
+@@ -11,6 +11,7 @@
+ #include <signal.h>
+ #include <stdlib.h>
+ #include <sys/resource.h>
++#include <sys/storage.h>
+ #include <sys/time.h>
+ #include <sys/types.h>
+ #include <ucontext.h>
+@@ -154,5 +155,12 @@
+   return std::nullopt;
+ }
+ 
++// static
++Stack::StackSlot Stack::ObtainCurrentThreadStackStart() {
++  struct _thread_local_storage* tls = __tls();
++  if (!tls || !tls->__stackaddr || tls->__stacksize == 0) return nullptr;
++  return reinterpret_cast<uint8_t*>(tls->__stackaddr) + tls->__stacksize;
++}
++
+ }  // namespace base
+ }  // namespace v8
+--- a/v8/src/wasm/std-object-sizes.h
++++ b/v8/src/wasm/std-object-sizes.h
+@@ -68,7 +68,7 @@
+ // When one of these checks fails, that probably means you've added fields to
+ // a class guarded by it. Update the respective EstimateCurrentMemoryConsumption
+ // function accordingly, and then update the check's expected size.
+-#if V8_TARGET_ARCH_X64 && defined(__clang__) && V8_TARGET_OS_LINUX &&          \
++#if V8_TARGET_ARCH_X64 && defined(__clang__) && V8_OS_LINUX &&                 \
+     !V8_USE_ADDRESS_SANITIZER && !V8_USE_MEMORY_SANITIZER && defined(DEBUG) && \
+     V8_COMPRESS_POINTERS && !defined(V8_GC_MOLE) && defined(_LIBCPP_VERSION)
+ #define UPDATE_WHEN_CLASS_CHANGES(classname, size)                       \

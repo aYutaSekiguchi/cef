@@ -21,6 +21,10 @@ template("qnx_clang_toolchain") {
   _qnx_host = getenv("QNX_HOST")
   _qnx_target = getenv("QNX_TARGET")
 
+  # QNX platform macros (madvise -> posix_madvise, MADV_DONTNEED, etc.)
+  _qnx_macros = rebase_path("//build/config/qnx/qnx_macros.h",
+                            root_build_dir)
+
   # Polyfill header for C++23 features missing from QNX libc++
   _qnx_std_polyfill = rebase_path("//build/config/qnx/qnx_std_polyfill.h",
                                   root_build_dir)
@@ -46,7 +50,7 @@ template("qnx_clang_toolchain") {
 
     extra_cflags = "${_target_flags} -include time.h"
     extra_cppflags = "${_target_flags} -include time.h"
-    extra_cxxflags = "${_target_flags} -I${_qnx_shim_dir} -I${_qnx_target}/usr/include/c++/v1 -include time.h -include ${_qnx_std_polyfill}"
+    extra_cxxflags = "${_target_flags} -I${_qnx_shim_dir} -I${_qnx_target}/usr/include/c++/v1 -include time.h -include ${_qnx_macros} -include ${_qnx_std_polyfill}"
 
     ld = "${_qnx_host}/usr/bin/qcc"
 
