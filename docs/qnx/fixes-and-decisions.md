@@ -600,6 +600,68 @@ The test already has an early return check against `DecommittedMemoryIsAlwaysZer
 
 ---
 
+## 26. v8_unittests Runtime Crash (SIGTRAP) — WithDefaultPlatformMixin Lifecycle
+
+**Date**: 2026-05-31
+
+**Symptoms**:
+- `v8_unittests` built successfully (see section 25) but crashed with SIGTRAP (exit 133) on QEMU.
+- Crashed when running multiple test cases sharing a `TestWithContext` or `TestWithHeap` fixture.
+- Individual tests passed when run alone via `--gtest_filter`.
+- `--gtest_repeat=2` on the same test passed iteration 1, crashed on iteration 2.
+- Tests using plain `TEST()` (no fixture) worked fine with repeat.
+
+**Root cause**:
+- `WithDefaultPlatformMixin` (V8's test fixture mixin for Platform creation) uses **constructor/destructor** (per-test-case), not `SetUpTestSuite`/`TearDownTestSuite` (per-test-suite).
+- Each `TEST_F` creates a new fixture instance, which calls:
+  ```
+  Constructor: V8::InitializePlatformForTesting() → V8::Initialize()
+  Destructor:  V8::Dispose() → V8::DisposePlatform()
+  ```
+- V8's startup state machine is one-way: `kIdle → ... → kPlatformDisposed`, with **no reset back to `kIdle`**.
+- On the second instantiation, `InitializePlatformForTesting()` checks:
+  ```cpp
+  if (v8_startup_state_ != V8StartupState::kIdle) {
+      FATAL("The platform was initialized before. Note that running
+             multiple tests in the same process is not supported.");
+  }
+  ```
+  The state is `kPlatformDisposed` (not `kIdle`), so `FATAL` fires → `IMMEDIATE_CRASH()` → `int3` → **SIGTRAP**.
+
+**Why this is not QNX-specific**:
+- The state machine and `FATAL` check exist in upstream V8. This affects **all platforms**, not just QNX.
+- V8's own test runner (`test/unittests/testcfg.py`) works around this by invoking the test binary **once per test**:
+  ```python
+  def _get_suite_flags(self):
+      return [f"--gtest_filter={self.name}"]  # ← each test = separate process
+  ```
+- On Linux CI, the V8 test runner spawns a new process per test, so `WithDefaultPlatformMixin`
+  always starts from a fresh process with `v8_startup_state_ = kIdle`.
+
+**Fix**:
+- Created `cef/tools/qnx_run_v8_unittests.py` — a script that replicates the V8 test runner's strategy:
+  1. Boot QEMU once and mount NFS.
+  2. List all tests via `--gtest_list_tests`.
+  3. Run each test individually via `sh -c './v8_unittests --gtest_filter=<test>'; echo __PI_V8_EXIT__:$?`.
+  4. Report pass/fail summary.
+- Keeps QEMU running across all tests (`--keep-qemu` semantics) to avoid repeated boot overhead.
+
+**Results**:
+- ✅ `InspectorTest.WrapInsideWrapOnInterrupt` (PASS, 0.3s) — previously crashed with SIGTRAP
+- ✅ `InspectorTest.BinaryFromBase64` (PASS, 0.3s) — previously crashed
+- ✅ `GCHeapDeathTest.*` (3 PASS, ~8s each) — previously crashed at suite start
+- ✅ `DefaultPlatformTest.*` (11 PASS)
+- ✅ `FlagDefinitionsTest.*` (16/17 PASS — `FreezeFlags` fails due to per-test platform lifecycle)
+- ✅ `LanguageServer*.*` (22/24 PASS — 2 parser-error tests hit QNX SIGPIPE behavior)
+
+**Related files**:
+- `cef/tools/qnx_run_v8_unittests.py`
+- `v8/test/unittests/test-utils.h` (WithDefaultPlatformMixin)
+- `v8/src/init/v8.cc` (`V8::InitializePlatformForTesting`)
+- `v8/test/unittests/testcfg.py` (upstream per-test invocation pattern)
+
+---
+
 ## Current accepted exclusions
 
 These are the current broad-run exclusions used by `cef/tools/qnx_run_test.sh`.
@@ -618,5 +680,6 @@ For a fresh session, the preferred order is:
 
 1. preserve bootstrap reproducibility from `cef/patch/...`
 2. validate the baseline on the target machine
-3. move on to the next concrete failing target beyond `base_unittests`
-4. revisit accepted exclusions only if they block that target
+3. **v8_unittests** — use `cef/tools/qnx_run_v8_unittests.py` for per-test execution
+4. move on to the next concrete failing target beyond `base_unittests` and `v8_unittests`
+5. revisit accepted exclusions only if they block that target
