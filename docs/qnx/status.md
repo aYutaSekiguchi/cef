@@ -90,13 +90,6 @@ Use this checklist when validating on another machine:
 7. Run `./cef/tools/qnx_run_test.sh --timeout 7200 --kill-existing "*"`.
 8. If any failures appear, check `fixes-and-decisions.md` first, then `history/` for deeper investigations.
 
-## Preserved historical branches
-
-These branches are retained as historical references and should not be deleted:
-
-- `qnx-cef-consolidate`
-- `qnx-cef-patched-baseline`
-
 ## Patch ownership model
 
 The intended model is:

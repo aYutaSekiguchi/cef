@@ -23,7 +23,6 @@ This repository contains a QNX port of Chromium/CEF work centered on compatibili
 ## Do not
 
 - add unmanaged root-level `patches/` directories
-- delete historical branches such as `qnx-cef-consolidate` or `qnx-cef-patched-baseline`
 - assume Linux runtime behavior just because GN treats QNX as Linux-like for some file selection
 - rely on local tree edits as the durable source of truth when the change should be carried by a CEF-managed patch
 
