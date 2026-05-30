@@ -561,6 +561,45 @@ The test already has an early return check against `DecommittedMemoryIsAlwaysZer
 
 ---
 
+## 25. SA_RESTART Undeclared in v8_unittests Build
+
+**Date**: 2026-05-31
+**Symptoms**:
+- `v8_unittests` build FAILED with:
+  ```
+  ../../v8/test/unittests/libsampler/signals-and-mutexes-unittest.cc:32:17:
+  error: use of undeclared identifier 'SA_RESTART'
+  ```
+
+**Root cause**:
+- QNX `/usr/include/signal.h` has `SA_RESTART` commented out:
+  ```c
+  /* #define SA_RESTART      0x0040 (not supported yet) */
+  ```
+- `v8/test/unittests/libsampler/signals-and-mutexes-unittest.cc` uses `SA_RESTART` in `sa_flags`:
+  ```cpp
+  sa.sa_flags = SA_RESTART | SA_SIGINFO | SA_ONSTACK;
+  ```
+
+**Fix**:
+- Added `#define SA_RESTART 0` to `build/config/qnx/qnx_macros.h` (force-included via `-include` for all QNX C++ compilations).
+- `SA_RESTART` controls whether blocking syscalls are automatically restarted after a signal handler runs. QNX does not support this feature.
+- Defining it as `0` makes the flag a no-op with no runtime impact, since:
+  1. QNX explicitly marks it unsupported — no existing QNX code depends on it.
+  2. POSIX-compliant code already handles `EINTR` (signal-interrupted syscall) with retry loops.
+  3. The affected test (`signals-and-mutexes-unittest.cc`) sets up a `SIGPROF` profiler handler where syscall restart is irrelevant.
+
+**Result**:
+- ✅ `v8_unittests` builds successfully (4490 targets).
+- ✅ Existing `base_unittests` build unaffected.
+- ✅ `qnx_std_polyfill.h` is for C++ library features; `qnx_macros.h` is the correct place for platform-level POSIX macro fixes.
+
+**Related files**:
+- `build/config/qnx/qnx_macros.h`
+- `cef/patch/qnx/chromium/new_files/build/config/qnx/qnx_macros.h`
+
+---
+
 ## Current accepted exclusions
 
 These are the current broad-run exclusions used by `cef/tools/qnx_run_test.sh`.

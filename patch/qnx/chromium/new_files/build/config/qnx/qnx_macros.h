@@ -48,6 +48,12 @@
 #define MADV_DONTNEED POSIX_MADV_DONTNEED
 #endif
 
+// QNX does not support SA_RESTART (commented out in signal.h).
+// Define it as 0 so that code which or-ies it into sa_flags compiles.
+#if !defined(SA_RESTART)
+#define SA_RESTART 0
+#endif
+
 #endif  // __QNX__
 
 // Fallback for non-QNX platforms.
