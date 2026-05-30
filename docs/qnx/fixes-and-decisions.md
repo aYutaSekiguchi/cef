@@ -1,7 +1,7 @@
 # QNX Phase 2 — Resolved Problem Log
 
 > Records of problems encountered and their resolutions.
-> Updated: 2026-05-23
+> Updated: 2026-05-30
 
 ---
 
@@ -430,6 +430,134 @@ The test already has an early return check against `DecommittedMemoryIsAlwaysZer
 ### Action
 - Excluded via script filter (`*AnyCriticalThreadHung*`).
 - Occurrence probability is extremely low and root investigation is difficult. Re-investigate only if frequency increases.
+
+---
+
+## 21. V8 Host/Target OS Split — clang_x64 Snapshot Tools Must Stay Linux
+
+**Date**: 2026-05-30
+**Symptoms**:
+- Clean QNX builds failed in the host `clang_x64` toolchain while building V8 host tools such as `mksnapshot`.
+- Early failure mode: `v8/src/wasm/std-object-sizes.h` hit an invalid preprocessor expression because host tools fell back to a bare `V8_TARGET_OS_LINUX` macro when `V8_HAVE_TARGET_OS` was unset.
+- Regression discovered during clean-tree verification: host `clang_x64` started compiling `platform-qnx.cc` and failed on QNX-only headers like `<backtrace.h>`.
+
+**Root cause**:
+- V8 needs two distinct OS concepts during snapshot builds:
+  1. **host/runtime OS** for the tool currently being compiled (`current_os`, `V8_OS_*`)
+  2. **target snapshot OS** for the snapshot being produced (`target_os`, `V8_TARGET_OS_*`)
+- Upstream V8 did not provide `V8_TARGET_OS_QNX`.
+- Treating `target_os == "qnx"` as the selector for platform sources was wrong for host tools because `clang_x64` still runs on Linux.
+- `std-object-sizes.h` is a host/toolchain-specific check, so keying it off target Linux was also wrong.
+
+**Fix**:
+1. Added `V8_TARGET_OS_QNX` support in `v8/include/v8config.h` and `v8/BUILD.gn`.
+2. Kept target-OS define injection keyed off `target_os == "qnx"`.
+3. Kept platform/trap-handler source selection keyed off host/runtime OS (`is_qnx`, `is_linux`, `current_os`) rather than target OS.
+4. Changed the Linux-only object-size guard in `std-object-sizes.h` from `V8_TARGET_OS_LINUX` to `V8_OS_LINUX`.
+5. Excluded QNX from V8 trap-handler POSIX source selection.
+
+**Result**:
+- ✅ Host `clang_x64` V8 tools (`mksnapshot`, `v8_context_snapshot_generator`, `mkgrokdump`, `v8_shell`) build correctly again.
+- ✅ Clean QNX bootstrap/build no longer requires local V8-only edits.
+
+**Related files**:
+- `v8/BUILD.gn`
+- `v8/include/v8config.h`
+- `v8/src/wasm/std-object-sizes.h`
+- `cef/patch/patches/qnx/chromium/v8_qnx_targeting.patch`
+
+---
+
+## 22. V8 Runtime Stack Detection — QNX Needs `__tls()` Stack Top
+
+**Date**: 2026-05-30
+**Symptoms**:
+- `v8_hello_world` built successfully but crashed immediately on QNX/QEMU.
+- Guest run failed with `trace trap (core dumped)` / exit `133`.
+- GDB backtrace reached `v8::internal::Isolate::StackOverflow()` during script compilation.
+
+**Root cause**:
+- QNX-specific current-thread stack-top detection in `platform-qnx.cc` was not providing a valid stack start for V8 runtime stack checks.
+- Without a correct stack top, V8 treated normal execution as stack overflow.
+
+**Fix**:
+- Implemented `Stack::ObtainCurrentThreadStackStart()` using QNX TLS metadata from `__tls()` / `struct _thread_local_storage`:
+  - `tls->__stackaddr + tls->__stacksize`
+- Added the required `#include <sys/storage.h>`.
+
+**Result**:
+- ✅ `v8_hello_world` now runs successfully on QNX/QEMU.
+- Observed output:
+  - `Hello, World!`
+  - `3 + 4 = 7`
+
+**Related files**:
+- `v8/src/base/platform/platform-qnx.cc`
+- `cef/patch/patches/qnx/chromium/v8_qnx_targeting.patch`
+
+---
+
+## 23. SIMDUTF Atomic Base64 Paths — Guard on `SIMDUTF_ATOMIC_REF`
+
+**Date**: 2026-05-30
+**Symptoms**:
+- Clean QNX builds failed in `v8/src/builtins/builtins-typed-array.cc` with missing simdutf atomic Base64 entry points, e.g.:
+  - `simdutf::atomic_base64_to_binary_safe`
+  - `simdutf::atomic_binary_to_base64`
+
+**Root cause**:
+- QNX SDP 8 libc++ does not provide standard-library `std::atomic_ref`.
+- We intentionally did **not** fake `__cpp_lib_atomic_ref`, so simdutf correctly disables its atomic Base64 APIs when `SIMDUTF_ATOMIC_REF` is false.
+- V8 still called the atomic simdutf entry points unconditionally for shared buffers.
+
+**Fix**:
+- Guarded both atomic Base64 call sites in `builtins-typed-array.cc` with `#if SIMDUTF_ATOMIC_REF`.
+- Fall back to the non-atomic simdutf functions when atomic-ref support is unavailable.
+
+**Result**:
+- ✅ Clean QNX V8 build succeeds without pretending to have full upstream `std::atomic_ref` support.
+
+**Related files**:
+- `v8/src/builtins/builtins-typed-array.cc`
+- `cef/patch/patches/qnx/chromium/v8_base64_atomic.patch`
+
+---
+
+## 24. Clean Bootstrap Reproducibility — Capture Fixes in CEF Patch Source of Truth
+
+**Date**: 2026-05-30
+**Symptoms**:
+- Clean-tree validation exposed packaging/reproducibility issues even when the live working tree already built successfully.
+- `partition_alloc_qnx.patch` failed to apply with `error: corrupt patch at line 365`.
+- Perfetto QNX ELF fixes and V8 fixes existed as working-tree changes but needed to be preserved as CEF-managed patches.
+- QNX builds emitted repeated `std::atomic_ref` CTAD warnings from the local polyfill.
+
+**Root cause**:
+- Some validated fixes were not yet captured in the durable CEF patch/new-file flow.
+- `partition_alloc_qnx.patch` had a broken hunk header (`@@ -1105,7 +1105,7 @@` instead of `@@ -1105,7 +1105,11 @@`).
+- The `atomic_ref` polyfill lacked a deduction guide, triggering repeated `-Wctad-maybe-unsupported` warnings.
+
+**Fix**:
+1. Corrected the broken `partition_alloc_qnx.patch` hunk header.
+2. Registered the Perfetto ELF macro-collision fix in `patch/patch.cfg` as `qnx/perfetto_qnx_elf`.
+3. Captured the V8 work in durable CEF patch files:
+   - `v8_qnx_targeting.patch`
+   - `v8_base64_atomic.patch`
+4. Added these V8 patches to `cef/tools/cef_create_projects_qnx.sh` Phase 3 application.
+5. Added an `atomic_ref(T&) -> atomic_ref<T>` deduction guide to `qnx_std_polyfill.h`.
+
+**Result**:
+- ✅ Clean bootstrap/build verification succeeds from CEF-managed patch sources.
+- ✅ Rebuild logs are no longer flooded with the `std::atomic_ref` CTAD warning.
+
+**Related files**:
+- `cef/patch/patches/qnx/chromium/partition_alloc_qnx.patch`
+- `cef/patch/patches/qnx/perfetto_qnx_elf.patch`
+- `cef/patch/patches/qnx/chromium/v8_qnx_targeting.patch`
+- `cef/patch/patches/qnx/chromium/v8_base64_atomic.patch`
+- `cef/patch/qnx/chromium/new_files/build/config/qnx/qnx_std_polyfill.h`
+- `cef/tools/cef_create_projects_qnx.sh`
+- `cef/patch/patch.cfg`
 
 ---
 
