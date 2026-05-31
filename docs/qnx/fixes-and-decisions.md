@@ -762,7 +762,7 @@ The test already has an early return check against `DecommittedMemoryIsAlwaysZer
 **Validation**:
 - A small QNX probe confirmed `std::stringstream << 1e100` still prints `1e+100`; only pointer insertion differs.
 - `JsonIntegrationTest` passes with the QNX JSON expectation.
-- `MultipleArgsAndCopy` now matches QNX pointer formatting and should pass once the rebuilt binary is re-run.
+- `MultipleArgsAndCopy` passes with the QNX pointer formatting.
 
 **Related files**:
 - `v8/test/unittests/libplatform/tracing-unittest.cc`
