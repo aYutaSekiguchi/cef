@@ -1,0 +1,64 @@
+--- a/v8/src/base/platform/platform.h
++++ b/v8/src/base/platform/platform.h
+@@ -681,6 +681,11 @@ class V8_BASE_EXPORT Stack {
+   // Gets the start of the stack of the current thread.
+   static StackSlot GetStackStart();
+ 
++  // Returns the actual OS stack size for the current thread, or 0 if unknown.
++  // Platforms with limited or configurable stacks (e.g. QNX) should override
++  // this so that the stack guard can clamp the logical stack limit.
++  static size_t GetStackSize();
++
+   // Returns the current stack top. Works correctly with ASAN and SafeStack.
+   //
+   // GetCurrentStackPosition() should not be inlined, because it works on stack
+--- a/v8/src/base/platform/platform-posix.cc
++++ b/v8/src/base/platform/platform-posix.cc
+@@ -1493,6 +1493,11 @@ Stack::StackSlot Stack::GetCurrentStackPosition() {
+   return __builtin_frame_address(0);
+ }
+ 
++#if !V8_OS_QNX
++// static
++size_t Stack::GetStackSize() { return 0; }
++#endif
++
+ #undef LOG_TAG
+ #undef MAP_ANONYMOUS
+ #undef MADV_FREE
+--- a/v8/src/base/platform/platform-qnx.cc
++++ b/v8/src/base/platform/platform-qnx.cc
+@@ -155,5 +155,11 @@ std::optional<OS::MemoryRange> OS::GetFirstFreeMemoryRangeWithin(
+ 
+ // static
++size_t Stack::GetStackSize() {
++  struct _thread_local_storage* tls = __tls();
++  if (!tls || tls->__stacksize == 0) return 0;
++  return tls->__stacksize;
++}
++
++// static
+ Stack::StackSlot Stack::ObtainCurrentThreadStackStart() {
+   struct _thread_local_storage* tls = __tls();
+--- a/v8/src/execution/stack-guard.cc
++++ b/v8/src/execution/stack-guard.cc
+@@ -249,7 +249,20 @@ void StackGuard::ThreadLocal::Initialize(Isolate* isolate,
+                                          const ExecutionAccess& lock) {
+-  const uintptr_t kLimitSize = v8_flags.stack_size * KB;
++  uintptr_t kLimitSize = v8_flags.stack_size * KB;
++  // Clamp the logical stack limit to stay within the actual OS stack.
++  // Platforms like QNX may have smaller stacks than V8's default (~1MB)
++  // assumption. Without clamping, the limit can be placed past the OS
++  // guard page, causing STACK_CHECK to never fire before a real overflow.
++  // See crbug.com/v8/13945 and platform-qnx.cc for details.
++  size_t actual_os = base::Stack::GetStackSize();
++  if (actual_os > 0) {
++    constexpr size_t kSafetyMargin = 128u * 1024;  // 128 KB
++    size_t max_allowed = actual_os > kSafetyMargin
++                             ? actual_os - kSafetyMargin
++                             : kSafetyMargin;
++    if (kLimitSize > max_allowed) kLimitSize = max_allowed;
++  }
+   DCHECK_GT(base::Stack::GetStackStart(), kLimitSize);
+   uintptr_t limit = base::Stack::GetStackStart() - kLimitSize;
+   real_jslimit_ = SimulatorStack::JsLimitFromCLimit(isolate, limit);

@@ -654,9 +654,12 @@ The test already has an early return check against `DecommittedMemoryIsAlwaysZer
 | Exit code | Count | Category | Details |
 |---|---|---|---|
 | exit 1 | 1 | gtest assertion | `FlagDefinitionsTest.FreezeFlags` — per-test Platform lifecycle interaction |
-| exit 13 | 18 | Expected error tests | Parser errors, serializer errors, stack overflow tests, etc. — test intentionally exits process on invalid input |
-| exit 133 (SIGTRAP) | 3 | CHECK failures | `PlatformTracingTest.JsonIntegrationTest` — Perfetto JSON number format differs on QNX libc (`1e+100` vs full decimal). `LogMapsTest.LogMapsDetailsContexts` — already `[SKIP]` in `unittests.status` under `tsan`. `WeakSetsTest.WeakSet_Shrinking` — already `[SKIP]` in status file. |
-| exit 139 (SIGSEGV) | 1 | Stack overflow crash | `ValueSerializerTest.DecodeVerifyObjectCount` — 100K recursion depth raw C++ stack overflow, not caught by V8's proactive guard |
+| exit 1 | 1 | gtest assertion | `FlagDefinitionsTest.FreezeFlags` — per-test Platform lifecycle interaction |
+| exit 13 | 16 | Error-path tests | **Genuine failures**: V8's proactive `STACK_CHECK` fired too late because stack limit exceeded actual OS stack (see section 27). Process terminates via `abort()` before error can be caught. |
+| exit 13 | 2 | `official_build` exception issue | `LanguageServerJson.ParserError`, `LexerError` — `-fno-exceptions` prevents `catch` from working. Known V8 issue `v8:13945`. Same on macOS. |
+| exit 133 (SIGTRAP) | 1 | Perfetto JSON format | `PlatformTracingTest.JsonIntegrationTest` — QNX libc formats `1e+100` as full decimal instead of scientific notation. Cosmetic, no runtime impact. |
+| exit 134 (SIGABRT) | 2 | `official_build` exception issue | `Torque.ImportNonExistentFile`, `Torque.Enums` — same `-fno-exceptions` root cause. |
+| exit 139 (SIGSEGV) | 1 | Stack overflow crash | `LogAllTest.LogAll` — separate issue, not stack-limit related. |
 | GTest warning | 1 | Config issue | Uninstantiated parameterized test suite |
 
 **Notable findings**:
@@ -684,6 +687,62 @@ The test already has an early return check against `DecommittedMemoryIsAlwaysZer
 - `v8/src/init/v8.cc` (`V8::InitializePlatformForTesting`)
 - `v8/test/unittests/testcfg.py` (upstream per-test invocation pattern)
 - `v8/src/base/platform/platform-qnx.cc` (`StackObtainCurrentThreadStackStart`)
+
+---
+
+## 27. QNX Stack Limit Calibration — ValueSerializer Stack Overflow Fix
+
+**Date**: 2026-05-31
+
+**Symptoms**:
+- `ValueSerializerTest.*StackOverflow*` and `*DecodeVerifyObjectCount` tests failed with exit 13/SIGSEGV on QNX/QEMU.
+- Tests that create deeply nested data structures (100K levels) triggered raw C++ stack overflow before V8's `STACK_CHECK` could fire.
+
+**Root cause**:
+- V8 default stack size (`V8_DEFAULT_STACK_SIZE_KB = 984`, ~1MB) assumes the OS provides at least that much stack.
+- QNX QEMU provides **512 KB** for the main thread and **256 KB** for worker threads (measured via `__tls()->__stacksize`):
+  ```
+  MAIN:   __stackaddr=0x2a60447000  __stacksize=524288 (512 KB)
+  WORKER: __stackaddr=0x2a604c9000  __stacksize=262144 (256 KB)
+  ```
+- V8's stack limit was computed as `Stack::GetStackStart() - 984KB`. With only 512KB available, the limit was placed **below the OS stack guard page**, so `STACK_CHECK` never fired before a real overflow.
+- Confirmable: running with `--stack-size=384` (within 512KB - 128KB margin) made all stack-overflow tests PASS.
+
+**Fix**:
+- Added `Stack::GetStackSize()` function to the platform API, returning:
+  - QNX: `__tls()->__stacksize` (actual OS stack size)
+  - Other POSIX platforms: `0` (unknown/unlimited)
+- Modified `StackGuard::ThreadLocal::Initialize()` in `v8/src/execution/stack-guard.cc` to clamp the logical stack limit:
+  ```cpp
+  size_t actual_os = base::Stack::GetStackSize();
+  if (actual_os > 0) {
+    constexpr size_t kSafetyMargin = 128 * 1024;  // 128 KB
+    size_t max_allowed = actual_os > kSafetyMargin
+                             ? actual_os - kSafetyMargin
+                             : kSafetyMargin;
+    if (kLimitSize > max_allowed) kLimitSize = max_allowed;
+  }
+  ```
+- The safety margin (128 KB) ensures there's always room for signal handlers and inline frames.
+- No `--stack-size` flag override needed; works automatically for all threads.
+
+**Results**:
+- ✅ `ValueSerializerTest.EncodeArrayStackOverflow` — PASS (0.4s, was exit 13)
+- ✅ `ValueSerializerTest.DecodeVerifyObjectCount` — PASS (0.3s, was exit 139/SIGSEGV)
+- ✅ `ValueSerializerTest.DecodeArrayStackOverflow` — PASS
+- ✅ `ValueSerializerTest.DecodeObjectStackOverflow` — PASS
+- ✅ No regression on other tests (JIT, Maglev, Turboshaft all PASS)
+
+**Note on remaining failures**:
+- `LanguageServerJson.ParserError/LexerError` and `Torque.*` still FAIL with exit 13. These are caused by `-fno-exceptions` under `is_official_build = true`. V8 upstream already tracks this as `v8:13945` and marks them as `[FAIL]` under `['official_build', {` in `unittests.status`. Same behavior on macOS which also uses `-fno-exceptions`. These will be excluded via `['system == qnx', { ... [SKIP] }]` in `unittests.status` in a follow-up.
+
+**Related files**:
+- `cef/patch/patches/qnx/chromium/v8_stack_limit_qnx.patch`
+- `v8/src/base/platform/platform.h` (`Stack::GetStackSize` declaration)
+- `v8/src/base/platform/platform-posix.cc` (default: returns 0)
+- `v8/src/base/platform/platform-qnx.cc` (QNX: returns `__tls()->__stacksize`)
+- `v8/src/execution/stack-guard.cc` (clamping logic)
+- `cef/tools/stack_measure.c` (stack diagnostic tool)
 
 ---
 
