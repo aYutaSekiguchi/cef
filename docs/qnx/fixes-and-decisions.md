@@ -770,6 +770,46 @@ The test already has an early return check against `DecommittedMemoryIsAlwaysZer
 
 ---
 
+## 29. Remaining v8_unittests FAILs after stack + Perfetto fixes
+
+**Date**: 2026-06-01
+
+**Current snapshot**:
+- 6315 tests: 6301 PASS, 14 FAIL
+
+**Grouped by root cause**:
+
+1. **Logging / map logging**
+   - `LogMapsTest.TraceMaps`
+   - `LogMapsTest.LogMapsDetailsContexts`
+   - `LogMapsCodeTest.LogMapsDetailsCode`
+   - `LogAllTest.LogAll`
+   - Notes: `LogMapsDetailsContexts` reports missing startup `map-create`; `LogAll` still crashes on the heavy logging path.
+
+2. **Stack-sensitive**
+   - `BackgroundCompileTaskTest.CompileFailure`
+   - `WorkloadsTest.BasicFunctionality`
+   - Notes: `BackgroundCompileTaskTest` passes with `--stack-size=256` but fails at the default calibrated stack; `WorkloadsTest` has a ~800KB stack array (`Persistent* persistents[100000]`) and overflows the 512KB QNX thread stack.
+
+3. **Path / golden-file discovery**
+   - `BytecodeGeneratorInitTest.HasGoldenFiles`
+   - `GoogleTestVerification.UninstantiatedParameterizedTestSuite<BytecodeGeneratorTest>`
+   - Notes: `CollectGoldenFiles()` does not find the bytecode expectation directory from the QNX runner CWD, so the param suite is never instantiated.
+
+4. **Official-build exception path**
+   - `LanguageServerJson.ParserError`
+   - `LanguageServerJson.LexerError`
+   - `Torque.DoubleUnderScorePrefixIllegalForIdentifiers`
+   - `Torque.ImportNonExistentFile`
+   - `Torque.Enums`
+   - Notes: `TorqueAbortCompilation` is thrown while the binaries are built with `-fno-exceptions` (`is_official_build = true`), so the expected catch path cannot run.
+
+5. **Flag freeze death test**
+   - `FlagDefinitionsTest.FreezeFlags`
+   - Notes: child dies via `std::__2::__throw_bad_optional_access` instead of the expected `CHECK(!IsFrozen())`.
+
+---
+
 ## Current accepted exclusions
 
 These are the current broad-run exclusions used by `cef/tools/qnx_run_test.sh`.
