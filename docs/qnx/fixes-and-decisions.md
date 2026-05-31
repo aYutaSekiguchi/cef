@@ -775,7 +775,7 @@ The test already has an early return check against `DecommittedMemoryIsAlwaysZer
 **Date**: 2026-06-01
 
 **Current snapshot**:
-- 6310 tests: 6301 PASS, 9 FAIL
+- Bytecode golden-file discovery is fixed; remaining failures are now limited to logging, stack-sensitive, and flag-freeze categories.
 - 5 official_build exception tests are now skipped on QNX via `unittests.status`.
 
 **Grouped by root cause**:
@@ -792,14 +792,13 @@ The test already has an early return check against `DecommittedMemoryIsAlwaysZer
    - `WorkloadsTest.BasicFunctionality`
    - Notes: `BackgroundCompileTaskTest` passes with `--stack-size=256` but fails at the default calibrated stack; `WorkloadsTest` has a ~800KB stack array (`Persistent* persistents[100000]`) and overflows the 512KB QNX thread stack.
 
-3. **Path / golden-file discovery**
-   - `BytecodeGeneratorInitTest.HasGoldenFiles`
-   - `GoogleTestVerification.UninstantiatedParameterizedTestSuite<BytecodeGeneratorTest>`
-   - Notes: `CollectGoldenFiles()` does not find the bytecode expectation directory from the QNX runner CWD, so the param suite is never instantiated.
-
-4. **Flag freeze death test**
+3. **Flag freeze death test**
    - `FlagDefinitionsTest.FreezeFlags`
    - Notes: child dies via `std::__2::__throw_bad_optional_access` instead of the expected `CHECK(!IsFrozen())`.
+
+**Resolved during this pass**:
+- `BytecodeGeneratorInitTest.HasGoldenFiles` now passes after `CollectGoldenFiles()` tries both `../..` and `../../v8`.
+- `GoogleTestVerification.UninstantiatedParameterizedTestSuite<BytecodeGeneratorTest>` no longer appears once the parameterized suite is instantiated.
 
 **Skipped on QNX now**:
 - `LanguageServerJson.ParserError`
