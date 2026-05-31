@@ -370,6 +370,77 @@ def kill_qemu(pid: int):
 
 
 # ---------------------------------------------------------------------------
+# unittests.status parsing
+# ---------------------------------------------------------------------------
+
+def parse_skip_patterns() -> list[str]:
+    """Parse v8/test/unittests/unittests.status for [SKIP] patterns.
+
+    Returns a list of GTest pattern strings (with * wildcards) that are
+    marked [SKIP] under always-applicable conditions.
+    """
+    status_path = os.path.join(CHROMIUM_SRC, "v8", "test", "unittests",
+                               "unittests.status")
+    if not os.path.exists(status_path):
+        print(f"WARNING: unittests.status not found at {status_path}",
+              file=sys.stderr)
+        return []
+
+    with open(status_path) as f:
+        text = f.read()
+
+    patterns = []
+    always_match = re.search(r"\[ALWAYS,\s*\{\n(.*?)\n\}\],\s*# ALWAYS",
+                             text, re.DOTALL)
+    if not always_match:
+        return []
+
+    body = always_match.group(1)
+    for line in body.split("\n"):
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        # Match: 'TestPattern': [...]
+        m = re.match(r"'([^']+)'\s*:\s*\[(.*)]", line)
+        if not m:
+            continue
+        name = m.group(1)
+        raw_statuses = m.group(2)
+
+        # Split status tokens at the top level (not inside nested brackets).
+        # A simple heuristic: SKIP is a bare status if it appears outside []
+        # and is not inside a sub-list.
+        # We extract comma-separated tokens from the outer list only.
+        depth = 0
+        outer_tokens = []
+        current = ""
+        for ch in raw_statuses:
+            if ch == "[":
+                depth += 1
+            elif ch == "]":
+                depth -= 1
+            elif ch == "," and depth == 0:
+                outer_tokens.append(current.strip())
+                current = ""
+                continue
+            if depth == 0:
+                current += ch
+        if current.strip():
+            outer_tokens.append(current.strip())
+
+        # Skip if the status is PASS (means it's not unconditionally skipped)
+        # SKIP is unconditional if it's a bare token in outer_tokens
+        is_skip = ("SKIP" in outer_tokens)
+        is_pass = ("PASS" in outer_tokens)
+
+        if is_skip and not is_pass:
+            gtest_name = name.replace("*", "*")
+            patterns.append(gtest_name)
+
+    return patterns
+
+
+# ---------------------------------------------------------------------------
 # Test list parsing
 # ---------------------------------------------------------------------------
 
@@ -486,6 +557,23 @@ def main():
             filtered = [t for t in filtered if "DeathTest" not in t]
             print(f"After --skip-death-tests: {len(filtered)} tests "
                   f"(removed {before - len(filtered)})")
+
+        # Apply [SKIP] patterns from unittests.status
+        skip_patterns = parse_skip_patterns()
+        if skip_patterns:
+            before = len(filtered)
+            compiled_skips = [
+                re.compile(p.replace("*", ".*")) for p in skip_patterns
+            ]
+            filtered = [
+                t for t in filtered
+                if not any(s.fullmatch(t) or s.search(t)
+                           for s in compiled_skips)
+            ]
+            removed = before - len(filtered)
+            if removed > 0:
+                print(f"After unittests.status [SKIP]: {len(filtered)} tests "
+                      f"(removed {removed})")
 
         if args.dry_run:
             print("\n=== Tests (dry run) ===")
