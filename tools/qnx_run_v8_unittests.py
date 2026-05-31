@@ -505,6 +505,8 @@ def main():
                         help="Only list tests, don't run them")
     parser.add_argument("--max-tests", type=int, default=0,
                         help="Stop after running this many tests (for testing the script)")
+    parser.add_argument("--stack-size", type=int, default=0,
+                        help="Override V8 stack size in KB (e.g. 256). Sets --stack-size on the guest binary.")
     args = parser.parse_args()
 
     stamp = time.strftime("%Y%m%d_%H%M%S")
@@ -595,8 +597,11 @@ def main():
             pct = f"[{idx}/{total}]"
             print(f"\n{pct} {test_name}")
             t0 = time.time()
+            v8_extra = ""
+            if args.stack_size > 0:
+                v8_extra = f" --stack-size={args.stack_size}"
             ec, raw_out = serial.run_command(
-                f"./v8_unittests --gtest_filter={q(test_name)} 2>&1",
+                f"./v8_unittests{v8_extra} --gtest_filter={q(test_name)} 2>&1",
                 timeout=args.timeout)
             elapsed = time.time() - t0
             passed = (ec == 0)
