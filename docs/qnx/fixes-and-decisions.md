@@ -775,7 +775,8 @@ The test already has an early return check against `DecommittedMemoryIsAlwaysZer
 **Date**: 2026-06-01
 
 **Current snapshot**:
-- 6315 tests: 6301 PASS, 14 FAIL
+- 6310 tests: 6301 PASS, 9 FAIL
+- 5 official_build exception tests are now skipped on QNX via `unittests.status`.
 
 **Grouped by root cause**:
 
@@ -796,17 +797,22 @@ The test already has an early return check against `DecommittedMemoryIsAlwaysZer
    - `GoogleTestVerification.UninstantiatedParameterizedTestSuite<BytecodeGeneratorTest>`
    - Notes: `CollectGoldenFiles()` does not find the bytecode expectation directory from the QNX runner CWD, so the param suite is never instantiated.
 
-4. **Official-build exception path**
-   - `LanguageServerJson.ParserError`
-   - `LanguageServerJson.LexerError`
-   - `Torque.DoubleUnderScorePrefixIllegalForIdentifiers`
-   - `Torque.ImportNonExistentFile`
-   - `Torque.Enums`
-   - Notes: `TorqueAbortCompilation` is thrown while the binaries are built with `-fno-exceptions` (`is_official_build = true`), so the expected catch path cannot run.
-
-5. **Flag freeze death test**
+4. **Flag freeze death test**
    - `FlagDefinitionsTest.FreezeFlags`
    - Notes: child dies via `std::__2::__throw_bad_optional_access` instead of the expected `CHECK(!IsFrozen())`.
+
+**Skipped on QNX now**:
+- `LanguageServerJson.ParserError`
+- `LanguageServerJson.LexerError`
+- `Torque.DoubleUnderScorePrefixIllegalForIdentifiers`
+- `Torque.ImportNonExistentFile`
+- `Torque.Enums`
+- Notes: added `['system == qnx', { ... [SKIP] }]` in `v8/test/unittests/unittests.status`, and `cef/tools/qnx_run_v8_unittests.py` now parses the QNX section as well as ALWAYS.
+
+**Related files**:
+- `v8/test/unittests/unittests.status`
+- `cef/patch/patches/qnx/chromium/v8_unittests_status_qnx.patch`
+- `cef/tools/qnx_run_v8_unittests.py`
 
 ---
 

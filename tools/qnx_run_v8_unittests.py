@@ -373,29 +373,14 @@ def kill_qemu(pid: int):
 # unittests.status parsing
 # ---------------------------------------------------------------------------
 
-def parse_skip_patterns() -> list[str]:
-    """Parse v8/test/unittests/unittests.status for [SKIP] patterns.
-
-    Returns a list of GTest pattern strings (with * wildcards) that are
-    marked [SKIP] under always-applicable conditions.
-    """
-    status_path = os.path.join(CHROMIUM_SRC, "v8", "test", "unittests",
-                               "unittests.status")
-    if not os.path.exists(status_path):
-        print(f"WARNING: unittests.status not found at {status_path}",
-              file=sys.stderr)
+def _extract_unconditional_skip_patterns(text: str,
+                                         section_regex: str) -> list[str]:
+    match = re.search(section_regex, text, re.DOTALL)
+    if not match:
         return []
-
-    with open(status_path) as f:
-        text = f.read()
 
     patterns = []
-    always_match = re.search(r"\[ALWAYS,\s*\{\n(.*?)\n\}\],\s*# ALWAYS",
-                             text, re.DOTALL)
-    if not always_match:
-        return []
-
-    body = always_match.group(1)
+    body = match.group(1)
     for line in body.split("\n"):
         line = line.strip()
         if not line or line.startswith("#"):
@@ -434,10 +419,37 @@ def parse_skip_patterns() -> list[str]:
         is_pass = ("PASS" in outer_tokens)
 
         if is_skip and not is_pass:
-            gtest_name = name.replace("*", "*")
-            patterns.append(gtest_name)
+            patterns.append(name)
 
     return patterns
+
+
+def parse_skip_patterns() -> list[str]:
+    """Parse v8/test/unittests/unittests.status for [SKIP] patterns.
+
+    Returns a list of GTest pattern strings (with * wildcards) that are
+    marked [SKIP] under always-applicable conditions or in the QNX-specific
+    section.
+    """
+    status_path = os.path.join(CHROMIUM_SRC, "v8", "test", "unittests",
+                               "unittests.status")
+    if not os.path.exists(status_path):
+        print(f"WARNING: unittests.status not found at {status_path}",
+              file=sys.stderr)
+        return []
+
+    with open(status_path) as f:
+        text = f.read()
+
+    patterns = []
+    patterns.extend(_extract_unconditional_skip_patterns(
+        text, r"\[ALWAYS,\s*\{\n(.*?)\n\}\],\s*# ALWAYS"))
+    patterns.extend(_extract_unconditional_skip_patterns(
+        text,
+        r"\['system == qnx',\s*\{\n(.*?)\n\}\],\s*# system == qnx"))
+
+    # Deduplicate while preserving order.
+    return list(dict.fromkeys(patterns))
 
 
 # ---------------------------------------------------------------------------

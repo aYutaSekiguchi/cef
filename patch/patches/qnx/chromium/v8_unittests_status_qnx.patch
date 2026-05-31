@@ -1,0 +1,40 @@
+diff --git a/test/unittests/unittests.status b/test/unittests/unittests.status
+index 75294a05c5a..8c0294f01f2 100644
+--- a/test/unittests/unittests.status
++++ b/test/unittests/unittests.status
+@@ -63,6 +63,16 @@
+   'Torque.ImportNonExistentFile': [SKIP],
+ }],  # system == macos
+ 
++['system == qnx', {
++  # Throwing C++ exceptions doesn't work in official_build (built with
++  # -fno-exceptions). These tests rely on catching TorqueAbortCompilation.
++  'LanguageServerJson.LexerError': [SKIP],
++  'LanguageServerJson.ParserError': [SKIP],
++  'Torque.DoubleUnderScorePrefixIllegalForIdentifiers': [SKIP],
++  'Torque.Enums': [SKIP],
++  'Torque.ImportNonExistentFile': [SKIP],
++}],  # system == qnx
++
+ ['system == macos and target_cpu == arm64', {
+   # The read-write-execute handling in the test hasn't been updated to
+   # support the later macOS versions that run on ARM64.
+
+--- Changes ---
+
+test/unittests/unittests.status
+  @@ -63,6 +63,16 @@
+  +['system == qnx', {
+  +  # Throwing C++ exceptions doesn't work in official_build (built with
+  +  # -fno-exceptions). These tests rely on catching TorqueAbortCompilation.
+  +  'LanguageServerJson.LexerError': [SKIP],
+  +  'LanguageServerJson.ParserError': [SKIP],
+  +  'Torque.DoubleUnderScorePrefixIllegalForIdentifiers': [SKIP],
+  +  'Torque.Enums': [SKIP],
+  +  'Torque.ImportNonExistentFile': [SKIP],
+  +}],  # system == qnx
+  +
+   ['system == macos and target_cpu == arm64', {
+     # The read-write-execute handling in the test hasn't been updated to
+     # support the later macOS versions that run on ARM64.
+  +10 -0
