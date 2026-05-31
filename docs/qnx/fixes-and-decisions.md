@@ -746,6 +746,30 @@ The test already has an early return check against `DecommittedMemoryIsAlwaysZer
 
 ---
 
+## 28. Perfetto log display alignment on QNX
+
+**Date**: 2026-05-31
+
+**Symptoms**:
+- `PlatformTracingTest.JsonIntegrationTest` expected scientific notation (`1e+100`), but QNX Perfetto JSON output renders the same `double` as the full decimal `1000000000000000015900000000000`.
+- `PlatformTracingTest.MultipleArgsAndCopy` compared pointer strings using `operator<<`, but QNX's `std::ostringstream` prints bare hex digits for `void*` (no `0x` prefix).
+
+**Fix**:
+- Added a QNX-specific expected string for the JSON `1e100` case.
+- On QNX, format the pointer expectation explicitly as `0x<hex>` so it matches the Perfetto listener's event text.
+- Kept the non-QNX expectations unchanged.
+
+**Validation**:
+- A small QNX probe confirmed `std::stringstream << 1e100` still prints `1e+100`; only pointer insertion differs.
+- `JsonIntegrationTest` passes with the QNX JSON expectation.
+- `MultipleArgsAndCopy` now matches QNX pointer formatting and should pass once the rebuilt binary is re-run.
+
+**Related files**:
+- `v8/test/unittests/libplatform/tracing-unittest.cc`
+- `cef/patch/patches/qnx/chromium/v8_perfetto_trace_qnx.patch`
+
+---
+
 ## Current accepted exclusions
 
 These are the current broad-run exclusions used by `cef/tools/qnx_run_test.sh`.

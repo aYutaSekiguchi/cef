@@ -1,0 +1,72 @@
+diff --git a/test/unittests/libplatform/tracing-unittest.cc b/test/unittests/libplatform/tracing-unittest.cc
+index f7d8a195e11..cf9a2f1f29b 100644
+--- a/test/unittests/libplatform/tracing-unittest.cc
++++ b/test/unittests/libplatform/tracing-unittest.cc
+@@ -536,6 +536,12 @@ TEST_F(PlatformTracingTest, AddTraceEventMultiThreaded) {
+ 
+ using TrackEvent = ::perfetto::protos::TrackEvent;
+ 
++#if V8_OS_QNX
++constexpr const char* kExpectedPerfetto1e100 = "1000000000000000015900000000000";
++#else
++constexpr const char* kExpectedPerfetto1e100 = "1e+100";
++#endif
++
+ class TestListener : public TraceEventListener {
+  public:
+   void ParseFromArray(const std::vector<char>& array) {
+@@ -832,7 +838,12 @@ TEST_F(PlatformTracingTest, MultipleArgsAndCopy) {
+   CHECK_EQ("B:v8.v8.Test.jj5(jj5=(double)-inf)", harness.get_event(14));
+ 
+   std::ostringstream pointer_stream;
++#if V8_OS_QNX
++  pointer_stream << "B:v8.v8.Test.kk(kk=(pointer)0x" << std::hex
++                 << reinterpret_cast<uintptr_t>(&aa) << ")";
++#else
+   pointer_stream << "B:v8.v8.Test.kk(kk=(pointer)" << &aa << ")";
++#endif
+   CHECK_EQ(pointer_stream.str().c_str(), harness.get_event(15));
+ 
+   CHECK_EQ("B:v8.v8.Test.ll(ll=(string)100)", harness.get_event(16));
+@@ -882,7 +893,8 @@ TEST_F(PlatformTracingTest, JsonIntegrationTest) {
+   int i = 0;
+   while (all_cats[i] == "__metadata") ++i;
+ 
+-  CHECK_EQ("\"1\":1e+100", all_args[i++]);
++  CHECK_EQ(std::string("\"1\":") + kExpectedPerfetto1e100,
++           all_args[i++]);
+   CHECK_EQ("\"2\":\"NaN\"", all_args[i++]);
+   CHECK_EQ("\"3\":\"Infinity\"", all_args[i++]);
+   CHECK_EQ("\"4\":\"-Infinity\"", all_args[i++]);
+
+--- Changes ---
+
+test/unittests/libplatform/tracing-unittest.cc
+  @@ -536,6 +536,12 @@ TEST_F(PlatformTracingTest, AddTraceEventMultiThreaded) {
+  +#if V8_OS_QNX
+  +constexpr const char* kExpectedPerfetto1e100 = "1000000000000000015900000000000";
+  +#else
+  +constexpr const char* kExpectedPerfetto1e100 = "1e+100";
+  +#endif
+  +
+   class TestListener : public TraceEventListener {
+    public:
+     void ParseFromArray(const std::vector<char>& array) {
+  @@ -832,7 +838,12 @@ TEST_F(PlatformTracingTest, MultipleArgsAndCopy) {
+  +#if V8_OS_QNX
+  +  pointer_stream << "B:v8.v8.Test.kk(kk=(pointer)0x" << std::hex
+  +                 << reinterpret_cast<uintptr_t>(&aa) << ")";
+  +#else
+     pointer_stream << "B:v8.v8.Test.kk(kk=(pointer)" << &aa << ")";
+  +#endif
+     CHECK_EQ(pointer_stream.str().c_str(), harness.get_event(15));
+   
+     CHECK_EQ("B:v8.v8.Test.ll(ll=(string)100)", harness.get_event(16));
+  @@ -882,7 +893,8 @@ TEST_F(PlatformTracingTest, JsonIntegrationTest) {
+  -  CHECK_EQ("\"1\":1e+100", all_args[i++]);
+  +  CHECK_EQ(std::string("\"1\":") + kExpectedPerfetto1e100,
+  +           all_args[i++]);
+     CHECK_EQ("\"2\":\"NaN\"", all_args[i++]);
+     CHECK_EQ("\"3\":\"Infinity\"", all_args[i++]);
+     CHECK_EQ("\"4\":\"-Infinity\"", all_args[i++]);
+  +13 -1
