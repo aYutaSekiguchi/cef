@@ -170,9 +170,23 @@ UNREGISTERED_CHROMIUM_PATCHES=(
   # Compiler / toolchain support
   "compiler_rt_builtins_qnx"
   "qnx_source_sync"
-  # V8
+  # V8 — must be applied in this dependency order.
+  #   1. v8_base64_atomic / v8_qnx_targeting: V8 platform support
+  #   2. v8_stack_limit_qnx: clamp V8 stack limit to actual OS thread
+  #      stack (QNX threads are 512KB main / 256KB worker, V8 default
+  #      984KB overflows)
+  #   3. v8_perfetto_trace_qnx: align Perfetto JSON number/pointer
+  #      formatting with QNX libc++ (1e+100 rendered as full decimal
+  #      instead of scientific, void* missing 0x prefix, etc.)
+  #   4. v8_bytecode_expectations_qnx: make CollectGoldenFiles try
+  #      ../../v8/<path> in addition to ../../<path> so the
+  #      BytecodeGeneratorTest param suite is instantiated under the
+  #      Chromium tree layout
   "v8_base64_atomic"
   "v8_qnx_targeting"
+  "v8_stack_limit_qnx"
+  "v8_perfetto_trace_qnx"
+  "v8_bytecode_expectations_qnx"
   # v8_unittests_status_logall_qnx: SKIP LogAllTest on QNX (and the
   # official_build exception tests, which were already skipped on macOS
   # upstream). LogAllTest crashes inside RunJS under QEMU; the exact

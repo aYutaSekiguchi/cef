@@ -826,6 +826,30 @@ The test already has an early return check against `DecommittedMemoryIsAlwaysZer
 
 ---
 
+## 30. V8 QNX patch bootstrap registration
+
+**Date**: 2026-06-01
+
+**Issue discovered**: Three previously-committed V8 QNX patches were **not registered in `UNREGISTERED_CHROMIUM_PATCHES`** in `tools/cef_create_projects_qnx.sh`, so they were never applied during the actual production bootstrap. The v8 working tree had been edited directly during testing, masking the fact that production builds were missing these fixes.
+
+**Patches that were silently non-functional in production**:
+- **`v8_stack_limit_qnx`**: Clamps V8's `STACK_CHECK` limit to the actual OS thread stack (QNX threads: 512KB main / 256KB worker; V8 default: 984KB). Without this, V8 crashes with `STACK_CHECK` misfiring on QNX thread stacks.
+- **`v8_perfetto_trace_qnx`**: Aligns Perfetto JSON number formatting (QNX libc++ renders `1e+100` as full decimal instead of scientific; `void*` lacks `0x` prefix). Without this, Perfetto JSON traces on QNX are unreadable.
+- **`v8_bytecode_expectations_qnx`**: Adds `../../v8/<path>` as a candidate directory in `CollectGoldenFiles()` so the `BytecodeGeneratorTest` param suite is instantiated under the Chromium tree layout. Without this, `BytecodeGeneratorInitTest.HasGoldenFiles` and the related uninstantiated-suite test fail.
+
+**Fix**: Added all three patches to `UNREGISTERED_CHROMIUM_PATCHES` in `tools/cef_create_projects_qnx.sh`, in the documented dependency order:
+1. `v8_base64_atomic`, `v8_qnx_targeting` (platform support)
+2. `v8_stack_limit_qnx`
+3. `v8_perfetto_trace_qnx`
+4. `v8_bytecode_expectations_qnx`
+5. `v8_unittests_status_logall_qnx` (status file changes)
+
+**Verification**: After bootstrap, `v8_unittests` re-run on QNX shows:
+- 6,505 tests executed (14 unconditional + QNX SKIPs)
+- 6,500 PASS, 5 FAIL (down from 14 before the SKIP was applied; the remaining 5 are unrelated to the patches above: 1 gtest assertion, 2 `LogMapsTest.*` map logging, 2 stack-sensitive `BackgroundCompileTaskTest.CompileFailure` / `WorkloadsTest.BasicFunctionality`).
+
+---
+
 ## Current accepted exclusions
 
 These are the current broad-run exclusions used by `cef/tools/qnx_run_test.sh`.
