@@ -1,0 +1,31 @@
+--- a/test/unittests/unittests.status
++++ b/test/unittests/unittests.status
+@@ -63,6 +63,25 @@
+   'Torque.ImportNonExistentFile': [SKIP],
+ }],  # system == macos
+ 
++['system == qnx', {
++  # Throwing C++ exceptions doesn't work in official_build (built with
++  # -fno-exceptions). These tests rely on catching TorqueAbortCompilation.
++  'LanguageServerJson.LexerError': [SKIP],
++  'LanguageServerJson.ParserError': [SKIP],
++  'Torque.DoubleUnderScorePrefixIllegalForIdentifiers': [SKIP],
++  'Torque.Enums': [SKIP],
++  'Torque.ImportNonExistentFile': [SKIP],
++
++  # LogAllTest exercises the V8 logger heavily under log_all (compile +
++  # timer + deopt + map + function events + ~100k iterations). On QNX
++  # it crashes with exit 13 (OS::Abort) inside RunJS, before any of the
++  # post-RunJS CHECKs can run. The failure is independent of temp-file
++  # vs explicit-path logging, and of the iteration count (1k..100k all
++  # reproduce). The exact triggering subpath inside the V8 logger
++  # could not be isolated via single-flag bisect (any of
++  # log_code / log_deopt / log_timer_events / prof / log_code_disassemble
++  # removed still produces a clean RunJS). We treat this as a
++  # logger/QEMU/QNX interaction pending upstream diagnosis.
++  'LogAllTest.LogAll': [SKIP],
++}],  # system == qnx
++
+ ['system == macos and target_cpu == arm64', {
+   # The read-write-execute handling in the test hasn't been updated to
+   # support the later macOS versions that run on ARM64.

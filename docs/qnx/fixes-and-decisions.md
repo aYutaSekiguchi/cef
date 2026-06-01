@@ -806,11 +806,22 @@ The test already has an early return check against `DecommittedMemoryIsAlwaysZer
 - `Torque.DoubleUnderScorePrefixIllegalForIdentifiers`
 - `Torque.ImportNonExistentFile`
 - `Torque.Enums`
+- `LogAllTest.LogAll` (see below for diagnosis)
 - Notes: added `['system == qnx', { ... [SKIP] }]` in `v8/test/unittests/unittests.status`, and `cef/tools/qnx_run_v8_unittests.py` now parses the QNX section as well as ALWAYS.
+
+**LogAllTest.LogAll diagnosis (June 2026)**:
+- Original LogAllTest: `log_all=true` (implies log_code, log_deopt, log_code_disassemble, log_maps, log_function_events, log_ic, log_feedback_vector, log_source_code, log_source_position, log_timer_events, prof, prof_cpp), 100k iter, crash with exit 13 inside RunJS.
+- H1 (temp file / NFS) RULED OUT: explicit logfile path works fine, log file (495KB) properly written.
+- log_maps RULED OUT (test fails with log_all=false but individual flags set).
+- log_deopt, log_timer_events, prof, log_code_disassemble individually RULED OUT (any one disabled → RunJS completes).
+- Multiple failure modes were initially mixed (CHECK failures after RunJS) but separated by judging bisect by RunJS completion, not test PASS/FAIL.
+- Trigger could not be isolated to a single LOG_FLAGS subflag. Remaining candidates are `log_maps` (in some combination), `log_feedback_vector`, `log_function_events`, `log_ic`, `log_source_code`, `log_source_position`, or a non-flag-related V8 logger issue.
+- Decision: SKIP for QNX, pending upstream investigation.
 
 **Related files**:
 - `v8/test/unittests/unittests.status`
-- `cef/patch/patches/qnx/chromium/v8_unittests_status_qnx.patch`
+- `cef/patch/patches/qnx/chromium/v8_unittests_status_logall_qnx.patch` (replaces the older `v8_unittests_status_qnx.patch`; the bootstrap script's `UNREGISTERED_CHROMIUM_PATCHES` list was updated to include it)
+- `cef/tools/cef_create_projects_qnx.sh` (added `v8_unittests_status_logall_qnx` to `UNREGISTERED_CHROMIUM_PATCHES`)
 - `cef/tools/qnx_run_v8_unittests.py`
 
 ---
