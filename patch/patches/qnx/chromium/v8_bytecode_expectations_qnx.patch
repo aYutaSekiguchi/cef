@@ -1,7 +1,7 @@
-diff --git a/test/unittests/interpreter/bytecode-expectations-parser.cc b/test/unittests/interpreter/bytecode-expectations-parser.cc
+diff --git a/v8/test/unittests/interpreter/bytecode-expectations-parser.cc b/v8/test/unittests/interpreter/bytecode-expectations-parser.cc
 index a2bc8811c41..34d61d6ed55 100644
---- a/test/unittests/interpreter/bytecode-expectations-parser.cc
-+++ b/test/unittests/interpreter/bytecode-expectations-parser.cc
+--- a/v8/test/unittests/interpreter/bytecode-expectations-parser.cc
++++ b/v8/test/unittests/interpreter/bytecode-expectations-parser.cc
 @@ -136,26 +136,34 @@ std::string BytecodeExpectationsParser::ReadToNextSeparator() {
  std::vector<std::filesystem::path> CollectGoldenFiles(
      const char* raw_directory_path) {
@@ -55,55 +55,3 @@ index a2bc8811c41..34d61d6ed55 100644
  
  }  // namespace v8::internal::interpreter
 
---- Changes ---
-
-test/unittests/interpreter/bytecode-expectations-parser.cc
-  @@ -136,26 +136,34 @@ std::string BytecodeExpectationsParser::ReadToNextSeparator() {
-  -  if (!std::filesystem::exists(directory_path)) {
-  -    if (directory_path.is_relative()) {
-  -      // The directory path is likely to be relative to the V8 source -- if the
-  -      // CWD is an output directory, then the V8 source is likely to be two
-  -      // levels up from that.
-  -      directory_path = "../.." / directory_path;
-  -    }
-  +  std::vector<std::filesystem::path> candidates{directory_path};
-  +
-  +  if (directory_path.is_relative()) {
-  +    // The directory path is likely to be relative to the V8 source. Depending
-  +    // on whether the binary is run from a standalone V8 checkout or from the
-  +    // Chromium tree, the source root may be either:
-  +    //   - two levels up (../..)
-  +    //   - two levels up + /v8
-  +    // Try both so the tests work in both layouts.
-  +    candidates.push_back("../.." / directory_path);
-  +    candidates.push_back("../.." / std::filesystem::path("v8") /
-  +                         directory_path);
-     }
-  -  if (!std::filesystem::exists(directory_path)) return {};
-  -  if (!std::filesystem::is_directory(directory_path)) return {};
-  -
-  -  std::vector<std::filesystem::path> ret;
-  -  for (const auto& entry :
-  -       std::filesystem::directory_iterator(directory_path)) {
-  -    if (!entry.is_regular_file()) continue;
-  -    if (entry.path().extension() == ".golden") {
-  -      ret.push_back(entry.path());
-  +
-  +  for (const auto& candidate : candidates) {
-  +    if (!std::filesystem::exists(candidate)) continue;
-  +    if (!std::filesystem::is_directory(candidate)) continue;
-  +
-  +    std::vector<std::filesystem::path> ret;
-  +    for (const auto& entry : std::filesystem::directory_iterator(candidate)) {
-  +      if (!entry.is_regular_file()) continue;
-  +      if (entry.path().extension() == ".golden") {
-  +        ret.push_back(entry.path());
-  +      }
-       }
-  +    return ret;
-     }
-  -  return ret;
-  +  return {};
-   }
-   
-   }  // namespace v8::internal::interpreter

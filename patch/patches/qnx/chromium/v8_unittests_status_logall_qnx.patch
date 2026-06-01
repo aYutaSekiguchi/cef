@@ -1,9 +1,9 @@
---- a/test/unittests/unittests.status
-+++ b/test/unittests/unittests.status
-@@ -63,6 +63,25 @@
-   'Torque.ImportNonExistentFile': [SKIP],
- }],  # system == macos
+--- a/v8/test/unittests/unittests.status
++++ b/v8/test/unittests/unittests.status
+@@ -53,6 +53,28 @@
+ }],
  
+ ##############################################################################
 +['system == qnx', {
 +  # Throwing C++ exceptions doesn't work in official_build (built with
 +  # -fno-exceptions). These tests rely on catching TorqueAbortCompilation.
@@ -26,6 +26,6 @@
 +  'LogAllTest.LogAll': [SKIP],
 +}],  # system == qnx
 +
- ['system == macos and target_cpu == arm64', {
-   # The read-write-execute handling in the test hasn't been updated to
-   # support the later macOS versions that run on ARM64.
+ ['system == macos', {
+   # Throwing C++ exceptions doesn't work; probably because the unittests
+   # binary on macOS is built with -fno-exceptions?
