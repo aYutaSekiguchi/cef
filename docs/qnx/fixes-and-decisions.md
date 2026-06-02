@@ -891,6 +891,48 @@ This is a **general upstream-quality bug fix** — it is not QNX-specific. The o
 
 ---
 
+## 32. `WorkloadsTest.BasicFunctionality` — move 100 000-pointer array off the stack
+
+**Date**: 2026-06-02
+
+**Root cause**: `WorkloadsTest.BasicFunctionality` in `v8/test/unittests/heap/cppgc/workloads-unittest.cc` declared
+
+```cpp
+const size_t kNumPersistents = 100000;
+Persistent<DynamicallySizedObject>* persistents[kNumPersistents];
+```
+
+That's a 100 000-element array of pointers, i.e. **≈ 800 KB on 64-bit**, declared on the test function's stack. On QNX the unittests are dispatched on worker threads (V8 platform workers) whose default stack is **256 KB**, so the array alone overflows the OS stack before the test body even runs. On Linux the test happens to work because the default thread stack is 8 MB.
+
+The test's actual purpose has nothing to do with stack memory — it is exercising **cppgc / Oilpan persistent allocation** (1000 allocations of increasing size, each wrapped in a heap-allocated `Persistent`). The stack array is an unrelated bookkeeping detail that snuck into the test as a "convenient" fixed-size storage.
+
+**Fix**: Replace the stack array with a heap-allocated `std::vector` of the same capacity, leaving the test logic and the `kNumPersistents = 100 000` budget unchanged.
+
+```diff
++#include <vector>
+ ...
+-  Persistent<DynamicallySizedObject>* persistents[kNumPersistents];
++  std::vector<Persistent<DynamicallySizedObject>*> persistents;
++  persistents.reserve(kNumPersistents);
+```
+
+The downstream uses (`persistents[persistent_count++] = new Persistent<...>(...)`, `delete persistents[i]`) keep working unchanged because `std::vector` supports the same `operator[]` indexing and grows as needed.
+
+**Why vector and not a smaller array**:
+- The test's loop creates 1000 `Persistent<...>`s and stores them in this array. `kNumPersistents = 100 000` is the *capacity* (reserve), not the *count*. Reducing the constant would change the documented test budget and (because the array size becomes an implicit invariant with `reserve(kNumPersistents)`) require keeping the two in sync. A `vector<...>(reserve(kNumPersistents))` preserves the original semantics with the smallest possible change.
+- The 800 KB vector lives on the heap, which QNX cppgc tests have plenty of.
+
+**QNX impact**: The test now actually exercises cppgc persistent allocation on QNX, instead of failing at function entry with a C++ stack overflow (`OS::Abort` exit 13).
+
+**Files**:
+- `v8/test/unittests/heap/cppgc/workloads-unittest.cc` (one `#include`, two-line replacement)
+- `cef/patch/patches/qnx/chromium/v8_workloads_basic_functionality_stack_qnx.patch`
+- `cef/tools/cef_create_projects_qnx.sh` (added `v8_workloads_basic_functionality_stack_qnx` to `UNREGISTERED_CHROMIUM_PATCHES`)
+
+**Upstream note**: This is a test-quality fix (move a large stack array to the heap). It is platform-neutral, low-risk, and likely uncontroversial upstream. The 100 000-element reserve is preserved; only the *storage class* of the array changes. The actual test logic (1000 heap-allocated `Persistent`s of increasing size) is unchanged. A future CEF upgrade can drop the QNX patch once upstream lands.
+
+---
+
 ## Current accepted exclusions
 
 These are the current broad-run exclusions used by `cef/tools/qnx_run_test.sh`.

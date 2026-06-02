@@ -199,6 +199,16 @@ UNREGISTERED_CHROMIUM_PATCHES=(
   # upstream-quality bug fix; carried under QNX patches because QNX is
   # the platform where it manifests.
   "v8_background_compile_stack_size_qnx"
+  # v8_workloads_basic_functionality_stack_qnx: the test allocated a
+  # 100 000-element pointer array (≈ 800 KB on 64-bit) on the stack
+  # with `Persistent<...>* persistents[kNumPersistents]`. On QNX the
+  # unittest runs on a worker thread with a 256 KB stack, so the array
+  # alone overflows before the test body even starts. Move the array
+  # to a heap-allocated `std::vector` (size unchanged) so the test's
+  # actual logic — exercising cppgc / Oilpan persistent allocation —
+  # runs in the same O(100k) range as the author intended, but no
+  # longer needs 800 KB of stack.
+  "v8_workloads_basic_functionality_stack_qnx"
   # v8_unittests_status_logall_qnx: SKIP LogAllTest on QNX (and the
   # official_build exception tests, which were already skipped on macOS
   # upstream). LogAllTest crashes inside RunJS under QEMU; the exact
