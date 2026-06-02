@@ -1,0 +1,11 @@
+--- a/v8/test/unittests/tasks/background-compile-task-unittest.cc
++++ b/v8/test/unittests/tasks/background-compile-task-unittest.cc
+@@ -55,7 +55,7 @@ class BackgroundCompileTaskTest : public TestWithNativeContext {
+         isolate, shared, test::SourceCharacterStreamForShared(isolate, shared),
+         isolate->counters()->worker_thread_runtime_call_stats(),
+         isolate->counters()->compile_function_on_background(),
+-        v8_flags.stack_size);
++        stack_size);
+   }
+ 
+  private:

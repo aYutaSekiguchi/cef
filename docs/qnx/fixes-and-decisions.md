@@ -850,6 +850,47 @@ The test already has an early return check against `DecommittedMemoryIsAlwaysZer
 
 ---
 
+## 31. `BackgroundCompileTaskTest.CompileFailure` — honor `stack_size` parameter
+
+**Date**: 2026-06-02
+
+**Root cause**: `BackgroundCompileTaskTest::NewBackgroundCompileTask()` in `v8/test/unittests/tasks/background-compile-task-unittest.cc` declared a `size_t stack_size = v8_flags.stack_size` parameter but **always** passed `v8_flags.stack_size` to the `BackgroundCompileTask` constructor. The parameter was silently ignored.
+
+```cpp
+// Before (the bug)
+BackgroundCompileTask* NewBackgroundCompileTask(
+    Isolate* isolate, Handle<SharedFunctionInfo> shared,
+    size_t stack_size = v8_flags.stack_size) {
+  return new BackgroundCompileTask(
+      isolate, shared, ...,
+      v8_flags.stack_size);  // <-- ignores `stack_size`!
+}
+```
+
+`CompileFailure` then passes `100` (intending 100 KB) but gets the full 984 KB parser stack, which is large enough that 10 000 alternating `+`/`-` binops overflow the **C++ stack** (≈ 1 MB of stack frames) before V8's parser stack guard can fire. On platforms with 8 MB default thread stacks (Linux) the C++ overflow is recovered as a parse error exception; on QNX (512 KB main / 256 KB worker) the same overflow hits `OS::Abort` (exit 13) and the test fails.
+
+**Fix**: Make the helper actually use the parameter.
+
+```cpp
+// After
+        isolate->counters()->compile_function_on_background(),
+-        v8_flags.stack_size);
++        stack_size);
+```
+
+This is a **general upstream-quality bug fix** — it is not QNX-specific. The other tests that share this helper (`SyntaxError`, `Construct`, `CompileAndRun`, `CompileOnBackgroundThread`, `EagerInnerFunctions`, `LazyInnerFunctions`) currently use the default 984 KB parser stack because of the bug; after the fix they all use the explicit `stack_size` (default value 100 KB), making parser stack usage more deterministic across the suite.
+
+**QNX impact**: With the fix, the parser stack guard fires on the 10 000-binop script at the requested 100 KB limit, throwing a parse error exception that the test verifies. The C++ stack is never touched, so QNX's small threads no longer matter.
+
+**Files**:
+- `v8/test/unittests/tasks/background-compile-task-unittest.cc` (1-line change)
+- `cef/patch/patches/qnx/chromium/v8_background_compile_stack_size_qnx.patch` (carries the change under the QNX patches directory until it's merged upstream)
+- `cef/tools/cef_create_projects_qnx.sh` (added `v8_background_compile_stack_size_qnx` to `UNREGISTERED_CHROMIUM_PATCHES`)
+
+**Upstream**: This is a good candidate for a V8 contribution (the parameter is dead code). Once the upstream fix lands, the QNX patch can be removed.
+
+---
+
 ## Current accepted exclusions
 
 These are the current broad-run exclusions used by `cef/tools/qnx_run_test.sh`.

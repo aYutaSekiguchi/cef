@@ -187,6 +187,18 @@ UNREGISTERED_CHROMIUM_PATCHES=(
   "v8_stack_limit_qnx"
   "v8_perfetto_trace_qnx"
   "v8_bytecode_expectations_qnx"
+  # v8_background_compile_stack_size_qnx: the test helper
+  # BackgroundCompileTaskTest::NewBackgroundCompileTask() declared a
+  # `stack_size` parameter but ignored it, always passing
+  # v8_flags.stack_size to the BackgroundCompileTask constructor. As a
+  # result, BackgroundCompileTaskTest.CompileFailure (which passes
+  # `100` intending a 100KB parser stack) ran the parser with the full
+  # 984KB budget and overflowed the C++ stack on QNX (512KB main / 256KB
+  # worker). Fix the helper to actually use the parameter so the parser
+  # stack guard fires before the OS stack does. This is a general
+  # upstream-quality bug fix; carried under QNX patches because QNX is
+  # the platform where it manifests.
+  "v8_background_compile_stack_size_qnx"
   # v8_unittests_status_logall_qnx: SKIP LogAllTest on QNX (and the
   # official_build exception tests, which were already skipped on macOS
   # upstream). LogAllTest crashes inside RunJS under QEMU; the exact
