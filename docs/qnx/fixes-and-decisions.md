@@ -1,7 +1,7 @@
 # QNX Phase 2 — Resolved Problem Log
 
 > Records of problems encountered and their resolutions.
-> Updated: 2026-05-30
+> Updated: 2026-06-03
 
 ---
 
@@ -930,6 +930,178 @@ The downstream uses (`persistents[persistent_count++] = new Persistent<...>(...)
 - `cef/tools/cef_create_projects_qnx.sh` (added `v8_workloads_basic_functionality_stack_qnx` to `UNREGISTERED_CHROMIUM_PATCHES`)
 
 **Upstream note**: This is a test-quality fix (move a large stack array to the heap). It is platform-neutral, low-risk, and likely uncontroversial upstream. The 100 000-element reserve is preserved; only the *storage class* of the array changes. The actual test logic (1000 heap-allocated `Persistent`s of increasing size) is unchanged. A future CEF upgrade can drop the QNX patch once upstream lands.
+
+---
+
+## 33. FFmpeg QNX/x64 platform config — missing `chromium/config/Chromium/qnx/x64/`
+
+**Date**: 2026-06-03
+**Symptoms**:
+- The first `ninja -C ../out/qnx_release/ cefsimple` run after a clean bootstrap failed before any C++ file was compiled:
+  ```
+  ninja: error: '../../third_party/ffmpeg/chromium/config/Chromium/qnx/x64/config.asm',
+    needed by 'phony/third_party/ffmpeg/ffmpeg_nasm_action.inputdeps',
+    missing and no known rule to make it
+  ```
+
+**Root cause**:
+- FFmpeg's `third_party/ffmpeg/BUILD.gn` resolves platform config from
+  ```
+  platform_config_root = "chromium/config/$ffmpeg_branding/$os_config/$ffmpeg_arch"
+  ```
+  and treats `qnx` as a valid `$os_config` value (because the GN toolchain is built when `target_os = "qnx"`).
+- Upstream Chromium only ships pre-generated configs for `android`, `ios`, `linux`, `mac`, `win`, `win-msvc` under `chromium/config/Chromium/`.
+- The `$os_config == "qnx"` branch therefore resolves to a directory that simply does not exist on disk, so every `nasm_assemble` input is unresolvable.
+
+**Fix**:
+- Created `chromium/config/Chromium/qnx/x64/` and added the four config files that FFmpeg expects for an x64 Linux-shaped platform:
+  - `config.asm` (architecture / HAVE_* / CONFIG_* %defines)
+  - `config_components.asm` (per-component enable table for the NASM build)
+  - `config.h` (same data for the C build)
+  - `config_components.h`
+- These are byte-for-byte copies of the `linux/x64` files. QNX SDP 8 supports the same x86_64 ISA / intrinsics matrix that the linux/x64 configs describe, and the only consumer here is FFmpeg's own NASM assemble step, which never touches QNX-specific headers.
+- Captured as **new_files** under `cef/patch/qnx/chromium/new_files/third_party/ffmpeg/chromium/config/Chromium/qnx/x64/` so Phase 1 of `cef_create_projects_qnx.sh` installs them automatically on every bootstrap.
+
+**Result**:
+- ✅ `ninja -C out/qnx_release/ cefsimple` proceeds past the FFmpeg `phony/.../inputdeps` step and the `nasm_assemble("ffmpeg_nasm")` action runs cleanly.
+
+**Related files**:
+- `cef/patch/qnx/chromium/new_files/third_party/ffmpeg/chromium/config/Chromium/qnx/x64/config.asm`
+- `cef/patch/qnx/chromium/new_files/third_party/ffmpeg/chromium/config/Chromium/qnx/x64/config.h`
+- `cef/patch/qnx/chromium/new_files/third_party/ffmpeg/chromium/config/Chromium/qnx/x64/config_components.asm`
+- `cef/patch/qnx/chromium/new_files/third_party/ffmpeg/chromium/config/Chromium/qnx/x64/config_components.h`
+
+**Notes**:
+- The four config files together are ~193 KB. If a future CEF upgrade ever wants to drop them, the right move is to add `&& !is_qnx` to the `platform_config_root` resolution in `third_party/ffmpeg/BUILD.gn` and have QNX fall back to the linux config explicitly. Until then, the file copy is the smallest correct change.
+
+---
+
+## 34. `fieldtrial_to_struct.py` — `--platform=qnx` rejected
+
+**Date**: 2026-06-03
+**Symptoms**:
+- After the FFmpeg config blocker was removed, the build failed at the variations fieldtrial config action:
+  ```
+  FAILED: gen/components/variations/field_trial_config/fieldtrial_testing_config.cc
+  python3 ../../tools/variations/fieldtrial_to_struct.py
+    --platform=qnx ...
+  fieldtrial_to_struct.py: error: option --platform: invalid choice: 'qnx'
+    (choose from 'android', 'android_webview', 'chromeos', 'fuchsia',
+     'ios', 'linux', 'mac', 'windows')
+  ```
+
+**Root cause**:
+- `tools/variations/fieldtrial_to_struct.py` hard-codes the list of legal `--platform` values in `_platforms` (used as the `choices=` argument to `optparse`). `qnx` is not in that list.
+- The QNX GN toolchain passes `--platform=qnx` (the same value used in `target_os = "qnx"` and the FFmpeg config path), so the script fails as soon as the fieldtrial generator runs.
+- Adding `qnx` to the list is safe because the script only converts the platform name to `Study::PLATFORM_QNX` (a value that `components/variations/proto/study.proto` already accepts; QNX is otherwise a Linux-like target with no Study-side behavioural differences for the headless cefsimple use case).
+
+**Fix**:
+- Added `'qnx'` to `_platforms` in `tools/variations/fieldtrial_to_struct.py` (between `'linux'` and `'mac'`, to keep alphabetical-by-ecosystem order — QNX's variations behaviour is linux-shaped).
+- Captured as a CEF patch at `cef/patch/patches/qnx/chromium/fieldtrial_to_struct_qnx.patch` and registered in `UNREGISTERED_CHROMIUM_PATCHES` in `cef_create_projects_qnx.sh` so it is applied in Phase 3.
+
+**Result**:
+- ✅ The variations fieldtrial config action runs to completion and `fieldtrial_testing_config.cc` is generated.
+
+**Related files**:
+- `tools/variations/fieldtrial_to_struct.py` (one-line list addition)
+- `cef/patch/patches/qnx/chromium/fieldtrial_to_struct_qnx.patch`
+- `cef/tools/cef_create_projects_qnx.sh` (added `fieldtrial_to_struct_qnx` to `UNREGISTERED_CHROMIUM_PATCHES`)
+
+---
+
+## 35. `qnx_std_polyfill.h` — no-newline-at-end-of-file warning floods the build log
+
+**Date**: 2026-06-03
+**Symptoms**:
+- Every QNX translation unit (forced to `#include` `build/config/qnx/qnx_std_polyfill.h` via `-include`) emitted:
+  ```
+  In file included from <built-in>:4:
+  ./../../build/config/qnx/qnx_std_polyfill.h:132:48: warning: no newline at end of file [-Wnewline-eof]
+    132 | #endif  // BUILD_CONFIG_QNX_QNX_STD_POLYFILL_H_
+        |                                                ^
+  1 warning generated.
+  ```
+  Compiles succeed, but the log is dominated by the same noise repeated for every file.
+
+**Root cause**:
+- The polyfill header was terminated with `#endif // BUILD_CONFIG_QNX_QNX_STD_POLYFILL_H_` and no trailing `\n`. The clang `-Wnewline-eof` warning fires on every translation unit that includes the file.
+
+**Fix**:
+- Appended a single `\n` to the file so the final byte of the file is a newline, matching the convention used by every other QNX polyfill / shim header.
+
+**Result**:
+- ✅ The `-Wnewline-eof` warning is gone from the entire build log. No source content change.
+
+**Related files**:
+- `cef/patch/qnx/chromium/new_files/build/config/qnx/qnx_std_polyfill.h` (1 byte added at end of file)
+
+---
+
+## 36. ANGLE `use_libpci` — QNX libpci API is not Linux libpci API
+
+**Date**: 2026-06-03
+**Symptoms**:
+- After the previous two blockers were removed, `ninja -C out/qnx_release/ cefsimple` failed at:
+  ```
+  FAILED: obj/third_party/angle/angle_gpu_info_util/SystemInfo_libpci.o
+  ../../third_party/angle/src/gpu_info_util/SystemInfo_libpci.cpp:75:17:
+    error: no member named 'pci_alloc' in the global namespace; did you mean 'calloc'?
+  ../../third_party/angle/src/gpu_info_util/SystemInfo_libpci.cpp:76:17:
+    error: no member named 'pci_init' in the global namespace
+  ... 13 more 'no member named ...' errors ...
+  ../../third_party/angle/src/gpu_info_util/SystemInfo_libpci.cpp:83:27:
+    error: unknown type name 'pci_dev'
+  ../../third_party/angle/src/gpu_info_util/SystemInfo_libpci.cpp:100:36:
+    error: use of undeclared identifier 'PCI_REVISION_ID'
+  ... etc ...
+  ```
+
+**Root cause**:
+- `third_party/angle/BUILD.gn` defines:
+  ```
+  use_libpci = (is_linux || is_chromeos) && (angle_use_x11 || use_ozone) && angle_has_build
+  ```
+  and `is_linux` is defined in `build/config/BUILDCONFIG.gn` as:
+  ```
+  is_linux = current_os == "linux" || is_qnx
+  ```
+  so for a QNX build (`target_os = "qnx"`, `use_ozone = true`), `use_libpci` evaluates to true. The library section also does `libs += [ "pci" ]` to link against `libpci.so.3`.
+- QNX SDP 8 *does* ship `<pci/pci.h>` and `x86_64/lib/libpci.so.3.0`. But the QNX implementation is the QNX-native PCI server API:
+  | Linux libpci (what ANGLE expects) | QNX libpci (what is shipped) |
+  |---|---|
+  | `pci_alloc()` | `pci_device_attach()` |
+  | `pci_init()` | `pci_device_detach()` |
+  | `pci_cleanup()` | `pci_device_find()` |
+  | `pci_scan_bus()` | `pci_device_read_ba()` |
+  | `pci_fill_info()` | `pci_device_read_irq()` |
+  | `pci_lookup_name()` | `pci_device_reset()` |
+  | `pci_read_byte()` | `pci_strerror()` / `pci_partition_name()` |
+  | `pci_dev` | `pci_bdf_t` (different struct layout) |
+  | `PCI_REVISION_ID` / `PCI_FILL_*` / `PCI_BASE_CLASS_DISPLAY` | Different (or absent) constants |
+- Result: `SystemInfo_libpci.cpp` fails to *compile* on QNX (no link failure — the symbol simply is not declared in any namespace).
+- The non-libpci path (`SystemInfo_linux.cpp`) reads GPU info directly from `/sys/bus/pci/devices/...`, which avoids the whole problem.
+- Additionally, the QNX GN args already define `ANGLE_USE_VULKAN_DISPLAY`, so `SystemInfo_vulkan.cpp` is the *preferred* GPU info source anyway on this platform; libpci was only being pulled in as a Linux-legacy fallback.
+
+**Fix**:
+- Added `use_libpci = false` to the QNX GN args written by `cef_create_projects_qnx.sh` (Phase 4). This:
+  - Skips the `if (use_libpci) { sources += libangle_gpu_info_util_libpci_sources; defines += [ "GPU_INFO_USE_LIBPCI" ]; libs += [ "pci" ] }` block.
+  - Lets `SystemInfo_linux.cpp` (already linked into the ANGLE gpu_info_util target) provide a Linux-shaped sysfs-based fallback.
+  - Leaves the Vulkan path (`SystemInfo_vulkan.cpp`) intact as the primary GPU info source on QNX.
+- This is a one-line change in the bootstrap script, no source-tree patch needed.
+
+**Result**:
+- ✅ The `angle_gpu_info_util/SystemInfo_libpci.o` failure is gone and the build proceeds to the next target (currently `third_party/cpuinfo`).
+
+**Related files**:
+- `cef/tools/cef_create_projects_qnx.sh` (added `use_libpci = false` to the Phase 4 GN args)
+- `out/qnx_release/args.gn` (regenerated by the bootstrap script; contains the new line)
+
+**Forward-looking notes**:
+- The current QNX target is **headless** cefsimple. No WebGL, no WebGPU, no `<canvas>` rendering. So a missing libpci path is not currently user-visible.
+- When WebGL / WebGPU / canvas rendering becomes a real product requirement on QNX, the libpci issue will need a real fix, not just a flag flip. The two options are:
+  1. **Author a `SystemInfo_qnx.cpp`** that bridges ANGLE's expectations onto QNX's `pci_device_find` / `pci_device_read_ba` / `pci_device_read_irq` API. Cleanest, but requires understanding the qnx_use_libpci translation table and may touch `libangle_gpu_info_util_sources`.
+  2. **Add a `qnx_use_libpci` translation shim header** that maps the missing Linux symbols (`pci_alloc`, `pci_init`, `pci_scan_bus`, `pci_fill_info`, `pci_lookup_name`, `pci_read_byte`, `PCI_REVISION_ID`, `PCI_FILL_*`, `PCI_BASE_CLASS_DISPLAY`) onto the QNX native equivalents. Less code, but locks in a non-standard API and risks drift if QNX evolves their PCI server.
+- Until then, this entry documents the deliberate `use_libpci = false` choice and the rationale, so a future session can revisit it with full context.
 
 ---
 
