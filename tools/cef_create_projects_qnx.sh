@@ -338,6 +338,14 @@ ozone_platform_x11 = false
 ozone_platform_drm = false
 rtc_use_pipewire = false
 use_vaapi = false
+
+# ANGLE: QNX SDP 8 ships <pci/pci.h> and libpci.so.3 but the API is the QNX
+# native one (pci_device_attach / pci_device_detach / pci_device_find / etc),
+# not the Linux libpci API (pci_alloc / pci_init / pci_scan_bus / etc) that
+# SystemInfo_libpci.cpp expects. The current QNX build target is headless
+# cefsimple (no WebGL / WebGPU), so disable libpci in ANGLE; GPU info will be
+# collected via ANGLE_USE_VULKAN_DISPLAY (SystemInfo_vulkan.cpp) instead.
+use_libpci = false
 EOF
 
 echo "GN args written to: ${GN_ARGS_FILE}"
