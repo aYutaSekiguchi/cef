@@ -1,0 +1,12 @@
+diff --git a/tools/variations/fieldtrial_to_struct.py b/tools/variations/fieldtrial_to_struct.py
+index 000469b3d25a9..a7b7069e09a74 100755
+--- a/tools/variations/fieldtrial_to_struct.py
++++ b/tools/variations/fieldtrial_to_struct.py
+@@ -30,6 +30,7 @@ _platforms = [
+     'ios',
+     'linux',
+     'mac',
++    'qnx',
+     'windows',
+ ]
+

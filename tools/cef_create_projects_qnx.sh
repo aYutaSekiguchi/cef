@@ -214,6 +214,12 @@ UNREGISTERED_CHROMIUM_PATCHES=(
   # upstream). LogAllTest crashes inside RunJS under QEMU; the exact
   # logger subpath could not be isolated.
   "v8_unittests_status_logall_qnx"
+  # fieldtrial_to_struct_qnx: fieldtrial_to_struct.py only recognizes
+  # android, android_webview, chromeos, fuchsia, ios, linux, mac, windows
+  # as valid --platform values. Add 'qnx' to the platform list so that
+  # fieldtrial config generation works in QNX builds. This is needed
+  # because the QNX toolchain passes --platform=qnx to the script via GN.
+  "fieldtrial_to_struct_qnx"
 )
 
 for patch_name in "${UNREGISTERED_CHROMIUM_PATCHES[@]}"; do
