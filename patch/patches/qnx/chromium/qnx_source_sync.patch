@@ -1,83 +1,31 @@
 diff --git a/.gitmodules b/.gitmodules
-index d136e5d2532a9..9d15a55f83c23 100644
+index d136e5d2532a9..4a369bbb13984 100644
 --- a/.gitmodules
 +++ b/.gitmodules
-@@ -914,3 +914,6 @@
+@@ -914,3 +914,9 @@
  	path = webkit/data/test_shell/plugins
  	url = https://chrome-internal.googlesource.com/chrome/data/webkit_plugin_tests
  	gclient-condition = checkout_src_internal
 +[submodule "third_party/epoll/src"]
 +	path = third_party/epoll/src
 +	url = https://github.com/qnx-ports/epoll.git
++[submodule "third_party/cpuinfo_qnx/src"]
++	path = third_party/cpuinfo_qnx/src
++	url = https://github.com/qnx-ports/cpuinfo.git
 diff --git a/DEPS b/DEPS
-index 40049e447ccd1..eade80b30d516 100644
+index 6fe4536b7acda..8b0b487de4d13 100644
 --- a/DEPS
 +++ b/DEPS
-@@ -53,6 +53,7 @@ gclient_gn_args = [
-   'cros_boards',
-   'cros_boards_with_qemu_images',
-   'generate_location_tags',
-+  'source_tarball',
- ]
- 
- 
-@@ -207,6 +208,8 @@ vars = {
-   # qemu on linux-arm64 machines.
-   'checkout_fuchsia_for_arm64_host': False,
- 
-+  'source_tarball': False,
-+
-   # By default, download the fuchsia sdk from the public sdk directory.
-   'fuchsia_sdk_cipd_prefix': 'fuchsia/sdk/core/',
- 
-@@ -2156,6 +2159,9 @@ deps = {
+@@ -2156,6 +2156,12 @@ deps = {
    'src/third_party/emoji-segmenter/src':
      Var('chromium_git') + '/external/github.com/google/emoji-segmenter.git' + '@' + Var('emoji_segmenter_revision'),
  
 +  'src/third_party/epoll/src':
 +    'https://github.com/qnx-ports/epoll.git' + '@' + 'aea458535243e44627b85b915ccbb658a396e4fb',
 +
++  'src/third_party/cpuinfo_qnx/src':
++    'https://github.com/qnx-ports/cpuinfo.git' + '@' + '0cf43cf0ad54f4f8551d5a0c624fe5c4aee64dcc',
++
    'src/third_party/oak/src':
      Var('chromium_git') + '/external/github.com/project-oak/oak.git' + '@' + '96c00a6c99ac382f3f3a8f376bc7a70890d1adaa',
- 
-@@ -4246,6 +4252,7 @@ hooks = [
-     # Update LASTCHANGE.
-     'name': 'lastchange',
-     'pattern': '.',
-+    'condition': 'not source_tarball',
-     'action': ['python3', 'src/build/util/lastchange.py',
-                '-o', 'src/build/util/LASTCHANGE'],
-   },
-@@ -4253,7 +4260,7 @@ hooks = [
-     # Update lastchange_commit_position.h (only for CrOS).
-     'name': 'lastchange_commit_position_cros',
-     'pattern': '.',
--    'condition': 'checkout_chromeos',
-+    'condition': 'checkout_chromeos and not source_tarball',
-     'action': ['python3', 'src/build/util/lastchange.py',
-                '-m', 'CHROMIUM',
-                '--commit-position-header',
-@@ -4263,6 +4270,7 @@ hooks = [
-     # Update GPU lists version string (for gpu/config).
-     'name': 'gpu_lists_version',
-     'pattern': '.',
-+    'condition': 'not source_tarball',
-     'action': ['python3', 'src/build/util/lastchange.py',
-                '-m', 'GPU_LISTS_VERSION',
-                '--revision-id-only',
-@@ -4272,6 +4280,7 @@ hooks = [
-     # Update skia_commit_hash.h.
-     'name': 'lastchange_skia',
-     'pattern': '.',
-+    'condition': 'not source_tarball',
-     'action': ['python3', 'src/build/util/lastchange.py',
-                '-m', 'SKIA_COMMIT_HASH',
-                '-s', 'src/third_party/skia',
-@@ -4281,6 +4290,7 @@ hooks = [
-     # Update dawn_version.h.
-     'name': 'lastchange_dawn',
-     'pattern': '.',
-+    'condition': 'not source_tarball',
-     'action': ['python3', 'src/build/util/lastchange.py',
-                '-m', 'DAWN_COMMIT_HASH',
-                '-s', 'src/third_party/dawn',
+

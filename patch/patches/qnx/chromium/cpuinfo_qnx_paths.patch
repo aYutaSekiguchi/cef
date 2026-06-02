@@ -1,0 +1,104 @@
+diff --git a/third_party/cpuinfo/BUILD.gn b/third_party/cpuinfo/BUILD.gn
+index b076eb7195e9f..96ce1d518117c 100644
+--- a/third_party/cpuinfo/BUILD.gn
++++ b/third_party/cpuinfo/BUILD.gn
+@@ -8,6 +8,19 @@ config("cpuinfo_include") {
+     "src/src",
+     "src/deps/clog/include",
+   ]
++  if (is_qnx) {
++    # QNX uses the qnx-ports fork (added by qnx_source_sync.patch under
++    # third_party/cpuinfo_qnx/src). The qnx-ports copy is API-compatible
++    # with pytorch/cpuinfo (same header layout, same struct names) but adds
++    # src/qnx/api.c backed by the QNX syspage / cpuid. Add its include
++    # directories so cpuinfo BUILD.gn can reference
++    # //third_party/cpuinfo_qnx/src/... symbols directly.
++    include_dirs += [
++      "//third_party/cpuinfo_qnx/src/src/include",
++      "//third_party/cpuinfo_qnx/src/src",
++      "//third_party/cpuinfo_qnx/src/deps/clog/include",
++    ]
++  }
+ }
+ 
+ config("cpuinfo_config") {
+@@ -48,6 +61,24 @@ source_set("cpuinfo") {
+     "src/src/log.c",
+   ]
+ 
++  if (is_qnx) {
++    # On QNX, take the common cpuinfo sources from the qnx-ports fork
++    # instead of pytorch/cpuinfo. This keeps the qnx-ports fork coherent:
++    # qnx-ports/cpuinfo patches the common files alongside src/qnx/api.c,
++    # so mixing pytorch's common sources with qnx-ports's qnx/api.c is
++    # not safe. Reset sources to empty first because GN forbids replacing
++    # a nonempty list with another nonempty list.
++    sources = []
++    sources = [
++      "//third_party/cpuinfo_qnx/src/deps/clog/src/clog.c",
++      "//third_party/cpuinfo_qnx/src/src/include/cpuinfo.h",
++      "//third_party/cpuinfo_qnx/src/src/api.c",
++      "//third_party/cpuinfo_qnx/src/src/cache.c",
++      "//third_party/cpuinfo_qnx/src/src/init.c",
++      "//third_party/cpuinfo_qnx/src/src/log.c",
++    ]
++  }
++
+   deps = [
+     ":cpu_and_os_specific",
+     ":cpu_specific",
+@@ -67,7 +98,7 @@ source_set("cpuinfo") {
+ }
+ 
+ source_set("os_specific") {
+-  if (is_chromeos || is_linux || is_android) {
++  if ((is_chromeos || is_linux || is_android) && !is_qnx) {
+     sources = [
+       "src/src/linux/cpulist.c",
+       "src/src/linux/multiline.c",
+@@ -80,6 +111,12 @@ source_set("os_specific") {
+     sources = [ "src/src/mach/topology.c" ]
+   }
+ 
++  if (is_qnx) {
++    sources = [
++      "//third_party/cpuinfo_qnx/src/src/qnx/api.c",
++    ]
++  }
++
+   configs -= [
+     "//build/config/compiler:chromium_code",
+     "//build/config/sanitizers:default_sanitizer_flags",
+@@ -149,7 +186,7 @@ source_set("x86_cache") {
+ }
+ 
+ source_set("cpu_and_os_specific") {
+-  if ((is_linux || is_chromeos) &&
++  if ((is_linux || is_chromeos) && !is_qnx &&
+       (current_cpu == "x86" || current_cpu == "x64")) {
+     sources = [
+       "src/src/x86/linux/cpuinfo.c",
+@@ -157,6 +194,22 @@ source_set("cpu_and_os_specific") {
+     ]
+   }
+ 
++  if (is_qnx && (current_cpu == "x86" || current_cpu == "x64")) {
++    # Replace the Linux x86 init path on QNX with the qnx-ports one. The
++    # qnx-ports fork is a near-line-for-line copy of pytorch/cpuinfo but
++    # with src/x86/linux/init.c -> src/qnx/api.c plumbing so CPU detection
++    # goes through the QNX syspage instead of <linux/api.h>.
++    sources = [
++      "//third_party/cpuinfo_qnx/src/src/x86/init.c",
++      "//third_party/cpuinfo_qnx/src/src/x86/isa.c",
++      "//third_party/cpuinfo_qnx/src/src/x86/name.c",
++      "//third_party/cpuinfo_qnx/src/src/x86/topology.c",
++      "//third_party/cpuinfo_qnx/src/src/x86/uarch.c",
++      "//third_party/cpuinfo_qnx/src/src/x86/vendor.c",
++      "//third_party/cpuinfo_qnx/src/src/qnx/api.c",
++    ]
++  }
++
+   if ((is_linux || is_chromeos) && current_cpu == "arm") {
+     sources = [
+       "src/src/arm/linux/aarch32-isa.c",
+
