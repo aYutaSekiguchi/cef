@@ -1105,6 +1105,308 @@ The downstream uses (`persistents[persistent_count++] = new Persistent<...>(...)
 
 ---
 
+## 37. third_party/cpuinfo — switch to the qnx-ports fork on QNX
+
+**Date**: 2026-06-03
+**Symptoms**:
+- After the FFmpeg/fieldtrial fixes, the build failed in
+  `third_party/cpuinfo`:
+  - `src/src/x86/linux/init.c` includes `<linux/api.h>`, which is the
+    Linux libpci-style shim and does not exist on QNX.
+  - `src/src/linux/processors.c` uses `<sched.h>` `CPU_SETSIZE`, which
+    QNX SDP 8's `<sched.h>` does not define.
+  - `src/src/x86/linux/init.c:21` declares a local `static inline
+    uint32_t min(uint32_t a, uint32_t b)` that collides with macros
+    already defined in QNX's `<sys/types.h>`.
+
+**Root cause**:
+- `pytorch/cpuinfo` is the version of cpuinfo Chromium fetches. Its
+  Linux paths assume `<linux/api.h>`, Linux libpci symbols, and
+  `<sched.h> CPU_SETSIZE` — none of which exist on QNX.
+- `is_linux` is set to `current_os == "linux" || is_qnx` in
+  `BUILDCONFIG.gn`, so the QNX build pulled in the Linux paths.
+
+**Fix**:
+- Use the qnx-ports fork: https://github.com/qnx-ports/cpuinfo,
+  branch `qnx`, pinned to commit `0cf43cf0` (2024-10-11, "Added
+  x86_64 support (with gcc package)"). The fork is a near-line-for-
+  line copy of pytorch/cpuinfo with a `src/qnx/api.c` that reads CPU
+  topology through QNX syspage / cpuid / ARM MIDR.
+- The switch is a two-step patch:
+  1. `qnx_source_sync.patch` adds a `third_party/cpuinfo_qnx/src`
+     submodule entry to `.gitmodules` and a corresponding
+     `src/third_party/cpuinfo_qnx/src` entry to `DEPS`, both
+     pointing at the qnx-ports commit. The submodule is only
+     fetched when `tools/qnx_sync_sources.sh` runs `gclient sync`
+     (i.e. on a QNX bootstrap), so a normal CEF Linux/Windows
+     bootstrap does not pull it.
+  2. New patch `qnx/chromium/cpuinfo_qnx_paths` rewires
+     `third_party/cpuinfo/BUILD.gn`:
+     - `cpuinfo_include` adds
+       `//third_party/cpuinfo_qnx/{src/include,src,deps/clog/include}`.
+     - `source_set("cpuinfo")` resets `sources` to `[]` first then
+       re-binds it to the qnx-ports common sources (clog.c, api.c,
+       cache.c, init.c, log.c) when `is_qnx`. The reset is needed
+       because GN forbids replacing a nonempty list.
+     - `source_set("os_specific")` gates the
+       `is_chromeos || is_linux || is_android` block on `!is_qnx`
+       and adds the qnx-ports `src/qnx/api.c` under `if (is_qnx)`.
+     - `source_set("cpu_and_os_specific")` gates the Linux x86
+       block on `!is_qnx` and adds the qnx-ports
+       `x86/{init,isa,name,topology,uarch,vendor}.c + qnx/api.c`
+       under `if (is_qnx)`.
+
+**Result**:
+- ✅ `third_party/cpuinfo` compiles cleanly on QNX.
+- The next failing target is `third_party/farmhash`.
+
+**Related files**:
+- `cef/patch/patches/qnx/chromium/qnx_source_sync.patch`
+  (added `third_party/cpuinfo_qnx/src` entries)
+- `cef/patch/patches/qnx/chromium/cpuinfo_qnx_paths.patch` (new)
+- `cef/patch/patch.cfg` (added `qnx/chromium/cpuinfo_qnx_paths`)
+- `third_party/cpuinfo/BUILD.gn`
+
+**Forward-looking notes**:
+- ARM/QNX: not yet exercised; if/when that becomes a target, mirror
+  the x86 block under `(current_cpu == "arm" || current_cpu ==
+  "arm64")` and switch the include set accordingly.
+- Upstream note: the qnx-ports fork tracks pytorch/cpuinfo via
+  manual sync. If pytorch/cpuinfo gets rebased to a hash that breaks
+  the qnx-ports fork, the pinned `0cf43cf0` may need to be bumped
+  and the BUILD.gn paths re-checked.
+
+---
+
+## 38. third_party/farmhash — switch to the qnx-ports fork on QNX
+
+**Date**: 2026-06-03
+**Symptoms**:
+- `third_party/farmhash/src/src/farmhash.cc:172:10: fatal error:
+  'byteswap.h' file not found`.
+
+**Root cause**:
+- `farmhash.cc` has a long `#if defined(__FreeBSD__) ... #elif ...
+  #else <byteswap.h>` fallthrough that picks the right `bswap_32`
+  / `bswap_64` per platform. QNX hits the `#else` and tries to
+  include `<byteswap.h>`, which is glibc-only and is not in
+  QNX SDP 8. QNX also has no `<sys/endian.h>`, so the FreeBSD-style
+  `bswap32` / `bswap64` aliases are not reachable.
+- The qnx-ports fork at https://github.com/qnx-ports/farmhash
+  reworks the header (replaces `_WIN32` with `_MSC_VER`, removes
+  the `__HAIKU__` branch, renames `data` to `farmhash_data` under
+  `QNXNTO` to dodge a libc++ symbol clash, etc.) but does **not**
+  itself add a `__QNXNTO__` branch to the bswap chain.
+
+**Fix**:
+- Three steps:
+  1. `qnx_source_sync.patch` adds a `third_party/farmhash_qnx/src`
+     submodule entry to `.gitmodules` and a corresponding
+     `src/third_party/farmhash_qnx/src` entry to `DEPS`, both
+     pointing at qnx-ports commit `be24c150` (2024-06-13,
+     "Add patch"). Only fetched on a QNX bootstrap.
+  2. New patch `qnx/chromium/farmhash_qnx_paths` rewires
+     `third_party/farmhash/BUILD.gn`:
+     - `farmhash_include` adds `//third_party/farmhash_qnx/src/src`
+       when `is_qnx`.
+     - `source_set("farmhash")` resets `public` and `sources` to `[]`
+       first then re-binds them to
+       `//third_party/farmhash_qnx/src/src/farmhash.{h,cc}` when
+       `is_qnx`.
+  3. The qnx-ports copy of `farmhash.cc` itself is also placed
+     under
+     `cef/patch/qnx/chromium/new_files/third_party/farmhash_qnx/src/src/`
+     so Phase 1 of `cef_create_projects_qnx.sh` overwrites the
+     freshly-cloned submodule copy. The replacement version adds
+     an `#elif defined(__QNXNTO__)` branch just before the
+     `#else <byteswap.h>` fallthrough that defines `bswap_32` and
+     `bswap_64` inline (QNX libc exposes neither symbol).
+
+**Result**:
+- ✅ `third_party/farmhash` compiles cleanly on QNX.
+- The next failing target is
+  `third_party/crabbyavif/dav1d_bindgen.rs` (a separate bindgen /
+  QNX sysroot header issue, see section 39).
+
+**Related files**:
+- `cef/patch/patches/qnx/chromium/qnx_source_sync.patch`
+  (added `third_party/farmhash_qnx/src` entries)
+- `cef/patch/patches/qnx/chromium/farmhash_qnx_paths.patch` (new)
+- `cef/patch/qnx/chromium/new_files/third_party/farmhash_qnx/src/src/farmhash.cc`
+  (new, 12k lines — the qnx-ports fork + QNX bswap branch)
+- `cef/patch/patch.cfg` (added `qnx/chromium/farmhash_qnx_paths`)
+
+**Forward-looking notes**:
+- ARM/QNX: not yet exercised. If `bswap_32` / `bswap_64` is ever
+  needed on QNX/ARM, the inline implementation above may want
+  `__builtin_bswap{32,64}` behind a `defined(__arm__) ||
+  defined(__aarch64__)` check.
+- Submodule fragility: the new_files overlay is layered on top
+  of the freshly-cloned submodule. If the qnx-ports farmhash
+  upstream adds their own `__QNXNTO__` branch in a future commit
+  and the pinned `be24c150` is bumped, the new_files overlay
+  will start to conflict and will need to be reworked.
+
+---
+
+## 39. dav1d_config / libyuv_config — define QNX sysroot macros for bindgen
+
+**Date**: 2026-06-03
+**Symptoms**:
+- `gen/third_party/crabbyavif/crabbyavif_dav1d_bindings/dav1d_bindgen.rs`
+  and `crabbyavif_libyuv_bindings/libyuv_bindgen.rs` failed to
+  generate with errors from QNX SDP 8's sysroot headers:
+  ```
+  sys/compiler_gnu.h:60:3: error: Endian not defined
+  sys/platform.h:428:3: error: not configured for target
+  sys/ntohdr.h:38:6: error: not configured for CPU
+  fatal error: '_NTO_CPU_HDR_DIR_(platform.h)' file not found
+  stdint.h:70:9: error: unknown type name '_Intleast8t'
+  ```
+  (and similar for `_Intfast*`, `_Uintleast*`, etc.)
+
+**Root cause**:
+- `crabbyavif`'s Rust bindings use
+  `//build/rust/rust_bindgen_generator.gni` to spawn a `bindgen`
+  subprocess. The subprocess parses the dav1d / libyuv C headers
+  against the QNX SDP 8 sysroot.
+- QNX SDP 8's sysroot gates `<sys/compiler_gnu.h>` on
+  `__BIGENDIAN__` or `__LITTLEENDIAN__` being defined; it gates
+  `<sys/platform.h>` on `__QNXNTO__` (so it can pull in
+  `<sys/target_nto.h>`, which is what provides the `__LITTLEENDIAN__`
+  → `stdint.h` typedef chain); and it gates `<sys/ntohdr.h>` on
+  `__X86_64__` (so it can pull in the right CPU subdir).
+- The C/C++ toolchain at `build/toolchain/qnx/*` already passes
+  `-D__LITTLEENDIAN__ -D__QNXNTO__ -D__QNX__ -D__X86_64__` to normal
+  compile actions, but `rust_bindgen_generator.gni`'s subprocess
+  does not pick those up. dav1d / libyuv do not get the defines
+  through any normal config chain either, so bindgen parses
+  raw QNX sysroot and trips the `#error`s.
+
+**Fix**:
+- New patch `qnx/chromium/dav1d_qnx_endian`:
+  `third_party/dav1d/BUILD.gn`'s `config("dav1d_config")` gets an
+  `if (is_qnx) { defines = [ "__LITTLEENDIAN__", "__QNXNTO__",
+  "__QNX__", "__X86_64__" ] }` block.
+- New patch `qnx/chromium/libyuv_qnx_endian`:
+  `third_party/libyuv/BUILD.gn`'s `config("libyuv_config")` gets
+  the same defines under `if (is_qnx)`.
+- crabbyavif's `rust_bindgen_generator("crabbyavif_dav1d_bindings")`
+  and `rust_bindgen_generator("crabbyavif_libyuv_bindings")` both
+  take `configs = [ "//third_party/dav1d:dav1d_config" ]` and
+  `configs = [ "//third_party/libyuv:libyuv_config" ]`, so adding
+  the defines there propagates through to bindgen's command line.
+
+**Result**:
+- ✅ `dav1d_bindgen.rs` and `libyuv_bindgen.rs` generate cleanly.
+- The next failing target is `third_party/dawn` (Platform.h does
+  not mention QNX, see section 40).
+
+**Related files**:
+- `cef/patch/patches/qnx/chromium/dav1d_qnx_endian.patch` (new)
+- `cef/patch/patches/qnx/chromium/libyuv_qnx_endian.patch` (new)
+- `cef/patch/patch.cfg` (added both)
+- `third_party/dav1d/BUILD.gn`
+- `third_party/libyuv/BUILD.gn`
+
+**Forward-looking notes**:
+- This is a workaround, not a fix. The right long-term answer is
+  for `rust_bindgen_generator.gni` to inherit the QNX toolchain
+  target flags directly (the `is_linux` branch at lines ~XX of
+  that file already does this for libstdc++'s library path; an
+  analogous `is_qnx` branch could pass `-D__LITTLEENDIAN__
+  -D__QNXNTO__ -D__QNX__ -D__X86_64__` to the bindgen subprocess
+  through `--bindgen-flags`). That would let us drop these two
+  per-target defines. Until then, the per-target workaround is
+  the smallest correct change.
+- The same pattern will likely apply to any future
+  `rust_bindgen_generator` consumer that pulls in QNX sysroot
+  headers. Keep an eye on new `rust_bindgen_*` invocations when
+  more targets come online.
+
+---
+
+## 40. dawn `Platform.h` and libsync — QNX stubs and Linux fallback
+
+**Date**: 2026-06-03
+**Symptoms**:
+- After the dav1d / libyuv fixes:
+  - `third_party/dawn/src/dawn/common/Platform.h:99:2: error:
+    "Unsupported platform."` and the same error in
+    `DynamicLib.{h,cpp}` (`Unsupported platform for DynamicLib`,
+    `use of undeclared identifier 'mHandle'`, etc.).
+  - `third_party/libsync/src/sync.c` included
+    `third_party/libsync/src/include/ndk/sync.h`, which
+    transitively pulled in `<linux/sync_file.h>` — a fatal
+    `'linux/sync_file.h' file not found` on QNX.
+
+**Root cause**:
+- `dawn/src/dawn/common/Platform.h` has a
+  `#if defined(WIN32) / __linux__ / __APPLE__ / __Fuchsia__ /
+  __EMSCRIPTEN__ / #else #error "Unsupported platform."` chain.
+  None of the four named branches fire on QNX, so dawn's `common`
+  target (which is built whenever `is_linux` is true) hits
+  `#error`.
+- `libsync`'s bundled `source_set` includes `src/sync.c`, which
+  includes `src/include/ndk/sync.h`, which includes
+  `<linux/sync_file.h>`. The bundled path is taken whenever
+  `!use_system_libsync` (and `use_system_libsync = is_chromeos_device`
+  is false on QNX). QNX SDP 8 has no `linux/sync_file.h` — QNX
+  exposes its own `<sys/sync.h>`-style interfaces, not the
+  Linux futex / sync_file ABI.
+
+**Fix**:
+- New patch `qnx/chromium/dawn_qnx_platform`:
+  `src/dawn/common/Platform.h`'s `#elif defined(__linux__)` is
+  changed to `#elif defined(__linux__) || defined(__QNX__)`. QNX
+  thus takes the `DAWN_PLATFORM_IS_LINUX / POSIX / LINUX_DESKTOP`
+  branch. This is correct for a headless cefsimple that never
+  sees WebGPU content — WebGPU itself still has no QNX backend,
+  but the common plumbing (DynamicLib, Platform macros, etc.)
+  now compiles.
+- New patch `qnx/chromium/libsync_qnx_stub`: the
+  `if (!use_system_libsync) { source_set("libsync") { ... } }`
+  block in `third_party/libsync/BUILD.gn` is wrapped in
+  `if (is_qnx) { group("libsync") {} } else if (...) { ... }`.
+  The QNX branch is an empty `group` so consumers that still
+  reference `//third_party/libsync` can link without pulling in
+  the Android NDK headers.
+
+**Result**:
+- ✅ dawn's `common` target compiles cleanly on QNX.
+- ✅ libsync's bundled NDK shim is no longer pulled in on QNX.
+- The next failing target is `third_party/swiftshader` (its
+  llvm-subzero `Host.h` tries to include `<machine/endian.h>`,
+  which QNX SDP 8 also does not provide).
+
+**Related files**:
+- `cef/patch/patches/qnx/chromium/dawn_qnx_platform.patch` (new)
+- `cef/patch/patches/qnx/chromium/libsync_qnx_stub.patch` (new)
+- `cef/patch/patch.cfg` (added both)
+- `third_party/dawn/src/dawn/common/Platform.h`
+- `third_party/libsync/BUILD.gn`
+
+**Forward-looking notes**:
+- **dawn on QNX is only the common plumbing.** Anything that
+  actually exercises WebGPU (a SwiftShader D3D12 backend, a
+  Vulkan/WebGPU surface) still needs real QNX work. cefsimple
+  in headless mode does not pull those in, so the
+  `LINUX_DESKTOP` shim is enough for now.
+- **libsync stub has no symbols**, so any caller that tried to
+  actually call into libsync (sync_file_range, sync_wait, etc.)
+  would fail to link. This is fine for cefsimple (the
+  sync_bookmarks / sync_device_info targets that would consume
+  it are themselves disabled in CEF's QNX args), but a future
+  CEF feature that re-enables Chrome Sync on QNX would need
+  a real QNX libsync port.
+- **WebGPU** is out of scope for the current QNX target. If
+  WebGPU is later requested, a follow-up commit should
+  replace the `LINUX_DESKTOP` shim with a proper
+  `DAWN_PLATFORM_IS_QNX` branch that does not pretend to be
+  Linux.
+
+---
+
 ## Current accepted exclusions
 
 These are the current broad-run exclusions used by `cef/tools/qnx_run_test.sh`.
