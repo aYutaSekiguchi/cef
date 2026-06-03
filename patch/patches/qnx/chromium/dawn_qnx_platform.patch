@@ -1,0 +1,14 @@
+diff --git a/src/dawn/common/Platform.h b/src/dawn/common/Platform.h
+index b4ac61004d..36d716b8eb 100644
+--- a/src/dawn/common/Platform.h
++++ b/src/dawn/common/Platform.h
+@@ -60,7 +60,7 @@
+ #error "Unsupported Windows platform."
+ #endif
+ 
+-#elif defined(__linux__)
++#elif defined(__linux__) || defined(__QNX__)
+ #define DAWN_PLATFORM_IS_LINUX 1
+ #define DAWN_PLATFORM_IS_POSIX 1
+ #if defined(__ANDROID__)
+

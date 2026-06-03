@@ -1,0 +1,23 @@
+diff --git a/BUILD.gn b/BUILD.gn
+index 2b374e8b4e06a..392395f1c6e9f 100644
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -13,7 +13,16 @@ declare_args() {
+   use_system_libsync = is_chromeos_device
+ }
+ 
+-if (!use_system_libsync) {
++if (is_qnx) {
++  # libsync is an Android NDK / ChromeOS shim. Its bundled sources
++  # include <linux/sync_file.h> which QNX SDP 8 does not ship, and
++  # the only consumer on QNX is the sync bookmarks / device info
++  # targets which are themselves disabled in CEF's QNX args. Provide
++  # a no-op stub so consumers that still reference //third_party/libsync
++  # can link without pulling in the Android NDK headers.
++  group("libsync") {
++  }
++} else if (!use_system_libsync) {
+   config("libsync_config") {
+     include_dirs = [
+       "src",
+
