@@ -1,0 +1,12 @@
+diff --git a/base/test/BUILD.gn b/base/test/BUILD.gn
+--- a/base/test/BUILD.gn	2026-06-03 20:44:24.146055328 +0900
++++ b/base/test/BUILD.gn	2026-06-03 20:44:24.146228561 +0900
+@@ -329,7 +329,7 @@
+     }
+   }
+ 
+-  if (is_posix || is_fuchsia) {
++  if ((is_posix && !is_qnx) || is_fuchsia) {
+     sources += [
+       "scoped_locale.cc",
+       "scoped_locale.h",

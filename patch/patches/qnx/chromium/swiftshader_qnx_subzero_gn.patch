@@ -1,0 +1,36 @@
+diff --git a/src/Reactor/BUILD.gn b/src/Reactor/BUILD.gn
+index 67dfeb0ec..7ddaa8aab 100644
+--- a/src/Reactor/BUILD.gn
++++ b/src/Reactor/BUILD.gn
+@@ -96,6 +96,14 @@ if (supports_subzero) {
+     if (is_win) {
+       include_dirs +=
+           [ "../../third_party/llvm-subzero/build/Windows/include/" ]
++    } else if (is_qnx) {
++      # is_qnx must be tested before is_linux: BUILDCONFIG.gn defines
++      # is_linux = current_os == "linux" || is_qnx, so both is_linux
++      # and is_qnx are true on QNX. If the linux branch were tested
++      # first, the Linux <features.h>-pulling config.h would be
++      # selected on QNX and we'd hit "'features.h' file not found"
++      # during compilation.
++      include_dirs += [ "../../third_party/llvm-subzero/build/QNX/include/" ]
+     } else if (is_linux || is_chromeos) {
+       include_dirs += [ "../../third_party/llvm-subzero/build/Linux/include/" ]
+     } else if (is_fuchsia) {
+@@ -327,7 +335,15 @@ if (supports_llvm) {
+       "$llvm_dir/configs/common/include/",
+     ]
+ 
+-    if (is_linux || is_chromeos) {
++    if (is_qnx) {
++      # is_qnx must be tested before is_linux: BUILDCONFIG.gn defines
++      # is_linux = current_os == "linux" || is_qnx, so both is_linux
++      # and is_qnx are true on QNX. If the linux branch were tested
++      # first, configs/linux/include would be selected on QNX and the
++      # linux config.h would try to pull in QNX-missing headers (e.g.
++      # <features.h>, <byteswap.h>).
++      include_dirs += [ "$llvm_dir/configs/qnx/include/" ]
++    } else if (is_linux || is_chromeos) {
+       include_dirs += [ "$llvm_dir/configs/linux/include/" ]
+     } else if (is_fuchsia) {
+       include_dirs += [ "$llvm_dir/configs/fuchsia/include/" ]

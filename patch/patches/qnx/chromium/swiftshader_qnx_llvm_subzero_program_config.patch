@@ -1,0 +1,13 @@
+diff --git a/third_party/llvm-subzero/include/llvm/Support/Program.h b/third_party/llvm-subzero/include/llvm/Support/Program.h
+index 422f8c20a..6343b34a1 100644
+--- a/third_party/llvm-subzero/include/llvm/Support/Program.h
++++ b/third_party/llvm-subzero/include/llvm/Support/Program.h
+@@ -15,6 +15,7 @@
+ #define LLVM_SUPPORT_PROGRAM_H
+ 
+ #include "llvm/ADT/ArrayRef.h"
++#include "llvm/Config/config.h"
+ #include "llvm/Support/ErrorOr.h"
+ #include <system_error>
+ 
+

@@ -1,0 +1,13 @@
+diff --git a/third_party/llvm-subzero/lib/Support/Path.cpp b/third_party/llvm-subzero/lib/Support/Path.cpp
+index 694841297..39ab0b8d6 100644
+--- a/third_party/llvm-subzero/lib/Support/Path.cpp
++++ b/third_party/llvm-subzero/lib/Support/Path.cpp
+@@ -12,6 +12,7 @@
+ //===----------------------------------------------------------------------===//
+ 
+ #include "llvm/Support/COFF.h"
++#include "llvm/Config/llvm-config.h"
+ #include "llvm/Support/Endian.h"
+ #include "llvm/Support/Errc.h"
+ #include "llvm/Support/ErrorHandling.h"
+

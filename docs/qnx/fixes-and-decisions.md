@@ -1568,6 +1568,10 @@ under QEMU and have it pass.
 | **subzero `BUILD.gn` is_qnx branch** | `swiftshader/src/Reactor/BUILD.gn` was edited locally to add an `is_qnx` branch for both `llvm-subzero/build/QNX/include/` and `llvm-10.0/configs/qnx/include/`, but the corresponding patch was not generated cleanly (the file got written to disk but the `git diff` capture came out empty). The branch is required for the configs/qnx/ config.h to actually be selected. | follow-up commit |
 | **QEMU run** | Once the test target builds, exercise `swiftshader_reactor_subzero_unittests` under QEMU via `cef/tools/qnx_run_test.sh`. | follow-up |
 
+### Status update after the follow-up ports
+
+The remaining LLVM / Marl ports and the `base/test/BUILD.gn` QNX source-selection fix have now been wired in as CEF-managed patches. On the current `test/src` tree, `ninja -C out/qnx_release/ third_party/swiftshader/tests/ReactorUnitTests:swiftshader_reactor_subzero_unittests` builds successfully, and the target also passes under QEMU. The `swiftshader_reactor_subzero_unittests` goal is now complete.
+
 ### Forward-looking notes
 
 - The `qnx_macros.h` cleanup also benefits any future

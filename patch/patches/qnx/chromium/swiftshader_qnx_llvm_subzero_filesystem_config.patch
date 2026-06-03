@@ -1,0 +1,13 @@
+diff --git a/third_party/llvm-subzero/include/llvm/Support/FileSystem.h b/third_party/llvm-subzero/include/llvm/Support/FileSystem.h
+index 9d8d8c3ff..06c58e139 100644
+--- a/third_party/llvm-subzero/include/llvm/Support/FileSystem.h
++++ b/third_party/llvm-subzero/include/llvm/Support/FileSystem.h
+@@ -31,6 +31,7 @@
+ #include "llvm/ADT/SmallString.h"
+ #include "llvm/ADT/StringRef.h"
+ #include "llvm/ADT/Twine.h"
++#include "llvm/Config/config.h"
+ #include "llvm/Support/Chrono.h"
+ #include "llvm/Support/ErrorHandling.h"
+ #include "llvm/Support/ErrorOr.h"
+

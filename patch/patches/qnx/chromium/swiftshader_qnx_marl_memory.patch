@@ -1,0 +1,42 @@
+diff --git a/third_party/marl/src/memory.cpp b/third_party/marl/src/memory.cpp
+index f52be5599..1a9b3dfdc 100644
+--- a/third_party/marl/src/memory.cpp
++++ b/third_party/marl/src/memory.cpp
+@@ -123,6 +123,36 @@ inline void protectPage(void* addr) {
+   MARL_ASSERT(res != 0, "Failed to protect page at %p", addr);
+ }
+ }  // anonymous namespace
++#elif defined(__QNX__)
++  // QNX port: page-based allocation via POSIX mmap / mprotect. QNX
++  // SDP 8 ships a standard POSIX mmap with PROT_NONE / PROT_READ /
++  // PROT_WRITE, which is sufficient for marl's guard-page support.
++#include <sys/mman.h>
++#include <unistd.h>
++namespace {
++inline size_t pageSize() {
++  static const auto size = ::sysconf(_SC_PAGESIZE);
++  return static_cast<size_t>(size);
++}
++inline void* allocatePages(size_t count) {
++  void* mapping =
++      ::mmap(nullptr, count * pageSize(), PROT_READ | PROT_WRITE,
++             MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
++  MARL_ASSERT(mapping != MAP_FAILED,
++              "Failed to allocate %d pages", int(count));
++  return mapping;
++}
++inline void freePages(void* ptr, size_t count) {
++  auto res = ::munmap(ptr, count * pageSize());
++  (void)res;
++  MARL_ASSERT(res == 0, "Failed to free %d pages at %p", int(count), ptr);
++}
++inline void protectPage(void* addr) {
++  auto res = ::mprotect(addr, pageSize(), PROT_NONE);
++  (void)res;
++  MARL_ASSERT(res == 0, "Failed to protect page at %p", addr);
++}
++}  // anonymous namespace
+ #else
+ #error "Page based allocation not implemented for this platform"
+ #endif
+
