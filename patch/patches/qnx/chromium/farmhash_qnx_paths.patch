@@ -1,0 +1,40 @@
+diff --git a/third_party/farmhash/BUILD.gn b/third_party/farmhash/BUILD.gn
+index 90b192ef654ad..b108976cde5b1 100644
+--- a/third_party/farmhash/BUILD.gn
++++ b/third_party/farmhash/BUILD.gn
+@@ -4,6 +4,14 @@
+ 
+ config("farmhash_include") {
+   include_dirs = [ "src/src" ]
++  if (is_qnx) {
++    # QNX uses the qnx-ports fork (added by qnx_source_sync.patch under
++    # third_party/farmhash_qnx/src). The qnx-ports copy replaces the
++    # google/farmhash source with a QNX-compatible one (adds QNX to the
++    # #if defined(__FreeBSD__)... #else fallthrough chain in farmhash.cc
++    # so it does not try to <byteswap.h>, which QNX SDP 8 does not ship).
++    include_dirs += [ "//third_party/farmhash_qnx/src/src" ]
++  }
+ }
+ 
+ config("farmhash-warnings") {
+@@ -16,9 +24,18 @@ config("farmhash-warnings") {
+ 
+ source_set("farmhash") {
+   public = [ "src/src/farmhash.h" ]
+-
+   sources = [ "src/src/farmhash.cc" ]
+ 
++  if (is_qnx) {
++    # Take the QNX-ready source from the qnx-ports fork instead of the
++    # google/farmhash copy. Reset public/sources first because GN forbids
++    # replacing a nonempty list with another nonempty list.
++    public = []
++    sources = []
++    public = [ "//third_party/farmhash_qnx/src/src/farmhash.h" ]
++    sources = [ "//third_party/farmhash_qnx/src/src/farmhash.cc" ]
++  }
++
+   configs -= [ "//build/config/compiler:chromium_code" ]
+   configs += [ "//build/config/compiler:no_chromium_code" ]
+   configs += [ ":farmhash-warnings" ]
+
