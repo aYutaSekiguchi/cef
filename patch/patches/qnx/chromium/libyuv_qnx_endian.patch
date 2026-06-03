@@ -1,0 +1,27 @@
+diff --git a/BUILD.gn b/BUILD.gn
+index ab491242..6e195f9c 100644
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -32,6 +32,21 @@ config("libyuv_config") {
+ 
+   # Define CHROMIUM to tell cpu_id to avoid sandbox unsafe system calls.
+   defines = [ "CHROMIUM" ]
++  if (is_qnx) {
++    # QNX SDP 8's sysroot headers (sys/compiler_gnu.h, sys/platform.h,
++    # sys/ntohdr.h) require a set of CPU/OS/endian defines to be
++    # present or they #error out. The C/C++ toolchain injects them
++    # via build/toolchain/qnx/*'s _target_flags, but the bindgen
++    # subprocess that crabbyavif_libyuv_bindings runs to parse
++    # libyuv headers does not pick those up. See
++    # qnx/chromium/dav1d_qnx_endian for the matching fix in dav1d.
++    defines += [
++      "__LITTLEENDIAN__",
++      "__QNXNTO__",
++      "__QNX__",
++      "__X86_64__",
++    ]
++  }
+   if (!libyuv_use_neon) {
+     defines += [ "LIBYUV_DISABLE_NEON" ]
+   }
+

@@ -1,0 +1,31 @@
+diff --git a/third_party/dav1d/BUILD.gn b/third_party/dav1d/BUILD.gn
+index c521fe2c68c4c..45246b7a02f93 100644
+--- a/third_party/dav1d/BUILD.gn
++++ b/third_party/dav1d/BUILD.gn
+@@ -83,6 +83,25 @@ config("dav1d_config") {
+   if (is_win && !is_clang) {
+     include_dirs += [ "libdav1d/include/compat/msvc" ]
+   }
++  if (is_qnx) {
++    # QNX SDP 8's sysroot headers (sys/compiler_gnu.h, sys/platform.h,
++    # sys/ntohdr.h) require a set of CPU/OS/endian defines to be
++    # present or they #error out with messages like
++    #   'Endian not defined' / 'not configured for target' /
++    #   'not configured for CPU' / '_NTO_CPU_HDR_DIR_(platform.h)
++    #   file not found'.
++    # The C/C++ toolchain does this via build/toolchain/qnx/*'s
++    # _target_flags, but the bindgen subprocess that
++    # crabbyavif_dav1d_bindings uses to parse the dav1d headers does
++    # not pick those up. So define them here, where crabbyavif
++    # consumes dav1d_config.
++    defines = [
++      "__LITTLEENDIAN__",
++      "__QNXNTO__",
++      "__QNX__",
++      "__X86_64__",
++    ]
++  }
+ }
+ 
+ dav1d_copts = [
+
