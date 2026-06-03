@@ -1,0 +1,28 @@
+diff --git a/third_party/llvm-subzero/include/llvm/Support/ELF.h b/third_party/llvm-subzero/include/llvm/Support/ELF.h
+index d951e552f..f32cdbf7f 100644
+--- a/third_party/llvm-subzero/include/llvm/Support/ELF.h
++++ b/third_party/llvm-subzero/include/llvm/Support/ELF.h
+@@ -20,6 +20,22 @@
+ #ifndef LLVM_SUPPORT_ELF_H
+ #define LLVM_SUPPORT_ELF_H
+ 
++#if defined(__QNX__)
++  // QNX SDP 8's sysroot headers (<elfdefinitions.h>, <sys/exec.h>,
++  // <sys/elf.h>, ...) define several ELF identifier names as
++  // preprocessor macros. The build's qnx_macros.h no longer drags
++  // <sys/elf.h> into every TU, but transitively-included QNX headers
++  // can still leave these macros defined when this header is pulled
++  // in. Undef them so the enums below parse.
++  #undef EV_NONE
++  #undef EV_CURRENT
++  #undef ELFOSABI_LINUX
++  #undef PT_ARM_UNWIND
++  #undef GRP_COMDAT
++  #undef GRP_MASKOS
++  #undef GRP_MASKPROC
++#endif
++
+ #include "llvm/Support/Compiler.h"
+ #include "llvm/Support/DataTypes.h"
+ #include <cstring>
+

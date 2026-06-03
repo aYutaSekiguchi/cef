@@ -1,0 +1,31 @@
+diff --git a/third_party/llvm-subzero/include/llvm/Support/Host.h b/third_party/llvm-subzero/include/llvm/Support/Host.h
+index 1746c7272..a670859cd 100644
+--- a/third_party/llvm-subzero/include/llvm/Support/Host.h
++++ b/third_party/llvm-subzero/include/llvm/Support/Host.h
+@@ -20,6 +20,25 @@
+ #include <endian.h>
+ #elif defined(_AIX)
+ #include <sys/machine.h>
++#elif defined(__QNX__)
++  // QNX SDP 8 does not ship a glibc-style <endian.h> with BYTE_ORDER /
++  // BIG_ENDIAN macros, and the sysroot has no <machine/endian.h> on
++  // its default include path (it lives under
++  // devs/include_<arch>/machine/endian.h, which the toolchain does
++  // not search by default). QNX itself predefines
++  // __LITTLEENDIAN__ / __BIGENDIAN__ in <sys/compiler_gnu.h>, so
++  // synthesize the legacy macros llvm-subzero expects from them.
++  #ifndef BYTE_ORDER
++    #if defined(__LITTLEENDIAN__)
++      #define LITTLE_ENDIAN 1234
++      #define BIG_ENDIAN    4321
++      #define BYTE_ORDER    LITTLE_ENDIAN
++    #elif defined(__BIGENDIAN__)
++      #define LITTLE_ENDIAN 1234
++      #define BIG_ENDIAN    4321
++      #define BYTE_ORDER    BIG_ENDIAN
++    #endif
++  #endif
+ #else
+ #if !defined(BYTE_ORDER) && !defined(LLVM_ON_WIN32)
+ #include <machine/endian.h>
+

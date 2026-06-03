@@ -1,0 +1,30 @@
+diff --git a/third_party/llvm-10.0/llvm/include/llvm/Support/SwapByteOrder.h b/third_party/llvm-10.0/llvm/include/llvm/Support/SwapByteOrder.h
+index 6cec87006..d7368c7cf 100644
+--- a/third_party/llvm-10.0/llvm/include/llvm/Support/SwapByteOrder.h
++++ b/third_party/llvm-10.0/llvm/include/llvm/Support/SwapByteOrder.h
+@@ -36,6 +36,24 @@
+ #else
+ #define BYTE_ORDER LITTLE_ENDIAN
+ #endif
++#elif defined(__QNX__)
++  // QNX SDP 8 does not ship a glibc-style <endian.h> with BYTE_ORDER
++  // / BIG_ENDIAN macros, and the sysroot has no <machine/endian.h>
++  // on its default include path. QNX itself predefines
++  // __LITTLEENDIAN__ / __BIGENDIAN__ in <sys/compiler_gnu.h>, so
++  // synthesize the legacy macros llvm/sys::IsBigEndianHost /
++  // IsLittleEndianHost expects from them.
++  #ifndef BYTE_ORDER
++    #if defined(__LITTLEENDIAN__)
++      #define LITTLE_ENDIAN 1234
++      #define BIG_ENDIAN    4321
++      #define BYTE_ORDER    LITTLE_ENDIAN
++    #elif defined(__BIGENDIAN__)
++      #define LITTLE_ENDIAN 1234
++      #define BIG_ENDIAN    4321
++      #define BYTE_ORDER    BIG_ENDIAN
++    #endif
++  #endif
+ #else
+ #if !defined(BYTE_ORDER) && !defined(_WIN32)
+ #include <machine/endian.h>
+

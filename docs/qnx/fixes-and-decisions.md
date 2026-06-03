@@ -1428,3 +1428,176 @@ For a fresh session, the preferred order is:
 3. **v8_unittests** — use `cef/tools/qnx_run_v8_unittests.py` for per-test execution
 4. move on to the next concrete failing target beyond `base_unittests` and `v8_unittests`
 5. revisit accepted exclusions only if they block that target
+
+## 41. SwiftShader / llvm ELF.h collision — QNX sysroot ELF macro pollution
+
+**Date**: 2026-06-03
+
+### Symptoms
+
+Building `cefsimple` (or any target that depends on SwiftShader) on QNX hit a wave of
+"expected identifier" / "redefinition of enumerator" errors in the LLVM 10.0 / llvm-subzero
+ELF headers, even though CEF's QNX toolchain correctly sets `--target=x86_64-unknown-nto`
+and `-D__QNX__`. Examples:
+
+```
+BinaryFormat/ELF.h:155: error: expected identifier
+  enum { EV_NONE = 0, EV_CURRENT = 1 };
+                   ^
+
+BinaryFormat/ELF.h:336: error: redefinition of enumerator 'ELFOSABI_GNU'
+BinaryFormat/ELF.h:1214: error: redefinition of enumerator 'PT_ARM_EXIDX'
+```
+
+Initial attempts using `#undef EV_CURRENT` / `#undef ELFOSABI_LINUX` in a hygiene block
+at the top of ELF.h did **not** fix the issue, because:
+
+- `EV_NONE` is `#define EV_NONE 0` (a simple macro) in `<elfdefinitions.h>` and
+  `<devs/sys/elf_common.h>`, so `enum { 0 = 0, EV_CURRENT = 1 }` is what the
+  preprocessor produced.
+- `ELFOSABI_LINUX` is `#define ELFOSABI_LINUX ELFOSABI_GNU` and
+  `PT_ARM_UNWIND` is `#define PT_ARM_UNWIND PT_ARM_EXIDX` in the same QNX header,
+  so even with the host enumerator declared first, the macro re-expansion made
+  it look like a redefinition.
+- Several other names (`GRP_COMDAT`, `GRP_MASKOS`, `GRP_MASKPROC`,
+  `SHT_GNU_*`, `NT_GNU_ABI_TAG`, ...) are defined as enum values via
+  `_ELF_DEFINE_*` macros. `#undef` cannot remove enum values, so even the
+  per-enum guard strategy was brittle.
+
+### Root cause
+
+`build/config/qnx/qnx_macros.h` was being `-include`d into every QNX C/C++
+translation unit (see `build/toolchain/qnx/BUILD.gn`). That file itself did
+`#include <sys/elf.h>`, which transitively pulled in `<elfdefinitions.h>`
+and `<devs/sys/elf_common.h>`. As a result, the QNX ELF enumerator names
+were exposed as preprocessor macros in **every** TU, and the first time
+`llvm/BinaryFormat/ELF.h`, `llvm/Support/ELF.h`, or
+`llvm-subzero/Support/ELF.h` was included, the enumerator names collided
+with the macros.
+
+This is a textbook case of "small force-included header pollutes the global
+namespace". The right fix is to stop polluting the global namespace, not to
+add `#undef`s at every consumer.
+
+### Fix
+
+Three coordinated changes:
+
+1. **`qnx_macros.h` no longer includes `<sys/elf.h>`.**
+   `ElfW(type)` is now defined as a plain token paste (it doesn't actually
+   need `<sys/elf.h>`'s type definitions at the point of `qnx_macros.h`'s
+   inclusion). Consumers that need the `Elf32_*/Elf64_*` C types now
+   include `<sys/elf.h>` explicitly.
+
+   File: `cef/patch/qnx/chromium/new_files/build/config/qnx/qnx_macros.h`
+
+2. **`stack_trace_posix.cc` includes `<sys/elf.h>` explicitly.**
+   `Elf64_Ehdr` / `Elf64_Phdr` / `ET_EXEC` / `ET_DYN` / `ELFMAG` were
+   previously reachable only because `qnx_macros.h` dragged `<sys/elf.h>` in.
+   With the force-include removed, this file declares its own dependency.
+
+   Patch: `cef/patch/patches/qnx/chromium/stack_trace_posix_qnx_elf.patch`
+   (registered as `qnx/chromium/stack_trace_posix_qnx_elf`)
+
+3. **LLVM ELF.h headers keep a small hygiene block.** Even after the
+   `<sys/elf.h>` pollution is gone, transitively-included QNX headers
+   (`<elfdefinitions.h>`, `<sys/exec.h>`, `<sys/elf.h>`, ...) can still
+   leave these macros defined when an ELF.h header is pulled in. A small
+   `#if defined(__QNX__)` block at the top of each ELF.h header undefines
+   the names that have caused collisions so far:
+
+   ```cpp
+   #if defined(__QNX__)
+     #undef EV_NONE
+     #undef EV_CURRENT
+     #undef ELFOSABI_LINUX
+     #undef PT_ARM_UNWIND
+     #undef GRP_COMDAT
+     #undef GRP_MASKOS
+     #undef GRP_MASKPROC
+   #endif
+   ```
+
+   Patches (applied at `third_party/swiftshader`):
+   - `cef/patch/patches/qnx/chromium/swiftshader_qnx_llvm_elf.patch`
+     (registered as `qnx/chromium/swiftshader_qnx_llvm_elf`) for
+     `llvm-10.0/llvm/include/llvm/BinaryFormat/ELF.h`.
+   - `cef/patch/patches/qnx/chromium/swiftshader_qnx_elf.patch`
+     (registered as `qnx/chromium/swiftshader_qnx_elf`) for
+     `llvm-subzero/include/llvm/Support/ELF.h`.
+
+   New `#undef` lines should be added to this block if future collisions
+   are reported — one line per name, no per-enum guards needed.
+
+### Other QNX-side patches added in the same commit
+
+| Patch | File | Purpose |
+|-------|------|---------|
+| `swiftshader_qnx_endian` | `third_party/swiftshader/third_party/llvm-subzero/include/llvm/Support/Host.h` | Synthesize `BYTE_ORDER` / `LITTLE_ENDIAN` / `BIG_ENDIAN` from QNX's `__LITTLEENDIAN__` / `__BIGENDIAN__`. Avoids `<machine/endian.h>`. |
+| `swiftshader_qnx_swapbyte` | `third_party/swiftshader/third_party/llvm-10.0/llvm/include/llvm/Support/SwapByteOrder.h` | Same pattern for LLVM 10.0. |
+| `swiftshader_qnx_memfd` | `third_party/swiftshader/src/System/BUILD.gn` | Exclude `Linux/MemFd.cpp` from the SwiftShader `System` source_set on QNX — the file uses `syscall(__NR_memfd_create, ...)` which QNX SDP 8 does not provide. |
+
+All five `swiftshader_*` patches use `path: 'third_party/swiftshader'` in
+`patch.cfg` so they apply inside the swiftshader submodule (where the
+vendored `llvm-10.0/` and `llvm-subzero/` trees live).
+
+### What this fixes vs. what it doesn't
+
+**Fixed**: The ELF enumerator name collisions in the LLVM 10.0 /
+llvm-subzero ELF.h headers. `cefsimple`'s SwiftShader LLVM 10 backend
+compiles past the ELF.h headers (other QNX-specific LLVM errors are
+documented below in the residual work).
+
+**Not yet fixed (out of scope for this commit)**: QNX toolchain /
+build.ninja plumbing for the Subzero backend (`is_qnx` propagation,
+`configs/qnx/` selection in the LLVM 10.0 BUILD.gn, the QNX branch in
+`Path.inc`'s `is_local()`, and several other Unix/*.inc files). These
+are tracked in the residual work section below.
+
+### Residual work toward the swiftshader_reactor_subzero_unittests PASS goal
+
+Goal: build and run
+`//third_party/swiftshader/tests/ReactorUnitTests:swiftshader_reactor_subzero_unittests`
+under QEMU and have it pass.
+
+| Item | Description | Owner |
+|------|-------------|-------|
+| **toolchain propagation** | Confirm `//build/toolchain/qnx:clang_x64` is actually picked up as the default toolchain for subzero (current build.ninja output is split between `out/qnx_release/clang_x64/` (host-like) and `out/qnx_release/clang_x64_with_system_allocator/` (qnx-like); the subzero target's `cflags` still contain `--target=x86_64-unknown-linux-gnu`). Most likely need a follow-up patch to either `BUILDCONFIG.gn` or `build/config/clang/BUILD.gn` to ensure the qnx branch in `compiler_cpu_abi` is evaluated inside the qnx toolchain scope. | qnx-port reviewer |
+| **llvm-10.0 / llvm-subzero additional Unix/*.inc ports** | `Path.inc` (getMainExecutable on QNX), `Signals.inc` (no `<link.h>`), `Memory.inc` (madvise / posix_madvise), `Process.inc` (qcc link), and the `Host.cpp` `getHostCPU` ARM fallback. Reference impl lives in `qnx-ports/llvm-project@qnx-22.1.x`; port a minimal subset that matches SwiftShader's actual use. | this PR |
+| **llvm-10.0 / llvm-subzero QNX `config.h`** | A new `configs/qnx/include/llvm/Config/config.h` and `llvm-subzero/build/QNX/include/llvm/Config/config.h` exist as untracked new_files this session. They have not been wired into `swiftshader/src/Reactor/BUILD.gn` (which still picks `Linux/include/` for the qnx case), nor has the CEF-managed-patch infrastructure been set up to carry them. | follow-up commit |
+| **subzero `BUILD.gn` is_qnx branch** | `swiftshader/src/Reactor/BUILD.gn` was edited locally to add an `is_qnx` branch for both `llvm-subzero/build/QNX/include/` and `llvm-10.0/configs/qnx/include/`, but the corresponding patch was not generated cleanly (the file got written to disk but the `git diff` capture came out empty). The branch is required for the configs/qnx/ config.h to actually be selected. | follow-up commit |
+| **QEMU run** | Once the test target builds, exercise `swiftshader_reactor_subzero_unittests` under QEMU via `cef/tools/qnx_run_test.sh`. | follow-up |
+
+### Forward-looking notes
+
+- The `qnx_macros.h` cleanup also benefits any future
+  LLVM/Clang-derived third_party code that might have hit the same
+  collisions silently. The list of `undef`s in the hygiene block is
+  conservative (only what we have actually seen collide); expect to
+  add to it as more LLVM/SwiftShader headers are exercised.
+- The `qnx-ports/llvm-project@qnx-22.1.x` fork is a useful reference for
+  the remaining QNX ports, but it is on LLVM 22 and SwiftShader ships
+  LLVM 10.0 / a private llvm-subzero fork. Direct swapping is not
+  possible; backporting specific QNX branches from the qnx-ports fork
+  one at a time is the safer path.
+- The `use_swiftshader_with_subzero = false` / `supports_subzero = false`
+  workaround that earlier draft commits added to
+  `tools/cef_create_projects_qnx.sh` has been **reverted** in this
+  commit. SwiftShader's Subzero backend is now an explicit goal again,
+  not a deferred item.
+
+---
+
+## Current follow-up priority
+
+For a fresh session, the preferred order is:
+
+1. preserve bootstrap reproducibility from `cef/patch/...`
+2. validate the baseline on the target machine
+3. **v8_unittests** — use `cef/tools/qnx_run_v8_unittests.py` for per-test execution
+4. move on to the next concrete failing target beyond `base_unittests` and `v8_unittests`
+5. **swiftshader_reactor_subzero_unittests** (new this session) — build the
+   subzero test target, run it under QEMU, and reach PASS. The
+   `is_qnx` toolchain propagation, llvm-10.0/llvm-subzero QNX ports,
+   and `configs/qnx/` wiring documented in §41 are prerequisites.
+6. revisit accepted exclusions only if they block that target

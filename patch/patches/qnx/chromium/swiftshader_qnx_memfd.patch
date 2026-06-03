@@ -1,0 +1,14 @@
+diff --git a/src/System/BUILD.gn b/src/System/BUILD.gn
+index 6f61d9f76..fde4fa9b8 100644
+--- a/src/System/BUILD.gn
++++ b/src/System/BUILD.gn
+@@ -48,7 +48,7 @@ swiftshader_source_set("System") {
+     "SwiftConfig.cpp",
+     "Timer.cpp",
+   ]
+-  if (is_linux || is_chromeos || is_android) {
++  if ((is_linux || is_chromeos || is_android) && !is_qnx) {
+     sources += [
+       "Linux/MemFd.cpp",
+     ]
+

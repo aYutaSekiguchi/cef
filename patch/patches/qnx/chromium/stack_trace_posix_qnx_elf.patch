@@ -1,0 +1,38 @@
+diff --git a/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/debug/stack_trace_posix.cc b/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/debug/stack_trace_posix.cc
+index ae1070defaa2a..9c162eb4be937 100644
+--- a/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/debug/stack_trace_posix.cc
++++ b/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/debug/stack_trace_posix.cc
+@@ -7,6 +7,14 @@
+ #include <fcntl.h>
+ #include <unistd.h>
+ 
++// QNX: qnx_macros.h used to drag <sys/elf.h> into every TU. We no longer
++// do that (it pollutes the global namespace with ELF enumerator names
++// like EV_NONE, PT_ARM_UNWIND, ELFOSABI_LINUX), so include <sys/elf.h>
++// explicitly here for Elf64_Ehdr / Elf64_Phdr / ELFMAG / ET_EXEC / ET_DYN.
++#if defined(__QNX__)
++#include <sys/elf.h>
++#endif
++
+ #include <cstring>
+ 
+ #include "partition_alloc/partition_alloc_base/compiler_specific.h"
+@@ -14,7 +22,9 @@
+ #include "partition_alloc/partition_alloc_base/posix/eintr_wrapper.h"
+ #include "partition_alloc/partition_alloc_base/strings/safe_sprintf.h"
+ 
+-#if !PA_BUILDFLAG(IS_ANDROID) && !PA_BUILDFLAG(IS_APPLE)
++#if defined(__QNX__)
++#include "build/config/qnx/qnx_macros.h"
++#elif !PA_BUILDFLAG(IS_ANDROID) && !PA_BUILDFLAG(IS_APPLE)
+ #include <link.h>  // For ElfW() macro.
+ #endif
+ 
+@@ -427,4 +437,4 @@ void OutputStackTrace(unsigned index,
+ }
+ #endif  // !PA_BUILDFLAG(IS_ANDROID)
+ 
+-}  // namespace partition_alloc::internal::base::debug
++}  // namespace partition_alloc::internal::base::debug
+\ No newline at end of file
+

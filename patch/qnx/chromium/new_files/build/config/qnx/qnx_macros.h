@@ -6,10 +6,17 @@
 #define BUILD_CONFIG_QNX_QNX_MACROS_H_
 
 // QNX does not provide <link.h>, which on Linux defines the ElfW(type) macro.
-// We define it here using the QNX sysroot's <sys/elf.h>.
+// We define it here using a token-paste on Elf32_*/Elf64_*. Note that we
+// deliberately do NOT #include <sys/elf.h> here: this header is force-included
+// into every QNX C/C++ TU (see build/toolchain/qnx/BUILD.gn's -include
+// qnx_macros.h), and <sys/elf.h> transitively pulls in <elfdefinitions.h>
+// which defines EV_NONE, EV_CURRENT, ELFOSABI_LINUX, PT_ARM_UNWIND,
+// SHT_GNU_*, NT_GNU_ABI_TAG, etc. as preprocessor macros. Those macros
+// collide with the enumerator names in llvm/BinaryFormat/ELF.h,
+// llvm/Support/ELF.h, llvm-subzero's ELF.h, and similar ELF-format headers
+// that Chromium / SwiftShader / v8 / etc. ship. The right shape is for any
+// TU that needs the Elf32_*/Elf64_* C types to include <sys/elf.h> itself.
 #if defined(__QNX__)
-#include <sys/elf.h>
-
 #ifndef ElfW
 #  ifdef __LP64__
 #    define ElfW(type) Elf64_##type
