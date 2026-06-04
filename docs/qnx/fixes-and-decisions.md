@@ -1840,6 +1840,108 @@ third binaries in `--swiftshader`, whose `icudtl.dat` lookup uses
 
 ---
 
+## 43. Skia `SkSemaphore.cpp` — `<dispatch/dispatch.h>` not found on QNX
+
+**Date**: 2026-06-04
+
+**Symptoms**:
+- Building `skia_core_and_effects` (specifically `SkSemaphore.o`)
+  failed with:
+  ```
+  ../../third_party/skia/src/base/SkSemaphore.cpp:13:14: fatal error: 'dispatch/dispatch.h' file not found
+     13 |     #include <dispatch/dispatch.h>
+        |              ^~~~~~~~~~~~~~~~~~~~~
+  ```
+- QNX SDP 8 does not ship the Apple Grand Central Dispatch headers.
+
+**Root cause**:
+- `third_party/skia/src/base/SkSemaphore.cpp` selects its
+  implementation via:
+  ```c
+  #if defined(SK_BUILD_FOR_MAC) || defined(SK_BUILD_FOR_IOS)
+      #include <dispatch/dispatch.h>   // Apple GCD path
+      ...
+  #elif defined(SK_BUILD_FOR_WIN)
+      ...                              // Win32 path
+  #else
+      #include <semaphore.h>           // POSIX path
+      ...
+  #endif
+  ```
+- The `SK_BUILD_FOR_*` macros are auto-defined in
+  `third_party/skia/include/private/base/SkFeatures.h` by checking
+  pre-defined compiler / target macros. None of the
+  `defined(linux) || defined(__linux) || defined(__FreeBSD__) ||
+  ... || defined(__unix__)` branches match on QNX (verified that
+  the QNX `clang --target=x86_64-unknown-nto` driver defines
+  `__QNX__` and `__QNXNTO__` but **not** `__unix__` or `__linux`).
+  The code therefore falls into the `else` branch and sets
+  `SK_BUILD_FOR_MAC`, which routes `SkSemaphore.cpp` to the GCD
+  path.
+- QNX NTO is a POSIX-compliant RTOS and ships `<semaphore.h>` with
+  `sem_init` / `sem_wait` / `sem_post` / `sem_destroy` (verified
+  in `/home/yuta/qnx800/target/qnx/usr/include/semaphore.h`), so
+  the `#else` POSIX branch would have worked directly — the only
+  problem is the misclassification.
+
+**Fix**:
+- Pre-define `SK_BUILD_FOR_UNIX` from GN so that the outer
+  `#if !defined(SK_BUILD_FOR_ANDROID) && !defined(SK_BUILD_FOR_IOS)
+  && !defined(SK_BUILD_FOR_WIN) && !defined(SK_BUILD_FOR_UNIX) &&
+  !defined(SK_BUILD_FOR_MAC)` guard in `SkFeatures.h` skips its
+  platform auto-detection block.
+- The natural place to add the define is the existing
+  `is_linux || is_chromeos` branch in `skia/BUILD.gn`'s
+  `skia_config`. `is_linux` is already `true` for QNX builds
+  because `build/config/BUILDCONFIG.gn` sets
+  `is_linux = current_os == "linux" || is_qnx`. That same branch
+  is already emitting `SK_GAMMA_EXPONENT=1.2` /
+  `SK_GAMMA_CONTRAST=0.2` for QNX (visible in the build command
+  before this fix), so the QNX build was already partially
+  routed through it.
+- Adding `SK_BUILD_FOR_UNIX` here is redundant for stock Linux
+  and ChromeOS (where `SkFeatures.h` auto-detects correctly via
+  `__linux` / `__GLIBC__`) but harmless — the resulting
+  `SK_BUILD_FOR_UNIX` is identical in both paths.
+- After the fix, `SkSemaphore.cpp` compiles cleanly with the
+  QNX-native `<semaphore.h>`. Verified by inspecting
+  `SkSemaphore.o`'s `.d` file: it includes
+  `qnx800/target/qnx/usr/include/semaphore.h` and never
+  references `dispatch/dispatch.h`.
+
+**Result**:
+- ✅ `obj/skia/skia_core_and_effects/SkSemaphore.o` builds
+  (8.6 KB, x86-64 QNX ELF, REL).
+- ✅ No other `dispatch/dispatch.h` consumers in Skia
+  (`grep -rln "dispatch/dispatch.h" third_party/skia/src/base
+  third_party/skia/src/core` returns only `SkSemaphore.cpp`).
+  All other `SK_BUILD_FOR_MAC` / `SK_BUILD_FOR_IOS` branches in
+  Skia live in macOS/Metal-specific source files
+  (`src/utils/mac/*`, `src/ports/SkTypeface_mac_ct.cpp`,
+  `src/gpu/ganesh/mtl/*`, `src/gpu/graphite/mtl/*`) that are not
+  part of `skia_core_sources` and are not built for QNX.
+- ✅ Linux and ChromeOS builds are unaffected (redundant define
+  is a no-op).
+- ✅ The 3 other QNX-affected Skia files that reference
+  `SK_BUILD_FOR_IOS` (`GrGLCaps.cpp`, `SkImageFilterCache.cpp`)
+  are guarded by `#ifdef SK_BUILD_FOR_IOS`, which QNX does not
+  define, so they fall through to their non-iOS branch
+  unchanged.
+
+**Related files**:
+- `cef/patch/patches/qnx/chromium/skia_qnx_build_for_unix.patch` (new)
+- `cef/patch/patch.cfg` (registers the new patch in the QNX
+  patch list, applied by `tools/patcher.py` during the
+  `cef_create_projects_qnx.sh` Phase 2)
+- `skia/BUILD.gn` (target of the patch — single define added
+  inside the existing `is_linux || is_chromeos` block)
+- `third_party/skia/include/private/base/SkFeatures.h` (consumer —
+  skips auto-detect when `SK_BUILD_FOR_UNIX` is pre-defined)
+- `third_party/skia/src/base/SkSemaphore.cpp` (consumer — selects
+  POSIX `<semaphore.h>` path on QNX)
+
+---
+
 ## Current follow-up priority
 
 For a fresh session, the preferred order is:
