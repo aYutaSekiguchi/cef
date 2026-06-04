@@ -1,16 +1,3 @@
-diff --git a/base/test/BUILD.gn b/base/test/BUILD.gn
-index d5fb797..8c68fe5 100644
---- a/base/test/BUILD.gn
-+++ b/base/test/BUILD.gn
-@@ -324,7 +324,7 @@ static_library("test_support") {
-     }
-   }
- 
--  if ((is_posix && !is_qnx) || is_fuchsia) {
-+  if (is_posix || is_fuchsia) {
-     sources += [
-       "scoped_locale.cc",
-       "scoped_locale.h",
 diff --git a/base/test/test_file_util_posix.cc b/base/test/test_file_util_posix.cc
 index d64a00e..7f649e7 100644
 --- a/base/test/test_file_util_posix.cc
