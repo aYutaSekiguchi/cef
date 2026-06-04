@@ -1,0 +1,20 @@
+diff --git a/third_party/llvm-10.0/BUILD.gn b/third_party/llvm-10.0/BUILD.gn
+index a98c3b0f9..6d0d8f9a1 100644
+--- a/third_party/llvm-10.0/BUILD.gn
++++ b/third_party/llvm-10.0/BUILD.gn
+@@ -104,7 +104,14 @@ llvm_include_dirs = [
+   "configs/common/lib/Transforms/InstCombine/",
+ ]
+ 
+-if (is_linux || is_chromeos) {
++if (is_qnx) {
++  # is_qnx must be tested before is_linux: BUILDCONFIG.gn defines
++  # is_linux = current_os == "linux" || is_qnx, so both is_linux
++  # and is_qnx are true on QNX. If the linux branch were tested
++  # first, configs/linux/include would be selected on QNX and the
++  # Linux llvm config headers would be used instead of the QNX ones.
++  llvm_include_dirs += [ "configs/qnx/include/" ]
++} else if (is_linux || is_chromeos) {
+   llvm_include_dirs += [ "configs/linux/include/" ]
+ } else if (is_fuchsia) {
+   llvm_include_dirs += [ "configs/fuchsia/include/" ]
