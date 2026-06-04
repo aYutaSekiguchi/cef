@@ -1,31 +1,48 @@
 diff --git a/.gitmodules b/.gitmodules
-index d136e5d2532a9..f82970aa8b5e9 100644
+index d136e5d2532a9..1457bb6444862 100644
 --- a/.gitmodules
 +++ b/.gitmodules
-@@ -914,3 +914,6 @@
+@@ -914,3 +914,9 @@
  	path = webkit/data/test_shell/plugins
  	url = https://chrome-internal.googlesource.com/chrome/data/webkit_plugin_tests
  	gclient-condition = checkout_src_internal
++[submodule "third_party/cpuinfo_qnx/src"]
++	path = third_party/cpuinfo_qnx/src
++	url = https://github.com/qnx-ports/cpuinfo.git
 +[submodule "third_party/farmhash_qnx/src"]
 +	path = third_party/farmhash_qnx/src
 +	url = https://github.com/qnx-ports/farmhash.git
 diff --git a/DEPS b/DEPS
-index 6fe4536b7acda..6786cba47668e 100644
+index 40049e447ccd1..63e34be8015fa 100644
 --- a/DEPS
 +++ b/DEPS
-@@ -4875,3 +4875,14 @@ recursedeps = [
-   # this.
-   'src/third_party/catapult',
- ]
-+ools-frontend/src',
-+  # clank has its own DEPS file, does not need to be in trybot_analyze_config
-+  # since the roller does not run tests.
-+  'src/clank',
-+  'src/components/optimization_guide/internal',
-+  'src/ios_internal',
-+  # TODO(crbug.com/430571901): Fix telemetry_unittests to use
-+  # third_party/webpagereplay instead of the copy inside catapult and remove
-+  # this.
-+  'src/third_party/catapult',
-+]
-
+@@ -2048,6 +2048,9 @@ deps = {
+   'src/third_party/cpuinfo/src':
+     Var('chromium_git') + '/external/github.com/pytorch/cpuinfo.git' + '@' + '7364b490b5f78d58efe23ea76e74210fd6c3c76f',
+ 
++  'src/third_party/cpuinfo_qnx/src':
++    'https://github.com/qnx-ports/cpuinfo.git@0cf43cf0ad54f4f8551d5a0c624fe5c4aee64dcc',
++
+   'src/third_party/crc32c/src':
+     Var('chromium_git') + '/external/github.com/google/crc32c.git' + '@' + 'd3d60ac6e0f16780bcfcc825385e1d338801a558',
+ 
+@@ -2083,6 +2086,9 @@ deps = {
+     'condition': 'checkout_chromeos',
+   },
+ 
++  'src/third_party/epoll/src':
++    'https://github.com/qnx-ports/epoll.git@aea458535243e44627b85b915ccbb658a396e4fb',
++
+   'src/third_party/espresso': {
+       'packages': [
+           {
+@@ -2097,6 +2103,9 @@ deps = {
+   'src/third_party/farmhash/src':
+     Var('chromium_git') + '/external/github.com/google/farmhash.git' + '@' + '816a4ae622e964763ca0862d9dbd19324a1eaf45',
+ 
++  'src/third_party/farmhash_qnx/src':
++    'https://github.com/qnx-ports/farmhash.git@be24c1508eacdf25691bcf561b6f443d6e3ed141',
++
+   'src/third_party/fast_float/src':
+     Var('chromium_git') + '/external/github.com/fastfloat/fast_float.git' + '@' + 'cb1d42aaa1e14b09e1452cfdef373d051b8c02a4',
+ 

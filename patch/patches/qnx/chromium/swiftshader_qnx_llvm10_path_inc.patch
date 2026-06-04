@@ -1,8 +1,22 @@
 diff --git a/third_party/llvm-10.0/llvm/lib/Support/Unix/Path.inc b/third_party/llvm-10.0/llvm/lib/Support/Unix/Path.inc
-index 89e083683..4f74f32ac 100644
 --- a/third_party/llvm-10.0/llvm/lib/Support/Unix/Path.inc
 +++ b/third_party/llvm-10.0/llvm/lib/Support/Unix/Path.inc
-@@ -123,7 +123,8 @@ namespace fs {
+@@ -62,6 +62,13 @@
+ # define MAXPATHLEN 4096
+ #endif
+ 
++// QNX SDP 8 only ships _POSIX_PATH_MAX (256), which is too small for
++// paths in many use cases. Force a sane 1024-byte buffer (matches the
++// value used on Linux/BSD).
++#if defined(__QNX__) && !defined(MAXPATHLEN)
++# define MAXPATHLEN 1024
++#endif
++
+ #include <sys/types.h>
+ #if !defined(__APPLE__) && !defined(__OpenBSD__) && !defined(__FreeBSD__) &&   \
+     !defined(__linux__) && !defined(__FreeBSD_kernel__) && !defined(_AIX)
+@@ -117,7 +124,8 @@
+ 
  #if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) ||     \
      defined(__minix) || defined(__FreeBSD_kernel__) || defined(__linux__) ||   \
 -    defined(__CYGWIN__) || defined(__DragonFly__) || defined(_AIX) || defined(__GNU__)
@@ -11,11 +25,10 @@ index 89e083683..4f74f32ac 100644
  static int
  test_dir(char ret[PATH_MAX], const char *dir, const char *bin)
  {
-@@ -245,7 +246,29 @@ std::string getMainExecutable(const char *argv0, void *MainAddr) {
+@@ -238,6 +246,33 @@
    // If we don't have procfs mounted, fall back to argv[0]
    if (getprogpath(exe_path, argv0) != NULL)
      return exe_path;
--#elif defined(__linux__) || defined(__CYGWIN__) || defined(__gnu_hurd__) || defined(__QNX__)
 +#elif defined(__QNX__)
 +  char exe_path[MAXPATHLEN] = {};
 +  const char *aPath = "/proc/self/exefile";
@@ -43,7 +56,18 @@ index 89e083683..4f74f32ac 100644
 +  }
 +  if (getprogpath(exe_path, argv0))
 +    return exe_path;
-+#elif defined(__linux__) || defined(__CYGWIN__) || defined(__gnu_hurd__)
+ #elif defined(__linux__) || defined(__CYGWIN__) || defined(__gnu_hurd__)
    char exe_path[MAXPATHLEN];
    const char *aPath = "/proc/self/exe";
-   if (sys::fs::exists(aPath)) {
+@@ -504,6 +539,11 @@
+ 
+   // vmount entry not found; "remote" is the conservative answer.
+   return false;
++#elif defined(__QNX__)
++  // QNX has no portable concept of a "local" mount; the statvfs struct
++  // has no f_flag / f_flags field, and there is no MNT_LOCAL macro.
++  // Conservatively return true so is_local() callers proceed.
++  return true;
+ #else
+   return !!(STATVFS_F_FLAG(Vfs) & MNT_LOCAL);
+ #endif
