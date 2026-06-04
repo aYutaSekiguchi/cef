@@ -1495,6 +1495,9 @@ Three coordinated changes:
    `Elf64_Ehdr` / `Elf64_Phdr` / `ET_EXEC` / `ET_DYN` / `ELFMAG` were
    previously reachable only because `qnx_macros.h` dragged `<sys/elf.h>` in.
    With the force-include removed, this file declares its own dependency.
+   Note that the QNX-only `#include "build/config/qnx/qnx_macros.h"` in this
+   file is already carried by `partition_alloc_qnx.patch`; this patch should
+   only add the explicit `<sys/elf.h>` include on top of that state.
 
    Patch: `cef/patch/patches/qnx/chromium/stack_trace_posix_qnx_elf.patch`
    (registered as `qnx/chromium/stack_trace_posix_qnx_elf`)
