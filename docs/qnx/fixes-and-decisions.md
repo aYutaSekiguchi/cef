@@ -1664,7 +1664,11 @@ qnx_tests/                        # NEW — single source of truth
     swiftshader.py                # SwiftShaderModule: 3-binary
                                   #   test group (system_unittests +
                                   #   reactor_llvm_unittests +
-                                  #   reactor_subzero_unittests)
+                                  #   reactor_subzero_unittests),
+                                  #   all using 'single' strategy to
+                                  #   avoid the QEMU + ICU file
+                                  #   descriptor issue in
+                                  #   --gtest_list_tests
 ```
 
 `TestModule` is a `@dataclass`.  Each module declares:
