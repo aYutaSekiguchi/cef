@@ -1758,6 +1758,23 @@ To add a new test group, subclass `TestModule` and populate
 `binaries`. No additional wiring is needed beyond the existing
 `MODULES` registration.
 
+**CHROME_EXE_PATH handling for multi-binary groups**:
+
+Multi-binary groups have `binary=""` (the field is mutually exclusive
+with `binaries`). The initial `setup_env()` in `cli.py` therefore
+needs a primary binary name to export `CHROME_EXE_PATH` correctly.
+The wrapper falls back to `effective_binaries()[0].name` so the first
+binary in the group is reachable via the standard QNX path lookup
+(see `qnx-proc-exefile-path-resolution` skill).
+
+`TestModule.run()` then re-exports `CHROME_EXE_PATH` for every
+`BinarySpec` in the group right before launching that binary.  This
+is what stops
+`base::TestSuite::InitializeICUForTesting` from failing with
+`Invalid file descriptor to ICU data received` on the second and
+third binaries in `--swiftshader`, whose `icudtl.dat` lookup uses
+`CHROME_EXE_PATH` to resolve `DIR_ASSETS`.
+
 **Result**:
 - ✅ All three validated test targets can be run via a single
   `--base/--v8/--swiftshader` flag, with `--all` for the combined run.

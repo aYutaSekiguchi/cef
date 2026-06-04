@@ -219,7 +219,15 @@ def main(argv=None) -> int:
             serial = QNXSerial(cfg.serial_port, cfg.boot_timeout, serial_log)
             serial.connect()
             serial.boot_and_login()
-            serial.setup_env(cfg.guest_build_dir(), modules[0].binary)
+            # Pick a sensible primary binary for the initial env setup.
+            # Multi-binary groups have an empty modules[0].binary, so we
+            # fall back to the first BinarySpec name. The TestModule.run()
+            # call later re-exports CHROME_EXE_PATH per binary.
+            primary = (
+                modules[0].binary
+                or modules[0].effective_binaries()[0].name
+            )
+            serial.setup_env(cfg.guest_build_dir(), primary)
             print("\n=== QEMU kept running; NFS mounted. ===")
             print(f"Attach serial: socat -,raw,echo=0 TCP:127.0.0.1:{cfg.serial_port}")
             print(f"Stop QEMU: kill {qemu_pid}")
@@ -238,7 +246,15 @@ def main(argv=None) -> int:
         serial = QNXSerial(cfg.serial_port, cfg.boot_timeout, serial_log)
         serial.connect()
         serial.boot_and_login()
-        serial.setup_env(cfg.guest_build_dir(), modules[0].binary)
+        # Pick a sensible primary binary for the initial env setup.
+        # Multi-binary groups have an empty modules[0].binary, so we
+        # fall back to the first BinarySpec name. The TestModule.run()
+        # call later re-exports CHROME_EXE_PATH per binary.
+        primary = (
+            modules[0].binary
+            or modules[0].effective_binaries()[0].name
+        )
+        serial.setup_env(cfg.guest_build_dir(), primary)
 
         for m in modules:
             # --skip-death-tests (per_test only)
