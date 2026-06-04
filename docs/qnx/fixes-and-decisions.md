@@ -1595,16 +1595,238 @@ The remaining LLVM / Marl ports and the `base/test/BUILD.gn` QNX source-selectio
 
 ---
 
+## 42. Test runner refactor — unified `qnx_run_test.sh --<module>` dispatcher
+
+**Date**: 2026-06-04
+
+**Symptoms**:
+- Three different QEMU-launching scripts were drifting apart:
+  - `tools/qnx_run.sh` — generic runner, with a 100+ line Python heredoc
+    embedded in bash that reimplemented QEMU boot, login, serial I/O,
+    and NFS mount.
+  - `tools/qnx_run_test.sh` — thin wrapper around `qnx_run.sh` for
+    gtest-style binaries, with `QNX_ENV_EXCLUSIONS` baked in.
+  - `tools/qnx_run_v8_unittests.py` — standalone Python that
+    **duplicated** the QEMU/serial/login logic from `qnx_run.sh` to
+    add per-test invocation for `v8_unittests`.
+- Running the full set of validated tests (`base_unittests` +
+  `v8_unittests` + `swiftshader_reactor_subzero_unittests`) required
+  three separate QEMU boots and three separate command lines.
+- Adding a new test target (`cctest`, `components_unittests`, ...)
+  required authoring a new top-level script and copying the serial
+  code yet again.
+- The exact prerequisites for re-running each module (build target,
+  exclusion list, special flags such as `--stack-size=384`, status-file
+  parsing for v8's `[SKIP]` annotations) lived in scattered
+  one-off scripts, so a fresh session had to dig through
+  `fixes-and-decisions.md` to remember them.
+
+**Root cause**:
+- No single source of truth for "what does it take to run module X
+  on QNX/QEMU".  Each script carried its own copy of the boot
+  protocol, and per-module knowledge was implicit in the script
+  that happened to run it.
+
+**Fix**:
+
+New layout under `cef/tools/`:
+
+```
+qnx_setup_env.sh                  # unchanged (host env, root)
+qnx_run.sh                        # unchanged (generic runner; still
+                                  #   works exactly as before)
+qnx_run_test.sh                   # 5-line shim: dispatches to the
+                                  #   Python cli below
+qnx_run_v8_unittests.py           # backwards-compat shim; prints a
+                                  #   deprecation note, forwards to
+                                  #   `qnx_run_test.sh --v8`
+qnx_tests/                        # NEW — single source of truth
+  __init__.py
+  common.py                       # QNXConfig, QNXSerial, boot_qemu,
+                                  #   kill_qemu, helpers
+                                  #   (unifies the heredoc Python in
+                                  #   qnx_run.sh and the QNXSerial
+                                  #   class in qnx_run_v8_unittests.py)
+  registry.py                     # TestModule base class + helpers
+                                  #   (default-exclusion logic, gtest
+                                  #   list parsing, filter logic,
+                                  #   unittests.status SKIP parsing)
+  cli.py                          # argparse entry point; main loop
+                                  #   that boots QEMU once and
+                                  #   dispatches to one or more
+                                  #   modules
+  modules/
+    __init__.py                   # MODULES = {base, v8, swiftshader}
+    base.py                       # BaseModule: single strategy,
+                                  #   QNX_ENV_EXCLUSIONS
+    v8.py                         # V8Module: per_test strategy,
+                                  #   parses unittests.status
+    swiftshader.py                # SwiftShaderModule: 3-binary
+                                  #   test group (system_unittests +
+                                  #   reactor_llvm_unittests +
+                                  #   reactor_subzero_unittests)
+```
+
+`TestModule` is a `@dataclass`.  Each module declares:
+
+```python
+@dataclass
+class TestModule:
+    name: str                     # CLI flag
+    description: str
+    binary: str                   # guest binary in BUILD_DIR
+    strategy: str = "single"      # "single" or "per_test"
+    default_timeout: int = 600
+    default_batch_timeout: int = 7200
+    default_exclusions: list = field(default_factory=list)
+    per_test_args: list = field(default_factory=list)
+    parse_status_file: bool = False
+    status_file_relpath: str = ""
+    one_test_per_process: bool = False
+```
+
+**CLI UX**:
+
+```bash
+# List modules
+./tools/qnx_run_test.sh --list
+
+# Single module (broad run)
+./tools/qnx_run_test.sh --base --timeout 7200 --kill-existing
+./tools/qnx_run_test.sh --v8 --kill-existing
+./tools/qnx_run_test.sh --swiftshader --kill-existing
+
+# All validated modules in one QEMU session
+./tools/qnx_run_test.sh --all --timeout 7200 --kill-existing
+
+# Focused run
+./tools/qnx_run_test.sh --base 'ProcessTest.Create'
+./tools/qnx_run_test.sh --v8 --filter 'InspectorTest.*'
+./tools/qnx_run_test.sh --v8 --skip-death-tests --stack-size=384
+
+# Arbitrary guest command (legacy qnx_run.sh UX preserved)
+./tools/qnx_run_test.sh --cmd './base_unittests --gtest_list_tests'
+
+# Boot + mount only
+./tools/qnx_run_test.sh --mount-only --keep-qemu
+
+# Backward-compat (prints deprecation note)
+./tools/qnx_run_v8_unittests.py --filter 'InspectorTest.*'
+```
+
+**Backward compatibility**:
+- `qnx_run_test.sh` with no module flag still defaults to `--base`
+  (preserves the historical "run base_unittests" UX).
+- `qnx_run.sh` is unchanged.
+- `qnx_run_v8_unittests.py` becomes a 25-line shim that emits a
+  deprecation note to stderr and forwards to
+  `qnx_run_test.sh --v8`.  All flags it used to accept
+  (`--filter`, `--skip-death-tests`, `--timeout`, `--boot-timeout`,
+  `--kill-existing`, `--dry-run`, `--max-tests`, `--stack-size`)
+  are still accepted by the unified CLI.
+- All flags documented in `docs/qnx/testing.md` (positional filter,
+  `--binary`, `--cmd`, `--timeout`, `--boot-timeout`,
+  `--serial-port`, `--keep-qemu`, `--mount-only`, `--kill-existing`)
+  are still accepted by `qnx_run_test.sh` and routed correctly.
+- The `QNX_ENV_EXCLUSIONS` list that was baked into the old
+  `qnx_run_test.sh` now lives in `qnx_tests/modules/base.py`.  Use
+  `--no-default-exclusions` to disable.
+
+**Adding a new module** (e.g. `cctest`):
+1. Drop `cef/tools/qnx_tests/modules/cctest.py` with a
+   `@dataclass` subclass of `TestModule`.
+2. Add it to `MODULES` in `qnx_tests/modules/__init__.py`.
+3. `./tools/qnx_run_test.sh --cctest` is now wired up automatically.
+
+**Multi-binary test groups** (used by `--swiftshader`):
+
+When a single `--module` flag needs to drive several related binaries
+(for example, the three `swiftshader_*_unittests` binaries), set
+`binaries=[BinarySpec(...), ...]` instead of `binary=...`. Each
+`BinarySpec` can override the module-level defaults for `strategy`,
+`default_timeout`, `default_batch_timeout`, `default_exclusions`,
+`per_test_args`, `one_test_per_process`, and `parse_status_file`.
+The module's `run()` iterates over every `BinarySpec` sequentially
+and aggregates failures, so all binaries run inside the same QEMU
+session under one `--<module>` invocation.
+
+To add a new test group, subclass `TestModule` and populate
+`binaries`. No additional wiring is needed beyond the existing
+`MODULES` registration.
+
+**Result**:
+- ✅ All three validated test targets can be run via a single
+  `--base/--v8/--swiftshader` flag, with `--all` for the combined run.
+- ✅ Adding a new test target is one new file + one new line, not a
+  new top-level script.
+- ✅ The per-module prerequisites (default exclusions, status-file
+  parsing, per-test flags) live in the module file, visible at a
+  glance, no archaeology required to remember "did v8 need
+  `--stack-size=384` or `--stack-size=256`?".
+- ✅ QEMU is booted once per `qnx_run_test.sh` invocation, regardless
+  of how many modules are run (when using `--all`).
+- ✅ The Python heredoc inside `qnx_run.sh` remains for the
+  generic-runner use case (running arbitrary commands in the
+  guest) but no longer competes with `qnx_run_v8_unittests.py` for
+  the per-test responsibility.
+
+**Sanity-check results** (offline, no QEMU):
+- All 8 modules import cleanly:
+  `qnx_tests`, `qnx_tests.common`, `qnx_tests.registry`,
+  `qnx_tests.cli`, `qnx_tests.modules`, `qnx_tests.modules.base`,
+  `qnx_tests.modules.v8`, `qnx_tests.modules.swiftshader`.
+- `--list` enumerates the 3 registered modules.
+- `qnx_run_test.sh --help` prints the unified usage.
+- `qnx_run_v8_unittests.py --help` prints the unified usage plus a
+  deprecation note.
+- Helper-level tests pass:
+  `_apply_default_exclusions(*, [A.b, C.d, *X*])` → `*:-A.b:C.d:*X*`
+  (preserves the historical `qnx_run_test.sh` QNX_ENV_EXCLUSIONS
+  format).
+- `_parse_gtest_list` correctly handles parameterized tests
+  (`Suite.ParamTest/0  # GetParam() = 0`).
+- `_load_unconditional_skips` parses 13 unconditional SKIP patterns
+  from the real `v8/test/unittests/unittests.status` (combining
+  `[ALWAYS, ...]` and `['system == qnx', ...]` sections), matching
+  the historical behaviour of `qnx_run_v8_unittests.py`.
+
+**Note (out of scope for this commit)**:
+- `qnx_run.sh` still embeds its own copy of the QEMU/serial/login
+  Python in a heredoc.  It is intentionally left alone so that the
+  generic "run any guest command" UX is unchanged.  A future
+  refactor could replace it with `python3 -m qnx_tests.cli --cmd ...`
+  to fully eliminate the duplication, but that would change the
+  shell-only UX for callers that today do
+  `qnx_run.sh --keep-qemu -- bash`.
+- The `_apply_default_exclusions` re-implementation in Python is
+  byte-for-byte equivalent to the bash string manipulation in the
+  old `qnx_run_test.sh`.
+
+**Related files**:
+- `cef/tools/qnx_tests/__init__.py` (new)
+- `cef/tools/qnx_tests/common.py` (new)
+- `cef/tools/qnx_tests/registry.py` (new)
+- `cef/tools/qnx_tests/cli.py` (new)
+- `cef/tools/qnx_tests/modules/__init__.py` (new)
+- `cef/tools/qnx_tests/modules/base.py` (new)
+- `cef/tools/qnx_tests/modules/v8.py` (new)
+- `cef/tools/qnx_tests/modules/swiftshader.py` (new)
+- `cef/tools/qnx_run_test.sh` (now a 5-line shim)
+- `cef/tools/qnx_run_v8_unittests.py` (now a 25-line shim with
+  deprecation note)
+- `cef/tools/qnx_testing.md` (updated to document the new UX)
+- `docs/qnx/fixes-and-decisions.md` (this entry)
+
+---
+
 ## Current follow-up priority
 
 For a fresh session, the preferred order is:
 
 1. preserve bootstrap reproducibility from `cef/patch/...`
 2. validate the baseline on the target machine
-3. **v8_unittests** — use `cef/tools/qnx_run_v8_unittests.py` for per-test execution
+3. **v8_unittests** — use `./tools/qnx_run_test.sh --v8` (per-test)
 4. move on to the next concrete failing target beyond `base_unittests` and `v8_unittests`
-5. **swiftshader_reactor_subzero_unittests** (new this session) — build the
-   subzero test target, run it under QEMU, and reach PASS. The
-   `is_qnx` toolchain propagation, llvm-10.0/llvm-subzero QNX ports,
-   and `configs/qnx/` wiring documented in §41 are prerequisites.
+5. **swiftshader_reactor_subzero_unittests** — use `./tools/qnx_run_test.sh --swiftshader` (per-test, stack-sensitive)
+6. revisit accepted exclusions only if they block that target
 6. revisit accepted exclusions only if they block that target
