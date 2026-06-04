@@ -1573,7 +1573,7 @@ under QEMU and have it pass.
 
 ### Status update after the follow-up ports
 
-The remaining LLVM / Marl ports and the `base/test/BUILD.gn` QNX source-selection fix have now been wired in as CEF-managed patches. On the current `test/src` tree, `ninja -C out/qnx_release/ third_party/swiftshader/tests/ReactorUnitTests:swiftshader_reactor_subzero_unittests` builds successfully, and the target also passes under QEMU. The `swiftshader_reactor_subzero_unittests` goal is now complete.
+The remaining LLVM / Marl ports and the `base/test/BUILD.gn` QNX source-selection fix have now been wired in as CEF-managed patches. One subtlety here is that QNX needs both `base/test/test_file_util_linux.cc` (for `EvictFileFromSystemCache`) and `base/test/test_file_util_posix.cc` (for `MakeFileUnreadable`, `MakeFileUnwritable`, and `FilePermissionRestorer`). The managed patch therefore keeps the POSIX source enabled on QNX and suppresses only the duplicate `EvictFileFromSystemCache()` fallback in `test_file_util_posix.cc`. On the current `test/src` tree, `ninja -C out/qnx_release/ third_party/swiftshader/tests/ReactorUnitTests:swiftshader_reactor_subzero_unittests` builds successfully, and the target also passes under QEMU. The `swiftshader_reactor_subzero_unittests` goal is now complete.
 
 ### Forward-looking notes
 

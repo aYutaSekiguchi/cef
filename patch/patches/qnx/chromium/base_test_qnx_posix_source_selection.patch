@@ -1,12 +1,26 @@
 diff --git a/base/test/BUILD.gn b/base/test/BUILD.gn
---- a/base/test/BUILD.gn	2026-06-03 20:44:24.146055328 +0900
-+++ b/base/test/BUILD.gn	2026-06-03 20:44:24.146228561 +0900
-@@ -329,7 +329,7 @@
+index d5fb797..8c68fe5 100644
+--- a/base/test/BUILD.gn
++++ b/base/test/BUILD.gn
+@@ -324,7 +324,7 @@ static_library("test_support") {
      }
    }
  
--  if (is_posix || is_fuchsia) {
-+  if ((is_posix && !is_qnx) || is_fuchsia) {
+-  if ((is_posix && !is_qnx) || is_fuchsia) {
++  if (is_posix || is_fuchsia) {
      sources += [
        "scoped_locale.cc",
        "scoped_locale.h",
+diff --git a/base/test/test_file_util_posix.cc b/base/test/test_file_util_posix.cc
+index d64a00e..7f649e7 100644
+--- a/base/test/test_file_util_posix.cc
++++ b/base/test/test_file_util_posix.cc
+@@ -66,7 +66,7 @@ void SyncPageCacheToDisk() {
+ }
+ 
+ #if !BUILDFLAG(IS_LINUX) && !BUILDFLAG(IS_CHROMEOS) && !BUILDFLAG(IS_APPLE) && \
+-    !BUILDFLAG(IS_ANDROID)
++    !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_QNX)
+ bool EvictFileFromSystemCache(const FilePath& file) {
+   // There doesn't seem to be a POSIX way to cool the disk cache.
+   NOTIMPLEMENTED();
