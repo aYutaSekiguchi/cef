@@ -1,0 +1,149 @@
+diff --git a/third_party/angle/BUILD.gn b/third_party/angle/BUILD.gn
+index 0cb785515c6c1bde3f47226cef6da461b693adc2..7529ec7c8695f10f9402bddaf3d5d28ceaab8b4d 100644
+--- a/third_party/angle/BUILD.gn
++++ b/third_party/angle/BUILD.gn
+@@ -553,7 +556,7 @@ template("angle_common_lib") {
+       all_dependent_configs = [ ":angle_disable_pool_alloc" ]
+     }
+ 
+-    if (is_linux || is_chromeos) {
++    if ((is_linux || is_chromeos) && !is_qnx) {
+       libs = [ "dl" ]
+     }
+ 
+
+diff --git a/third_party/angle/src/common/SimpleMutex.h b/third_party/angle/src/common/SimpleMutex.h
+index 84ffa1a1da568de14247f8a10476634301089984..eb102daab817695ef8d0791238f44982cb528549 100644
+--- a/third_party/angle/src/common/SimpleMutex.h
++++ b/third_party/angle/src/common/SimpleMutex.h
+@@ -33,8 +33,11 @@
+ //
+ // There is no TSAN support for futex currently, so it is disabled in that case
+ #if !defined(ANGLE_WITH_TSAN)
+-#    if defined(ANGLE_PLATFORM_LINUX) || defined(ANGLE_PLATFORM_ANDROID)
+-// Linux has had futexes for a very long time.  Assume support.
++#    if (defined(ANGLE_PLATFORM_LINUX) && !defined(__QNX__)) || defined(ANGLE_PLATFORM_ANDROID)
++// Linux has had futexes for a very long time.  Assume support.  QNX is routed
++// through ANGLE_PLATFORM_LINUX for the minimal Vulkan/offscreen port, but it
++// does not provide Linux's <linux/futex.h> userspace interface, so keep using
++// the std::mutex fallback there.
+ #        define ANGLE_USE_FUTEX 1
+ #    elif defined(ANGLE_PLATFORM_WINDOWS) && !defined(ANGLE_ENABLE_WINDOWS_UWP) && \
+         !defined(ANGLE_WINDOWS_NO_FUTEX)
+diff --git a/third_party/angle/src/common/platform.h b/third_party/angle/src/common/platform.h
+index 48d6c5dfa79c942fc5b99642d3e66e103b841846..148e7fac588197337199bcf6d0c7a3c7e3cc22b9 100644
+--- a/third_party/angle/src/common/platform.h
++++ b/third_party/angle/src/common/platform.h
+@@ -20,12 +20,12 @@
+ #elif defined(ANDROID) && !defined(ANGLE_ANDROID_DMA_BUF)
+ #    define ANGLE_PLATFORM_ANDROID 1
+ #    define ANGLE_PLATFORM_POSIX 1
+-#elif defined(__linux__) || defined(EMSCRIPTEN)
++#elif defined(__linux__) || defined(EMSCRIPTEN) || defined(__QNX__)
+ #    define ANGLE_PLATFORM_LINUX 1
+ #    define ANGLE_PLATFORM_POSIX 1
+ #elif defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) ||              \
+     defined(__DragonFly__) || defined(__sun) || defined(__GLIBC__) || defined(__GNU__) || \
+-    defined(__QNX__) || defined(__Fuchsia__) || defined(__HAIKU__)
++    defined(__Fuchsia__) || defined(__HAIKU__)
+ #    define ANGLE_PLATFORM_POSIX 1
+ #else
+ #    error Unsupported platform.
+diff --git a/third_party/angle/src/tests/test_utils/RenderDoc.cpp b/third_party/angle/src/tests/test_utils/RenderDoc.cpp
+index 9a7b3a11199db6fc5969a5184c3fe47603c86e94..5088e8a9d55cab39c99bf02034a6c37f0ef71e6b 100644
+--- a/third_party/angle/src/tests/test_utils/RenderDoc.cpp
++++ b/third_party/angle/src/tests/test_utils/RenderDoc.cpp
+@@ -19,7 +19,8 @@ RenderDoc::~RenderDoc()
+     SafeDelete(mRenderDocModule);
+ }
+ 
+-#if defined(ANGLE_PLATFORM_ANDROID) || defined(ANGLE_PLATFORM_LINUX) || \
++#if defined(ANGLE_PLATFORM_ANDROID) || \
++    (defined(ANGLE_PLATFORM_LINUX) && !defined(__QNX__)) || \
+     defined(ANGLE_PLATFORM_WINDOWS)
+ #    include "third_party/renderdoc/src/renderdoc_app.h"
+ 
+@@ -68,7 +69,8 @@ void RenderDoc::endFrame()
+     }
+ }
+ 
+-#else  // defiend(ANGLE_PLATFORM_ANDROID) || defined(ANGLE_PLATFORM_LINUX) ||
++#else  // defined(ANGLE_PLATFORM_ANDROID) ||
++       // (defined(ANGLE_PLATFORM_LINUX) && !defined(__QNX__)) ||
+        // defined(ANGLE_PLATFORM_WINDOWS)
+ 
+ // Stub out the implementation on unsupported platforms.
+@@ -81,5 +83,6 @@ void RenderDoc::startFrame() {}
+ 
+ void RenderDoc::endFrame() {}
+ 
+-#endif  // defiend(ANGLE_PLATFORM_ANDROID) || defined(ANGLE_PLATFORM_LINUX) ||
++#endif  // defined(ANGLE_PLATFORM_ANDROID) ||
++        // (defined(ANGLE_PLATFORM_LINUX) && !defined(__QNX__)) ||
+         // defined(ANGLE_PLATFORM_WINDOWS)
+diff --git a/third_party/angle/util/BUILD.gn b/third_party/angle/util/BUILD.gn
+index 6e2473c4ddbd82490e406a79379f0a853316b016..1e2d66dc5c7a97f13cc1b96d6e16843ee871088b 100644
+--- a/third_party/angle/util/BUILD.gn
++++ b/third_party/angle/util/BUILD.gn
+@@ -41,7 +41,7 @@ if (is_win) {
+   }
+ }
+ 
+-if (is_linux) {
++if (is_linux && !is_qnx) {
+   _util_sources += [
+     "display/DisplayPixmap.cpp",
+     "display/DisplayWindow.cpp",
+@@ -334,7 +334,7 @@ foreach(is_shared_library,
+     ]
+     libs = []
+ 
+-    if (is_linux || is_chromeos) {
++    if ((is_linux || is_chromeos) && !is_qnx) {
+       libs += [
+         "rt",
+         "dl",
+diff --git a/third_party/angle/util/posix/crash_handler_posix.cpp b/third_party/angle/util/posix/crash_handler_posix.cpp
+index 3ac44d041c76c0a739a8f01aa20cfd6b7f749cbd..765c7cf7d57e963b023bba644698beda5d015bcc 100644
+--- a/third_party/angle/util/posix/crash_handler_posix.cpp
++++ b/third_party/angle/util/posix/crash_handler_posix.cpp
+@@ -28,7 +28,7 @@
+ #include <unistd.h>
+ #include <iostream>
+ 
+-#if !defined(ANGLE_PLATFORM_ANDROID) && !defined(ANGLE_PLATFORM_FUCHSIA)
++#if !defined(ANGLE_PLATFORM_ANDROID) && !defined(ANGLE_PLATFORM_FUCHSIA) && !defined(__QNX__)
+ #    if defined(ANGLE_PLATFORM_APPLE)
+ // We only use local unwinding, so we can define this to select a faster implementation.
+ #        define UNW_LOCAL_ONLY
+@@ -46,7 +46,7 @@
+ #        include <signal.h>
+ #        include <string.h>
+ #    endif  // defined(ANGLE_PLATFORM_APPLE)
+-#endif      // !defined(ANGLE_PLATFORM_ANDROID) && !defined(ANGLE_PLATFORM_FUCHSIA)
++#endif      // !defined(ANGLE_PLATFORM_ANDROID) && !defined(ANGLE_PLATFORM_FUCHSIA) && !defined(__QNX__)
+ 
+ // This code snippet is coped from Chromium's base/posix/eintr_wrapper.h.
+ #if defined(NDEBUG)
+@@ -75,7 +75,7 @@
+ 
+ namespace angle
+ {
+-#if defined(ANGLE_PLATFORM_ANDROID) || defined(ANGLE_PLATFORM_FUCHSIA)
++#if defined(ANGLE_PLATFORM_ANDROID) || defined(ANGLE_PLATFORM_FUCHSIA) || defined(__QNX__)
+ 
+ void PrintStackBacktrace()
+ {
+diff --git a/third_party/angle/util/posix/test_utils_posix.cpp b/third_party/angle/util/posix/test_utils_posix.cpp
+index 92dfa30ef88288bceddf4d4447ebeac2fa93311c..dc1e8d6b1d18301105dc8e857a9dc6334b821be9 100644
+--- a/third_party/angle/util/posix/test_utils_posix.cpp
++++ b/third_party/angle/util/posix/test_utils_posix.cpp
+@@ -378,7 +378,7 @@ bool StabilizeCPUForBenchmarking()
+             "default priority");
+         success = false;
+     }
+-#    if ANGLE_PLATFORM_LINUX
++#    if ANGLE_PLATFORM_LINUX && !defined(__QNX__)
+     cpu_set_t affinity;
+     CPU_SET(0, &affinity);
+     errno = 0;

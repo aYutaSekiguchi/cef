@@ -2320,6 +2320,122 @@ is generated):
 - ✅ QNX link dependency on `libmemstream` captured in GN
 - ✅ Fix is reproducible via `cef_create_projects_qnx.sh`
 
+
+
+---
+
+## 47. ANGLE minimal QNX port — Linux/headless Vulkan path aligned enough to build core tests
+
+**Date**: 2026-06-05
+
+**Goal shift**:
+- Instead of resuming `cefsimple`, pause application-level integration and use
+  ANGLE's own tests as the validation target.
+- Immediate milestones:
+  1. build `angle_system_info_test`
+  2. build `angle_unittests`
+  3. build `angle_end2end_tests`
+- Runtime PASS remains a separate target-machine step; this entry records the
+  build-enabling QNX deltas needed to get those binaries produced.
+
+**Root cause**:
+- Chromium GN already routes QNX through many Linux-like ANGLE conditions via
+  `is_linux = current_os == "linux" || is_qnx`.
+  Examples:
+  - `third_party/angle/gni/angle.gni`: `angle_use_vulkan_display = is_linux || is_chromeos`
+  - `third_party/angle/gni/angle.gni`: Vulkan backend sources under
+    `src/libANGLE/renderer/vulkan/linux/*` are compiled when `is_linux` is true
+  - current args use `use_ozone = true`, with `ozone_platform_x11 = false`,
+    `ozone_platform_wayland = false`, `ozone_platform_drm = false`, which lands
+    ANGLE on the headless/ozone path
+- But ANGLE's source-level platform detection (`src/common/platform.h`) still
+  treated `__QNX__` as generic POSIX instead of `ANGLE_PLATFORM_LINUX`.
+  Result: Vulkan display selection in `src/libANGLE/Display.cpp` hit:
+  ```cpp
+  #error Unsupported Vulkan platform.
+  ```
+- After routing QNX through `ANGLE_PLATFORM_LINUX`, several Linux-only helper
+  assumptions surfaced and had to be trimmed back:
+  - `common/SimpleMutex.h`: enabled futex path, but QNX lacks
+    `<linux/futex.h>` userspace ABI
+  - `util/posix/test_utils_posix.cpp`: `cpu_set_t` /
+    `sched_setaffinity()` not available in the Linux form expected there
+  - `util/posix/crash_handler_posix.cpp`: no `<execinfo.h>` in the QNX sysroot
+  - `src/tests/test_utils/RenderDoc.cpp`: RenderDoc header only recognizes
+    Win/Linux/Apple/Android; QNX should use the stub path
+  - `BUILD.gn` / `util/BUILD.gn`: Linux-only `-ldl` / `-lrt` additions break on
+    QNX because those libraries do not exist as separate link units
+  - `util/BUILD.gn`: with `is_linux` true and `use_ozone` true,
+    `display/*` and `ozone/*` sources were both selected, causing multiple
+    definitions of `CreateOSPixmap()` and `OSWindow::New()`
+
+**Fix**:
+- New patch:
+  `cef/patch/patches/qnx/chromium/angle_qnx_minimal_linux_headless.patch`
+- Registered in `cef/patch/patch.cfg` as
+  `qnx/chromium/angle_qnx_minimal_linux_headless`
+- Changes in the patch:
+  1. `third_party/angle/src/common/platform.h`
+     - treat `__QNX__` as `ANGLE_PLATFORM_LINUX`
+  2. `third_party/angle/src/common/SimpleMutex.h`
+     - keep QNX on `std::mutex` fallback instead of futex path
+  3. `third_party/angle/util/posix/test_utils_posix.cpp`
+     - skip `sched_setaffinity()` CPU pinning on QNX
+  4. `third_party/angle/util/posix/crash_handler_posix.cpp`
+     - use stub/no-op crash backtrace path on QNX instead of `execinfo.h`
+  5. `third_party/angle/src/tests/test_utils/RenderDoc.cpp`
+     - disable RenderDoc integration on QNX and use stub implementation
+  6. `third_party/angle/BUILD.gn`
+     - suppress Linux-only `libs = [ "dl" ]` on QNX
+  7. `third_party/angle/util/BUILD.gn`
+     - suppress Linux-only `libs += [ "rt", "dl" ]` on QNX
+     - suppress `util/display/*` source selection on QNX so headless ozone uses
+       `util/ozone/*` only
+
+**Validation**:
+- Initial blocker fixed:
+  - `obj/third_party/angle/libANGLE_no_vulkan/Display.o` now builds; the
+    `Unsupported Vulkan platform` error is gone
+- Built successfully in `out/qnx_release/`:
+  - `angle_system_info_test` (~22 MB)
+  - `angle_unittests` (~67 MB)
+  - `angle_end2end_tests` (~212 MB)
+- These are QNX ELF executables (`interpreter /usr/lib/ldqnx-64.so.2`)
+- The sequence of resolved blockers was:
+  1. Vulkan platform selection (`Display.cpp`)
+  2. futex-only mutex implementation (`SimpleMutex.h`)
+  3. Linux affinity helpers (`test_utils_posix.cpp`)
+  4. `execinfo.h` crash handler (`crash_handler_posix.cpp`)
+  5. Linux-only `dl` / `rt` link additions
+  6. duplicate headless window/pixmap implementations
+  7. RenderDoc unsupported platform path in end2end tests
+
+**Scope / non-goals**:
+- This is intentionally a **minimal** ANGLE port, not a full QNX-native
+  backend using `VK_QNX_screen_surface`
+- The current strategy is:
+  - reuse ANGLE's Linux/offscreen/headless Vulkan path for QNX where possible
+  - trim only the Linux-specific assumptions that fail on QNX
+- No dedicated `DisplayVkQNX` / `WindowSurfaceVkQNX` implementation exists yet
+- Test **execution/PASS on target** still needs a QNX runtime step; this entry
+  only establishes that the main ANGLE unit/integration test binaries now build
+
+**Next recommended runtime order**:
+1. `angle_system_info_test` (smallest, least graphics-heavy)
+2. `angle_unittests`
+3. `angle_end2end_tests` (largest, most likely to expose EGL/Vulkan runtime
+   differences)
+
+**Related files**:
+- `cef/patch/patches/qnx/chromium/angle_qnx_minimal_linux_headless.patch`
+- `cef/patch/patch.cfg`
+- `third_party/angle/src/common/platform.h`
+- `third_party/angle/src/common/SimpleMutex.h`
+- `third_party/angle/util/BUILD.gn`
+- `third_party/angle/util/posix/test_utils_posix.cpp`
+- `third_party/angle/util/posix/crash_handler_posix.cpp`
+- `third_party/angle/src/tests/test_utils/RenderDoc.cpp`
+
 For a fresh session, the preferred order is:
 
 1. preserve bootstrap reproducibility from `cef/patch/...`
