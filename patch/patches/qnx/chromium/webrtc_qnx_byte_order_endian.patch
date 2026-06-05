@@ -1,0 +1,61 @@
+diff --git a/third_party/webrtc/rtc_base/byte_order.h b/third_party/webrtc/rtc_base/byte_order.h
+--- a/third_party/webrtc/rtc_base/byte_order.h
++++ b/third_party/webrtc/rtc_base/byte_order.h
+@@ -82,12 +82,56 @@
+ #endif  // defined(WEBRTC_WIN)
+ #else
+ #error WEBRTC_ARCH_BIG_ENDIAN or WEBRTC_ARCH_LITTLE_ENDIAN must be defined.
+ #endif  // defined(WEBRTC_ARCH_LITTLE_ENDIAN)
+ 
+-#elif defined(WEBRTC_POSIX)
++#elif defined(WEBRTC_POSIX) && !defined(__QNX__)
+ #include <endian.h>
++#elif defined(__QNX__)
++// QNX SDP 8 does not ship glibc-style <endian.h>. Use QNX's own
++// <qh/endian.h> (which is C++-safe under the QNX sysroot) and map
++// its ENDIAN_* names to the glibc-style short names the rest of
++// webrtc expects (htobe16 / be16toh / ...). Each #define is guarded
++// so future QNX sysroot updates that start exporting the short names
++// natively do not produce redefinition warnings.
++#include <qh/endian.h>
++#ifndef htobe16
++#define htobe16(v) ENDIAN_HTOBE16(v)
++#endif
++#ifndef htobe32
++#define htobe32(v) ENDIAN_HTOBE32(v)
++#endif
++#ifndef htobe64
++#define htobe64(v) ENDIAN_HTOBE64(v)
++#endif
++#ifndef be16toh
++#define be16toh(v) ENDIAN_BE16TOH(v)
++#endif
++#ifndef be32toh
++#define be32toh(v) ENDIAN_BE32TOH(v)
++#endif
++#ifndef be64toh
++#define be64toh(v) ENDIAN_BE64TOH(v)
++#endif
++#ifndef htole16
++#define htole16(v) ENDIAN_HTOLE16(v)
++#endif
++#ifndef htole32
++#define htole32(v) ENDIAN_HTOLE32(v)
++#endif
++#ifndef htole64
++#define htole64(v) ENDIAN_HTOLE64(v)
++#endif
++#ifndef le16toh
++#define le16toh(v) ENDIAN_LE16TOH(v)
++#endif
++#ifndef le32toh
++#define le32toh(v) ENDIAN_LE32TOH(v)
++#endif
++#ifndef le64toh
++#define le64toh(v) ENDIAN_LE64TOH(v)
++#endif
+ #else
+ #error "Missing byte order functions for this arch."
+ #endif  // defined(WEBRTC_MAC)
+ 
+ namespace webrtc {

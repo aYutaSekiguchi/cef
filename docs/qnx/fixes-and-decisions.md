@@ -2725,6 +2725,89 @@ is generated):
   pattern may repeat in other Chromium submodules that route through
   `is_linux` on QNX; those are tracked separately as they surface.
 
+
+
+---
+
+## 52. WebRTC `byte_order.h` — use `<qh/endian.h>` instead of glibc `<endian.h>` on QNX
+
+**Date**: 2026-06-05
+
+**Symptom** (after the platform_thread_types fix in #51):
+```
+../../third_party/webrtc/rtc_base/byte_order.h:88:10: fatal error: 'endian.h' file not found
+   88 | #include <endian.h>
+```
+
+**Root cause**:
+- `byte_order.h` declares htobe/htole helpers and takes a generic
+  POSIX path:
+  ```cpp
+  #elif defined(WEBRTC_POSIX)
+  #include <endian.h>
+  ```
+- `WEBRTC_POSIX` is defined via `WEBRTC_LINUX` (set by
+  `third_party/webrtc/BUILD.gn:228` because `is_linux` is true for QNX).
+- QNX SDP 8 sysroot does **not** ship glibc-style `/usr/include/endian.h`.
+  It ships its own equivalent at `/usr/include/qh/endian.h`, which
+  exposes the conversions under `ENDIAN_HTOBE16`, `ENDIAN_BE16TOH`,
+  `ENDIAN_HTOLE16`, `ENDIAN_LE16TOH`, etc. (QNX naming), and is gated
+  on `__QNXNTO__` (uses `<gulliver.h>` for the runtime form, plus
+  pre-processor `_CONST` forms).
+
+**Fix**:
+- New patch:
+  `cef/patch/patches/qnx/chromium/webrtc_qnx_byte_order_endian.patch`
+- Registered in `cef/patch/patch.cfg` as
+  `qnx/chromium/webrtc_qnx_byte_order_endian`
+- Changes in the patch (`third_party/webrtc/rtc_base/byte_order.h`):
+  - Guard the existing `#include <endian.h>` line on
+    `defined(WEBRTC_POSIX) && !defined(__QNX__)`
+  - Add an explicit `#elif defined(__QNX__)` branch that:
+    1. `#include <qh/endian.h>`
+    2. Defines each glibc-style name (`htobe16`, `htole16`, `be16toh`,
+       `le16toh`, `...` for 32 and 64 bit) by mapping to the QNX
+       `ENDIAN_*` macro of the same operation
+    3. Wraps every `#define` in `#ifndef` so future QNX sysroot
+       updates that begin exporting the short names natively do not
+       produce redefinition warnings
+
+**Why option A (modifying `qnx_macros.h`) was rejected**:
+- `qnx_macros.h` is force-included into every Chromium C/C++ TU
+  (per `build/toolchain/qnx/BUILD.gn`). Adding an `<endian.h>`
+  mapping there would leak those `htobe*` macros into every TU
+  unconditionally, even Chromium code paths that don't use them.
+  A targeted patch on `byte_order.h` keeps the shim scoped to the
+  one webrtc header that actually needs the names.
+- The shim is only meaningful for a single webrtc header today; if
+  more webrtc submodules need `<endian.h>`, they can each be patched
+  in the same shape, or the mapping can be promoted to
+  `qnx_macros.h` at that point.
+
+**Validation**:
+- Local rebuild of the previously failing object:
+  ```
+  autoninja obj/third_party/webrtc/rtc_base/ip_address/ip_address.o
+  ```
+  → succeeds.
+- `ninja cefsimple` resumes past the previous blocker. The next
+  blocker surfaces in
+  `third_party/webrtc/rtc_base/physical_socket_server.cc:69:10:
+  fatal error: 'asm-generic/socket.h' file not found`, which is a
+  separate Linux uapi header problem (tracked outside this entry).
+- Clean-tree apply test in `/tmp`:
+  ```
+  patch check OK
+  patch apply OK
+  ```
+
+**Scope / non-goals**:
+- Only `byte_order.h` is patched. Other WebRTC (or non-WebRTC)
+  callers of `<endian.h>` may exist; they will be handled
+  separately as they surface. A `rg '<endian.h>' third_party/`
+  check is the next step if the follow-up blocker on
+  `asm-generic/socket.h` turns out to also be a missing uapi header.
+
 For a fresh session, the preferred order is:
 
 1. preserve bootstrap reproducibility from `cef/patch/...`
