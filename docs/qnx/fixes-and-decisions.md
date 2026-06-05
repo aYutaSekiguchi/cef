@@ -2436,6 +2436,75 @@ is generated):
 - `third_party/angle/util/posix/crash_handler_posix.cpp`
 - `third_party/angle/src/tests/test_utils/RenderDoc.cpp`
 
+
+
+---
+
+## 48. ANGLE QNX runtime follow-up — executable path resolution fixed via `CHROME_EXE_PATH`
+
+**Date**: 2026-06-05
+
+**Symptoms**:
+- After the minimal ANGLE QNX build port (#47), the three ANGLE test binaries
+  could be launched through `cef/tools/qnx_run_test.sh --angle`, but runtime
+  failures remained:
+  - `angle_unittests` failed 5 tests:
+    - `SystemUtils.ExecutablePath`
+    - `SystemUtils.ExecutableDir`
+    - `TestSuiteTest.RunMockTests`
+    - `TestSuiteTest.RunFlakyTests`
+    - `TestSuiteTest.RunCrashingTests`
+  - `angle_end2end_tests` aborted before running tests with:
+    ```text
+    Unable to find test expectations path (src/tests/angle_end2end_tests_expectations.txt)
+    ```
+
+**Root cause**:
+- The minimal QNX port deliberately routes `__QNX__` through
+  `ANGLE_PLATFORM_LINUX` in `src/common/platform.h`.
+- That makes `src/common/system_utils_linux.cpp` the active implementation of
+  `GetExecutablePath()` / `GetExecutableDirectory()`.
+- The Linux implementation assumed `/proc/self/exe` is a symlink and used
+  `readlink("/proc/self/exe", ...)`.
+- On QNX this is the wrong contract:
+  - Chromium's QNX test runner already exports the active binary path through
+    `CHROME_EXE_PATH`
+  - QNX procfs uses `/proc/self/exefile` (a regular file), not Linux's
+    `/proc/self/exe` symlink
+- As a result `GetExecutablePath()` returned an empty string, which then broke:
+  - the `SystemUtils.*` tests directly
+  - helper-binary lookup in `TestSuiteTest.*`
+  - `FindTestDataPath()` search roots used by `angle_end2end_tests`
+
+**Fix**:
+- Extend
+  `cef/patch/patches/qnx/chromium/angle_qnx_minimal_linux_headless.patch`
+  with a QNX-specific executable-path fallback in
+  `third_party/angle/src/common/system_utils_linux.cpp`:
+  1. use `getenv("CHROME_EXE_PATH")` first
+  2. otherwise read `/proc/self/exefile`
+  3. keep the existing Linux `/proc/self/exe` path for non-QNX platforms
+
+**Validation**:
+- QNX targeted rerun:
+  ```text
+  SystemUtils.ExecutablePath      PASS
+  SystemUtils.ExecutableDir       PASS
+  TestSuiteTest.RunMockTests      PASS
+  TestSuiteTest.RunFlakyTests     PASS
+  TestSuiteTest.RunCrashingTests  PASS
+  ```
+- QNX targeted `angle_end2end_tests` rerun with a non-matching filter now
+  reaches normal gtest execution and exits successfully instead of failing to
+  find `angle_end2end_tests_expectations.txt`
+
+**Result**:
+- The previous 5 `angle_unittests` runtime failures were not independent test
+  bugs; they were all caused by one missing QNX executable-path adaptation.
+- `angle_end2end_tests` now gets past expectations-file discovery, so the next
+  failures (if any) should be real runtime/renderer issues rather than harness
+  path resolution.
+
 For a fresh session, the preferred order is:
 
 1. preserve bootstrap reproducibility from `cef/patch/...`

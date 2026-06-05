@@ -49,6 +49,48 @@ index 48d6c5dfa79c942fc5b99642d3e66e103b841846..148e7fac588197337199bcf6d0c7a3c7
  #    define ANGLE_PLATFORM_POSIX 1
  #else
  #    error Unsupported platform.
+diff --git a/third_party/angle/src/common/system_utils_linux.cpp b/third_party/angle/src/common/system_utils_linux.cpp
+index 97da0bee25c4adf11cf99bc45e7ef13df1361e65..266839ba8ae353e28482bfe27d715eb9783dcbaa 100644
+--- a/third_party/angle/src/common/system_utils_linux.cpp
++++ b/third_party/angle/src/common/system_utils_linux.cpp
+@@ -20,11 +20,37 @@
+ #include <unistd.h>
+ 
+ #include <array>
++#include <fstream>
++#include <stdlib.h>
+ 
+ namespace angle
+ {
+ std::string GetExecutablePath()
+ {
++#if defined(__QNX__)
++    // Chromium's QNX test runner already exports CHROME_EXE_PATH for the active
++    // test binary.  QNX does not provide Linux's /proc/self/exe symlink, so use
++    // that environment override first.
++    const char *executablePath = getenv("CHROME_EXE_PATH");
++    if (executablePath != nullptr && executablePath[0] != '\0')
++    {
++        return executablePath;
++    }
++
++    // QNX's procfs exposes the executable path via a regular file instead of a
++    // symlink.  Fall back to reading it directly when available.
++    std::ifstream exefile("/proc/self/exefile");
++    if (exefile)
++    {
++        std::string path;
++        std::getline(exefile, path);
++        if (!path.empty())
++        {
++            return path;
++        }
++    }
++#endif
++
+     // We cannot use lstat to get the size of /proc/self/exe as it always returns 0
+     // so we just use a big buffer and hope the path fits in it.
+     char path[4096];
 diff --git a/third_party/angle/src/tests/test_utils/RenderDoc.cpp b/third_party/angle/src/tests/test_utils/RenderDoc.cpp
 index 9a7b3a11199db6fc5969a5184c3fe47603c86e94..5088e8a9d55cab39c99bf02034a6c37f0ef71e6b 100644
 --- a/third_party/angle/src/tests/test_utils/RenderDoc.cpp
