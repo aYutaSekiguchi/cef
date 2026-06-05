@@ -2240,6 +2240,86 @@ is generated):
 - #33 (original 4-file introduction)
 - #44 (FFmpeg `_POSIX_C_SOURCE` / `_XOPEN_SOURCE` collision —
   independent issue)
+
+
+---
+
+## 46. libdrm QNX build — `open_memstream` header/lib split and `makedev` arity mismatch
+
+**Date**: 2026-06-05
+
+**Symptoms** (next failure after #45):
+```text
+../../third_party/libdrm/src/xf86drm.c:308:10: error: call to undeclared function 'open_memstream'
+../../third_party/libdrm/src/xf86drm.c:965:54: error: too few arguments provided to function-like macro invocation
+/home/yuta/qnx800/target/qnx/usr/include/sys/types.h:265:9: note: macro 'makedev' defined here
+#define makedev(node,major,minor)
+```
+
+**Root cause**:
+- `third_party/libdrm/src/xf86drm.c` assumes the glibc/Linux API surface:
+  - `open_memstream()` is visible from `<stdio.h>` and linked from libc.
+  - `makedev()` takes two arguments `(major, minor)`.
+- QNX SDP 8 differs in both places:
+  - `open_memstream()` is declared in
+    `/usr/include/sys/memstream.h`, not `<stdio.h>`.
+  - the implementation lives in `libmemstream`, so a plain compile can
+    succeed once the header is included, but the final link still fails
+    without `-lmemstream`.
+  - `/usr/include/sys/types.h` and `/usr/include/sys/sysmacros.h`
+    define `makedev(node, major, minor)` with **three** arguments.
+- Chromium's GN target selection is Linux-like for QNX here (`assert(is_linux || is_chromeos)` in `third_party/libdrm/BUILD.gn`, and
+  `is_linux = current_os == "linux" || is_qnx`), so libdrm's Linux-facing
+  code path is compiled against QNX headers. That is why the mismatch
+  surfaces at compile time.
+
+**Fix**:
+- Add a QNX include in `third_party/libdrm/src/xf86drm.c`:
+  ```c
+  #if defined(__QNXNTO__)
+  #include <sys/memstream.h>
+  #endif
+  ```
+- Add a cross-platform wrapper macro near `DRM_MAJOR`:
+  ```c
+  #if defined(__QNXNTO__)
+  #define DRM_MAKEDEV(major, minor) makedev(0, (major), (minor))
+  #else
+  #define DRM_MAKEDEV(major, minor) makedev((major), (minor))
+  #endif
+  ```
+  and replace the four `makedev(...)` call sites with `DRM_MAKEDEV(...)`.
+  Only `drmOpenMinor()` is on the active QNX path today, but converting
+  all call sites keeps the source portable and avoids future surprises in
+  platform-gated blocks.
+- Add a QNX-only GN link dependency in `third_party/libdrm/BUILD.gn`:
+  ```gn
+  if (is_qnx) {
+    libs = [ "memstream" ]
+  }
+  ```
+
+**Validation**:
+- `autoninja -C out/qnx_release obj/third_party/libdrm/libdrm/xf86drm.o`
+  now succeeds.
+- `gn desc out/qnx_release //third_party/libdrm:modetest libs`
+  includes `memstream`, confirming the library requirement propagates to
+  final link steps.
+- Remaining `#warning "Missing implementation of ..."` diagnostics in
+  `xf86drm.c` are pre-existing warnings, not blockers for this failure.
+
+**Durable source of truth**:
+- Patch file:
+  `cef/patch/patches/qnx/chromium/libdrm_qnx_memstream_makedev.patch`
+- Patch registration:
+  `cef/patch/patch.cfg`
+
+**Result**:
+- ✅ `open_memstream` declaration error resolved
+- ✅ `makedev` arity mismatch resolved
+- ✅ QNX link dependency on `libmemstream` captured in GN
+- ✅ Fix is reproducible via `cef_create_projects_qnx.sh`
+
 For a fresh session, the preferred order is:
 
 1. preserve bootstrap reproducibility from `cef/patch/...`

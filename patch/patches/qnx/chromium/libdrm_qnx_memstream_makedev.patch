@@ -1,0 +1,82 @@
+diff --git a/third_party/libdrm/BUILD.gn b/third_party/libdrm/BUILD.gn
+index 16ce474e5cdb91d8a6e55f2f1aa771a47c141239..9f27b5ff5119ae3851ce0cf182b11726d65b1971 100644
+--- a/third_party/libdrm/BUILD.gn
++++ b/third_party/libdrm/BUILD.gn
+@@ -82,6 +82,14 @@ static_library("libdrm") {
+     "-Wno-deprecated-declarations",
+   ]
+ 
++  if (is_qnx) {
++    # QNX declares open_memstream() in <sys/memstream.h> instead of
++    # <stdio.h>, and the symbol lives in libmemstream rather than libc.
++    # xf86drm.c uses open_memstream() to format DRM modifier names, so
++    # QNX builds need an explicit link against -lmemstream.
++    libs = [ "memstream" ]
++  }
++
+   public_configs = [ ":libdrm_config" ]
+ }
+ 
+diff --git a/third_party/libdrm/src/xf86drm.c b/third_party/libdrm/src/xf86drm.c
+index d4bfec8a41ba785ff4b8d917669c8bbea214b36e..78e213cfd13e842a6c929ac9a6dc6f3d362471fc 100644
+--- a/third_party/libdrm/src/xf86drm.c
++++ b/third_party/libdrm/src/xf86drm.c
+@@ -58,6 +58,9 @@
+ #ifdef MAJOR_IN_SYSMACROS
+ #include <sys/sysmacros.h>
+ #endif
++#if defined(__QNXNTO__)
++#include <sys/memstream.h>
++#endif
+ #if HAVE_SYS_SYSCTL_H
+ #include <sys/sysctl.h>
+ #endif
+@@ -101,6 +104,12 @@
+ #define DRM_MAJOR 226 /* Linux */
+ #endif
+ 
++#if defined(__QNXNTO__)
++#define DRM_MAKEDEV(major, minor) makedev(0, (major), (minor))
++#else
++#define DRM_MAKEDEV(major, minor) makedev((major), (minor))
++#endif
++
+ #if defined(__OpenBSD__) || defined(__DragonFly__)
+ struct drm_pciinfo {
+ 	uint16_t	domain;
+@@ -962,7 +971,7 @@ static int drmOpenMinor(int minor, int create, int type)
+     const char *dev_name = drmGetDeviceName(type);
+ 
+     if (create)
+-        return drmOpenDevice(makedev(DRM_MAJOR, minor), minor, type);
++        return drmOpenDevice(DRM_MAKEDEV(DRM_MAJOR, minor), minor, type);
+ 
+     if (!dev_name)
+         return -EINVAL;
+@@ -1031,7 +1040,7 @@ static int drmGetMinorType(int major, int minor)
+     char name[SPECNAMELEN];
+     int id;
+ 
+-    if (!devname_r(makedev(major, minor), S_IFCHR, name, sizeof(name)))
++    if (!devname_r(DRM_MAKEDEV(major, minor), S_IFCHR, name, sizeof(name)))
+         return -1;
+ 
+     if (sscanf(name, "drm/%d", &id) != 1) {
+@@ -3330,7 +3339,7 @@ static bool drmNodeIsDRM(int maj, int min)
+ #elif defined(__FreeBSD__)
+     char name[SPECNAMELEN];
+ 
+-    if (!devname_r(makedev(maj, min), S_IFCHR, name, sizeof(name)))
++    if (!devname_r(DRM_MAKEDEV(maj, min), S_IFCHR, name, sizeof(name)))
+       return 0;
+     /* Handle drm/ and dri/ as both are present in different FreeBSD version
+      * FreeBSD on amd64/i386/powerpc external kernel modules create node in
+@@ -3672,7 +3681,7 @@ static int get_sysctl_pci_bus_info(int maj, int min, drmPciBusInfoPtr info)
+     int id, type, nelem;
+     unsigned int rdev, majmin, domain, bus, dev, func;
+ 
+-    rdev = makedev(maj, min);
++    rdev = DRM_MAKEDEV(maj, min);
+     if (!devname_r(rdev, S_IFCHR, dname, sizeof(dname)))
+       return -EINVAL;
+ 
