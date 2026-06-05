@@ -28,69 +28,69 @@ QNX_TARGET="${QNX_TARGET:-${QNX_SDP_ROOT}/target/qnx}"
 QNX_HOST="${QNX_HOST:-${QNX_SDP_ROOT}/host/linux/x86_64}"
 
 while [[ $# -gt 0 ]]; do
-  case "$1" in
-    --build-type)
-      BUILD_TYPE="$2"
-      shift 2
-      ;;
-    --qnx-sdp-root)
-      QNX_SDP_ROOT="$2"
-      shift 2
-      ;;
-    --qnx-target)
-      QNX_TARGET="$2"
-      shift 2
-      ;;
-    --qnx-host)
-      QNX_HOST="$2"
-      shift 2
-      ;;
-    --help)
-      echo "Usage: $0 [options]"
-      echo ""
-      echo "Options:"
-      echo "  --build-type <type>     Build type: Debug or Release (default: Release)"
-      echo "  --qnx-sdp-root <path>   QNX SDP installation root (default: ~/qnx800)"
-      echo "  --qnx-target <path>     QNX target sysroot (default: <sdp>/target/qnx)"
-      echo "  --qnx-host <path>       QNX host tools dir (default: <sdp>/host/linux/x86_64)"
-      echo "  --help                  Show this help message"
-      exit 0
-      ;;
-    *)
-      echo "Unknown option: $1"
-      exit 1
-      ;;
-  esac
+	case "$1" in
+	--build-type)
+		BUILD_TYPE="$2"
+		shift 2
+		;;
+	--qnx-sdp-root)
+		QNX_SDP_ROOT="$2"
+		shift 2
+		;;
+	--qnx-target)
+		QNX_TARGET="$2"
+		shift 2
+		;;
+	--qnx-host)
+		QNX_HOST="$2"
+		shift 2
+		;;
+	--help)
+		echo "Usage: $0 [options]"
+		echo ""
+		echo "Options:"
+		echo "  --build-type <type>     Build type: Debug or Release (default: Release)"
+		echo "  --qnx-sdp-root <path>   QNX SDP installation root (default: ~/qnx800)"
+		echo "  --qnx-target <path>     QNX target sysroot (default: <sdp>/target/qnx)"
+		echo "  --qnx-host <path>       QNX host tools dir (default: <sdp>/host/linux/x86_64)"
+		echo "  --help                  Show this help message"
+		exit 0
+		;;
+	*)
+		echo "Unknown option: $1"
+		exit 1
+		;;
+	esac
 done
 
 # Validate QNX SDK
 if [[ ! -d "${QNX_SDP_ROOT}/target/qnx" ]]; then
-  echo "ERROR: QNX SDP not found at ${QNX_SDP_ROOT}"
-  echo "Please set QNX_SDP_ROOT environment variable or use --qnx-sdp-root"
-  exit 1
+	echo "ERROR: QNX SDP not found at ${QNX_SDP_ROOT}"
+	echo "Please set QNX_SDP_ROOT environment variable or use --qnx-sdp-root"
+	exit 1
 fi
 if [[ ! -d "${QNX_TARGET}" ]]; then
-  echo "ERROR: QNX target sysroot not found at ${QNX_TARGET}"
-  exit 1
+	echo "ERROR: QNX target sysroot not found at ${QNX_TARGET}"
+	exit 1
 fi
 if [[ ! -d "${QNX_HOST}" ]]; then
-  echo "ERROR: QNX host tools not found at ${QNX_HOST}"
-  exit 1
+	echo "ERROR: QNX host tools not found at ${QNX_HOST}"
+	exit 1
 fi
 
 # Initialize submodules if needed (same prerequisites as cef_create_projects.sh).
 echo "Checking submodules..."
 cd "${CHROMIUM_SRC_DIR}"
 for submodule_path in \
-  "third_party/googletest/src/googletest/src/gtest-death-test.cc" \
-  "third_party/perfetto/src/base/test/vm_test_utils.cc" \
-  "third_party/boringssl/src/crypto/rand/internal.h" \
-  "third_party/ced/src/util/basictypes.h"; do
-  if [[ ! -f "${submodule_path}" ]]; then
-    submodule_dir="$(dirname "${submodule_path}" | sed 's|/[^/]*$||')"
-    echo "  Initializing ${submodule_dir} submodule..."
-    git submodule update --init "${submodule_dir}" || true
-  fi
+	"third_party/googletest/src/googletest/src/gtest-death-test.cc" \
+	"third_party/perfetto/src/base/test/vm_test_utils.cc" \
+	"third_party/boringssl/src/crypto/rand/internal.h" \
+	"third_party/ced/src/util/basictypes.h"; do
+	if [[ ! -f "${submodule_path}" ]]; then
+		submodule_dir="$(dirname "${submodule_path}" | sed 's|/[^/]*$||')"
+		echo "  Initializing ${submodule_dir} submodule..."
+		git submodule update --init "${submodule_dir}" || true
+	fi
 done
 cd "${CEF_DIR}"
 
@@ -111,20 +111,20 @@ echo ""
 echo "Phase 1: Installing new QNX platform files..."
 NEW_FILES_DIR="${CEF_DIR}/patch/qnx/chromium/new_files"
 if [[ -d "${NEW_FILES_DIR}" ]]; then
-  while IFS= read -r -d '' file; do
-    rel_path="${file#${NEW_FILES_DIR}/}"
-    target_file="${CHROMIUM_SRC_DIR}/${rel_path}"
-    mkdir -p "$(dirname "${target_file}")"
-    if [[ ! -f "${target_file}" ]]; then
-      echo "  Installing: ${rel_path}"
-      cp "${file}" "${target_file}"
-    elif ! cmp -s "${file}" "${target_file}"; then
-      echo "  Updating:   ${rel_path}"
-      cp "${file}" "${target_file}"
-    else
-      echo "  Keeping:    ${rel_path}"
-    fi
-  done < <(find "${NEW_FILES_DIR}" -type f -print0 | sort -z)
+	while IFS= read -r -d '' file; do
+		rel_path="${file#${NEW_FILES_DIR}/}"
+		target_file="${CHROMIUM_SRC_DIR}/${rel_path}"
+		mkdir -p "$(dirname "${target_file}")"
+		if [[ ! -f "${target_file}" ]]; then
+			echo "  Installing: ${rel_path}"
+			cp "${file}" "${target_file}"
+		elif ! cmp -s "${file}" "${target_file}"; then
+			echo "  Updating:   ${rel_path}"
+			cp "${file}" "${target_file}"
+		else
+			echo "  Keeping:    ${rel_path}"
+		fi
+	done < <(find "${NEW_FILES_DIR}" -type f -print0 | sort -z)
 fi
 echo ""
 
@@ -167,69 +167,69 @@ PYTHON3="${PYTHON3:-python3}"
 # then higher-level modules.
 
 UNREGISTERED_CHROMIUM_PATCHES=(
-  # Compiler / toolchain support
-  "compiler_rt_builtins_qnx"
-  "qnx_source_sync"
-  # V8 — must be applied in this dependency order.
-  #   1. v8_base64_atomic / v8_qnx_targeting: V8 platform support
-  #   2. v8_stack_limit_qnx: clamp V8 stack limit to actual OS thread
-  #      stack (QNX threads are 512KB main / 256KB worker, V8 default
-  #      984KB overflows)
-  #   3. v8_perfetto_trace_qnx: align Perfetto JSON number/pointer
-  #      formatting with QNX libc++ (1e+100 rendered as full decimal
-  #      instead of scientific, void* missing 0x prefix, etc.)
-  #   4. v8_bytecode_expectations_qnx: make CollectGoldenFiles try
-  #      ../../v8/<path> in addition to ../../<path> so the
-  #      BytecodeGeneratorTest param suite is instantiated under the
-  #      Chromium tree layout
-  "v8_base64_atomic"
-  "v8_qnx_targeting"
-  "v8_stack_limit_qnx"
-  "v8_perfetto_trace_qnx"
-  "v8_bytecode_expectations_qnx"
-  # v8_background_compile_stack_size_qnx: the test helper
-  # BackgroundCompileTaskTest::NewBackgroundCompileTask() declared a
-  # `stack_size` parameter but ignored it, always passing
-  # v8_flags.stack_size to the BackgroundCompileTask constructor. As a
-  # result, BackgroundCompileTaskTest.CompileFailure (which passes
-  # `100` intending a 100KB parser stack) ran the parser with the full
-  # 984KB budget and overflowed the C++ stack on QNX (512KB main / 256KB
-  # worker). Fix the helper to actually use the parameter so the parser
-  # stack guard fires before the OS stack does. This is a general
-  # upstream-quality bug fix; carried under QNX patches because QNX is
-  # the platform where it manifests.
-  "v8_background_compile_stack_size_qnx"
-  # v8_workloads_basic_functionality_stack_qnx: the test allocated a
-  # 100 000-element pointer array (≈ 800 KB on 64-bit) on the stack
-  # with `Persistent<...>* persistents[kNumPersistents]`. On QNX the
-  # unittest runs on a worker thread with a 256 KB stack, so the array
-  # alone overflows before the test body even starts. Move the array
-  # to a heap-allocated `std::vector` (size unchanged) so the test's
-  # actual logic — exercising cppgc / Oilpan persistent allocation —
-  # runs in the same O(100k) range as the author intended, but no
-  # longer needs 800 KB of stack.
-  "v8_workloads_basic_functionality_stack_qnx"
-  # v8_unittests_status_logall_qnx: SKIP LogAllTest on QNX (and the
-  # official_build exception tests, which were already skipped on macOS
-  # upstream). LogAllTest crashes inside RunJS under QEMU; the exact
-  # logger subpath could not be isolated.
-  "v8_unittests_status_logall_qnx"
-  # fieldtrial_to_struct_qnx: fieldtrial_to_struct.py only recognizes
-  # android, android_webview, chromeos, fuchsia, ios, linux, mac, windows
-  # as valid --platform values. Add 'qnx' to the platform list so that
-  # fieldtrial config generation works in QNX builds. This is needed
-  # because the QNX toolchain passes --platform=qnx to the script via GN.
-  "fieldtrial_to_struct_qnx"
+	# Compiler / toolchain support
+	"compiler_rt_builtins_qnx"
+	"qnx_source_sync"
+	# V8 — must be applied in this dependency order.
+	#   1. v8_base64_atomic / v8_qnx_targeting: V8 platform support
+	#   2. v8_stack_limit_qnx: clamp V8 stack limit to actual OS thread
+	#      stack (QNX threads are 512KB main / 256KB worker, V8 default
+	#      984KB overflows)
+	#   3. v8_perfetto_trace_qnx: align Perfetto JSON number/pointer
+	#      formatting with QNX libc++ (1e+100 rendered as full decimal
+	#      instead of scientific, void* missing 0x prefix, etc.)
+	#   4. v8_bytecode_expectations_qnx: make CollectGoldenFiles try
+	#      ../../v8/<path> in addition to ../../<path> so the
+	#      BytecodeGeneratorTest param suite is instantiated under the
+	#      Chromium tree layout
+	"v8_base64_atomic"
+	"v8_qnx_targeting"
+	"v8_stack_limit_qnx"
+	"v8_perfetto_trace_qnx"
+	"v8_bytecode_expectations_qnx"
+	# v8_background_compile_stack_size_qnx: the test helper
+	# BackgroundCompileTaskTest::NewBackgroundCompileTask() declared a
+	# `stack_size` parameter but ignored it, always passing
+	# v8_flags.stack_size to the BackgroundCompileTask constructor. As a
+	# result, BackgroundCompileTaskTest.CompileFailure (which passes
+	# `100` intending a 100KB parser stack) ran the parser with the full
+	# 984KB budget and overflowed the C++ stack on QNX (512KB main / 256KB
+	# worker). Fix the helper to actually use the parameter so the parser
+	# stack guard fires before the OS stack does. This is a general
+	# upstream-quality bug fix; carried under QNX patches because QNX is
+	# the platform where it manifests.
+	"v8_background_compile_stack_size_qnx"
+	# v8_workloads_basic_functionality_stack_qnx: the test allocated a
+	# 100 000-element pointer array (≈ 800 KB on 64-bit) on the stack
+	# with `Persistent<...>* persistents[kNumPersistents]`. On QNX the
+	# unittest runs on a worker thread with a 256 KB stack, so the array
+	# alone overflows before the test body even starts. Move the array
+	# to a heap-allocated `std::vector` (size unchanged) so the test's
+	# actual logic — exercising cppgc / Oilpan persistent allocation —
+	# runs in the same O(100k) range as the author intended, but no
+	# longer needs 800 KB of stack.
+	"v8_workloads_basic_functionality_stack_qnx"
+	# v8_unittests_status_logall_qnx: SKIP LogAllTest on QNX (and the
+	# official_build exception tests, which were already skipped on macOS
+	# upstream). LogAllTest crashes inside RunJS under QEMU; the exact
+	# logger subpath could not be isolated.
+	"v8_unittests_status_logall_qnx"
+	# fieldtrial_to_struct_qnx: fieldtrial_to_struct.py only recognizes
+	# android, android_webview, chromeos, fuchsia, ios, linux, mac, windows
+	# as valid --platform values. Add 'qnx' to the platform list so that
+	# fieldtrial config generation works in QNX builds. This is needed
+	# because the QNX toolchain passes --platform=qnx to the script via GN.
+	"fieldtrial_to_struct_qnx"
 )
 
 for patch_name in "${UNREGISTERED_CHROMIUM_PATCHES[@]}"; do
-  patch_file="${CEF_DIR}/patch/patches/qnx/chromium/${patch_name}.patch"
-  if [[ -f "${patch_file}" ]]; then
-    echo "  - ${patch_name}"
-    "${PYTHON3}" "${SCRIPT_DIR}/patcher.py" --patch-file "qnx/chromium/${patch_name}"
-  else
-    echo "  - ${patch_name} (NOT FOUND — remove from list or add patch file)"
-  fi
+	patch_file="${CEF_DIR}/patch/patches/qnx/chromium/${patch_name}.patch"
+	if [[ -f "${patch_file}" ]]; then
+		echo "  - ${patch_name}"
+		"${PYTHON3}" "${SCRIPT_DIR}/patcher.py" --patch-file "qnx/chromium/${patch_name}"
+	else
+		echo "  - ${patch_name} (NOT FOUND — remove from list or add patch file)"
+	fi
 done
 
 # Note: All third_party submodule patches (googletest, perfetto, boringssl,
@@ -256,7 +256,7 @@ echo "Phase 4: Creating QNX build directory: ${BUILD_DIR}"
 echo ""
 
 GN_ARGS_FILE="${BUILD_DIR}/args.gn"
-cat > "${GN_ARGS_FILE}" << EOF
+cat >"${GN_ARGS_FILE}" <<EOF
 # QNX-specific GN args for CEF
 # Auto-generated by cef_create_projects_qnx.sh
 
@@ -371,13 +371,13 @@ gn gen "${BUILD_DIR}"
 echo ""
 
 # Write helper scripts.
-cat > "${BUILD_DIR}/qnx_env.sh" << EOF
+cat >"${BUILD_DIR}/qnx_env.sh" <<EOF
 export QNX_SDP_ROOT="${QNX_SDP_ROOT}"
 export QNX_TARGET="${QNX_TARGET}"
 export QNX_HOST="${QNX_HOST}"
 EOF
 
-cat > "${BUILD_DIR}/ninja_qnx.sh" << 'EOF'
+cat >"${BUILD_DIR}/ninja_qnx.sh" <<'EOF'
 #!/bin/bash
 set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
