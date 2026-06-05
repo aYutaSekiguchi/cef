@@ -2558,6 +2558,100 @@ is generated):
   - the team decides to pursue native EGL/GLES2 as the primary QNX graphics
     path instead of Vulkan/headless.
 
+
+
+---
+
+## 50. WebGPU (Dawn) deferred on QNX — `use_dawn = false`
+
+**Date**: 2026-06-05
+
+**Goal**:
+- Unblock cfsimple build. cfsimple is a headless target with no canvas,
+  WebGL or WebGPU, so disabling Dawn has no functional impact.
+- Keep the decision durable through `cef_create_projects_qnx.sh` so
+  `./cef/tools/cef_create_projects_qnx.sh` re-emits it for every clean
+  rebootstrap.
+
+**Symptoms** (after ANGLE work was suspended per #49):
+- The cfsimple build resumed into Dawn's Vulkan backend and failed:
+  - `renderdoc_app.h:43:2: error: "Unknown platform"` (RenderDoc header
+    does not know `__QNXNTO__`; only Windows / Linux / macOS / FreeBSD /
+    Android are recognized)
+  - `VulkanBackend.cpp`: `ExternalImageDescriptorOpaqueFD`,
+    `ExternalImageDescriptorDmaBuf`, `ExternalImageExportInfoOpaqueFD`,
+    `ExternalImageExportInfoDmaBuf`, `ExternalImageDescriptorFD`,
+    `ExternalImageExportInfoFD` all "unknown type name"
+  - The FD types are guarded on raw `__linux__` in
+    `include/dawn/native/VulkanBackend.h`, not on Dawn's own
+    `DAWN_PLATFORM_IS(LINUX)`. The existing
+    `cef/patch/patches/qnx/chromium/dawn_qnx_platform.patch` only
+    re-routes `Platform.h`; the submodule-internal `__linux__` guards
+    are not covered by that patch.
+- Why Dawn was compiled at all on QNX: `is_linux` is true for QNX
+  (`build/config/BUILDCONFIG.gn:322`), so
+  `use_dawn = is_apple || is_win || is_chromeos || (is_linux && !is_castos) || ...`
+  defaults to **true** on QNX, pulling Dawn into the GPU process even
+  though cfsimple never uses WebGPU.
+
+**Decision**:
+- Defer WebGPU on QNX. Disable Dawn at the GN level for QNX builds.
+- Dawn is not part of the cfsimple feature set; the WebGPU JS bindings
+  are Blink-internal and not exposed in the stable CEF C API.
+
+**Fix**:
+- `cef/tools/cef_create_projects_qnx.sh` (Phase 4 heredoc that writes
+  `args.gn`) now sets:
+  ```gn
+  # WebGPU (Dawn) is deferred: cfsimple is headless and the QEMU test
+  # environment has no GPU device, so WebGPU is not exercised. Disabling
+  # Dawn also sidesteps Dawn's Linux-only assumptions in renderdoc_app.h
+  # and ExternalImageDescriptorFD. See fixes-and-decisions.md #50.
+  use_dawn = false
+  ```
+- The same line is also written into the active
+  `out/qnx_release/args.gn` so the current build picks it up.
+- No CEF source patch needed: `use_dawn = false` removes the
+  `if (use_dawn || skia_use_dawn)` deps in
+  `gpu/BUILD.gn`, `components/viz/service/BUILD.gn`, and
+  `third_party/blink/renderer/modules/webgpu/BUILD.gn`, so Dawn's
+  Vulkan backend, RenderDoc glue, and WebGPU JS bindings all stop
+  being compiled.
+
+**Validation**:
+- `gn args out/qnx_release --list=use_dawn` reports:
+  ```
+  Current value = false
+    From //out/qnx_release/args.gn:40
+  Overridden from the default = true
+    From //ui/gl/features.gni:15
+  ```
+- Resumed `ninja cefsimple` no longer hits the 5 Dawn errors that
+  were blocking the build. Build progresses past the previous Dawn
+  failure point and the next blocker is now `webrtc/rtc_base/platform_thread_types.cc`
+  failing on `linux/prctl.h` (separate Linux-only WebRTC issue,
+  tracked separately).
+
+**Cost analysis (recorded for the future)**:
+- Disabling Dawn (this entry): ~1 line of GN arg, no upstream maintenance.
+- Porting Dawn to QNX: estimated 6-12 months. Requires:
+  - Resolving the `linux/prctl.h`-style Linux-only guards inside
+    `third_party/dawn/include/dawn/native/VulkanBackend.h`
+  - Adding `__QNXNTO__` to the renderdoc_app.h platform check
+  - Implementing a QNX Vulkan surface (no upstream QNX support
+    planned; SwiftShader is deprecated for GPU-process JIT use)
+  - Running the Dawn conformance suite on QNX hardware with Vulkan
+- Upstream Chromium has no QNX support planned for Dawn; SwiftShader
+  fallback is being deprecated for security reasons (JIT in the GPU
+  process). Disabling is the correct short-term choice.
+
+**Re-enabling Dawn on QNX**:
+- The durable lever is `use_dawn = false` in
+  `cef/tools/cef_create_projects_qnx.sh`. Flipping it back to
+  `use_dawn = true` (or removing the line) is the first step; the
+  remaining QNX-specific Dawn work (VulkanBackend.h, renderdoc_app.h,
+  QNX Vulkan surface) is tracked outside this entry.
+
 For a fresh session, the preferred order is:
 
 1. preserve bootstrap reproducibility from `cef/patch/...`

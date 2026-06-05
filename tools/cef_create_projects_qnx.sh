@@ -292,6 +292,11 @@ enable_printing = false
 enable_nacl = false
 enable_mdns = false
 enable_remoting = false
+# WebGPU (Dawn) is deferred: cfsimple is headless and the QEMU test
+# environment has no GPU device, so WebGPU is not exercised. Disabling
+# Dawn also sidesteps Dawn's Linux-only assumptions in renderdoc_app.h
+# and ExternalImageDescriptorFD. See fixes-and-decisions.md #50.
+use_dawn = false
 
 # CEF specific
 cef_target_arch = "x64"
