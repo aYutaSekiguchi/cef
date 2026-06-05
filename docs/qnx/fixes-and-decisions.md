@@ -1952,4 +1952,175 @@ For a fresh session, the preferred order is:
 4. move on to the next concrete failing target beyond `base_unittests` and `v8_unittests`
 5. **swiftshader_reactor_subzero_unittests** — use `./tools/qnx_run_test.sh --swiftshader` (per-test, stack-sensitive)
 6. revisit accepted exclusions only if they block that target
+
+---
+
+## 44. FFmpeg `_POSIX_C_SOURCE` / `_XOPEN_SOURCE` collision — QNX `sys/platform.h` rejection
+
+**Date**: 2026-06-05
+
+**Symptoms** (QNX build of `skia_core_and_effects` had already
+been fixed in #43; the next failing module was
+`ffmpeg_internal`):
+```
+In file included from ../../third_party/ffmpeg/libavcodec/decode.c:31:
+In file included from ../../third_party/ffmpeg/libavutil/avassert.h:35:
+In file included from ../../third_party/ffmpeg/libavutil/log.h:26:
+In file included from ../../third_party/ffmpeg/libavutil/version.h:30:
+../../third_party/ffmpeg/libavutil/macros.h:28:10: fatal error: \
+    'libavutil/avconfig.h' file not found
+```
+and (root cause of both errors, surfaced as soon as `avconfig.h`
+is generated):
+```
+/home/yuta/qnx800/target/qnx/usr/include/sys/platform.h:165:5: error: \
+    This POSIX_C_SOURCE is unsuported with XOPEN_SOURCE
+  165 | #error This POSIX_C_SOURCE is unsuported with XOPEN_SOURCE
+      |  ^
+```
+
+**Root cause**:
+- `third_party/ffmpeg/BUILD.gn`'s `ffmpeg_internal` target
+  declares in its `defines` array:
+  ```
+  _POSIX_C_SOURCE=200112
+  _XOPEN_SOURCE=600
+  ```
+  because the bundled FFmpeg source tree is written against
+  XPG/SUSv3.
+- The QNX toolchain (`build/toolchain/qnx/BUILD.gn`) separately
+  forces `-D_POSIX_C_SOURCE=200809L` globally so that QNX sysroot
+  headers expose `strdup`, `dev_t`, `uid_t`, `gid_t`, etc.
+  (Phase 2-1 fixes — see
+  `cef/docs/qnx/history/archive/plan.md`, items #5 and
+  "sys/stat.h types undefined"). The toolchain's `-D` is the LAST
+  `-D_POSIX_C_SOURCE` on the compiler command line (it lives in
+  `extra_cflags`, appended after the target's `defines` and
+  `cflags` by `gcc_toolchain.gni:326`).
+- QNX's `/usr/include/sys/platform.h:163-165` rejects
+  `_XOPEN_SOURCE=600` paired with `_POSIX_C_SOURCE > 200112` with
+  `#error This POSIX_C_SOURCE is unsuported with XOPEN_SOURCE`.
+- The `avconfig.h` not-found error is a separate, downstream
+  symptom: the FFmpeg C compile aborts at the
+  `sys/platform.h` error before it ever reaches the
+  `#include "libavutil/avconfig.h"` line, so the latter shows up
+  as a secondary failure once the platform.h error is fixed.
+
+**Why we cannot just lower the toolchain-wide value**:
+- The `-D_POSIX_C_SOURCE=200809L` setting is the validated
+  Phase 2-1 fix for `strdup undefined` and the
+  `sys/stat.h types undefined` set. Lowering it toolchain-wide
+  (to 200112, or removing it) would re-break those surfaces for
+  every other QNX TU.
+- The same value is also hard-coded in two other places
+  (`cef/patch/qnx/chromium/new_files/build/config/qnx/build_compiler_rt_builtins.py:443`
+  and `cef/patch/patches/qnx/chromium/qnx_deps_third_party.patch:142`),
+  confirming the QNX port intentionally standardized on 200809L
+  build-wide.
+
+**Fix** — target-local shim, toolchain untouched:
+- New file
+  `cef/patch/qnx/chromium/new_files/build/config/qnx/qnx_ffmpeg_compat.h`:
+  ```c
+  #if defined(FFMPEG_CONFIGURATION)
+      #undef _POSIX_C_SOURCE
+      #define _POSIX_C_SOURCE 200112
+  #endif
+  ```
+  The `#if defined(FFMPEG_CONFIGURATION)` guard makes the shim
+  a no-op for every TU outside `ffmpeg_internal`
+  (`FFMPEG_CONFIGURATION=NULL` is in `ffmpeg_internal`'s
+  `defines` array at `third_party/ffmpeg/BUILD.gn:230`).
+- New patch
+  `cef/patch/patches/qnx/chromium/ffmpeg_qnx_posix_override.patch`
+  (registered with `'path': 'third_party/ffmpeg'` so patcher.py
+  changes into the FFmpeg submodule before applying). Inside
+  `ffmpeg_internal`, after `cflags = []`:
+  ```gn
+  if (is_qnx) {
+    cflags += [
+      "-include",
+      rebase_path("//build/config/qnx/qnx_ffmpeg_compat.h", root_build_dir),
+    ]
+  }
+  ```
+- The new file is installed by Phase 1 of
+  `cef_create_projects_qnx.sh` (it lives under
+  `cef/patch/qnx/chromium/new_files/`), the patch is applied by
+  Phase 2's `gclient_hook.py` -> `tools/patcher.py` run, and
+  `patch.cfg` registers it alongside #43.
+
+**Why the shim actually works (clang `-D` / `-include` ordering)**:
+- Naively, one would expect the toolchain's
+  `-D_POSIX_C_SOURCE=200809L` (which appears AFTER
+  `-include qnx_ffmpeg_compat.h` on the command line) to
+  override the shim's `#define`. It does not.
+- clang's command-line processing is two-phase: every `-D`
+  flag is applied in order (last `-D` wins) to set up the
+  initial macro state; only then are all `-include` files
+  processed in order. The shim's `#undef _POSIX_C_SOURCE;
+  #define _POSIX_C_SOURCE 200112` therefore runs AFTER the
+  toolchain's `-D_POSIX_C_SOURCE=200809L`, so its value is
+  the one the rest of the TU sees.
+- Verified empirically with
+  `clang -E -P -D_POSIX_C_SOURCE=200112 -include shim.h -D_POSIX_C_SOURCE=200809L test.c`
+  on the bundled `third_party/llvm-build/` clang. The preprocessed
+  source reads `_POSIX_C_SOURCE=200112L`, confirming the shim wins
+  regardless of the `-D` / `-include` interleaving on the
+  command line.
+- This same shim also neutralizes the source-internal
+  `#define _XOPEN_SOURCE 600` in `libavutil/error.c` and
+  `libavutil/mem.c` — once the shim has set
+  `_POSIX_C_SOURCE=200112`, those re-definitions of
+  `_XOPEN_SOURCE` no longer collide with the toolchain's
+  `_POSIX_C_SOURCE=200809L` (because the shim's value is what
+  the TU sees by the time those source files are reached).
+
+**Result**:
+- ✅ FFmpeg C TUs build with `_POSIX_C_SOURCE=200112` and
+  `_XOPEN_SOURCE=600`, matching FFmpeg's expectations and
+  satisfying QNX `sys/platform.h`.
+- ✅ Non-FFmpeg QNX TUs are completely unaffected: their
+  `cflags` are not modified, the shim is never force-included
+  for them, and even if it were, the
+  `#if defined(FFMPEG_CONFIGURATION)` guard makes it a no-op.
+- ✅ The toolchain-wide `_POSIX_C_SOURCE=200809L` is
+  preserved, so `strdup` / `dev_t` / `uid_t` / `gid_t`
+  visibility for all other QNX TUs is unchanged.
+- ✅ `rebase_path(...)` resolves the shim's absolute path at
+  gn gen time, so the compiled `-include` flag does not
+  depend on the current working directory at compile time.
+
+**Related files**:
+- `cef/patch/qnx/chromium/new_files/build/config/qnx/qnx_ffmpeg_compat.h` (new)
+- `cef/patch/patches/qnx/chromium/ffmpeg_qnx_posix_override.patch` (new)
+- `cef/patch/patch.cfg` (registers the patch with
+  `'path': 'third_party/ffmpeg'`)
+- `third_party/ffmpeg/BUILD.gn` (target of the patch — the
+  `ffmpeg_internal` target gains the conditional `cflags +=`
+  block)
+- `build/config/qnx/qnx_ffmpeg_compat.h` (after Phase 1 install)
+- `build/toolchain/qnx/BUILD.gn` (NOT modified — the
+  toolchain-wide `_POSIX_C_SOURCE=200809L` is preserved)
+- `cef/docs/qnx/history/archive/plan.md` (Phase 2-1 entries #5
+  and "sys/stat.h types undefined" — explains why the
+  toolchain-wide value cannot be lowered)
+
+**Note**:
+- A separate, secondary error remains after this fix:
+  `libavutil/avconfig.h file not found`. That is tracked as a
+  distinct problem (missing FFmpeg QNX config files) and is
+  addressed in a follow-up entry.
+
+---
+
+## Current follow-up priority
+
+For a fresh session, the preferred order is:
+
+1. preserve bootstrap reproducibility from `cef/patch/...`
+2. validate the baseline on the target machine
+3. **v8_unittests** — use `./tools/qnx_run_test.sh --v8` (per-test)
+4. move on to the next concrete failing target beyond `base_unittests` and `v8_unittests`
+5. **swiftshader_reactor_subzero_unittests** — use `./tools/qnx_run_test.sh --swiftshader` (per-test, stack-sensitive)
 6. revisit accepted exclusions only if they block that target
