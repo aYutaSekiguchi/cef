@@ -2808,6 +2808,89 @@ is generated):
   check is the next step if the follow-up blocker on
   `asm-generic/socket.h` turns out to also be a missing uapi header.
 
+
+
+---
+
+## 53. qnx-ports/webrtc — evaluated and rejected (sticking with #51 + #52)
+
+**Date**: 2026-06-05
+
+**Initial question**:
+- https://github.com/qnx-ports/webrtc exists. The `qnx-m137` branch is
+  a QNX port of WebRTC maintained by QNX (latest commit
+  `eb51ec9e51` = `[QNX Base] Update DEPS to support QNX OS`).
+- The repo brings in a `qnx_build` submodule
+  (https://github.com/qnx-ports/build-files.git) which contains the
+  QNX DEPS + a series of 21 webrtc-specific patches under
+  `ports/webrtc/patches/webrtc/` plus per-third_party patch trees.
+- Consider: just use that repo as the `third_party/webrtc` submodule
+  source and let it apply its own QNX patches via its DEPS hooks
+  (`appple_qnx_patches`, `appple_qnx_ancillary_patches`, etc.).
+
+**Investigation**:
+- qnx-ports/webrtc `qnx-m137` is on a M132 / late-M137 fork line.
+  `git merge-base 28452dff1b eb51ec9e51` resolves to
+  `a5d71009ac1dce7da23813dc9413c03073cfa8ca` (an M132-era commit), so
+  the two repositories do share a common ancestor — but the two have
+  diverged by ~15 milestones' worth of upstream WebRTC changes since
+  then.
+- The Chromium M147 side calls into webrtc M147 APIs
+  (`webrtc::AudioEncoderFactory`, `webrtc::AudioDecoderFactory`,
+  `webrtc::NetEq`, `webrtc::AudioTransport`, `webrtc::CreateEnvironment`,
+  `webrtc::CreateNeuralResidualEchoEstimator`, etc.) across
+  `third_party/webrtc_overrides/`, `media/webrtc/`, `media/engine/`,
+  `third_party/blink/renderer/modules/peerconnection/`,
+  `third_party/blink/renderer/platform/peerconnection/`, and
+  `remoting/protocol/webrtc_transport.cc`. Many of these APIs changed
+  between M132 and M147.
+- Concretely, swapping the submodule to `qnx-ports/webrtc` and
+  running its `src/qnx_build/ports/webrtc/scripts/apply_patches.py`
+  succeeded, but the working tree is then frozen on M132-era
+  webrtc. Chromium M147 would no longer compile against that.
+
+**Decision**:
+- Do not swap the submodule. The audio / video capture patches in
+  `ports/webrtc/patches/webrtc/` (0003, 0006, 0007, 0015, 0017-0021)
+  are irrelevant to the cfsimple headless target.
+- Re-enable the smaller CEF patches (#51, #52) and continue the
+  per-blocker CEF patch approach. The next blocker is
+  `webrtc/rtc_base/physical_socket_server.cc:69: 'asm-generic/socket.h'`
+  which is the same Linux-uapi pattern; the CEF patch
+  `webrtc_qnx_physical_socket_server` (or similar) will follow.
+
+**Actions taken**:
+- `.gitmodules` / submodule URL reverted to
+  `https://webrtc.googlesource.com/src`.
+- `third_party/webrtc` HEAD reverted to `28452dff1b`
+  ([M147] [Pipewire] Fix mouse cursor data race).
+- `src/qnx_build/` untracked directory removed.
+- `cef/patch/patch.cfg` re-enabled the two webrtc patches (retired
+  comments removed).
+- `webrtc_qnx_platform_thread_names.patch` and
+  `webrtc_qnx_byte_order_endian.patch` re-applied to the M147
+  submodule via `git apply -p1` from the chromium/src root.
+- `ninja cefsimple` resumes past the previous blocker and reaches
+  the next one (`asm-generic/socket.h`).
+
+**References** (if qnx-ports/webrtc is ever needed again):
+- Repo: https://github.com/qnx-ports/webrtc
+- QNX build scripts / patches: https://github.com/qnx-ports/build-files
+  → `ports/webrtc/`
+- QNX-specific DEPS hooks (require `checkout_qnx = True`):
+  - `appple_qnx_patches` → `apply_patches.py`
+  - `appple_qnx_ancillary_patches` → `apply_ancillary_patches.py`
+  - `libvpx_revert_to_previous_versions` → `checkout_third_party_version.py`
+  - `collect-headers`, `generate_supplementary_files`
+- 21 webrtc patches under `ports/webrtc/patches/webrtc/`:
+  0001 (.gitignore), 0002 (exclude tests), 0003 (peerconnection_client),
+  0004 (WEBRTC_POSIX / WEBRTC_QNX define), 0005 (late-binding symbols),
+  0006 (video capture), 0007 (audio playout/capture),
+  0008 (rtc_base), 0009-0010 (SDP7.1 ARES_AI_ADDRCONFIG / TCP flags),
+  0011 (DetectNumberOfCores), 0012 (logging), 0013 (p2p/base),
+  0014 (set thread name), 0015 (io-snd audio), 0016 (decrease
+  thread priority), 0017-0021 (audio device plumbing).
+
 For a fresh session, the preferred order is:
 
 1. preserve bootstrap reproducibility from `cef/patch/...`
