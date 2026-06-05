@@ -25,6 +25,14 @@ cd <CHROMIUM_SRC_ROOT>
 ./out/qnx_release/ninja_qnx.sh base_unittests
 ```
 
+ANGLE test group:
+
+```bash
+cd <CHROMIUM_SRC_ROOT>
+./out/qnx_release/ninja_qnx.sh \
+  angle_system_info_test angle_unittests angle_end2end_tests
+```
+
 ### 3. Run the target on QNX
 
 Broad run:
@@ -39,6 +47,12 @@ Focused run:
 ```bash
 ./cef/tools/qnx_run_test.sh --timeout 600 --kill-existing \
   "CommandLineTest.CommandLineConstructor"
+```
+
+ANGLE broad run:
+
+```bash
+./cef/tools/qnx_run_test.sh --angle --timeout 7200 --kill-existing
 ```
 
 Arbitrary guest command:
@@ -100,6 +114,7 @@ export CR_SOURCE_ROOT=/mnt/nfs
 | boot + mount only | `./cef/tools/qnx_run_test.sh --mount-only --kill-existing` |
 | run one test | `./cef/tools/qnx_run_test.sh --timeout 600 'ProcessTest.Create'` |
 | run list-tests | `./cef/tools/qnx_run_test.sh --cmd './base_unittests --gtest_list_tests'` |
+| run ANGLE group | `./cef/tools/qnx_run_test.sh --angle --timeout 7200 --kill-existing` |
 | inspect QEMU interactively | `tmux attach -t <session>` when running inside tmux |
 
 ## Logs and results

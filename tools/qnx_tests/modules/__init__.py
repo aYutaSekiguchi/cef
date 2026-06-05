@@ -12,16 +12,24 @@ registered entry in ``MODULES`` is keyed by ``module.name``.
 
 from __future__ import annotations
 
-from .base import BaseModule
-from .v8 import V8Module
-from .swiftshader import SwiftShaderModule
+from qnx_tests.modules.angle import AngleModule
+from qnx_tests.modules.base import BaseModule
+from qnx_tests.modules.v8 import V8Module
+from qnx_tests.modules.swiftshader import SwiftShaderModule
 
 
 MODULES = {
     "base": BaseModule(),
     "v8": V8Module(),
     "swiftshader": SwiftShaderModule(),
+    "angle": AngleModule(),
 }
 
 
-__all__ = ["MODULES", "BaseModule", "V8Module", "SwiftShaderModule"]
+__all__ = [
+    "MODULES",
+    "AngleModule",
+    "BaseModule",
+    "V8Module",
+    "SwiftShaderModule",
+]

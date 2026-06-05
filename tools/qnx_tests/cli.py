@@ -6,6 +6,7 @@ Examples::
     tools/qnx_run_test.sh --base
     tools/qnx_run_test.sh --v8
     tools/qnx_run_test.sh --swiftshader
+    tools/qnx_run_test.sh --angle
     tools/qnx_run_test.sh --list
     tools/qnx_run_test.sh --base 'ProcessTest.*'
     tools/qnx_run_test.sh --cmd './base_unittests --gtest_list_tests'
@@ -39,6 +40,7 @@ from qnx_tests.common import (  # noqa: E402
     QNXConfig, QNXSerial, boot_qemu, kill_qemu,
 )
 from qnx_tests.modules import MODULES  # noqa: E402
+from qnx_tests.registry import TestModule  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -239,6 +241,7 @@ def main(argv=None) -> int:
     # Normal run path: boot QEMU once, share the session across modules
     qemu_pid = boot_qemu(cfg)
     overall_failed = 0
+    serial: QNXSerial | None = None
     try:
         # Open the first serial session; reuse for all modules in this run
         stamp = time.strftime("%Y%m%d_%H%M%S")
@@ -261,8 +264,8 @@ def main(argv=None) -> int:
             if args.skip_death_tests and m.strategy == "per_test":
                 # Implemented as a post-list filter
                 orig_list_tests = m.list_tests
-                def _filtered(serial_, g, t, _orig=orig_list_tests):
-                    return [n for n in _orig(serial_, g, t)
+                def _filtered(serial_, g, timeout, _orig=orig_list_tests):
+                    return [n for n in _orig(serial_, g, timeout)
                             if "DeathTest" not in n]
                 m.list_tests = _filtered  # type: ignore[method-assign]
 
@@ -292,7 +295,8 @@ def main(argv=None) -> int:
             failed, results = m.run(cfg, serial, cfg.guest_build_dir(), filter_arg)
             overall_failed += _print_module_summary(m.name, results)
     finally:
-        serial.close()
+        if serial is not None:
+            serial.close()
         if not cfg.keep_qemu:
             kill_qemu(qemu_pid)
 
@@ -303,28 +307,30 @@ def main(argv=None) -> int:
 # Helpers
 # ---------------------------------------------------------------------------
 
-class _CmdModule:
+class _CmdModule(TestModule):
     """Synthetic module that runs an arbitrary guest command exactly once.
 
     Used to preserve the legacy ``qnx_run_test.sh --cmd '<guest cmd>'`` UX.
     """
-    name = "cmd"
-    description = "(arbitrary guest command)"
-    binary = "base_unittests"
-    strategy = "single"
-    default_timeout: int = 600
-    default_batch_timeout: int = 1800
-    default_exclusions: list = []
-    per_test_args: list = []
-    parse_status_file: bool = False
-    status_file_relpath: str = ""
-    one_test_per_process: bool = False
 
     def __init__(self, cmd: str, timeout: int):
+        super().__init__(
+            name="cmd",
+            description="(arbitrary guest command)",
+            binary="base_unittests",
+            strategy="single",
+            default_timeout=600,
+            default_batch_timeout=timeout or 1800,
+        )
         self._cmd = cmd
-        self.default_batch_timeout = timeout or 1800
 
-    def run(self, cfg, serial, guest_build_dir, cli_filter=""):
+    def run(
+        self,
+        cfg: QNXConfig,
+        serial: QNXSerial,
+        guest_build_dir: str,
+        cli_filter: str = "",
+    ):
         t0 = time.time()
         ec, _ = serial.run_command(self._cmd, timeout=self.default_batch_timeout)
         elapsed = time.time() - t0
