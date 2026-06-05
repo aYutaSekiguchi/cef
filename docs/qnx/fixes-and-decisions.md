@@ -2116,6 +2116,130 @@ is generated):
 
 ## Current follow-up priority
 
+
+---
+
+## 45. FFmpeg QNX config files — regenerated via `configure` instead of Linux copy
+
+**Date**: 2026-06-05
+
+**Context** (follow-up to #33 and #44):
+- Entry #33 installed 4 of the 12 FFmpeg platform config files by
+  byte-for-byte copying from `Chromium/linux/x64/`. The 8 missing files
+  (`libavutil/{avconfig,ffversion}.h`,
+  `libavcodec/{bsf,codec,parser}_list.c`,
+  `libavformat/{demuxer,muxer,protocol}_list.c`) caused the
+  `libavutil/avconfig.h file not found` error at build time.
+- Instead of just copying the remaining 8 files from Linux, the user
+  correctly noted that Chromium upstream uses
+  `media/ffmpeg/scripts/build_ffmpeg.py` + `generate_gn.py` to drive
+  FFmpeg's `configure` for each target platform and then copies the
+  generated output. This ensures the configs reflect the actual target
+  OS, the current FFmpeg commit, and the right set of enabled
+  components.
+
+**Root cause of the copy-Linux shortcut being inadequate**:
+- `ffversion.h` contained a stale FFmpeg commit hash
+  (`git-2026-02-09-6461415fc4` from the original copy date) instead of
+  the current commit (`git-2026-02-17-946d97db8d`).
+- `config.h` had `OS_NAME linux` and a `FFMPEG_CONFIGURATION`
+  string referencing `--target-os=linux`, not `qnx`.
+- If the QNX build had been run with `--disable-asm`, the
+  `avconfig.h` from Linux (which has `AV_HAVE_FAST_UNALIGNED 1`
+  because ASM is enabled) would have been wrong (should be `0` for
+  the no-ASM case). Our QNX build keeps ASM enabled, so the value
+  is `1` and matches Linux x64 — but the *reason* it is `1` is now
+  backed by an actual QNX `configure` run rather than a copy.
+- Future Chromium FFmpeg rolls could introduce `linux`-specific vs
+  `qnx`-specific `configure`-time feature detection (e.g. threading
+  backend, network stack, CPU feature flags). A copy-Linux approach
+  would silently lag behind the correct QNX config.
+
+**`generate_gn.py` is NOT needed for QNX**:
+- `ffmpeg_generated.gni` (the GN source list) routes QNX through
+  `use_linux_config = is_linux || is_chromeos || is_fuchsia`, because
+  BUILDCONFIG.gn sets `is_linux = current_os == "linux" || is_qnx`.
+- The source list depends only on (arch, ffmpeg_branding, enabled
+  components). For the same x64 + Chromium branding + same
+  `--enable-decoder/...` flags, the configure-derived OBJS list is
+  identical between Linux and QNX.
+- We verified this by running `make -n` on the QNX configure and
+  diffing against `ffmpeg_generated.gni`'s effective source list.
+  The only differences are:
+  1. 23 files that `generate_gn.py`'s `CleanObjectFiles`
+     intentionally removes (binary-size / link-warning hygiene);
+  2. 168+ files gated on `ffmpeg_branding == "Chrome"` (Chromium
+     build excludes them at compile time).
+- `ffmpeg_generated.gni` already has 26 conditional blocks with
+  `ffmpeg_branding == "Chrome"`, 10 of which include the
+  `use_linux_config && ffmpeg_branding == "Chrome"` pattern. So if
+  the user flips `ffmpeg_branding = "Chrome"` for QNX in the future,
+  all Chrome-only sources (H264/AAC decoders, etc.) are
+  automatically included — **no regeneration of
+  `ffmpeg_generated.gni` is needed**.
+- Only the 12 config files need to be re-generated when
+  `ffmpeg_branding` changes (to flip `CONFIG_AAC_DECODER`,
+  `CONFIG_H264_DECODER` etc. from 0→1). The script supports this.
+
+**Fix**:
+- New script `cef/tools/qnx_build_ffmpeg_config.sh` drives FFmpeg's
+  `configure` for QNX:
+  ```bash
+  # Regenerate in-place (default: Chromium branding, x64):
+  ./cef/tools/qnx_build_ffmpeg_config.sh
+
+  # Future Chrome branding:
+  ./cef/tools/qnx_build_ffmpeg_config.sh --branding chrome
+  ```
+  The script accepts `--arch x64|arm64`, `--branding chromium|chrome`,
+  `--output-dir DIR`, and `--qnx-sdp-root DIR`. It requires
+  `QNX_HOST` and `QNX_TARGET` to be set (or inferred from
+  `--qnx-sdp-root`).
+- The script runs:
+  1. `configure --target-os=qnx --enable-cross-compile ...`
+     (mirrors `build_ffmpeg.py` for Linux x64, with QNX toolchain
+     flags: `--cc=clang`, `--ld=qcc -Vgcc_ntox86_64_cxx`, QNX
+     sysroot, `--extra-libs=-lsocket`, etc.)
+  2. `make libavutil/ffversion.h` to generate the `*_list.c` files
+  3. `ffbuild/version.sh` for the version header
+  4. Copies the 12 files to the output directory
+- All 12 files in
+  `cef/patch/qnx/chromium/new_files/third_party/ffmpeg/chromium/config/Chromium/qnx/x64/`
+  have been replaced with the freshly generated versions:
+  - Existing 4 files (`config.{h,asm}`,
+    `config_components.{h,asm}`): replaced (were stale copies from
+    an older FFmpeg commit with `OS_NAME linux`)
+  - 8 previously missing files: newly added
+- Verified values:
+  - `avconfig.h`: `AV_HAVE_FAST_UNALIGNED 1` (ASM enabled, same as
+    Linux x64)
+  - `codec_list.c`: includes `ff_libopus_decoder` (enabled via
+    `--enable-libopus` + Chromium's configure comment-out of the
+    pkg-config check at line 7301)
+  - `ffversion.h`: `git-2026-02-17-946d97db8d` (current commit)
+  - `config.h`: `OS_NAME qnx`, correct FFMPEG_CONFIGURATION
+  - 12/12 files generated, 8 of which differ from Linux x64 (config
+    string, paths, version), 4 identical (component lists)
+
+**Result**:
+- ✅ `libavutil/avconfig.h file not found` error resolved (file now
+  exists in the QNX platform config directory)
+- ✅ All 12 config files are authoritative QNX values, not
+  Linux copies
+- ✅ `ffmpeg_generated.gni` regeneration confirmed unnecessary
+  (existing file already supports QNX through `use_linux_config`)
+- ✅ `ffmpeg_branding = "Chrome"` future toggle supported (no gni
+  change needed; just re-run the script with `--branding chrome`)
+- ✅ Script is idempotent and safe for re-running on FFmpeg rolls
+
+**Related files**:
+- `cef/tools/qnx_build_ffmpeg_config.sh` (new)
+- `cef/patch/qnx/chromium/new_files/third_party/ffmpeg/chromium/config/Chromium/qnx/x64/`
+  (12 files: 4 replaced, 8 new)
+- `cef/docs/qnx/fixes-and-decisions.md` (this entry)
+- #33 (original 4-file introduction)
+- #44 (FFmpeg `_POSIX_C_SOURCE` / `_XOPEN_SOURCE` collision —
+  independent issue)
 For a fresh session, the preferred order is:
 
 1. preserve bootstrap reproducibility from `cef/patch/...`
