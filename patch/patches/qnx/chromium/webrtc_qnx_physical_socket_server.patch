@@ -1,0 +1,89 @@
+diff --git a/third_party/webrtc/rtc_base/physical_socket_server.cc b/third_party/webrtc/rtc_base/physical_socket_server.cc
+--- a/third_party/webrtc/rtc_base/physical_socket_server.cc
++++ b/third_party/webrtc/rtc_base/physical_socket_server.cc
+@@ -63,11 +63,11 @@
+ #include <ws2tcpip.h>
+ 
+ #undef SetPort
+ #endif
+ 
+-#if defined(WEBRTC_LINUX)
++#if defined(WEBRTC_LINUX) && !defined(__QNX__)
+ #include <asm-generic/socket.h>
+ #include <linux/sockios.h>
+ #include <sys/epoll.h>
+ #endif
+ 
+@@ -80,11 +80,11 @@
+ #if defined(WEBRTC_POSIX)
+ #define IP_MTU 14  // Until this is integrated from linux/in.h to netinet/in.h
+ typedef void* SockOptArg;
+ #endif  // WEBRTC_POSIX
+ 
+-#if defined(WEBRTC_POSIX) && !defined(WEBRTC_MAC)
++#if defined(WEBRTC_POSIX) && !defined(WEBRTC_MAC) && !defined(__QNX__)
+ int64_t GetSocketRecvTimestamp(int socket) {
+   struct timeval tv_ioctl;
+   int ret = ioctl(socket, SIOCGSTAMP, &tv_ioctl);
+   if (ret != 0)
+     return -1;
+@@ -334,11 +334,11 @@ int PhysicalSocket::GetOption(Option opt, int* value) {
+   int ret = ::getsockopt(s_, slevel, sopt, (SockOptArg)value, &optlen);
+   if (ret == -1) {
+     return -1;
+   }
+   if (opt == OPT_DONTFRAGMENT) {
+-#if defined(WEBRTC_LINUX) && !defined(WEBRTC_ANDROID)
++#if defined(WEBRTC_LINUX) && !defined(WEBRTC_ANDROID) && !defined(__QNX__)
+     *value = (*value != IP_PMTUDISC_DONT) ? 1 : 0;
+ #endif
+   } else if (opt == OPT_DSCP) {
+ #if defined(WEBRTC_POSIX)
+     // unshift DSCP value to get six most significant bits of IP DiffServ field
+@@ -363,11 +363,11 @@ int PhysicalSocket::SetOption(Option opt, int value) {
+   int slevel;
+   int sopt;
+   if (TranslateOption(opt, &slevel, &sopt) == -1)
+     return -1;
+   if (opt == OPT_DONTFRAGMENT) {
+-#if defined(WEBRTC_LINUX) && !defined(WEBRTC_ANDROID)
++#if defined(WEBRTC_LINUX) && !defined(WEBRTC_ANDROID) && !defined(__QNX__)
+     value = (value) ? IP_PMTUDISC_DO : IP_PMTUDISC_DONT;
+ #endif
+   } else if (opt == OPT_DSCP) {
+     // IP DiffServ  consists of DSCP 6 most significant, ECN 2 least
+     // significant.
+@@ -707,14 +707,19 @@ int PhysicalSocket::TranslateOption(Option opt, int* slevel, int* sopt) {
+       *sopt = IP_DONTFRAGMENT;
+       break;
+ #elif defined(WEBRTC_MAC) || defined(BSD)
+       RTC_LOG(LS_WARNING) << "Socket::OPT_DONTFRAGMENT not supported.";
+       return -1;
+-#elif defined(WEBRTC_POSIX)
++#elif defined(WEBRTC_POSIX) && !defined(__QNX__)
+       *slevel = IPPROTO_IP;
+       *sopt = IP_MTU_DISCOVER;
+       break;
++#elif defined(__QNX__)
++      // QNX SDP 8 has no IP_MTU_DISCOVER; pretend the option is
++      // unsupported so callers fall through gracefully.
++      RTC_LOG(LS_WARNING) << "Socket::OPT_DONTFRAGMENT not supported.";
++      return -1;
+ #endif
+     case OPT_RCVBUF:
+       *slevel = SOL_SOCKET;
+       *sopt = SO_RCVBUF;
+       break;
+@@ -789,11 +794,11 @@ int PhysicalSocket::TranslateOption(Option opt, int* slevel, int* sopt) {
+     case OPT_TCP_KEEPINTVL:
+       *slevel = IPPROTO_TCP;
+       *sopt = TCP_KEEPINTVL;
+       break;
+     case OPT_TCP_USER_TIMEOUT:
+-#if defined(WEBRTC_LINUX) || defined(WEBRTC_ANDROID)
++#if (defined(WEBRTC_LINUX) || defined(WEBRTC_ANDROID)) && !defined(__QNX__)
+       *slevel = IPPROTO_TCP;
+       *sopt = TCP_USER_TIMEOUT;
+       break;
+ #else
+       RTC_LOG(LS_WARNING) << "Socket::OPT_TCP_USER_TIMEOUT not supported.";

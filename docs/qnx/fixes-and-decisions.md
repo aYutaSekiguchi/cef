@@ -2891,6 +2891,104 @@ is generated):
   0014 (set thread name), 0015 (io-snd audio), 0016 (decrease
   thread priority), 0017-0021 (audio device plumbing).
 
+
+
+---
+
+## 54. WebRTC `physical_socket_server.cc` — Linux socket constants missing on QNX
+
+**Date**: 2026-06-05
+
+**Symptom** (after the byte_order.h fix in #52):
+```
+../../third_party/webrtc/rtc_base/physical_socket_server.cc:69:10: fatal error: 'asm-generic/socket.h' file not found
+```
+Followed (after dropping the include) by:
+```
+physical_socket_server.cc:340: 'IP_PMTUDISC_DONT' undeclared
+physical_socket_server.cc:369: 'IP_PMTUDISC_DO' / 'IP_PMTUDISC_DONT' undeclared
+physical_socket_server.cc:714: 'IP_MTU_DISCOVER' undeclared
+physical_socket_server.cc:796: 'TCP_USER_TIMEOUT' undeclared
+```
+
+**Root cause**:
+- `physical_socket_server.cc` takes the `WEBRTC_LINUX` path because
+  `is_linux` is true for QNX (`build/config/BUILDCONFIG.gn:322`).
+- The `WEBRTC_LINUX` branch in this TU references four Linux
+  kernel / glibc extensions that QNX SDP 8 sysroot does not
+  expose:
+  - `IP_PMTUDISC_DO` / `IP_PMTUDISC_DONT` (path MTU discovery; from
+    `<linux/in.h>` / `<asm-generic/socket.h>`)
+  - `IP_MTU_DISCOVER` (the older IP-level setoption, same header)
+  - `TCP_USER_TIMEOUT` (from `<linux/tcp.h>`)
+  - Plus the two socket headers themselves:
+    `<asm-generic/socket.h>` and `<linux/sockios.h>`
+- These are used inside:
+  - `OPT_DONTFRAGMENT` Get/SetOption (PMTUDISC constant)
+  - `TranslateOption(OPT_DONTFRAGMENT)` (`IP_MTU_DISCOVER`)
+  - `TranslateOption(OPT_TCP_USER_TIMEOUT)` (`TCP_USER_TIMEOUT`)
+  - `GetSocketRecvTimestamp()` (uses `SIOCGSTAMP`, also Linux-only)
+
+**Reference source**:
+- The strategy is to guard each `WEBRTC_LINUX`-gated use of
+  these constants on `&& !defined(__QNX__)`, mirroring the
+  pattern already used by `0008-changes-for-QNX-in-rtc_base.patch`
+  in qnx-ports/webrtc. The qnx-ports patch is M132-based and
+  uses a separate `WEBRTC_QNX` flag, so it cannot be applied as
+  is on M147, but the per-blocker "exclude QNX from Linux-only
+  branches" approach is the same.
+
+**Fix**:
+- New patch:
+  `cef/patch/patches/qnx/chromium/webrtc_qnx_physical_socket_server.patch`
+- Registered in `cef/patch/patch.cfg` as
+  `qnx/chromium/webrtc_qnx_physical_socket_server`
+- Changes in the patch
+  (`third_party/webrtc/rtc_base/physical_socket_server.cc`):
+  1. Guard the include block (`#if defined(WEBRTC_LINUX)`) for
+     `<asm-generic/socket.h>` / `<linux/sockios.h>` / `<sys/epoll.h>`
+     on `&& !defined(__QNX__)`.
+  2. In `PhysicalSocket::GetOption` / `PhysicalSocket::SetOption`,
+     add `!defined(__QNX__)` to the `OPT_DONTFRAGMENT` block that
+     uses `IP_PMTUDISC_*`.
+  3. In `TranslateOption`, the `OPT_DONTFRAGMENT` `WEBRTC_POSIX`
+     branch that returns `IP_MTU_DISCOVER` gets the same QNX
+     guard, and a QNX-only `elif` block is added that logs
+     "Socket::OPT_DONTFRAGMENT not supported." (matching the
+     macOS / BSD fallback), so callers fall through gracefully.
+  4. In `TranslateOption`, the `OPT_TCP_USER_TIMEOUT` block gets
+     `&& !defined(__QNX__)`, which already falls through to the
+     warning log path.
+
+**Why `GetSocketRecvTimestamp()` was left as-is**:
+- The function body is already inside
+  `#if defined(WEBRTC_POSIX) && !defined(WEBRTC_MAC)`. The follow-up
+  guard `&& !defined(__QNX__)` was added so the `SIOCGSTAMP` ioctl
+  path is not compiled on QNX. The non-Linux/BSD fallback
+  (`return -1`) is already in place.
+
+**Validation**:
+- Local rebuild of the previously failing object:
+  ```
+  autoninja obj/third_party/webrtc/rtc_base/threading/physical_socket_server.o
+  ```
+  → succeeds.
+- Clean-tree apply test in `/tmp`:
+  ```
+  patch check OK
+  patch apply OK
+  ```
+- `ninja cefsimple` resumes past the previous blocker.
+
+**Scope / non-goals**:
+- Only `physical_socket_server.cc` is patched. Other webrtc
+  callers of `<linux/sockios.h>` / `<asm-generic/socket.h>` /
+  Linux-only socket constants may exist (e.g.
+  `rtc_base/ifaddrs_android.cc:20` references `<linux/sockios.h>`
+  but is gated on `WEBRTC_ANDROID` so it is not on the QNX
+  path). Anything that surfaces is handled with the same
+  per-blocker CEF patch approach.
+
 For a fresh session, the preferred order is:
 
 1. preserve bootstrap reproducibility from `cef/patch/...`
