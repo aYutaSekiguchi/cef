@@ -2652,6 +2652,79 @@ is generated):
   remaining QNX-specific Dawn work (VulkanBackend.h, renderdoc_app.h,
   QNX Vulkan surface) is tracked outside this entry.
 
+
+
+---
+
+## 51. WebRTC `platform_thread_types.cc` — prctl unavailable on QNX
+
+**Date**: 2026-06-05
+
+**Symptom** (after the Dawn disable in #50):
+```
+../../third_party/webrtc/rtc_base/platform_thread_types.cc:15:10: fatal error: 'linux/prctl.h' file not found
+   15 | #include <linux/prctl.h>
+```
+
+**Root cause**:
+- `build/config/BUILDCONFIG.gn:322` makes `is_linux = true` for QNX.
+- `third_party/webrtc/BUILD.gn:228` then sets `WEBRTC_LINUX`, and the
+  `platform_thread_types.cc` source takes the `WEBRTC_LINUX` branch.
+- That branch includes:
+  - `<linux/prctl.h>` (Linux kernel uapi header)
+  - `<sys/prctl.h>` (glibc header)
+  - `<asm/unistd_64.h>` (for the `__NR_gettid` syscall)
+  - and calls `prctl(PR_SET_NAME, name)` and `syscall(__NR_gettid)`
+- QNX 8 SDP sysroot ships none of these. QNX has no `prctl(2)` syscall;
+  it uses POSIX `pthread_setname_np(pthread_t, const char*)` (declared
+  in `/usr/include/pthread.h:248`) instead.
+
+**Fix**:
+- New patch:
+  `cef/patch/patches/qnx/chromium/webrtc_qnx_platform_thread_names.patch`
+- Registered in `cef/patch/patch.cfg` as
+  `qnx/chromium/webrtc_qnx_platform_thread_names`
+- Changes in the patch:
+  1. Skip the Linux includes (`<linux/prctl.h>`, `<sys/prctl.h>`,
+     `<asm/unistd_64.h>`) when `__QNX__` is defined.
+  2. In `CurrentThreadId()`, route QNX to `pthread_self()`. webrtc
+     uses `PlatformThreadId` only as an opaque comparison / hash key
+     (no numeric semantics), so the pthread handle is sufficient.
+  3. In `SetCurrentThreadName()`, use
+     `pthread_setname_np(pthread_self(), name)` on QNX, equivalent to
+     the macOS / iOS path already used in the same file.
+
+**Why `pthread_self()` is safe for `CurrentThreadId()` on QNX**:
+- The value is used in `rtc::PlatformThreadId` for logging,
+  `std::unordered_map<PlatformThreadId, ...>` keys, and equality
+  comparisons via `PlatformThreadId` operators. None of these require
+  a kernel TID semantics.
+- QNX does not export `gettid()` from `<unistd.h>` and has no
+  equivalent Linux syscall in `<sys/prctl.h>`. Using `pthread_self()`
+  matches the "default implementation for nacl and solaris" path
+  that already exists in the same switch.
+
+**Validation**:
+- Local build resumed past the previous blocker:
+  ```
+  ninja cefsimple
+  ...
+  ../../third_party/webrtc/rtc_base/byte_order.h:88:10: fatal error: 'endian.h' file not found
+  ```
+  → the build no longer stops on `platform_thread_types.cc`; it now
+  reaches the next blocker, which is a separate WebRTC endian issue
+  (tracked separately).
+- `clean-tree apply` test in `/tmp`:
+  ```
+  patch check OK
+  patch apply OK
+  ```
+
+**Scope / non-goals**:
+- Only `platform_thread_types.cc` is patched. The `linux/prctl.h`
+  pattern may repeat in other Chromium submodules that route through
+  `is_linux` on QNX; those are tracked separately as they surface.
+
 For a fresh session, the preferred order is:
 
 1. preserve bootstrap reproducibility from `cef/patch/...`

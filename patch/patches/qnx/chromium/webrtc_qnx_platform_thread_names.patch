@@ -1,0 +1,54 @@
+diff --git a/third_party/webrtc/rtc_base/platform_thread_types.cc b/third_party/webrtc/rtc_base/platform_thread_types.cc
+--- a/third_party/webrtc/rtc_base/platform_thread_types.cc
++++ b/third_party/webrtc/rtc_base/platform_thread_types.cc
+@@ -9,11 +9,11 @@
+  */
+ 
+ #include "rtc_base/platform_thread_types.h"
+ 
+ // IWYU pragma: begin_keep
+-#if defined(WEBRTC_LINUX)
++#if defined(WEBRTC_LINUX) && !defined(__QNX__)
+ #include <linux/prctl.h>
+ #include <sys/prctl.h>
+ #include <sys/syscall.h>
+ 
+ #if !defined(WEBRTC_ARCH_ARM) && !defined(WEBRTC_ARCH_ARM64)
+@@ -48,12 +48,18 @@ PlatformThreadId CurrentThreadId() {
+   return pthread_mach_thread_np(pthread_self());
+ #elif defined(WEBRTC_ANDROID)
+   return gettid();
+ #elif defined(WEBRTC_FUCHSIA)
+   return zx_thread_self();
+-#elif defined(WEBRTC_LINUX)
++#elif defined(WEBRTC_LINUX) && !defined(__QNX__)
+   return syscall(__NR_gettid);
++#elif defined(__QNX__)
++  // QNX has no Linux-style gettid(2) syscall exposed via <sys/prctl.h> /
++  // <asm/unistd_64.h>. webrtc only uses PlatformThreadId as an opaque
++  // comparison / hash key, so pthread_self() is the closest portable
++  // substitute on QNX.
++  return reinterpret_cast<PlatformThreadId>(pthread_self());
+ #elif defined(__EMSCRIPTEN__)
+   return static_cast<PlatformThreadId>(pthread_self());
+ #else
+   // Default implementation for nacl and solaris.
+   return reinterpret_cast<PlatformThreadId>(pthread_self());
+@@ -116,12 +122,16 @@ void SetCurrentThreadName(const char* name) {
+     ::RaiseException(0x406D1388, 0, sizeof(threadname_info) / sizeof(ULONG_PTR),
+                      reinterpret_cast<ULONG_PTR*>(&threadname_info));
+   } __except (EXCEPTION_EXECUTE_HANDLER) {  // NOLINT
+   }
+ #pragma warning(pop)
+-#elif defined(WEBRTC_LINUX) || defined(WEBRTC_ANDROID)
++#elif (defined(WEBRTC_LINUX) && !defined(__QNX__)) || defined(WEBRTC_ANDROID)
+   prctl(PR_SET_NAME, reinterpret_cast<unsigned long>(name));  // NOLINT
++#elif defined(__QNX__)
++  // QNX libc exposes pthread_setname_np(pthread_t, const char*) in
++  // <pthread.h>, equivalent to the macOS / iOS path used below.
++  pthread_setname_np(pthread_self(), name);
+ #elif defined(WEBRTC_MAC) || defined(WEBRTC_IOS)
+   pthread_setname_np(name);
+ #elif defined(WEBRTC_FUCHSIA)
+   zx_status_t status = zx_object_set_property(zx_thread_self(), ZX_PROP_NAME,
+                                               name, strlen(name));
