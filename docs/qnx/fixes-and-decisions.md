@@ -2505,6 +2505,59 @@ is generated):
   failures (if any) should be real runtime/renderer issues rather than harness
   path resolution.
 
+---
+
+## 49. ANGLE on QNX — status and suspension
+
+**Date**: 2026-06-05
+
+**What we achieved**:
+- Build pipeline: `angle_system_info_test`, `angle_unittests`,
+  `angle_end2end_tests` all produce QNX ELF binaries from `out/qnx_release`.
+- QNX test runner: added `--angle` module to `cef/tools/qnx_run_test.sh`
+  (entries #47, #48) so all three can be dispatched through the same QEMU
+  session workflow as base/v8/swiftshader.
+- Runtime harness fix: `GetExecutablePath()` / `GetExecutableDirectory()`
+  now resolve correctly on QNX via `CHROME_EXE_PATH` or `/proc/self/exefile`
+  (#48).
+
+**Broad-run results** (`./cef/tools/qnx_run_test.sh --angle --timeout 7200 --kill-existing`):
+
+| Test | Exit | OK | FAILED | SKIPPED |
+|---|---|---|---|---|
+| `angle_system_info_test` | 0 | 0 | 3 | 0 |
+| `angle_unittests` | 0 | **5989** | **0** | 9 |
+| `angle_end2end_tests` | 1 | 18 | 37 | 3 |
+
+**Why `angle_end2end_tests` fails**:
+- All 37 failures are Vulkan-related.
+- The QEMU test environment does not expose a GPU device to the guest — no
+  `-device virtio-gpu-*`, no Vulkan ICD, no `libvulkan.so` in the guest IFS.
+- ANGLE's Vulkan display path therefore cannot provide `VK_KHR_surface` or
+  `VK_EXT_headless_surface`, and every test that requests a Vulkan EGL config
+  aborts with:
+  ```
+  Extension not supported: VK_KHR_surface
+  Extension not supported: VK_EXT_headless_surface
+  ```
+- This is an infrastructure limitation, not a QNX port bug. Resolving it would
+  require either:
+  - QEMU GPU device passthrough / virtio-gpu-vulkan, or
+  - running the ANGLE tests on physical QNX hardware with a Vulkan-capable GPU,
+  - or dropping the Vulkan display path in favor of native EGL/GLES2 on QNX
+    (which itself requires a non-trivial Ozone + ANGLE re-architecture).
+
+**Suspension decision**:
+- `angle_unittests` achieved **5989 PASS / 0 FAIL** on QNX — the core ANGLE
+  port is functionally sound at the unit-test level.
+- Further `angle_end2end_tests` progress is blocked on GPU availability in the
+  test environment, not on additional QNX source deltas.
+- ANGLE work is **suspended** at this point. The durable changes are captured
+  in the CEF patch system and the test runner module, ready to be resumed when:
+  - a QNX device with Vulkan support becomes available for testing, or
+  - the team decides to pursue native EGL/GLES2 as the primary QNX graphics
+    path instead of Vulkan/headless.
+
 For a fresh session, the preferred order is:
 
 1. preserve bootstrap reproducibility from `cef/patch/...`
