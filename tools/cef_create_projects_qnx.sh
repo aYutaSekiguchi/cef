@@ -309,6 +309,24 @@ enable_remoting = false
 # Dawn also sidesteps Dawn's Linux-only assumptions in renderdoc_app.h
 # and ExternalImageDescriptorFD. See build-error-index.md and the related structured note.
 use_dawn = false
+# CEF 147 rebase regression: use_dawn = false alone no longer removes
+# the Dawn vulkan backend sources. dawn_enable_vulkan defaults to
+# is_linux in dawn/scripts/dawn_features.gni, and QNX is routed through
+# is_linux by GN, so the vulkan external-memory translation units
+# (MemoryServiceImplementation{DmaBuf,OpaqueFD}.cpp, which reference
+# ExternalImageDescriptor{DmaBuf,OpaqueFD} types that are not in the
+# CEF 147 Dawn tree) and the RenderDoc platform macros
+# (renderdoc_app.h:43 "Unknown platform") end up compiled. Disable
+# dawn_enable_vulkan explicitly here; use_dawn = false already keeps
+# Chrome from linking libdawn_native, and dawn_enable_vulkan has no
+# external consumer (verified by grep across the Chromium tree).
+# See docs/qnx/history/build-errors/compile/build-graph/dawn-disabled-for-headless-qnx.md
+# (2026-06-07 rebase note).
+dawn_enable_vulkan = false
+# dawn_use_swiftshader defaults to true on QNX (!is_android && !is_ios),
+# but Dawn's BUILD.gn asserts dawn_use_swiftshader => dawn_enable_vulkan,
+# so we have to clear it explicitly when dawn_enable_vulkan = false.
+dawn_use_swiftshader = false
 
 # CEF specific
 cef_target_arch = "x64"
