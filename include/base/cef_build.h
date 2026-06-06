@@ -110,6 +110,10 @@
 // For backwards compatibility.
 #define OS_MACOSX 1
 #endif  // defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE
+#elif defined(__QNXNTO__)
+// QNX SDP 8 toolchain defines both __linux__ and __QNXNTO__ for
+// compatibility. Check QNX first so OS_QNX is defined instead of OS_LINUX.
+#define OS_QNX 1
 #elif defined(__linux__)
 #if !defined(OS_CHROMEOS)
 // Do not define OS_LINUX on Chrome OS build.
@@ -134,8 +138,6 @@
 #define OS_OPENBSD 1
 #elif defined(__sun)
 #define OS_SOLARIS 1
-#elif defined(__QNXNTO__)
-#define OS_QNX 1
 #elif defined(_AIX)
 #define OS_AIX 1
 #elif defined(__asmjs__) || defined(__wasm__)

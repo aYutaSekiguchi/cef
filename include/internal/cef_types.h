@@ -42,13 +42,16 @@
 #include "include/internal/cef_types_content_settings.h"
 #include "include/internal/cef_types_geometry.h"
 
-// Bring in platform-specific definitions.
+// Bring in platform-specific definitions first (cef_types_wrappers.h
+// references cef_window_info_t, cef_accelerated_paint_info_t, etc).
 #if defined(OS_WIN)
 #include "include/internal/cef_types_win.h"
 #elif defined(OS_MAC)
 #include "include/internal/cef_types_mac.h"
-#elif defined(OS_LINUX) || defined(OS_QNX)
+#elif defined(OS_LINUX)
 #include "include/internal/cef_types_linux.h"
+#elif defined(OS_QNX)
+#include "include/internal/cef_types_qnx.h"
 #endif
 
 // 32-bit ARGB color value, not premultiplied. The color components are always

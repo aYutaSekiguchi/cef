@@ -1,22 +1,63 @@
+# QNX: Add CefWindowInfo, cef_main_args_t, etc. support to CEF headers.
+# QNX SDP 8 toolchain defines both __linux__ and __QNXNTO__, so the
+# QNX check in cef_build.h must come first.
+#
+# cef_types_qnx.h is a new header that mirrors cef_types_linux.h with
+# an OS_QNX guard. cef_qnx.h (also new) is a one-line wrapper that
+# pulls in cef_linux.h's C++ wrappers (cef_linux.h itself is unchanged).
+#
+# cef_qnx.h and cef_types_qnx.h are delivered as new files via
+# patch/qnx/chromium/new_files/. This patch modifies only the three
+# existing headers below.
+--- cef/include/base/cef_build.h
++++ cef/include/base/cef_build.h
+@@ -110,6 +110,10 @@
+ // For backwards compatibility.
+ #define OS_MACOSX 1
+ #endif  // defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE
++#elif defined(__QNXNTO__)
++// QNX SDP 8 toolchain defines both __linux__ and __QNXNTO__ for
++// compatibility. Check QNX first so OS_QNX is defined instead of OS_LINUX.
++#define OS_QNX 1
+ #elif defined(__linux__)
+ #if !defined(OS_CHROMEOS)
+ // Do not define OS_LINUX on Chrome OS build.
+@@ -134,8 +138,6 @@
+ #define OS_OPENBSD 1
+ #elif defined(__sun)
+ #define OS_SOLARIS 1
+-#elif defined(__QNXNTO__)
+-#define OS_QNX 1
+ #elif defined(_AIX)
+ #define OS_AIX 1
+ #elif defined(__asmjs__) || defined(__wasm__)
 --- cef/include/cef_base.h
 +++ cef/include/cef_base.h
-@@ -46,7 +46,7 @@
+@@ -46,8 +46,10 @@
  #include "include/internal/cef_win.h"
  #elif defined(OS_MAC)
  #include "include/internal/cef_mac.h"
--#elif defined(OS_LINUX)
-+#elif defined(OS_LINUX) || defined(OS_QNX)
+-#elif defined(OS_LINUX) || defined(OS_QNX)
++#elif defined(OS_LINUX)
  #include "include/internal/cef_linux.h"
++#elif defined(OS_QNX)
++#include "include/internal/cef_qnx.h"
  #endif
  
+ ///
 --- cef/include/internal/cef_types.h
 +++ cef/include/internal/cef_types.h
-@@ -47,7 +47,7 @@
+@@ -44,7 +44,8 @@
+ #include "include/internal/cef_types_content_settings.h"
+ #include "include/internal/cef_types_geometry.h"
+ 
+-// Bring in platform-specific definitions.
++// Bring in platform-specific definitions first (cef_types_wrappers.h
++// references cef_window_info_t, cef_accelerated_paint_info_t, etc).
+ #if defined(OS_WIN)
  #include "include/internal/cef_types_win.h"
  #elif defined(OS_MAC)
  #include "include/internal/cef_types_mac.h"
--#elif defined(OS_LINUX)
-+#elif defined(OS_LINUX) || defined(OS_QNX)
- #include "include/internal/cef_types_linux.h"
++#elif defined(OS_QNX)
++#include "include/internal/cef_types_qnx.h"
  #endif
- 
