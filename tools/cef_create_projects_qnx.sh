@@ -220,6 +220,14 @@ UNREGISTERED_CHROMIUM_PATCHES=(
 	# fieldtrial config generation works in QNX builds. This is needed
 	# because the QNX toolchain passes --platform=qnx to the script via GN.
 	"fieldtrial_to_struct_qnx"
+	# enable_on_device_model_qnx: introduces the enable_on_device_model GN
+	# variable (features.gni) that gates all on-device ML model service
+	# integration in content/ and chrome/browser/ui/. Defaults to
+	# use_on_device_model_service && use_dawn, so on QNX (where
+	# use_dawn=false) it automatically evaluates to false, removing
+	# Dawn's native/Vulkan sources and the renderdoc_app.h "Unknown platform"
+	# error from the cefsimple build. See docs/qnx/fixes-and-decisions.md #50.
+	"enable_on_device_model_qnx"
 )
 
 for patch_name in "${UNREGISTERED_CHROMIUM_PATCHES[@]}"; do
