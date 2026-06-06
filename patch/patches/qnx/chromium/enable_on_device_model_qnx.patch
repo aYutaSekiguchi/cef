@@ -3,7 +3,14 @@
 # use_on_device_model_service=false make this default to false, automatically
 # removing Dawn as an unwanted transitive dependency.
 #
+# Note: use_dawn is checked alongside enable_on_device_model in each BUILD.gn
+# (not in features.gni declare_args) because GN declare_args evaluation order
+# does not guarantee that use_dawn is available in all import contexts.
+#
 # See docs/qnx/fixes-and-decisions.md #50 (Dawn deferred on QNX).
+
+diff --git chrome/browser/ui/BUILD.gn chrome/browser/ui/BUILD.gn
+index 00b9254990f24..680cd6f3f1e93 100644
 --- chrome/browser/ui/BUILD.gn
 +++ chrome/browser/ui/BUILD.gn
 @@ -4,6 +4,7 @@
@@ -14,7 +21,15 @@
  import("//build/config/features.gni")
  import("//build/config/ozone.gni")
  import("//build/config/ui.gni")
-@@ -1729,8 +1730,6 @@ static_library("ui") {
+@@ -25,6 +26,7 @@ import("//rlz/buildflags/buildflags.gni")
+ import("//services/screen_ai/buildflags/features.gni")
+ import("//third_party/protobuf/proto_library.gni")
+ import("//tools/metrics/generate_allowlist_from_histograms_file.gni")
++import("//ui/gl/features.gni")
+ import("//ui/base/ui_features.gni")
+ import("//ui/views/features.gni")
+ 
+@@ -1729,8 +1731,6 @@ static_library("ui") {
        "//services/device/public/cpp/hid",
        "//services/device/public/mojom",
        "//services/metrics/public/cpp:metrics_cpp",
@@ -23,23 +38,23 @@
        "//services/preferences/public/mojom",
        "//services/preferences/tracked",
        "//skia",
-@@ -1774,8 +1773,10 @@ static_library("ui") {
+@@ -1774,8 +1774,10 @@ static_library("ui") {
        "//chrome/browser/ui/views/side_panel",
        "//chrome/browser/ui/waap:manager",
        "//chrome/browser/ui/webui/feedback/report_unsafe_site",
 -      "//chrome/browser/ui/webui/on_device_internals",
      ]
-+    if (enable_on_device_model) {
++    if (enable_on_device_model && use_dawn) {
 +      public_deps += [ "//chrome/browser/ui/webui/on_device_internals" ]
 +    }
      if (use_aura) {
        public_deps += [ "//chrome/browser/ui:overscroll_pref_manager" ]
      }
-@@ -1784,6 +1785,13 @@ static_library("ui") {
+@@ -1784,6 +1786,13 @@ static_library("ui") {
        deps += [ "//chrome/browser/apps/app_service" ]
      }
  
-+    if (enable_on_device_model) {
++    if (enable_on_device_model && use_dawn) {
 +      deps += [
 +        "//services/on_device_model/public/cpp",
 +        "//services/on_device_model/public/mojom",
@@ -49,17 +64,21 @@
      # Any circular includes must depend on the target "//chrome/browser:browser_public_dependencies".
      # Non-android circular dependencies
      allow_circular_includes_from += [
+diff --git chrome/browser/ui/webui/on_device_internals/BUILD.gn chrome/browser/ui/webui/on_device_internals/BUILD.gn
+index 6e70e1568aeac..c5c3a0dd3d92d 100644
 --- chrome/browser/ui/webui/on_device_internals/BUILD.gn
 +++ chrome/browser/ui/webui/on_device_internals/BUILD.gn
-@@ -2,6 +2,7 @@
+@@ -2,7 +2,9 @@
  # Use of this source code is governed by a BSD-style license that can be
  # found in the LICENSE file.
  
 +import("//content/utility/on_device_model/features.gni")
  import("//mojo/public/tools/bindings/mojom.gni")
++import("//ui/gl/features.gni")
  
  assert(!is_android)
-@@ -37,11 +38,13 @@ source_set("on_device_internals") {
+ 
+@@ -37,11 +39,13 @@ source_set("on_device_internals") {
      "//chrome/common",
      "//components/update_client",
      "//content/public/browser",
@@ -68,12 +87,14 @@
      "//ui/base",
      "//ui/webui",
    ]
-+  if (enable_on_device_model) {
++  if (enable_on_device_model && use_dawn) {
 +    deps += [ "//services/on_device_model/ml:ml_no_internal" ]
 +  }
    if (is_chromeos) {
      deps += [ "//chromeos/ash/components/mojo_service_manager" ]
    }
+diff --git content/utility/BUILD.gn content/utility/BUILD.gn
+index cb8edec486203..b89c0138ae595 100644
 --- content/utility/BUILD.gn
 +++ content/utility/BUILD.gn
 @@ -4,6 +4,7 @@
@@ -84,7 +105,15 @@
  import("//device/vr/buildflags/buildflags.gni")
  import("//media/gpu/args.gni")
  import("//media/media_options.gni")
-@@ -50,7 +51,6 @@ source_set("utility") {
+@@ -11,6 +12,7 @@ import("//mojo/public/tools/bindings/mojom.gni")
+ import("//printing/buildflags/buildflags.gni")
+ import("//services/accessibility/buildflags.gni")
+ import("//services/screen_ai/buildflags/features.gni")
++import("//ui/gl/features.gni")
+ 
+ source_set("utility") {
+   # Only the public target should depend on this. All other targets (even
+@@ -50,7 +52,6 @@ source_set("utility") {
      "//content/public/common:common_sources",
      "//content/public/common:content_descriptor_keys",
      "//content/services/auction_worklet",
@@ -92,7 +121,7 @@
      "//device/vr/buildflags",
      "//media:media_buildflags",
      "//mojo/public/cpp/bindings",
-@@ -62,9 +62,6 @@ source_set("utility") {
+@@ -62,9 +63,6 @@ source_set("utility") {
      "//services/data_decoder:lib",
      "//services/data_decoder/public/cpp",
      "//services/network:network_service",
@@ -102,11 +131,11 @@
      "//services/screen_ai/buildflags",
      "//services/service_manager/public/cpp",
      "//services/service_manager/public/mojom",
-@@ -141,6 +138,15 @@ source_set("utility") {
+@@ -141,6 +139,15 @@ source_set("utility") {
      deps += [ "//components/on_device_translation/service:on_device_translation_service" ]
    }
  
-+  if (enable_on_device_model) {
++  if (enable_on_device_model && use_dawn) {
 +    deps += [
 +      "//content/utility/on_device_model:on_device_model_sandbox_init",
 +      "//services/on_device_model:on_device_model_service",
@@ -118,42 +147,26 @@
    if (enable_vr && !is_android) {
      deps += [
        "//content/services/isolated_xr_device:lib",
+diff --git content/utility/on_device_model/BUILD.gn content/utility/on_device_model/BUILD.gn
+index 717631385e4d3..3f62150c3554a 100644
 --- content/utility/on_device_model/BUILD.gn
 +++ content/utility/on_device_model/BUILD.gn
-@@ -2,7 +2,7 @@
+@@ -2,7 +2,8 @@
  # Use of this source code is governed by a BSD-style license that can be
  # found in the LICENSE file.
  
 -import("//services/on_device_model/on_device_model.gni")
 +import("//content/utility/on_device_model/features.gni")
++import("//ui/gl/features.gni")
  
  source_set("on_device_model_sandbox_init") {
    sources = [
-@@ -25,7 +25,7 @@ source_set("on_device_model_sandbox_init") {
+@@ -25,7 +26,7 @@ source_set("on_device_model_sandbox_init") {
        "//sandbox/policy",
      ]
    }
 -  if (!is_fuchsia) {
-+  if (!is_fuchsia && enable_on_device_model) {
++  if (!is_fuchsia && enable_on_device_model && use_dawn) {
      deps += [
        "//third_party/dawn/include/dawn:cpp_headers",
        "//third_party/dawn/src/dawn:proc",
---- /dev/null
-+++ content/utility/on_device_model/features.gni
-@@ -0,0 +1,15 @@
-+# Copyright 2026 The Chromium Authors. All rights reserved.
-+# Use of this source code is governed by a BSD-style license that can be
-+# found in the LICENSE file.
-+
-+import("//services/on_device_model/on_device_model.gni")
-+import("//ui/gl/features.gni")
-+
-+declare_args() {
-+  # Master switch for the on-device model service integration in content/.
-+  # Defaults to true only when both the platform supports on-device models
-+  # AND Dawn (the GPU backend this feature depends on) is enabled.
-+  # - use_on_device_model_service: platform-level availability
-+  # - use_dawn: GPU backend required by the ML service
-+  # Either being false disables this feature by default.
-+  enable_on_device_model = use_on_device_model_service && use_dawn
-+}

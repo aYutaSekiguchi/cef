@@ -53,7 +53,7 @@ Introduce a new GN variable `enable_on_device_model` that gates all on_device_mo
 
 ## Applied change
 
-1. **Created `content/utility/on_device_model/features.gni`** — defines `enable_on_device_model = use_on_device_model_service && use_dawn`
+1. **Created `content/utility/on_device_model/features.gni`** — defines `enable_on_device_model = use_on_device_model_service`. (Note: `use_dawn` is checked separately in BUILD.gn files, not here, because GN declare_args evaluation order does not guarantee `use_dawn` is available in all import contexts.)
 2. **Modified `content/utility/on_device_model/BUILD.gn`** — switched import to features.gni; changed `!is_fuchsia` to `!is_fuchsia && enable_on_device_model`
 3. **Modified `content/utility/BUILD.gn`** — moved 4 unconditional on_device_model deps into `if (enable_on_device_model)` block
 4. **Modified `chrome/browser/ui/BUILD.gn`** — moved `on_device_model/public/cpp`, `on_device_model/public/mojom`, and `on_device_internals` public_dep into `if (enable_on_device_model)` blocks
