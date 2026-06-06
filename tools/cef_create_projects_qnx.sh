@@ -228,6 +228,10 @@ UNREGISTERED_CHROMIUM_PATCHES=(
 	# Dawn's native/Vulkan sources and the renderdoc_app.h "Unknown platform"
 	# error from the cefsimple build. See docs/qnx/fixes-and-decisions.md #50.
 	"enable_on_device_model_qnx"
+	# sentencepiece_qnx_endian: sentencepiece includes <endian.h> which
+	# QNX does not provide. Synthesize BYTE_ORDER/__BIG_ENDIAN from QNX's
+	# __LITTLEENDIAN__ predefines.
+	"sentencepiece_qnx_endian"
 )
 
 for patch_name in "${UNREGISTERED_CHROMIUM_PATCHES[@]}"; do

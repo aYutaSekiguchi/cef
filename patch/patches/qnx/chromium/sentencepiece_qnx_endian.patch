@@ -1,0 +1,30 @@
+# QNX SDP 8 does not ship a glibc-style <endian.h>. QNX predefines
+# __LITTLEENDIAN__ / __BIGENDIAN__ in the compiler headers, so synthesize
+# the legacy macros sentencepiece expects (BYTE_ORDER, __BIG_ENDIAN) from them.
+
+diff --git third_party/sentencepiece/src/src/common.h third_party/sentencepiece/src/src/common.h
+index 4cdc28d127ff7..cfb7e238f2901 100644
+--- third_party/sentencepiece/src/src/common.h
++++ third_party/sentencepiece/src/src/common.h
+@@ -65,7 +65,20 @@ char (&ArraySizeHelper(const T (&array)[N]))[N];
+ #if defined(_FREEBSD)
+ #include <sys/endian.h>
+ #endif
+-#if !defined(__APPLE__) && !defined(_WIN32) && !defined(_FREEBSD)
++#if defined(__QNXNTO__)
++// QNX SDP 8 does not ship a glibc-style <endian.h>. QNX predefines
++// __LITTLEENDIAN__ / __BIGENDIAN__ in the compiler headers, so synthesize
++// the legacy macros sentencepiece expects from them.
++#ifndef BYTE_ORDER
++#define __LITTLE_ENDIAN 1234
++#define __BIG_ENDIAN    4321
++#if defined(__LITTLEENDIAN__)
++#define BYTE_ORDER    __LITTLE_ENDIAN
++#elif defined(__BIGENDIAN__)
++#define BYTE_ORDER    __BIG_ENDIAN
++#endif
++#endif
++#elif !defined(__APPLE__) && !defined(_WIN32) && !defined(_FREEBSD)
+ #include <endian.h>
+ #if BYTE_ORDER == __BIG_ENDIAN
+ #define IS_BIG_ENDIAN
