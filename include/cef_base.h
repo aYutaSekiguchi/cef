@@ -46,7 +46,7 @@
 #include "include/internal/cef_win.h"
 #elif defined(OS_MAC)
 #include "include/internal/cef_mac.h"
-#elif defined(OS_LINUX)
+#elif defined(OS_LINUX) || defined(OS_QNX)
 #include "include/internal/cef_linux.h"
 #endif
 
