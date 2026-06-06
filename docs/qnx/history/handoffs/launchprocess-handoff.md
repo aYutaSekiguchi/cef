@@ -131,7 +131,7 @@ a137679  QNX: Implement spawn-based base::LaunchProcess
 ## References
 
 - `cef/docs/qnx/build-and-toolchain.md` — current toolchain and design decisions
-- `cef/docs/qnx/fixes-and-decisions.md` — current fix log
+- `cef/docs/qnx/build-error-index.md` — current fix log
 - `cef/docs/qnx/status.md` — current validation status and follow-up checklist
 - `cef/docs/qnx/history/research/` — investigative materials
 - `base/process/launch_qnx.cc` — Implementation code

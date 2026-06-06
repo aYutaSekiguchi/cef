@@ -1,0 +1,74 @@
+# QNX Build Error Index
+
+This document is the entry point for looking up prior QNX build and test failures.
+
+Do not keep long fix narratives here. The source of truth for individual incidents is the structured catalog under `docs/qnx/history/build-errors/`.
+
+## What to read first
+
+1. `status.md` for the current validated baseline and accepted exclusions.
+2. `build-and-toolchain.md` for bootstrap and toolchain behavior.
+3. `testing.md` for QEMU and test-runner usage.
+4. `history/build-errors/` for concrete prior incidents.
+
+## How to search
+
+Start from the current failure's pipeline stage:
+
+- `bootstrap`
+- `gn`
+- `compile`
+- `link`
+- `package`
+- `test`
+
+Then narrow by cause class:
+
+- `build-graph`
+- `feature-guard`
+- `platform-api-gap`
+- `runtime-assumption`
+- `test-environment`
+- `toolchain-config`
+- `type-trait-template`
+
+Search with the smallest stable signature you have:
+
+- exact error code
+- header name
+- symbol name
+- syscall or API name
+- target or subsystem name
+
+Examples:
+
+```bash
+rg -n "posix_spawnp|EBADF|launch_qnx" docs/qnx/history/build-errors
+rg -n "F_GETFL|TakeError::kUnexpectedReadOnlyFd" docs/qnx/history/build-errors
+rg -n "fieldtrial_to_struct|--platform=qnx" docs/qnx/history/build-errors
+rg -n "open_memstream|libmemstream|makedev" docs/qnx/history/build-errors/link
+rg -n "linux/prctl.h|pthread_setname_np|platform_thread_types" docs/qnx/history/build-errors
+```
+
+If the immediate search misses:
+
+1. search `docs/qnx/history/` for older handoffs or research
+2. search `docs/qnx/history/archive/` for older notes
+3. only then broaden to generic source search in the tree
+
+## Directory map
+
+- `docs/qnx/history/build-errors/` — structured incident notes; this is the main lookup surface
+- `docs/qnx/history/handoffs/` — larger implementation-area handoff notes
+- `docs/qnx/history/research/` — focused investigations and platform analysis
+- `docs/qnx/history/archive/` — older notes preserved for reference when newer structured notes are not enough
+
+## Recording new incidents
+
+When a blocker is understood well enough to reuse later:
+
+1. classify it by `stage/category`
+2. create a note under `docs/qnx/history/build-errors/<stage>/<category>/`
+3. use `.agents/skills/build-breakage-loop/scripts/scaffold_error_note.py` if you want a normalized template
+
+Do not recreate a long running diary file. Add or update the specific structured note instead.

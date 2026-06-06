@@ -92,7 +92,7 @@ def build_parser() -> argparse.ArgumentParser:
         prog="qnx-tests",
         description=(
             "Run CEF/Chromium tests on QNX under QEMU, optionally one module "
-            "at a time.  See docs/qnx/fixes-and-decisions.md section 42."
+            "at a time.  See docs/qnx/build-error-index.md and the structured notes for background."
         ),
     )
 

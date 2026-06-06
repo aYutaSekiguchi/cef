@@ -1,0 +1,4 @@
+interface:
+  display_name: "Build Breakage Loop"
+  short_description: "Iterate on build breakages and reusable fixes"
+  default_prompt: "Use $build-breakage-loop to investigate and resolve repeated build failures in this tree."

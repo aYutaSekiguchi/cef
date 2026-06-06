@@ -20,6 +20,7 @@ Start here when the top-level docs are not enough:
 | `handoffs/` | targeted handoff notes for larger implementation areas |
 | `analysis/` | broader planning, tradeoff, and problem-analysis documents |
 | `research/` | focused platform/API investigations |
+| `build-errors/` | structured, retrieval-oriented notes keyed by stage and cause class |
 | `archive/` | older standalone notes preserved as reference, including `phase1/` and `reviews/` subdirectories |
 
 ## How to use this directory

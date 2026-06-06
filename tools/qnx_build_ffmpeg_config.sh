@@ -12,7 +12,7 @@
 # codec,parser}_list.c from a per-platform config directory. For QNX, those
 # 12 files were originally copied byte-for-byte from
 # third_party/ffmpeg/chromium/config/Chromium/linux/<arch>/ (see
-# docs/qnx/fixes-and-decisions.md entry #33), but that shortcut leaves
+# docs/qnx/build-error-index.md entry #33), but that shortcut leaves
 # stale data in config.h (OS_NAME=linux, FFMPEG_CONFIGURATION string,
 # FFMPEG_DATADIR paths) and libavutil/ffversion.h (older FFmpeg commit).
 # This script drives FFmpeg's `configure` natively for QNX so the 12 files
@@ -39,7 +39,7 @@
 # ffmpeg_branding on QNX — the file already supports both Chromium and
 # Chrome branding for the QNX target.
 #
-# See docs/qnx/fixes-and-decisions.md entry #45 for the full rationale,
+# See docs/qnx/build-error-index.md entry #45 for the full rationale,
 # including the cross-check against the existing Chromium/linux/<arch>/
 # configs.
 

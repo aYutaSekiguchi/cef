@@ -109,7 +109,7 @@ class TestModule:
     status_file_relpath: str = ""
     #: If True, ``per_test`` mode passes ``--gtest_filter=<single>`` so
     #: only one test runs per binary invocation.  This is the only way
-    #: to drive ``v8_unittests`` (see fixes-and-decisions.md section 26).
+    #: to drive ``v8_unittests`` (see build-error-index.md and the structured notes).
     one_test_per_process: bool = False
 
     def __post_init__(self) -> None:

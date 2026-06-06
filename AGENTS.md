@@ -18,7 +18,7 @@ This repository contains a QNX port of Chromium/CEF work centered on compatibili
 - use `cef/tools/cef_create_projects_qnx.sh` to regenerate a working QNX tree
 - use `out/qnx_release/ninja_qnx.sh` for builds after bootstrap
 - use `cef/tools/qnx_setup_env.sh` and `cef/tools/qnx_run_test.sh` for QEMU validation
-- check `cef/docs/qnx/fixes-and-decisions.md` and `cef/docs/qnx/history/` before inventing a new fix
+- check `cef/docs/qnx/build-error-index.md` and `cef/docs/qnx/history/` before inventing a new fix
 
 ## Do not
 
@@ -61,5 +61,5 @@ See `cef/docs/qnx/status.md` for the canonical exclusion list and rationale.
 - `cef/docs/qnx/status.md`
 - `cef/docs/qnx/build-and-toolchain.md`
 - `cef/docs/qnx/testing.md`
-- `cef/docs/qnx/fixes-and-decisions.md`
+- `cef/docs/qnx/build-error-index.md`
 - `cef/docs/qnx/history/`

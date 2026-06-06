@@ -7,7 +7,7 @@ This directory contains the working documentation for the Chromium/CEF QNX port.
 1. `status.md` — current validated state and what to run on another machine
 2. `build-and-toolchain.md` — bootstrap flow, toolchain model, GN args, constraints
 3. `testing.md` — QEMU/NFS setup and test execution workflow
-4. `fixes-and-decisions.md` — detailed fix log and rationale
+4. `build-error-index.md` — how to search the structured build-error catalog
 
 ## Main documents
 
@@ -16,7 +16,7 @@ This directory contains the working documentation for the Chromium/CEF QNX port.
 | `status.md` | Current port status, validated baseline, and cross-machine checklist |
 | `build-and-toolchain.md` | Build bootstrap, toolchain design, libc++ strategy, and constraints |
 | `testing.md` | QEMU runner usage, manual boot flow, and result inspection |
-| `fixes-and-decisions.md` | Detailed fix history and decision log |
+| `build-error-index.md` | Search entry point for the structured build-error catalog |
 | `history/` | Older investigations, status snapshots, reviews, and handoff material |
 
 ## Current baseline

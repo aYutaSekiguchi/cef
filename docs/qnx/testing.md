@@ -150,4 +150,4 @@ A practical validation loop is:
 2. build with `./out/qnx_release/ninja_qnx.sh <target>`
 3. run focused QEMU tests for the changed area
 4. rerun broad `base_unittests`
-5. check `fixes-and-decisions.md` and `history/` for regressions or prior art
+5. check `build-error-index.md` and `history/` for regressions or prior art

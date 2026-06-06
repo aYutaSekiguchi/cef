@@ -88,7 +88,7 @@ Use this checklist when validating on another machine:
 5. Build `base_unittests` using `out/qnx_release/ninja_qnx.sh`.
 6. Run `sudo ./cef/tools/qnx_setup_env.sh`.
 7. Run `./cef/tools/qnx_run_test.sh --timeout 7200 --kill-existing "*"`.
-8. If any failures appear, check `fixes-and-decisions.md` first, then `history/` for deeper investigations.
+8. If any failures appear, check `build-error-index.md` first, then `history/` for deeper investigations.
 
 ## Patch ownership model
 

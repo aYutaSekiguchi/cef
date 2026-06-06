@@ -2,7 +2,7 @@
 # Convenience dispatcher for the QNX QEMU test runner.
 #
 # Behaviour is preserved for every command documented in
-# docs/qnx/testing.md and docs/qnx/fixes-and-decisions.md.  The actual
+# docs/qnx/testing.md and docs/qnx/build-error-index.md.  The actual
 # implementation now lives under tools/qnx_tests/ and is a Python
 # package (one source of truth for serial I/O, login, and per-module
 # knowledge).
