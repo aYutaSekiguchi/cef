@@ -1,0 +1,30 @@
+diff --git a/components/crash/core/app/BUILD.gn b/components/crash/core/app/BUILD.gn
+index dd96becde4718..92077c70a9a1c 100644
+--- a/components/crash/core/app/BUILD.gn
++++ b/components/crash/core/app/BUILD.gn
+@@ -59,10 +59,15 @@ static_library("app") {
+     "crash_export_thunks.h",
+     "crash_switches.cc",
+     "crash_switches.h",
+-    "crashpad.cc",
+     "crashpad.h",
+   ]
+ 
++  if (is_qnx) {
++    sources += [ "crashpad_qnx.cc" ]
++  } else {
++    sources += [ "crashpad.cc" ]
++  }
++
+   if (is_castos) {
+     sources += [
+       "breakpad_linux.cc",
+@@ -85,7 +90,7 @@ static_library("app") {
+     "//third_party/crashpad/crashpad/util",
+   ]
+ 
+-  if (is_linux || is_chromeos) {
++  if (!is_qnx && (is_linux || is_chromeos)) {
+     sources += [ "crashpad_linux.cc" ]
+     data_deps = [ ":chrome_crashpad_handler" ]
+   }

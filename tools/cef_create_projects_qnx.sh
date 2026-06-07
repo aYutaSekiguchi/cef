@@ -214,6 +214,10 @@ UNREGISTERED_CHROMIUM_PATCHES=(
 	# upstream). LogAllTest crashes inside RunJS under QEMU; the exact
 	# logger subpath could not be isolated.
 	"v8_unittests_status_logall_qnx"
+	# crashpad_qnx: Replace Crashpad's Linux-only sources with a QNX
+	# no-op implementation so QNX builds can omit crashpad without hitting
+	# sys/prctl.h, NativeCPUContext, or crashpad.cc Port assertions.
+	"crashpad_qnx"
 	# fieldtrial_to_struct_qnx: fieldtrial_to_struct.py only recognizes
 	# android, android_webview, chromeos, fuchsia, ios, linux, mac, windows
 	# as valid --platform values. Add 'qnx' to the platform list so that
