@@ -1,0 +1,47 @@
+{
+  "skill_name": "qnx-bootstrap",
+  "evals": [
+    {
+      "id": 1,
+      "name": "second-bootstrap-rebase-collision",
+      "prompt": "cef/tools/cef_create_projects_qnx.sh を 2 回連続で実行した。1 回目は `168 patches total (160 applied, 8 skipped, 0 failed)` で完走した。2 回目は `168 patches total (0 applied, 166 skipped, 2 failed)` で `content_main_654986` と `qnx/chromium/build_qnx_toolchain` が failed になり `!!!! ERROR: 2 patches failed to apply` で止まった。原因と、このあと何をすべきか教えて。",
+      "expected_output": "Skill should identify the 2 patches as the CEF 147 rebase-collision set documented in the SKILL, explain that bootstrap is not idempotent across re-runs because of fuzzy-match hunks in those patches, and recommend the clean-tree recipe (git checkout -f + gclient sync -f -R + bootstrap) as the only reliable recovery. Should NOT recommend patch_updater.py --revert as a fix.",
+      "files": [],
+      "assertions": [
+        "names both failing patches (content_main_654986 AND qnx/chromium/build_qnx_toolchain)",
+        "identifies the cause as a rebase collision (mentions 'rebase' or 'CEF 147')",
+        "recommends the clean-tree recipe (mentions git checkout -f AND/OR gclient sync -f -R)",
+        "warns against blindly running patch_updater.py --revert as the fix, OR explicitly explains why --revert does not solve this case",
+        "explains the idempotency issue (why bootstrap 1st run succeeds but 2nd run aborts) — e.g. mentions fuzzy match, git apply --reverse --check, or similar"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "gclient-sync-qnx-sources-warning",
+      "prompt": "gclient sync -f -R を実行したら WARNING が出た: `WARNING: 'src/third_party/farmhash_qnx/src' is no longer part of this client. It is recommended that you manually remove it or use 'gclient sync -D' next time.` 同じ WARNING が `epoll/src` と `cpuinfo_qnx/src` でも出ている。これは何で、bootstrap に影響するか?",
+      "expected_output": "Skill should explain that these three are DEPS-managed QNX sources that need to be re-fetched by `cef/tools/qnx_sync_sources.sh`, point to the standard bootstrap flow that runs qnx_sync_sources before cef_create_projects, and note that running cef_create_projects without the qnx sources causes downstream patch failures. Should NOT recommend `gclient sync -D` (that would also delete the now-absent subdirs and lose any local state).",
+      "files": [],
+      "assertions": [
+        "names all three QNX sources (farmhash_qnx AND epoll AND cpuinfo_qnx)",
+        "explains the cause: these are DEPS-managed QNX sources that were removed (or not re-fetched) by gclient sync -f -R",
+        "recommends running qnx_sync_sources.sh (or equivalent QNX source sync step) before the next bootstrap",
+        "warns against gclient sync -D, or explains why it would be wrong here (e.g. it would delete state, or it is the wrong tool for this case)",
+        "explains bootstrap impact: missing submodules cause downstream patch failures (e.g. patch paths under third_party/farmhash_qnx etc. won't resolve)"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "cef-rebase-add-add-conflict",
+      "prompt": "cd ~/chromium/src/cef して `git rebase origin/qnx_7727` を実行したら、`Rebasing (1/6)` で次のエラーが出た: `CONFLICT (add/add): Merge conflict in docs/qnx/history/build-errors/gn/build-graph/qnx-use-dawn-false-does-not-remove-dawn-because-content-utility-depends-on-on-device-model-unconditionally.md` と `CONFLICT (add/add): Merge conflict in patch/patches/qnx/chromium/enable_on_device_model_qnx.patch`. 2 ファイルとも add/add。どう解決する?",
+      "expected_output": "Skill should walk through the CEF rebase workflow: (1) verify md5sum of HEAD vs origin for each file to confirm it's a force-push duplicate, (2) if md5sums match, `git checkout --theirs <file>` for each, (3) `git add` both, (4) `GIT_EDITOR=true git rebase --continue`. Should NOT skip the md5sum check, and should mention the GIT_EDITOR=true necessity so the rebase does not block on an editor.",
+      "files": [],
+      "assertions": [
+        "advises verifying the two commits have identical file content FIRST (md5sum or diff), before assuming --theirs is safe",
+        "if content matches, recommends git checkout --theirs <file> (or the equivalent: take the version from origin)",
+        "mentions git add on the resolved files before continuing",
+        "mentions GIT_EDITOR=true (or equivalent) to avoid blocking on the rebase --continue editor prompt",
+        "explains when this is NOT safe: if md5sums differ, this is a real merge that needs manual review, not a force-push duplicate"
+      ]
+    }
+  ]
+}
