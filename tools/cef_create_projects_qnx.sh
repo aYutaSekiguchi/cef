@@ -219,7 +219,9 @@ UNREGISTERED_CHROMIUM_PATCHES=(
 	# as valid --platform values. Add 'qnx' to the platform list so that
 	# fieldtrial config generation works in QNX builds. This is needed
 	# because the QNX toolchain passes --platform=qnx to the script via GN.
-	"fieldtrial_to_struct_qnx"
+	# Applied directly via sed instead of a patch file.
+	echo "  - fieldtrial_to_struct_qnx (direct sed)"
+	sed -i "/^_platforms = /,/^]/s/'windows',/'qnx',\n    'windows',/" "${CHROMIUM_SRC_DIR}/tools/variations/fieldtrial_to_struct.py"
 	# enable_on_device_model_qnx: introduces the enable_on_device_model GN
 	# variable (features.gni) that gates all on-device ML model service
 	# integration in content/ and chrome/browser/ui/. Defaults to

@@ -32,6 +32,8 @@ def make_api_versions_header(json):
 #define CEF_API_VERSION_{version} {version}
 #if defined(OS_WIN)
 #define CEF_API_HASH_{version} "$WINDOWS$"
+#elif defined(__QNX__)
+#define CEF_API_HASH_{version} "$LINUX$"
 #elif defined(OS_MAC)
 #define CEF_API_HASH_{version} "$MAC$"
 #elif defined(OS_LINUX)
