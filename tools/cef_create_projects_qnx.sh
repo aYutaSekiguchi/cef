@@ -214,6 +214,12 @@ UNREGISTERED_CHROMIUM_PATCHES=(
 	# upstream). LogAllTest crashes inside RunJS under QEMU; the exact
 	# logger subpath could not be isolated.
 	"v8_unittests_status_logall_qnx"
+	# fieldtrial_to_struct_qnx: fieldtrial_to_struct.py only recognizes
+	# android, android_webview, chromeos, fuchsia, ios, linux, mac, windows
+	# as valid --platform values. Add 'qnx' to the platform list so that
+	# fieldtrial config generation works in QNX builds. This is needed
+	# because the QNX toolchain passes --platform=qnx to the script via GN.
+	"fieldtrial_to_struct_qnx"
 	# enable_on_device_model_qnx: introduces the enable_on_device_model GN
 	# variable (features.gni) that gates all on-device ML model service
 	# integration in content/ and chrome/browser/ui/. Defaults to
@@ -237,16 +243,6 @@ for patch_name in "${UNREGISTERED_CHROMIUM_PATCHES[@]}"; do
 		echo "  - ${patch_name} (NOT FOUND — remove from list or add patch file)"
 	fi
 done
-
-# Direct edits (not carried as patch files):
-#
-# fieldtrial_to_struct_qnx: fieldtrial_to_struct.py only recognizes
-# android, android_webview, chromeos, fuchsia, ios, linux, mac, windows
-# as valid --platform values. Add 'qnx' to the platform list so that
-# fieldtrial config generation works in QNX builds. This is needed
-# because the QNX toolchain passes --platform=qnx to the script via GN.
-echo "  - fieldtrial_to_struct_qnx (direct sed)"
-sed -i "/^_platforms = /,/^]/s/'windows',/'qnx',\n    'windows',/" "${CHROMIUM_SRC_DIR}/tools/variations/fieldtrial_to_struct.py"
 
 # Note: All third_party submodule patches (googletest, perfetto, boringssl,
 # ced, epoll) are registered in patch.cfg and applied in Phase 2. The epoll
