@@ -214,6 +214,18 @@ UNREGISTERED_CHROMIUM_PATCHES=(
 	# upstream). LogAllTest crashes inside RunJS under QEMU; the exact
 	# logger subpath could not be isolated.
 	"v8_unittests_status_logall_qnx"
+	# crashpad_capture_context_qnx: crashpad_client.h pulls in
+	# util/misc/capture_context.h, which does not define NativeCPUContext
+	# for QNX. Add a QNX branch that aliases it to ucontext_t so the
+	# Crashpad headers can compile even though we do not actually enable
+	# Crashpad on QNX.
+	"crashpad_capture_context_qnx"
+	# crashpad_capture_context_qnx: crashpad_client.h pulls in
+	# util/misc/capture_context.h, which does not define NativeCPUContext
+	# for QNX. Add a QNX branch that aliases it to ucontext_t so the
+	# Crashpad headers can compile even though we do not actually enable
+	# Crashpad on QNX.
+	"crashpad_capture_context_qnx"
 	# crashpad_qnx: Replace Crashpad's Linux-only sources with a QNX
 	# no-op implementation so QNX builds can omit crashpad without hitting
 	# sys/prctl.h, NativeCPUContext, or crashpad.cc Port assertions.

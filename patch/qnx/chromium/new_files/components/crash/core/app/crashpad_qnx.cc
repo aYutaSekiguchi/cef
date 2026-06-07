@@ -9,6 +9,7 @@
 
 #include "base/debug/stack_trace.h"
 #include "base/no_destructor.h"
+#include "third_party/crashpad/crashpad/client/crashpad_client.h"
 
 namespace crash_reporter {
 
