@@ -1,0 +1,24 @@
+diff --git a/media/base/audio_parameters.h b/media/base/audio_parameters.h
+index 8dc6a6d1a8253..8b8463b0b6017 100644
+--- a/media/base/audio_parameters.h
++++ b/media/base/audio_parameters.h
+@@ -57,9 +57,19 @@ struct MEDIA_EXPORT alignas(kParametersAlignment) AudioOutputBufferParameters {
+   // atomically accumulated on the AudioService side, and are differentiated on
+   // the Renderer side to produce AudioGlitchInfo.
+   int64_t cumulative_glitch_duration_us;  // base::TimeDelta in microseconds.
++  // QNX SDP 8's libc++ lacks std::atomic_ref; the CEF QNX port polyfills it
++  // (build/config/qnx/qnx_std_polyfill.h) without the is_always_lock_free
++  // static member. Gate the assert on the C++20 capability macro so the
++  // polyfill's incomplete type is accepted on QNX. Mirrors the pattern in
++  // v8_base64_atomic.patch (see docs/qnx/history/build-errors/compile/
++  // feature-guard/v8-simdutf-atomic-base64-fallback.md).
++#if defined(__cpp_lib_atomic_ref) && __cpp_lib_atomic_ref >= 201806L
+   static_assert(std::atomic_ref<int64_t>::is_always_lock_free);
++#endif
+   uint64_t cumulative_glitch_count;
++#if defined(__cpp_lib_atomic_ref) && __cpp_lib_atomic_ref >= 201806L
+   static_assert(std::atomic_ref<uint64_t>::is_always_lock_free);
++#endif
+
+   uint32_t bitstream_data_size;
+   uint32_t bitstream_frames;
