@@ -1,0 +1,32 @@
+diff --git a/components/policy/tools/generate_policy_source.gni b/components/policy/tools/generate_policy_source.gni
+index 9bfa540933797..5436c5830ebb7 100644
+--- a/components/policy/tools/generate_policy_source.gni
++++ b/components/policy/tools/generate_policy_source.gni
+@@ -54,12 +54,26 @@ template("generate_policy_source") {
+       chrome_settings_proto_path,
+       cloud_policy_proto_path,
+     ]
++    # QNX: generate_policy_source.py does not know the "qnx"
++    # target_platform. Policy YAML supported_on entries only list
++    # chrome.linux / chrome.win / chrome.mac / chrome.*, so on QNX
++    # every policy is filtered out and the generated kSensitivePolicies
++    # array becomes zero-length. C++23 then rejects the empty
++    # const char* const[0] -> base::span<const char *const> conversion in
++    # policy_constants.cc:32. Fall back to "linux" so the generator
++    # emits a non-empty array; the generated code is otherwise identical
++    # because the QNX build treats linux as the closest supported
++    # platform for policy filtering purposes.
++    _policy_target_platform = target_os
++    if (target_os == "qnx") {
++      _policy_target_platform = "linux"
++    }
+     args = [
+       # Input information.
+       "--chrome-version-major=" + chrome_version_major,
+       "--policy-templates-file=" +
+           rebase_path(policy_templates_generated_json_path, root_build_dir),
+-      "--target-platform=" + target_os,
++      "--target-platform=" + _policy_target_platform,
+     ]
+     if (!chunking) {
+       args += [ "--no-chunking" ]
