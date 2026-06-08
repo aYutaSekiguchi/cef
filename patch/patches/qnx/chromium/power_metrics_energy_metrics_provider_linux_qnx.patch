@@ -1,0 +1,42 @@
+diff --git a/components/power_metrics/BUILD.gn b/components/power_metrics/BUILD.gn
+index ddcc4237b7d95..4b846f67a3d49 100644
+--- a/components/power_metrics/BUILD.gn
++++ b/components/power_metrics/BUILD.gn
+@@ -41,7 +41,7 @@ static_library("power_metrics") {
+     ldflags = [ "/DELAYLOAD:setupapi.dll" ]
+   }
+
+-  if (is_linux || is_chromeos) {
++  if ((is_linux || is_chromeos) && !is_qnx) {
+     sources += [
+       "energy_metrics_provider_linux.cc",
+       "energy_metrics_provider_linux.h",
+diff --git a/components/power_metrics/energy_metrics_provider.cc b/components/power_metrics/energy_metrics_provider.cc
+index 29683e05ffe46..1ff904b347bbe 100644
+--- a/components/power_metrics/energy_metrics_provider.cc
++++ b/components/power_metrics/energy_metrics_provider.cc
+@@ -8,7 +8,12 @@
+ #if BUILDFLAG(IS_WIN)
+ #include "components/power_metrics/energy_metrics_provider_win.h"
+ #elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
++#if BUILDFLAG(IS_QNX)
++// QNX has no perf_event / RAPL support; the abstract provider returns
++// nullptr on QNX (see Create() below and the BUILD.gn is_qnx guard).
++#else
+ #include "components/power_metrics/energy_metrics_provider_linux.h"
++#endif
+ #endif  // BUILDFLAG(IS_WIN)
+
+ namespace power_metrics {
+@@ -21,7 +26,11 @@ std::unique_ptr<EnergyMetricsProvider> EnergyMetricsProvider::Create() {
+ #if BUILDFLAG(IS_WIN)
+   return EnergyMetricsProviderWin::Create();
+ #elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
++#if BUILDFLAG(IS_QNX)
++  return nullptr;
++#else
+   return EnergyMetricsProviderLinux::Create();
++#endif
+ #else
+   return nullptr;
+ #endif  // BUILDFLAG(IS_WIN)
