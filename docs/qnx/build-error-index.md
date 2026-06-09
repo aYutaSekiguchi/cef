@@ -55,6 +55,7 @@ rg -n "crashpad_is_linux|linux/futex.h|compat/linux/sys/mman|features.h" docs/qn
 rg -n "Unhandled OS type|VMSize|define kOS|address_types.h" docs/qnx/history/build-errors
 rg -n "IOV_MAX|METRICS_OS_NAME|uuid.cc|InitializeWithNew|Port\." docs/qnx/history/build-errors
 rg -n "drop_privileges|close_multiple|symbolic_constants_posix|kFDDir|OPEN_MAX|kSignalNames" docs/qnx/history/build-errors
+rg -n "fx_qnx_impl|fx_linux_impl|Included on the wrong platform|pdfium" docs/qnx/history/build-errors
 rg -n "crashpad_client.h|capture_context.h|NativeCPUContext" docs/qnx/history/build-errors
 ```
 

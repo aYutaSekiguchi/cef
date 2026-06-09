@@ -1,0 +1,20 @@
+diff --git a/third_party/pdfium/core/fxge/BUILD.gn b/third_party/pdfium/core/fxge/BUILD.gn
+index 8aa2b3a62cfa4..29c713a8d252c 100644
+--- a/third_party/pdfium/core/fxge/BUILD.gn
++++ b/third_party/pdfium/core/fxge/BUILD.gn
+@@ -158,10 +158,14 @@ source_set("fxge") {
+     ]
+   }
+ 
+-  if (is_linux || is_chromeos) {
++  if ((is_linux && !is_qnx) || is_chromeos) {
+     sources += [ "linux/fx_linux_impl.cpp" ]
+   }
+ 
++  if (is_qnx) {
++    sources += [ "qnx/fx_qnx_impl.cpp" ]
++  }
++
+   if (is_mac) {
+     sources += [
+       "apple/fx_apple_impl.cpp",
