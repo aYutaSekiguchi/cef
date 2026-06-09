@@ -2,6 +2,13 @@
 
 Use this reference to keep build-breakage notes searchable without forcing future agents to read one growing log file.
 
+Load this file only when you need one of the following:
+
+- canonical `stage` or `category` names
+- the structured note path scheme
+- the note template for a resolved blocker
+- the scaffold command for creating a new note
+
 ## Goals
 
 - Separate retrieval by pipeline stage first, because the debugging surface changes a lot between bootstrap, compile, link, and test failures.
@@ -87,6 +94,22 @@ Each note should include these sections:
 ```
 
 The signature should be a short grep-friendly string copied from the primary failure.
+
+Keep the note concise. Do not paste entire build logs; include only the minimal lines needed to identify the pattern.
+
+## Scaffold Command
+
+From the repository root:
+
+```bash
+python .agents/skills/build-breakage-loop/scripts/scaffold_error_note.py \
+  --stage compile \
+  --category platform-api-gap \
+  --title "QNX fcntl F_GETFL shared memory descriptors report O_RDONLY" \
+  --signature "Unexpected(4) = TakeError::kUnexpectedReadOnlyFd"
+```
+
+The script creates the normalized note path under `docs/qnx/history/build-errors/` and fills in the standard headings.
 
 ## Search Heuristics
 
