@@ -1,0 +1,40 @@
+diff --git a/ui/events/keycodes/dom/keycode_converter.cc b/ui/events/keycodes/dom/keycode_converter.cc
+index e7072792d32d5..ccd5b1dcb4d0a 100644
+--- a/ui/events/keycodes/dom/keycode_converter.cc
++++ b/ui/events/keycodes/dom/keycode_converter.cc
+@@ -22,6 +22,25 @@ namespace ui {
+ 
+ namespace {
+ 
++#if BUILDFLAG(IS_QNX)
++constexpr int UsbKeycodeToQnxScanCode(uint32_t usb_keycode) {
++  // QNX Screen keyboard events expose SCREEN_PROPERTY_SCAN as the USB
++  // keyboard/keypad usage ID. QNX 8 documentation describes
++  // SCREEN_PROPERTY_SCAN as the physical-key scan code and points to
++  // <sys/usbcodes.h>, where examples include KS_a = 0x04 and
++  // KS_Enter = 0x28. Chromium's DomCode USB values include the usage page in
++  // the upper bits, e.g. 0x070004 for KeyA. Strip the keyboard/keypad page
++  // prefix so NativeKeycodeToDomCode() can be fed SCREEN_PROPERTY_SCAN when a
++  // future QNX Screen/Ozone keyboard backend receives SCREEN_FLAG_SCAN_VALID.
++  // Non-keyboard usage pages are not represented by <sys/usbcodes.h>; map
++  // them to 0, the same invalid native keycode used by the first table entry.
++  constexpr uint32_t kUsbKeyboardKeypadUsagePage = 0x00070000u;
++  return (usb_keycode & 0xffff0000u) == kUsbKeyboardKeypadUsagePage
++             ? static_cast<int>(usb_keycode & 0xffffu)
++             : 0;
++}
++#endif  // BUILDFLAG(IS_QNX)
++
+ // Table of USB codes (equivalent to DomCode values), native scan codes,
+ // and DOM Level 3 |code| strings.
+ #if BUILDFLAG(IS_WIN)
+@@ -36,6 +55,9 @@ namespace {
+ #elif BUILDFLAG(IS_ANDROID)
+ #define DOM_CODE(usb, evdev, xkb, win, mac, code, id) \
+   { usb, evdev, code }
++#elif BUILDFLAG(IS_QNX)
++#define DOM_CODE(usb, evdev, xkb, win, mac, code, id) \
++  { usb, UsbKeycodeToQnxScanCode(usb), code }
+ #elif BUILDFLAG(IS_FUCHSIA)
+ #define DOM_CODE(usb, evdev, xkb, win, mac, code, id) \
+   { usb, usb, code }
