@@ -44,7 +44,7 @@
 
 ## Applied change
 
-- `components/enterprise/client_certificates/core/private_key_factory.cc` (1 hunk, +7 / -4 lines):
+- `components/enterprise/client_certificates/core/private_key_factory.cc` (1 hunk, +9 / -5 lines):
   ```diff
        if (!private_key && source != PrivateKeySource::kSoftwareKey) {
   -    for (auto fallback_source =
@@ -52,26 +52,30 @@
   -                         std::end(kKeySourcesOrderedBySecurity), source);
   -         fallback_source != std::end(kKeySourcesOrderedBySecurity);
   -         fallback_source++) {
-  +    for (auto it = std::find(std::begin(kKeySourcesOrderedBySecurity),
-  +                           std::end(kKeySourcesOrderedBySecurity), source);
-  +         it != std::end(kKeySourcesOrderedBySecurity);
-  +         ++it) {
-  +      auto fallback_source = std::next(it);
+  -      auto it = sub_factories_.find(*fallback_source);
+  -      if (it != sub_factories_.end()) {
+  +    for (auto source_it = std::find(std::begin(kKeySourcesOrderedBySecurity),
+  +                                  std::end(kKeySourcesOrderedBySecurity),
+  +                                  source);
+  +         source_it != std::end(kKeySourcesOrderedBySecurity);
+  +         ++source_it) {
+  +      auto fallback_source = std::next(source_it);
   +      if (fallback_source == std::end(kKeySourcesOrderedBySecurity))
   +        break;
-         auto it = sub_factories_.find(*fallback_source);
+  +      auto fallback_it = sub_factories_.find(*fallback_source);
+  +      if (fallback_it != sub_factories_.end()) {
          ...
        }
   ```
-  The loop semantics are equivalent: iterate over the remaining sources after `source`, stopping at the end. The end-of-range check moves from the loop condition to an explicit `if (fallback_source == end) break;` inside the body, so the loop iterates one step further than the C++17 version (the `source`-matching element itself) but the inner `auto it = sub_factories_.find(*fallback_source); if (it == end) continue;` machinery will skip it via the sub_factories map (no factory exists for the same source as the original `source` in the production key-sources list).
+  The loop semantics are equivalent: iterate over the remaining sources after `source`, stopping at the end. The end-of-range check moves from the loop condition to an explicit `if (fallback_source == end) break;` inside the body. The durable patch also uses distinct iterator names (`source_it`, `fallback_it`) so the C++23 refactor does not introduce a same-scope shadowing error.
 
 ## Verification
 
-- `git apply --check` and `git apply` both succeed against the current Chromium tree at the upstream `private_key_factory.cc` revision pinned by `CHROMIUM_BUILD_COMPATIBILITY.txt`.
-- Re-running the QNX build with the patch applied is expected to:
-  - clear the `private_key_factory.cc:126` "expression is not assignable" diagnostic,
-  - leave the rest of the file's logic unchanged (same factory loop, same fallback iteration, same callback wiring),
-  - expose a new failure in the next TU that previously was hidden behind this one. CEF QNX bootstrap is expected to converge to "the whole chromium tree compiles" within the next few iterations.
+- Clean-tree bootstrap still succeeds with the patch registered in `patch.cfg`.
+- Re-running `./out/qnx_release/ninja_qnx.sh cefsimple` now confirms both private-key signatures are gone:
+  - `private_key_factory.cc:126` `expression is not assignable`
+  - later refactor regression `private_key_factory.cc:132` `redefinition of 'it'`
+- The patch-managed QNX build advances past `private_key_factory.o` and, on current verification, exposes a later PDFium blocker (`third_party/pdfium/core/fxge/linux/fx_linux_impl.cpp:23:2: error: "Included on the wrong platform"`).
 - Linux x64 / macOS / Windows / Android / ChromeOS / Fuchsia / OpenBSD builds are byte-for-byte unchanged; the new loop is a pure local-variable refactor.
 
 ## Files touched

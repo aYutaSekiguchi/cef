@@ -1,8 +1,8 @@
 diff --git a/components/enterprise/client_certificates/core/private_key_factory.cc b/components/enterprise/client_certificates/core/private_key_factory.cc
-index f2365aaf5ab77..a0f1cd174ebb7 100644
+index f2365aaf5ab77..18a03ad8d0b1f 100644
 --- a/components/enterprise/client_certificates/core/private_key_factory.cc
 +++ b/components/enterprise/client_certificates/core/private_key_factory.cc
-@@ -122,11 +122,13 @@ void PrivateKeyFactoryImpl::OnPrivateKeyCreated(
+@@ -122,16 +122,19 @@ void PrivateKeyFactoryImpl::OnPrivateKeyCreated(
      PrivateKeyCallback callback,
      scoped_refptr<PrivateKey> private_key) {
    if (!private_key && source != PrivateKeySource::kSoftwareKey) {
@@ -11,13 +11,22 @@ index f2365aaf5ab77..a0f1cd174ebb7 100644
 -                         std::end(kKeySourcesOrderedBySecurity), source);
 -         fallback_source != std::end(kKeySourcesOrderedBySecurity);
 -         fallback_source++) {
-+    for (auto it = std::find(std::begin(kKeySourcesOrderedBySecurity),
-+                           std::end(kKeySourcesOrderedBySecurity), source);
-+         it != std::end(kKeySourcesOrderedBySecurity);
-+         ++it) {
-+      auto fallback_source = std::next(it);
+-      auto it = sub_factories_.find(*fallback_source);
+-      if (it != sub_factories_.end()) {
++    for (auto source_it = std::find(std::begin(kKeySourcesOrderedBySecurity),
++                                  std::end(kKeySourcesOrderedBySecurity),
++                                  source);
++         source_it != std::end(kKeySourcesOrderedBySecurity);
++         ++source_it) {
++      auto fallback_source = std::next(source_it);
 +      if (fallback_source == std::end(kKeySourcesOrderedBySecurity))
 +        break;
-       auto it = sub_factories_.find(*fallback_source);
-       if (it != sub_factories_.end()) {
++      auto fallback_it = sub_factories_.find(*fallback_source);
++      if (fallback_it != sub_factories_.end()) {
          // If a more secure key failed to be created, fallback to creating a
+         // less secure key.
+-        it->second->CreatePrivateKey(base::BindOnce(
++        fallback_it->second->CreatePrivateKey(base::BindOnce(
+             &PrivateKeyFactoryImpl::OnPrivateKeyCreated,
+             weak_factory_.GetWeakPtr(), *fallback_source, std::move(callback)));
+         return;
