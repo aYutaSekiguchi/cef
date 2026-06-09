@@ -51,6 +51,7 @@ rg -n "linux/prctl.h|pthread_setname_np|platform_thread_types" docs/qnx/history/
 rg -n "sys/prctl.h|NativeCPUContext|Port\." docs/qnx/history/build-errors
 rg -n "suid_sandbox_client|compile_suid_client|sandbox/policy:policy" docs/qnx/history/build-errors
 rg -n "sandbox/linux:sandbox_services|sys/syscall.h|DT_LNK|network_sandbox_hook" docs/qnx/history/build-errors
+rg -n "crashpad_is_linux|linux/futex.h|compat/linux/sys/mman|features.h" docs/qnx/history/build-errors
 rg -n "crashpad_client.h|capture_context.h|NativeCPUContext" docs/qnx/history/build-errors
 ```
 
