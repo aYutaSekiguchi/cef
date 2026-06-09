@@ -352,9 +352,13 @@ enable_background_mode = false
 enable_resource_allowlist_generation = false
 enable_downgrade_processing = false
 
-# Disable sandbox (not supported on QNX)
-cef_enable_sandbox = false
+# Disable sandbox on QNX. cef_enable_sandbox is not a declared GN arg in
+# Chromium 147, so disable the actual Linux sandbox feature gates directly.
 v8_enable_sandbox = false
+use_seccomp_bpf = false
+compile_suid_client = false
+compile_credentials = false
+compile_syscall_broker = false
 
 # Compiler / modules
 is_clang = true

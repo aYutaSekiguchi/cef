@@ -1,0 +1,13 @@
+diff --git a/sandbox/policy/BUILD.gn b/sandbox/policy/BUILD.gn
+index 1a3c7c6cf8b15..661d1eb3042b2 100644
+--- a/sandbox/policy/BUILD.gn
++++ b/sandbox/policy/BUILD.gn
+@@ -46,7 +46,7 @@ component("policy") {
+       "//third_party/jni_zero",
+     ]
+   }
+-  if (is_linux || is_chromeos) {
++  if ((is_linux || is_chromeos) && !is_qnx) {
+     sources += [
+       "linux/bpf_audio_policy_linux.cc",
+       "linux/bpf_audio_policy_linux.h",
