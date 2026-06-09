@@ -1,0 +1,142 @@
+diff --git a/sandbox/BUILD.gn b/sandbox/BUILD.gn
+index 0820bc89c5ba3..41d9e06bf7dd0 100644
+--- a/sandbox/BUILD.gn
++++ b/sandbox/BUILD.gn
+@@ -49,7 +49,7 @@ group("sandbox") {
+       "//sandbox/mac:system_services",
+       "//sandbox/mac/mojom",
+     ]
+-  } else if (is_linux || is_chromeos || is_android) {
++  } else if (is_android || ((is_linux || is_chromeos) && !is_qnx)) {
+     public_deps = [ "//sandbox/linux:sandbox" ]
+   }
+ }
+diff --git a/content/common/BUILD.gn b/content/common/BUILD.gn
+index 5487c3756c603..463f7160eb5e1 100644
+--- a/content/common/BUILD.gn
++++ b/content/common/BUILD.gn
+@@ -367,7 +367,7 @@ source_set("common") {
+     sources -= [ "cursors/webcursor_aura.cc" ]
+   }
+ 
+-  if (is_linux || is_chromeos) {
++  if ((is_linux || is_chromeos) && !is_qnx) {
+     sources += [
+       "gpu_pre_sandbox_hook_linux.cc",
+       "gpu_pre_sandbox_hook_linux.h",
+diff --git a/services/audio/BUILD.gn b/services/audio/BUILD.gn
+index 735d0629d663e..006e49100108d 100644
+--- a/services/audio/BUILD.gn
++++ b/services/audio/BUILD.gn
+@@ -84,7 +84,7 @@ source_set("audio") {
+     "//services/audio/public/mojom",
+   ]
+ 
+-  if (is_linux || is_chromeos) {
++  if ((is_linux || is_chromeos) && !is_qnx) {
+     sources += [
+       "audio_sandbox_hook_linux.cc",
+       "audio_sandbox_hook_linux.h",
+diff --git a/services/network/BUILD.gn b/services/network/BUILD.gn
+index 8e9c0d3aeb7ad..a795236b538cb 100644
+--- a/services/network/BUILD.gn
++++ b/services/network/BUILD.gn
+@@ -395,7 +395,7 @@ component("network_service") {
+     "//url",
+   ]
+ 
+-  if (is_linux || is_chromeos) {
++  if ((is_linux || is_chromeos) && !is_qnx) {
+     deps += [
+       ":network_sandbox_hook",
+       "//sandbox/linux:sandbox_services",  # TODO(crbug.com/40220505): remove.
+@@ -441,7 +441,7 @@ component("network_service") {
+   defines = [ "IS_NETWORK_SERVICE_IMPL" ]
+ }
+ 
+-if (is_linux || is_chromeos) {
++if ((is_linux || is_chromeos) && !is_qnx) {
+   source_set("network_sandbox_hook") {
+     sources = [
+       "network_sandbox_hook_linux.cc",
+diff --git a/chrome/common/BUILD.gn b/chrome/common/BUILD.gn
+index e6ec5782e6634..785c908b02c4d 100644
+--- a/chrome/common/BUILD.gn
++++ b/chrome/common/BUILD.gn
+@@ -407,7 +407,7 @@ static_library("common_lib") {
+     public_deps += [ "//chrome/common/safe_browsing" ]
+   }
+ 
+-  if (is_linux || is_chromeos) {
++  if ((is_linux || is_chromeos) && !is_qnx) {
+     sources += [
+       "auto_start_linux.cc",
+       "auto_start_linux.h",
+diff --git a/components/on_device_translation/service/BUILD.gn b/components/on_device_translation/service/BUILD.gn
+index 5acb4c7382ddc..b6998a0231209 100644
+--- a/components/on_device_translation/service/BUILD.gn
++++ b/components/on_device_translation/service/BUILD.gn
+@@ -29,7 +29,7 @@ source_set("on_device_translation_service") {
+     "//mojo/public/cpp/bindings",
+   ]
+ 
+-  if (is_linux || is_chromeos) {
++  if ((is_linux || is_chromeos) && !is_qnx) {
+     sources += [
+       "sandbox_hook.cc",
+       "sandbox_hook.h",
+diff --git a/content/utility/BUILD.gn b/content/utility/BUILD.gn
+index b89c0138ae595..0a58e7a7e5d2a 100644
+--- a/content/utility/BUILD.gn
++++ b/content/utility/BUILD.gn
+@@ -97,7 +97,7 @@ source_set("utility") {
+     }
+   }
+ 
+-  if (is_linux || is_chromeos) {
++  if ((is_linux || is_chromeos) && !is_qnx) {
+     deps += [
+       "//content/utility/speech:speech_recognition_sandbox_hook",
+       "//media/gpu/sandbox",
+@@ -127,7 +127,7 @@ source_set("utility") {
+     deps += [ "//services/proxy_resolver:lib" ]
+   }
+ 
+-  if (enable_screen_ai_service && (is_linux || is_chromeos)) {
++  if (enable_screen_ai_service && (is_linux || is_chromeos) && !is_qnx) {
+     deps += [ "//services/screen_ai:screen_ai_sandbox_hook" ]
+   }
+ 
+diff --git a/content/utility/speech/BUILD.gn b/content/utility/speech/BUILD.gn
+index 37c4a8dfc48ab..fb952280680b5 100644
+--- a/content/utility/speech/BUILD.gn
++++ b/content/utility/speech/BUILD.gn
+@@ -2,7 +2,8 @@
+ # Use of this source code is governed by a BSD-style license that can be
+ # found in the LICENSE file.
+ 
+-source_set("speech_recognition_sandbox_hook") {
++if ((is_linux || is_chromeos) && !is_qnx) {
++  source_set("speech_recognition_sandbox_hook") {
+   sources = [
+     "speech_recognition_sandbox_hook_linux.cc",
+     "speech_recognition_sandbox_hook_linux.h",
+@@ -17,4 +18,5 @@ source_set("speech_recognition_sandbox_hook") {
+   ]
+ 
+   public_deps = [ "//sandbox/policy" ]
++  }
+ }
+diff --git a/services/screen_ai/BUILD.gn b/services/screen_ai/BUILD.gn
+index 5235382b56d31..03e4cacb087ac 100644
+--- a/services/screen_ai/BUILD.gn
++++ b/services/screen_ai/BUILD.gn
+@@ -76,7 +76,7 @@ if (is_chromeos) {
+   }
+ }
+ 
+-if (is_linux || is_chromeos) {
++if ((is_linux || is_chromeos) && !is_qnx) {
+   source_set("screen_ai_sandbox_hook") {
+     sources = [
+       "sandbox/screen_ai_sandbox_hook_linux.cc",
