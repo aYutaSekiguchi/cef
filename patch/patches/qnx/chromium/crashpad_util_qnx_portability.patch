@@ -1,0 +1,39 @@
+diff --git a/third_party/crashpad/crashpad/util/file/file_writer.cc b/third_party/crashpad/crashpad/util/file/file_writer.cc
+index a5bfa0811f2e4..f10dba88ac085 100644
+--- a/third_party/crashpad/crashpad/util/file/file_writer.cc
++++ b/third_party/crashpad/crashpad/util/file/file_writer.cc
+@@ -80,7 +80,7 @@ bool WeakFileHandleFileWriter::WriteIoVec(std::vector<WritableIoVec>* iovecs) {
+   iovec* iov = reinterpret_cast<iovec*>(&(*iovecs)[0]);
+   size_t remaining_iovecs = iovecs->size();
+ 
+-#if BUILDFLAG(IS_ANDROID)
++#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_QNX)
+   // Android does not expose the IOV_MAX macro, but makes its value available
+   // via sysconf(). See Android 7.0.0 bionic/libc/bionic/sysconf.cpp sysconf().
+   // Bionic defines IOV_MAX at bionic/libc/include/limits.h, but does not ship
+diff --git a/third_party/crashpad/crashpad/util/misc/metrics.cc b/third_party/crashpad/crashpad/util/misc/metrics.cc
+index de63434ddeb2f..eb21559de6e03 100644
+--- a/third_party/crashpad/crashpad/util/misc/metrics.cc
++++ b/third_party/crashpad/crashpad/util/misc/metrics.cc
+@@ -27,6 +27,8 @@
+ #define METRICS_OS_NAME "Android"
+ #elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
+ #define METRICS_OS_NAME "Linux"
++#elif BUILDFLAG(IS_QNX)
++#define METRICS_OS_NAME "QNX"
+ #elif BUILDFLAG(IS_FUCHSIA)
+ #define METRICS_OS_NAME "Fuchsia"
+ #endif
+diff --git a/third_party/crashpad/crashpad/util/misc/uuid.cc b/third_party/crashpad/crashpad/util/misc/uuid.cc
+index 6b404fdf3c475..6b3979bad70fb 100644
+--- a/third_party/crashpad/crashpad/util/misc/uuid.cc
++++ b/third_party/crashpad/crashpad/util/misc/uuid.cc
+@@ -110,7 +110,7 @@ bool UUID::InitializeWithNew() {
+   InitializeFromBytes(uuid);
+   return true;
+ #elif BUILDFLAG(IS_WIN) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || \
+-    BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_FUCHSIA)
++    BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_FUCHSIA) || BUILDFLAG(IS_QNX)
+   // Linux, Android, and Fuchsia do not provide a UUID generator in a
+   // widely-available system library. On Linux and Android, uuid_generate()
+   // from libuuid is not available everywhere.
