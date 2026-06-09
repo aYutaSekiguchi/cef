@@ -382,6 +382,10 @@ use_pangocairo = false
 use_xkbcommon = false
 use_nss_certs = false
 use_udev = false
+# QNX audio backends require dedicated porting work. Do not inherit the
+# generic POSIX/Linux defaults from media/media_options.gni.
+use_alsa = false
+use_pulseaudio = false
 use_system_minigbm = false
 use_system_libffi = false
 ozone_platform_wayland = false
