@@ -1,0 +1,127 @@
+diff --git a/third_party/crashpad/crashpad/util/posix/drop_privileges.cc b/third_party/crashpad/crashpad/util/posix/drop_privileges.cc
+index 1976c4fb7b506..2dd9e1cbd1390 100644
+--- a/third_party/crashpad/crashpad/util/posix/drop_privileges.cc
++++ b/third_party/crashpad/crashpad/util/posix/drop_privileges.cc
+@@ -85,6 +85,23 @@ void DropPrivileges() {
+   // necessary to perform any additional checking anyway.
+   //
+   // TODO(mark): Drop CAP_SETUID and CAP_SETGID if present and non-root?
++#elif BUILDFLAG(IS_QNX)
++  gid_t egid = getegid();
++  PCHECK(setgid(gid) == 0) << "setgid";
++  PCHECK(setregid(gid, gid) == 0) << "setregid";
++
++  uid_t euid = geteuid();
++  PCHECK(setuid(uid) == 0) << "setuid";
++  PCHECK(setreuid(uid, uid) == 0) << "setreuid";
++
++  if (uid != 0) {
++    if (euid != uid) {
++      CHECK_EQ(seteuid(euid), -1);
++    }
++    if (egid != gid) {
++      CHECK_EQ(setegid(egid), -1);
++    }
++  }
+ #else
+ #error Port this function to your system.
+ #endif
+diff --git a/third_party/crashpad/crashpad/util/posix/close_multiple.cc b/third_party/crashpad/crashpad/util/posix/close_multiple.cc
+index f5d7b00f01882..2d3300dfa3b21 100644
+--- a/third_party/crashpad/crashpad/util/posix/close_multiple.cc
++++ b/third_party/crashpad/crashpad/util/posix/close_multiple.cc
+@@ -77,6 +77,8 @@ bool CloseMultipleNowOrOnExecUsingFDDir(int min_fd, int preserve_fd) {
+   static constexpr char kFDDir[] = "/dev/fd";
+ #elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_ANDROID)
+   static constexpr char kFDDir[] = "/proc/self/fd";
++#elif BUILDFLAG(IS_QNX)
++  static constexpr char kFDDir[] = "/dev/fd";
+ #endif
+ 
+   DirectoryReader reader;
+@@ -143,7 +145,7 @@ void CloseMultipleNowOrOnExec(int fd, int preserve_fd) {
+ #endif
+ 
+ #if !(BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || \
+-      BUILDFLAG(IS_ANDROID)) ||                        \
++      BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_QNX)) ||  \
+     defined(OPEN_MAX)
+   // Linux does not provide OPEN_MAX. See
+   // https://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commit/include/linux/limits.h?id=77293034696e3e0b6c8b8fc1f96be091104b3d2b.
+diff --git a/third_party/crashpad/crashpad/util/posix/symbolic_constants_posix.cc b/third_party/crashpad/crashpad/util/posix/symbolic_constants_posix.cc
+index 58c9057fbd933..9a8d217e6f3b8 100644
+--- a/third_party/crashpad/crashpad/util/posix/symbolic_constants_posix.cc
++++ b/third_party/crashpad/crashpad/util/posix/symbolic_constants_posix.cc
+@@ -68,6 +68,63 @@ constexpr const char* kSignalNames[] = {
+     "INFO",
+     "USR1",
+     "USR2",
++#elif BUILDFLAG(IS_QNX)
++    "HUP",
++    "INT",
++    "QUIT",
++    "ILL",
++    "TRAP",
++    "ABRT",
++    "EMT",
++    "FPE",
++    "KILL",
++    "BUS",
++    "SEGV",
++    "SYS",
++    "PIPE",
++    "ALRM",
++    "TERM",
++    "USR1",
++    "USR2",
++    "CHLD",
++    "PWR",
++    "WINCH",
++    "URG",
++    "POLL",
++    "STOP",
++    "TSTP",
++    "CONT",
++    "TTIN",
++    "TTOU",
++    "VTALRM",
++    "PROF",
++    "XCPU",
++    "XFSZ",
++    "DOOM",
++    nullptr,
++    nullptr,
++    nullptr,
++    nullptr,
++    nullptr,
++    nullptr,
++    nullptr,
++    nullptr,
++    nullptr,
++    nullptr,
++    nullptr,
++    nullptr,
++    nullptr,
++    nullptr,
++    nullptr,
++    nullptr,
++    nullptr,
++    nullptr,
++    nullptr,
++    nullptr,
++    nullptr,
++    nullptr,
++    nullptr,
++    nullptr,
+ #elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_ANDROID)
+ #if defined(ARCH_CPU_MIPS_FAMILY)
+     "HUP",
+@@ -142,6 +199,8 @@ constexpr const char* kSignalNames[] = {
+ #if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_ANDROID)
+ // NSIG is 64 to account for real-time signals.
+ static_assert(std::size(kSignalNames) == 32, "kSignalNames length");
++#elif BUILDFLAG(IS_QNX)
++static_assert(std::size(kSignalNames) == NSIG, "kSignalNames length");
+ #else
+ static_assert(std::size(kSignalNames) == NSIG, "kSignalNames length");
+ #endif

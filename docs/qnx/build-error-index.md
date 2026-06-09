@@ -54,6 +54,7 @@ rg -n "sandbox/linux:sandbox_services|sys/syscall.h|DT_LNK|network_sandbox_hook"
 rg -n "crashpad_is_linux|linux/futex.h|compat/linux/sys/mman|features.h" docs/qnx/history/build-errors
 rg -n "Unhandled OS type|VMSize|define kOS|address_types.h" docs/qnx/history/build-errors
 rg -n "IOV_MAX|METRICS_OS_NAME|uuid.cc|InitializeWithNew|Port\." docs/qnx/history/build-errors
+rg -n "drop_privileges|close_multiple|symbolic_constants_posix|kFDDir|OPEN_MAX|kSignalNames" docs/qnx/history/build-errors
 rg -n "crashpad_client.h|capture_context.h|NativeCPUContext" docs/qnx/history/build-errors
 ```
 
