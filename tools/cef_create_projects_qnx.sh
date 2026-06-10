@@ -325,6 +325,11 @@ enable_remoting = false
 # Dawn also sidesteps Dawn's Linux-only assumptions in renderdoc_app.h
 # and ExternalImageDescriptorFD. See build-error-index.md and the related structured note.
 use_dawn = false
+# Skia Graphite Dawn is controlled by a separate build arg. Keep it aligned
+# with use_dawn=false so //skia:buildflags emits SKIA_USE_DAWN=0 and
+# gpu/config/gpu_info_collector.cc does not trip its USE_DAWN/SKIA_USE_DAWN
+# consistency assert.
+skia_use_dawn = false
 # CEF 147 rebase regression: use_dawn = false alone no longer removes
 # the Dawn vulkan backend sources. dawn_enable_vulkan defaults to
 # is_linux in dawn/scripts/dawn_features.gni, and QNX is routed through

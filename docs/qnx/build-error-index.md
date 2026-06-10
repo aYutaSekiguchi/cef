@@ -63,6 +63,7 @@ rg -n "ipcz/reference_drivers/random|getrandom|DevUrandom" docs/qnx/history/buil
 rg -n "kQnxShmHandle|QnxShmMemory|QnxShmHandle|wrapped_file_descriptor" docs/qnx/history/build-errors
 rg -n "IPCZ_MEMFD_QNX_SKIP_IMPL|MFD_ALLOW_SEALING|MultiprocessMemory" docs/qnx/history/build-errors
 rg -n "rust_bindgen_generator|mojo_c_system_bindings|Endian not defined" docs/qnx/history/build-errors
+rg -n "SKIA_USE_DAWN|skia_use_dawn|gpu_info_collector|USE_DAWN" docs/qnx/history/build-errors
 rg -n "gpu_test_config|GetCurrentOS|unknown os|kOsLinux" docs/qnx/history/build-errors
 rg -n "crashpad_client.h|capture_context.h|NativeCPUContext" docs/qnx/history/build-errors
 ```

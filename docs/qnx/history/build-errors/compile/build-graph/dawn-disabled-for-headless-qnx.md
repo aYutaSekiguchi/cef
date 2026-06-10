@@ -112,3 +112,55 @@ Five targets failed at the same compile boundary:
 - `cef/tools/cef_create_projects_qnx.sh`
 - `out/qnx_release/args.gn`
 - `docs/qnx/history/build-errors/compile/build-graph/dawn-disabled-for-headless-qnx.md` (this note)
+
+## Skia Graphite Dawn must also be disabled for Mojo/GPU builds
+
+### Signature
+
+While building `mojo:mojo_unittests`, `gpu/config/gpu_info_collector.cc`
+can fail with:
+
+```text
+#error "SKIA_USE_DAWN used without USE_DAWN is not supposed to work."
+```
+
+The generated buildflags show the mismatch:
+
+```text
+out/qnx_release/gen/skia/buildflags.h:
+#define BUILDFLAG_INTERNAL_SKIA_USE_DAWN() (1)
+
+out/qnx_release/gen/ui/gl/buildflags.h:
+#define BUILDFLAG_INTERNAL_USE_DAWN() (0)
+```
+
+### Root cause
+
+Chromium Dawn and Skia Graphite Dawn are controlled by separate GN args.
+`use_dawn = false` disables Chromium's Dawn integration, but it does not
+necessarily force Skia's `//skia:buildflags` target to emit
+`SKIA_USE_DAWN=0`. QNX builds are headless for now and should keep both
+Dawn paths disabled together.
+
+### Applied change
+
+Set `skia_use_dawn = false` next to `use_dawn = false` in
+`cef/tools/cef_create_projects_qnx.sh` so regenerated QNX args keep
+`BUILDFLAG(USE_DAWN)` and `BUILDFLAG(SKIA_USE_DAWN)` consistent.
+
+### Verification
+
+After regenerating `out/qnx_release`:
+
+```text
+ninja -C out/qnx_release skia:buildflags
+ninja -C out/qnx_release clang_x64/gen/skia/buildflags.h
+grep SKIA_USE_DAWN out/qnx_release/gen/skia/buildflags.h
+grep SKIA_USE_DAWN out/qnx_release/clang_x64/gen/skia/buildflags.h
+```
+
+both generated headers should contain:
+
+```text
+#define BUILDFLAG_INTERNAL_SKIA_USE_DAWN() (0)
+```
