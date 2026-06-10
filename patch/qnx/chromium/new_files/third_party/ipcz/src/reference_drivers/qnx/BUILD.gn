@@ -1,0 +1,30 @@
+# Copyright 2026 The Chromium Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//build/config/features.gni")
+
+# QNX implementation of ipcz reference drivers' shm-based memory and
+# handle wrappers. QNX lacks memfd_create() and fcntl seals, so this
+# shim provides a QnxShmMemory backed by shm_open(SHM_ANON) + mmap() and
+# a QnxShmHandle Object subclass to carry the underlying shm fd.
+source_set("qnx_shm") {
+  sources = [
+    "qnx_shm_handle.cc",
+    "qnx_shm_handle.h",
+    "qnx_shm_memory.cc",
+    "qnx_shm_memory.h",
+  ]
+  if (!is_qnx) {
+    # Keep the source set always declared so BUILD targets that depend on
+    # this directory on non-QNX configurations still resolve. The actual
+    # translation units are no-op when BUILDFLAG(IS_QNX) is false.
+    # (No-op TU: there are no .cc files compiled.)
+  }
+  public_deps = [
+    "../..",
+  ]
+  deps = [
+    "//base",
+  ]
+}

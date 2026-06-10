@@ -1,0 +1,90 @@
+diff --git a/third_party/ipcz/src/reference_drivers/object.h b/third_party/ipcz/src/reference_drivers/object.h
+index dd4c1f9a97499..23d9baa0591be 100644
+--- a/third_party/ipcz/src/reference_drivers/object.h
++++ b/third_party/ipcz/src/reference_drivers/object.h
+@@ -24,6 +24,11 @@ class Object : public RefCounted<Object> {
+ #if defined(OS_LINUX)
+     // A non-standard driver object type which wraps a FileDescriptor object.
+     kFileDescriptor,
++#elif defined(OS_QNX)
++    // QNX counterpart of kFileDescriptor. QNX has no memfd_create or fcntl
++    // seals, so shared-memory object identities are carried as shm_open()
++    // fds wrapped by WrappedFileDescriptor itself.
++    kQnxShmHandle,
+ #endif
+   };
+ 
+diff --git a/third_party/ipcz/src/reference_drivers/wrapped_file_descriptor.h b/third_party/ipcz/src/reference_drivers/wrapped_file_descriptor.h
+index 651f29127fc10..05a39897d6fb1 100644
+--- a/third_party/ipcz/src/reference_drivers/wrapped_file_descriptor.h
++++ b/third_party/ipcz/src/reference_drivers/wrapped_file_descriptor.h
+@@ -5,6 +5,7 @@
+ #ifndef IPCZ_SRC_REFERENCE_DRIVERS_WRAPPED_FILE_DESCRIPTOR_H_
+ #define IPCZ_SRC_REFERENCE_DRIVERS_WRAPPED_FILE_DESCRIPTOR_H_
+ 
++#include "build/build_config.h"
+ #include "reference_drivers/file_descriptor.h"
+ #include "reference_drivers/object.h"
+ 
+@@ -12,11 +13,19 @@ namespace ipcz::reference_drivers {
+ 
+ // Wraps a FileDescriptor as a driver object. The Linux multiprocess reference
+ // driver uses this to facilitate serialization of more complex objects into
+-// these readily transmissible objects.
++// these readily transmissible objects. On QNX, which lacks memfd_create and
++// fcntl seals, the same shim is re-typed as Object::kQnxShmHandle so the
++// underlying FileDescriptor (carrying a shm_open fd) stays object-identical
++// but is exposed under a QNX-specific Object type for downstream
++// serialization that may eventually need to emit shm_open_handle() tokens.
+ class WrappedFileDescriptor
++#if BUILDFLAG(IS_QNX)
++    : public ObjectImpl<WrappedFileDescriptor, Object::kQnxShmHandle> {
++#else
+     : public ObjectImpl<WrappedFileDescriptor, Object::kFileDescriptor> {
++#endif
+  public:
+-  explicit WrappedFileDescriptor(FileDescriptor fd);
++  explicit WrappedFileDescriptor(FileDescriptor fd) : fd_(std::move(fd)) {}
+ 
+   const FileDescriptor& handle() const { return fd_; }
+   FileDescriptor TakeDescriptor() { return std::move(fd_); }
+@@ -31,7 +40,7 @@ class WrappedFileDescriptor
+   }
+ 
+  private:
+-  ~WrappedFileDescriptor() override;
++  ~WrappedFileDescriptor() override = default;
+ 
+   FileDescriptor fd_;
+ };
+diff --git a/third_party/ipcz/src/reference_drivers/wrapped_file_descriptor.cc b/third_party/ipcz/src/reference_drivers/wrapped_file_descriptor.cc
+index f7f63b1951dfd..b49643d5e2ab6 100644
+--- a/third_party/ipcz/src/reference_drivers/wrapped_file_descriptor.cc
++++ b/third_party/ipcz/src/reference_drivers/wrapped_file_descriptor.cc
+@@ -4,14 +4,19 @@
+ 
+ #include "reference_drivers/wrapped_file_descriptor.h"
+ 
+-#include "third_party/abseil-cpp/absl/base/macros.h"
+-#include "util/ref_counted.h"
+-
++// The constructor and destructor are now defined inline in the header so
++// that the QNX branch (Object::kQnxShmHandle) and the Linux branch
++// (Object::kFileDescriptor) can share a single header-only body. This
++// translation unit is intentionally left as a near no-op so that the
++// existing source list in third_party/ipcz/src/BUILD.gn still picks it
++// up without changes.
+ namespace ipcz::reference_drivers {
+ 
+-WrappedFileDescriptor::WrappedFileDescriptor(FileDescriptor fd)
+-    : fd_(std::move(fd)) {}
+-
+-WrappedFileDescriptor::~WrappedFileDescriptor() = default;
++// Anchor symbol to keep the translation unit non-empty. Without it some
++// toolchains may warn or even drop the .o from the link entirely.
++namespace {
++[[maybe_unused]] const char kWrappedFileDescriptorAnchor[] =
++    "wrapped_file_descriptor.cc";
++}  // namespace
+ 
+ }  // namespace ipcz::reference_drivers

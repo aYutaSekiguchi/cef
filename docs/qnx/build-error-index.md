@@ -58,6 +58,10 @@ rg -n "drop_privileges|close_multiple|symbolic_constants_posix|kFDDir|OPEN_MAX|k
 rg -n "fx_qnx_impl|fx_linux_impl|Included on the wrong platform|pdfium" docs/qnx/history/build-errors
 rg -n "keycode_converter|SCREEN_PROPERTY_SCAN|sys/usbcodes|Unsupported platform|DOM_CODE" docs/qnx/history/build-errors
 rg -n "named_mojo_server_endpoint_connector|require_same_peer_user|SO_PEERCRED|ConnectionInfo::credentials" docs/qnx/history/build-errors
+rg -n "client_filterable_state|Study::PLATFORM|PLATFORM_QNX|Unknown platform" docs/qnx/history/build-errors
+rg -n "ipcz/reference_drivers/random|getrandom|DevUrandom" docs/qnx/history/build-errors
+rg -n "kQnxShmHandle|QnxShmMemory|QnxShmHandle|wrapped_file_descriptor" docs/qnx/history/build-errors
+rg -n "IPCZ_MEMFD_QNX_SKIP_IMPL|MFD_ALLOW_SEALING|MultiprocessMemory" docs/qnx/history/build-errors
 rg -n "crashpad_client.h|capture_context.h|NativeCPUContext" docs/qnx/history/build-errors
 ```
 

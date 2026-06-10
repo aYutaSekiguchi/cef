@@ -1,0 +1,75 @@
+diff --git a/third_party/ipcz/src/reference_drivers/memfd_memory.cc b/third_party/ipcz/src/reference_drivers/memfd_memory.cc
+index fadf967c313e4..b89d238749da0 100644
+--- a/third_party/ipcz/src/reference_drivers/memfd_memory.cc
++++ b/third_party/ipcz/src/reference_drivers/memfd_memory.cc
+@@ -6,12 +6,23 @@
+ 
+ #include <fcntl.h>
+ #include <sys/mman.h>
++#include <sys/types.h>
+ #include <unistd.h>
+ 
+ #include <utility>
+ 
++#include "build/build_config.h"
+ #include "third_party/abseil-cpp/absl/base/macros.h"
+ 
++#if BUILDFLAG(IS_QNX)
++// QNX lacks memfd_create() and fcntl seals. The driver for the multiprocess
++// reference driver on QNX is expected to provide a shm_open() fd through
++// the QnxShmMemory backend; this translation unit therefore must NOT call
++// memfd_create or fcntl(F_ADD_SEALS) when compiling for QNX. The Linux
++// build keeps the original implementation intact.
++#define IPCZ_MEMFD_QNX_SKIP_IMPL 1
++#endif
++
+ namespace ipcz::reference_drivers {
+ 
+ MemfdMemory::Mapping::Mapping() = default;
+@@ -47,6 +58,7 @@ MemfdMemory::MemfdMemory() = default;
+ MemfdMemory::MemfdMemory(FileDescriptor fd, size_t size)
+     : fd_(std::move(fd)), size_(size) {}
+ 
++#if !defined(IPCZ_MEMFD_QNX_SKIP_IMPL)
+ MemfdMemory::MemfdMemory(size_t size) {
+   int fd = memfd_create("/ipcz/mem", MFD_ALLOW_SEALING);
+   ABSL_ASSERT(fd >= 0);
+@@ -60,6 +72,20 @@ MemfdMemory::MemfdMemory(size_t size) {
+   fd_ = FileDescriptor(fd);
+   size_ = size;
+ }
++#else
++// On QNX the multiprocess reference driver must construct MemfdMemory from
++// a pre-imported shm fd (see QnxShmMemory). The default ctor that allocates
++// a fresh anonymous file is intentionally not supported; the multiprocess
++// driver on QNX owns the allocation step.
++MemfdMemory::MemfdMemory(size_t size) {
++  // Should never be called on QNX; the multiprocess driver is responsible
++  // for routing through QnxShmMemory and the FileDescriptor ctor.
++  (void)size;
++  ABSL_ASSERT(false && "MemfdMemory(size_t) is unavailable on QNX");
++  fd_ = FileDescriptor();
++  size_ = 0;
++}
++#endif
+ 
+ MemfdMemory::MemfdMemory(MemfdMemory&&) = default;
+ 
+diff --git a/third_party/ipcz/src/reference_drivers/multiprocess_reference_driver.cc b/third_party/ipcz/src/reference_drivers/multiprocess_reference_driver.cc
+index 4f655f496cd24..e759191d02705 100644
+--- a/third_party/ipcz/src/reference_drivers/multiprocess_reference_driver.cc
++++ b/third_party/ipcz/src/reference_drivers/multiprocess_reference_driver.cc
+@@ -68,8 +68,13 @@ class MultiprocessTransport
+                       absl::Span<const IpczDriverHandle> handles) {
+     std::vector<FileDescriptor> descriptors(handles.size());
+     for (size_t i = 0; i < handles.size(); ++i) {
++#if BUILDFLAG(IS_QNX)
++      ABSL_ASSERT(Object::FromHandle(handles[i])->type() ==
++                  Object::kQnxShmHandle);
++#else
+       ABSL_ASSERT(Object::FromHandle(handles[i])->type() ==
+                   Object::kFileDescriptor);
++#endif
+       descriptors[i] =
+           WrappedFileDescriptor::TakeFromHandle(handles[i])->TakeDescriptor();
+     }
