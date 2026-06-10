@@ -1,0 +1,36 @@
+diff --git a/components/named_mojo_ipc_server/endpoint_options.h b/components/named_mojo_ipc_server/endpoint_options.h
+index 6fa6d3b407793..b6ff4e836eda6 100644
+--- a/components/named_mojo_ipc_server/endpoint_options.h
++++ b/components/named_mojo_ipc_server/endpoint_options.h
+@@ -65,9 +65,13 @@ struct EndpointOptions {
+   std::wstring security_descriptor;
+ #endif
+ 
+-#if BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+   // Iff this is true, connecting clients running as a different user from the
+-  // server (i.e. the calling process) will be rejected.
++  // server (i.e. the calling process) will be rejected. On QNX the field is
++  // accepted for cross-platform callers, but the QNX connector backend
++  // currently cannot introspect peer credentials (no SO_PEERCRED / ucred in
++  // <sys/socket.h>); the QNX backend treats this flag as already satisfied
++  // and only fills ConnectionInfo::pid.
+   bool require_same_peer_user = true;
+ #endif
+ };
+diff --git a/components/named_mojo_ipc_server/BUILD.gn b/components/named_mojo_ipc_server/BUILD.gn
+index b423173187d6e..153875197abb0 100644
+--- a/components/named_mojo_ipc_server/BUILD.gn
++++ b/components/named_mojo_ipc_server/BUILD.gn
+@@ -35,8 +35,10 @@ static_library("named_mojo_ipc_server") {
+     "//mojo/public/cpp/system",
+   ]
+   libs = []
+-  if (is_linux) {
++  if ((is_linux && !is_qnx) || is_chromeos) {
+     sources += [ "named_mojo_server_endpoint_connector_linux.cc" ]
++  } else if (is_qnx) {
++    sources += [ "named_mojo_server_endpoint_connector_qnx.cc" ]
+   } else if (is_win) {
+     sources += [ "named_mojo_server_endpoint_connector_win.cc" ]
+   } else if (is_mac) {
