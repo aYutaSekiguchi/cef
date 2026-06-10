@@ -1,0 +1,520 @@
+diff --git a/chrome/browser/ai/BUILD.gn b/chrome/browser/ai/BUILD.gn
+index 4076bcd1b827f..7b40503e6f5f2 100644
+--- a/chrome/browser/ai/BUILD.gn
++++ b/chrome/browser/ai/BUILD.gn
+@@ -7,7 +7,7 @@ import("//components/optimization_guide/features.gni")
+ import("//pdf/features.gni")
+ 
+ assert(build_with_model_execution)
+-assert(is_win || is_mac || is_linux || is_chromeos || is_android)
++assert(is_win || is_mac || is_linux || is_chromeos || is_android || is_qnx)
+ 
+ source_set("ai") {
+   sources = [
+diff --git a/chrome/browser/browser_switcher/BUILD.gn b/chrome/browser/browser_switcher/BUILD.gn
+index 430cb16058482..22d1ffa19824c 100644
+--- a/chrome/browser/browser_switcher/BUILD.gn
++++ b/chrome/browser/browser_switcher/BUILD.gn
+@@ -4,7 +4,7 @@
+ 
+ import("//testing/libfuzzer/fuzzer_test.gni")
+ 
+-assert(is_win || is_mac || is_linux)
++assert(is_win || is_mac || is_linux || is_qnx)
+ 
+ source_set("browser_switcher") {
+   sources = []
+diff --git a/chrome/browser/chooser_controller/BUILD.gn b/chrome/browser/chooser_controller/BUILD.gn
+index b99bf55be6464..cd3f003f3e51f 100644
+--- a/chrome/browser/chooser_controller/BUILD.gn
++++ b/chrome/browser/chooser_controller/BUILD.gn
+@@ -4,7 +4,7 @@
+ 
+ import("//extensions/buildflags/buildflags.gni")
+ 
+-assert(is_win || is_mac || is_linux || is_chromeos || is_android)
++assert(is_win || is_mac || is_linux || is_chromeos || is_android || is_qnx)
+ 
+ source_set("chooser_controller") {
+   sources = [
+diff --git a/chrome/browser/commerce/BUILD.gn b/chrome/browser/commerce/BUILD.gn
+index 53e48e9c71456..32ce24c2696f6 100644
+--- a/chrome/browser/commerce/BUILD.gn
++++ b/chrome/browser/commerce/BUILD.gn
+@@ -2,7 +2,7 @@
+ # Use of this source code is governed by a BSD-style license that can be
+ # found in the LICENSE file.
+ 
+-assert(is_win || is_mac || is_linux || is_chromeos || is_android)
++assert(is_win || is_mac || is_linux || is_chromeos || is_android || is_qnx)
+ 
+ source_set("commerce") {
+   sources = [ "shopping_service_factory.h" ]
+diff --git a/chrome/browser/companion/text_finder/BUILD.gn b/chrome/browser/companion/text_finder/BUILD.gn
+index 9b8770822b500..3c57e1b41da85 100644
+--- a/chrome/browser/companion/text_finder/BUILD.gn
++++ b/chrome/browser/companion/text_finder/BUILD.gn
+@@ -2,7 +2,7 @@
+ # Use of this source code is governed by a BSD-style license that can be
+ # found in the LICENSE file.
+ 
+-assert(is_win || is_mac || is_linux || is_chromeos || is_android)
++assert(is_win || is_mac || is_linux || is_chromeos || is_android || is_qnx)
+ 
+ source_set("text_finder") {
+   sources = [
+diff --git a/chrome/browser/content_settings/BUILD.gn b/chrome/browser/content_settings/BUILD.gn
+index cec67ed273312..7c48aa4b802e0 100644
+--- a/chrome/browser/content_settings/BUILD.gn
++++ b/chrome/browser/content_settings/BUILD.gn
+@@ -7,7 +7,7 @@ import("//content/public/common/features.gni")
+ import("//extensions/buildflags/buildflags.gni")
+ import("//pdf/features.gni")
+ 
+-assert(is_win || is_mac || is_linux || is_chromeos || is_android)
++assert(is_win || is_mac || is_linux || is_chromeos || is_android || is_qnx)
+ 
+ source_set("content_settings") {
+   sources = [
+diff --git a/chrome/browser/feedback/BUILD.gn b/chrome/browser/feedback/BUILD.gn
+index 57d7219c37d9e..d458ef090584e 100644
+--- a/chrome/browser/feedback/BUILD.gn
++++ b/chrome/browser/feedback/BUILD.gn
+@@ -2,7 +2,7 @@
+ # Use of this source code is governed by a BSD-style license that can be
+ # found in the LICENSE file.
+ 
+-assert(is_win || is_mac || is_linux || is_chromeos || is_android)
++assert(is_win || is_mac || is_linux || is_chromeos || is_android || is_qnx)
+ 
+ import("//build/config/chromeos/ui_mode.gni")
+ 
+diff --git a/chrome/browser/file_system_access/BUILD.gn b/chrome/browser/file_system_access/BUILD.gn
+index ebe3e1a35ea41..91651414bb972 100644
+--- a/chrome/browser/file_system_access/BUILD.gn
++++ b/chrome/browser/file_system_access/BUILD.gn
+@@ -7,7 +7,7 @@ import("//components/guest_view/buildflags/buildflags.gni")
+ import("//components/safe_browsing/buildflags.gni")
+ import("//extensions/buildflags/buildflags.gni")
+ 
+-assert(is_win || is_mac || is_linux || is_chromeos || is_android)
++assert(is_win || is_mac || is_linux || is_chromeos || is_android || is_qnx)
+ 
+ source_set("file_system_access") {
+   sources = [
+diff --git a/chrome/browser/hid/BUILD.gn b/chrome/browser/hid/BUILD.gn
+index c9f9a4c3cdcba..20f466c1c0b23 100644
+--- a/chrome/browser/hid/BUILD.gn
++++ b/chrome/browser/hid/BUILD.gn
+@@ -2,7 +2,7 @@
+ # Use of this source code is governed by a BSD-style license that can be
+ # found in the LICENSE file.
+ 
+-assert(is_win || is_mac || is_linux || is_chromeos)
++assert(is_win || is_mac || is_linux || is_chromeos || is_qnx)
+ 
+ source_set("hid") {
+   sources = [
+diff --git a/chrome/browser/image_editor/BUILD.gn b/chrome/browser/image_editor/BUILD.gn
+index eb9ecb29c1780..912ea0d466725 100644
+--- a/chrome/browser/image_editor/BUILD.gn
++++ b/chrome/browser/image_editor/BUILD.gn
+@@ -3,7 +3,7 @@
+ # found in the LICENSE file.
+ import("//build/config/ui.gni")
+ 
+-assert(is_chromeos || is_linux || is_mac || is_win,
++assert(is_chromeos || is_linux || is_mac || is_win || is_qnx,
+        "Image Editor is for desktop plaforms only")
+ assert(!is_fuchsia, "Fuchsia shouldn't use anything in //chrome")
+ 
+diff --git a/chrome/browser/importer/BUILD.gn b/chrome/browser/importer/BUILD.gn
+index 0b36e87039987..4a1384408ed96 100644
+--- a/chrome/browser/importer/BUILD.gn
++++ b/chrome/browser/importer/BUILD.gn
+@@ -2,7 +2,7 @@
+ # Use of this source code is governed by a BSD-style license that can be
+ # found in the LICENSE file.
+ 
+-assert(is_win || is_mac || is_linux || is_chromeos)
++assert(is_win || is_mac || is_linux || is_chromeos || is_qnx)
+ 
+ source_set("importer") {
+   sources = [
+diff --git a/chrome/browser/lookalikes/BUILD.gn b/chrome/browser/lookalikes/BUILD.gn
+index a5c57af8665a7..cd3ae836788b5 100644
+--- a/chrome/browser/lookalikes/BUILD.gn
++++ b/chrome/browser/lookalikes/BUILD.gn
+@@ -2,7 +2,7 @@
+ # Use of this source code is governed by a BSD-style license that can be
+ # found in the LICENSE file.
+ 
+-assert(is_win || is_mac || is_linux || is_chromeos || is_android)
++assert(is_win || is_mac || is_linux || is_chromeos || is_android || is_qnx)
+ 
+ source_set("lookalikes") {
+   sources = [
+diff --git a/chrome/browser/media/webrtc/BUILD.gn b/chrome/browser/media/webrtc/BUILD.gn
+index 36df39fe7eb9d..5b59129a1a6ec 100644
+--- a/chrome/browser/media/webrtc/BUILD.gn
++++ b/chrome/browser/media/webrtc/BUILD.gn
+@@ -2,7 +2,7 @@
+ # Use of this source code is governed by a BSD-style license that can be
+ # found in the LICENSE file.
+ 
+-assert(is_win || is_mac || is_linux || is_chromeos || is_android)
++assert(is_win || is_mac || is_linux || is_chromeos || is_android || is_qnx)
+ 
+ import("//build/config/ozone.gni")
+ import("//build/config/ui.gni")
+diff --git a/chrome/browser/navigation_predictor/BUILD.gn b/chrome/browser/navigation_predictor/BUILD.gn
+index c0cc276e2c2b8..5ce0d8d32b38e 100644
+--- a/chrome/browser/navigation_predictor/BUILD.gn
++++ b/chrome/browser/navigation_predictor/BUILD.gn
+@@ -4,7 +4,7 @@
+ 
+ import("//components/optimization_guide/features.gni")
+ 
+-assert(is_win || is_mac || is_linux || is_chromeos || is_android)
++assert(is_win || is_mac || is_linux || is_chromeos || is_android || is_qnx)
+ 
+ source_set("navigation_predictor") {
+   sources = [
+diff --git a/chrome/browser/optimization_guide/BUILD.gn b/chrome/browser/optimization_guide/BUILD.gn
+index eb154bb1f2b0b..d0efa18b1d95c 100644
+--- a/chrome/browser/optimization_guide/BUILD.gn
++++ b/chrome/browser/optimization_guide/BUILD.gn
+@@ -4,7 +4,7 @@
+ 
+ import("//components/optimization_guide/features.gni")
+ 
+-assert(is_win || is_mac || is_linux || is_chromeos || is_android)
++assert(is_win || is_mac || is_linux || is_chromeos || is_android || is_qnx)
+ 
+ source_set("optimization_guide") {
+   sources = [
+diff --git a/chrome/browser/picture_in_picture/BUILD.gn b/chrome/browser/picture_in_picture/BUILD.gn
+index 30d160686cef8..05932fbfa82d2 100644
+--- a/chrome/browser/picture_in_picture/BUILD.gn
++++ b/chrome/browser/picture_in_picture/BUILD.gn
+@@ -4,7 +4,7 @@
+ 
+ import("//chrome/common/features.gni")
+ 
+-assert(is_win || is_mac || is_linux || is_chromeos || is_android)
++assert(is_win || is_mac || is_linux || is_chromeos || is_android || is_qnx)
+ 
+ source_set("picture_in_picture") {
+   sources = [
+diff --git a/chrome/browser/plus_addresses/BUILD.gn b/chrome/browser/plus_addresses/BUILD.gn
+index d2f0d045b04f3..b9bbac7f64638 100644
+--- a/chrome/browser/plus_addresses/BUILD.gn
++++ b/chrome/browser/plus_addresses/BUILD.gn
+@@ -2,7 +2,7 @@
+ # Use of this source code is governed by a BSD-style license that can be
+ # found in the LICENSE file.
+ 
+-assert(is_win || is_mac || is_linux || is_chromeos || is_android)
++assert(is_win || is_mac || is_linux || is_chromeos || is_android || is_qnx)
+ 
+ source_set("plus_addresses") {
+   sources = [
+diff --git a/chrome/browser/predictors/BUILD.gn b/chrome/browser/predictors/BUILD.gn
+index 44a99e662f4c1..1d0b7bafee885 100644
+--- a/chrome/browser/predictors/BUILD.gn
++++ b/chrome/browser/predictors/BUILD.gn
+@@ -5,7 +5,7 @@
+ import("//extensions/buildflags/buildflags.gni")
+ import("//third_party/protobuf/proto_library.gni")
+ 
+-assert(is_win || is_mac || is_linux || is_chromeos || is_android)
++assert(is_win || is_mac || is_linux || is_chromeos || is_android || is_qnx)
+ 
+ proto_library("resource_prefetch_predictor_proto") {
+   sources = [ "resource_prefetch_predictor.proto" ]
+diff --git a/chrome/browser/predictors/lcp_critical_path_predictor/BUILD.gn b/chrome/browser/predictors/lcp_critical_path_predictor/BUILD.gn
+index 0f8b1b4a5ed5c..308c9e7b9a7ed 100644
+--- a/chrome/browser/predictors/lcp_critical_path_predictor/BUILD.gn
++++ b/chrome/browser/predictors/lcp_critical_path_predictor/BUILD.gn
+@@ -4,7 +4,7 @@
+ 
+ import("//third_party/protobuf/proto_library.gni")
+ 
+-assert(is_win || is_mac || is_linux || is_chromeos || is_android)
++assert(is_win || is_mac || is_linux || is_chromeos || is_android || is_qnx)
+ 
+ proto_library("lcp_critical_path_predictor_proto") {
+   sources = [ "lcp_critical_path_predictor.proto" ]
+diff --git a/chrome/browser/prefs/BUILD.gn b/chrome/browser/prefs/BUILD.gn
+index c9f76e7418faa..4e70821529cde 100644
+--- a/chrome/browser/prefs/BUILD.gn
++++ b/chrome/browser/prefs/BUILD.gn
+@@ -9,7 +9,7 @@ import("//components/safe_browsing/buildflags.gni")
+ import("//extensions/buildflags/buildflags.gni")
+ import("//pdf/features.gni")
+ 
+-assert(is_win || is_mac || is_linux || is_chromeos || is_android)
++assert(is_win || is_mac || is_linux || is_chromeos || is_android || is_qnx)
+ 
+ source_set("prefs") {
+   sources = [
+diff --git a/chrome/browser/preloading/prefetch/no_state_prefetch/BUILD.gn b/chrome/browser/preloading/prefetch/no_state_prefetch/BUILD.gn
+index 3bb7ecc23f23d..84ec62a8bbc00 100644
+--- a/chrome/browser/preloading/prefetch/no_state_prefetch/BUILD.gn
++++ b/chrome/browser/preloading/prefetch/no_state_prefetch/BUILD.gn
+@@ -4,7 +4,7 @@
+ 
+ import("//extensions/buildflags/buildflags.gni")
+ 
+-assert(is_win || is_mac || is_linux || is_chromeos || is_android)
++assert(is_win || is_mac || is_linux || is_chromeos || is_android || is_qnx)
+ 
+ source_set("no_state_prefetch") {
+   sources = [
+diff --git a/chrome/browser/record_replay/BUILD.gn b/chrome/browser/record_replay/BUILD.gn
+index effe7b4bda877..7e264c7ac123d 100644
+--- a/chrome/browser/record_replay/BUILD.gn
++++ b/chrome/browser/record_replay/BUILD.gn
+@@ -4,7 +4,7 @@
+ 
+ import("//third_party/protobuf/proto_library.gni")
+ 
+-assert(is_win || is_mac || is_linux || is_chromeos)
++assert(is_win || is_mac || is_linux || is_chromeos || is_qnx)
+ 
+ static_library("record_replay") {
+   sources = [
+diff --git a/chrome/browser/reduce_accept_language/BUILD.gn b/chrome/browser/reduce_accept_language/BUILD.gn
+index 0aa316278002b..6e9437746db83 100644
+--- a/chrome/browser/reduce_accept_language/BUILD.gn
++++ b/chrome/browser/reduce_accept_language/BUILD.gn
+@@ -4,7 +4,7 @@
+ 
+ import("//chrome/common/features.gni")
+ 
+-assert(is_win || is_mac || is_linux || is_chromeos || is_android)
++assert(is_win || is_mac || is_linux || is_chromeos || is_android || is_qnx)
+ 
+ source_set("reduce_accept_language") {
+   sources = [ "reduce_accept_language_factory.h" ]
+diff --git a/chrome/browser/regional_capabilities/BUILD.gn b/chrome/browser/regional_capabilities/BUILD.gn
+index cc06bf4c9467a..8cb856f5fb53e 100644
+--- a/chrome/browser/regional_capabilities/BUILD.gn
++++ b/chrome/browser/regional_capabilities/BUILD.gn
+@@ -4,7 +4,7 @@
+ 
+ import("//build/config/chrome_build.gni")
+ 
+-assert(is_win || is_mac || is_linux || is_chromeos || is_android)
++assert(is_win || is_mac || is_linux || is_chromeos || is_android || is_qnx)
+ 
+ source_set("regional_capabilities") {
+   sources = [
+diff --git a/chrome/browser/resources/app_home/BUILD.gn b/chrome/browser/resources/app_home/BUILD.gn
+index f2e97847b6c14..c989f0d565060 100644
+--- a/chrome/browser/resources/app_home/BUILD.gn
++++ b/chrome/browser/resources/app_home/BUILD.gn
+@@ -4,7 +4,7 @@
+ 
+ import("//ui/webui/resources/tools/build_webui.gni")
+ 
+-assert(is_win || is_mac || is_linux)
++assert(is_win || is_mac || is_linux || is_qnx)
+ 
+ build_webui("build") {
+   grd_prefix = "app_home"
+diff --git a/chrome/browser/resources/app_settings/BUILD.gn b/chrome/browser/resources/app_settings/BUILD.gn
+index fc897d488cd06..51a8b35c5090a 100644
+--- a/chrome/browser/resources/app_settings/BUILD.gn
++++ b/chrome/browser/resources/app_settings/BUILD.gn
+@@ -5,7 +5,7 @@
+ import("//chrome/common/features.gni")
+ import("//ui/webui/resources/tools/build_webui.gni")
+ 
+-assert(is_win || is_mac || is_linux)
++assert(is_win || is_mac || is_linux || is_qnx)
+ assert(!is_fuchsia, "Fuchsia shouldn't use anything in //chrome")
+ 
+ build_webui("build") {
+diff --git a/chrome/browser/resources/browser_switch/BUILD.gn b/chrome/browser/resources/browser_switch/BUILD.gn
+index 65d27b436acd4..3136abaa3f38c 100644
+--- a/chrome/browser/resources/browser_switch/BUILD.gn
++++ b/chrome/browser/resources/browser_switch/BUILD.gn
+@@ -5,7 +5,7 @@
+ import("//chrome/common/features.gni")
+ import("//ui/webui/resources/tools/build_webui.gni")
+ 
+-assert(is_win || is_mac || is_linux)
++assert(is_win || is_mac || is_linux || is_qnx)
+ 
+ build_webui("build") {
+   grd_prefix = "browser_switch"
+diff --git a/chrome/browser/resources/new_tab_page_instant/BUILD.gn b/chrome/browser/resources/new_tab_page_instant/BUILD.gn
+index 6c6db1f6dc3dd..fc274f70a50e1 100644
+--- a/chrome/browser/resources/new_tab_page_instant/BUILD.gn
++++ b/chrome/browser/resources/new_tab_page_instant/BUILD.gn
+@@ -4,7 +4,7 @@
+ 
+ import("//ui/webui/resources/tools/build_webui.gni")
+ 
+-assert(is_linux || is_chromeos || is_win || is_mac)
++assert(is_linux || is_chromeos || is_win || is_mac || is_qnx)
+ assert(!is_fuchsia, "Fuchsia shouldn't use anything in //chrome")
+ 
+ build_webui("build") {
+diff --git a/chrome/browser/resources/on_device_translation_internals/BUILD.gn b/chrome/browser/resources/on_device_translation_internals/BUILD.gn
+index dc928d0ceabc9..c2e4707d6d0ca 100644
+--- a/chrome/browser/resources/on_device_translation_internals/BUILD.gn
++++ b/chrome/browser/resources/on_device_translation_internals/BUILD.gn
+@@ -4,7 +4,7 @@
+ 
+ import("//ui/webui/resources/tools/build_webui.gni")
+ 
+-assert(is_win || is_mac || is_linux)
++assert(is_win || is_mac || is_linux || is_qnx)
+ 
+ build_webui("build") {
+   grd_prefix = "on_device_translation_internals"
+diff --git a/chrome/browser/resources/sandbox_internals/BUILD.gn b/chrome/browser/resources/sandbox_internals/BUILD.gn
+index ce636be0d973f..9d7b79d42218d 100644
+--- a/chrome/browser/resources/sandbox_internals/BUILD.gn
++++ b/chrome/browser/resources/sandbox_internals/BUILD.gn
+@@ -4,7 +4,7 @@
+ 
+ import("//ui/webui/resources/tools/build_webui.gni")
+ 
+-assert(is_android || is_linux || is_chromeos || is_win)
++assert(is_android || is_linux || is_chromeos || is_win || is_qnx)
+ 
+ build_webui("build") {
+   grd_prefix = "sandbox_internals"
+diff --git a/chrome/browser/resources/signin/history_sync_optin/BUILD.gn b/chrome/browser/resources/signin/history_sync_optin/BUILD.gn
+index 06f41d0b5a3ad..0fb1ff583fb17 100644
+--- a/chrome/browser/resources/signin/history_sync_optin/BUILD.gn
++++ b/chrome/browser/resources/signin/history_sync_optin/BUILD.gn
+@@ -4,7 +4,7 @@
+ 
+ import("//ui/webui/resources/tools/build_webui.gni")
+ 
+-assert(is_win || is_mac || is_linux)
++assert(is_win || is_mac || is_linux || is_qnx)
+ 
+ build_webui("build") {
+   ts_composite = true
+diff --git a/chrome/browser/resources/tab_search/BUILD.gn b/chrome/browser/resources/tab_search/BUILD.gn
+index 5559ef2d0038d..57e746c2667f2 100644
+--- a/chrome/browser/resources/tab_search/BUILD.gn
++++ b/chrome/browser/resources/tab_search/BUILD.gn
+@@ -7,7 +7,7 @@ import("//ui/webui/resources/tools/build_webui.gni")
+ import("//ui/webui/resources/tools/generate_grd.gni")
+ import("//ui/webui/webui_features.gni")
+ 
+-assert(is_linux || is_chromeos || is_win || is_mac)
++assert(is_linux || is_chromeos || is_win || is_mac || is_qnx)
+ 
+ build_webui("build") {
+   grd_prefix = "tab_search"
+diff --git a/chrome/browser/resources/updater/BUILD.gn b/chrome/browser/resources/updater/BUILD.gn
+index f42fdf10ffc99..af3dc6e6a30eb 100644
+--- a/chrome/browser/resources/updater/BUILD.gn
++++ b/chrome/browser/resources/updater/BUILD.gn
+@@ -4,7 +4,7 @@
+ 
+ import("//ui/webui/resources/tools/build_webui.gni")
+ 
+-assert(is_mac || is_win || is_linux)
++assert(is_mac || is_win || is_linux || is_qnx)
+ 
+ build_webui("build") {
+   grd_prefix = "updater"
+diff --git a/chrome/browser/search/BUILD.gn b/chrome/browser/search/BUILD.gn
+index b3282aa2c591c..d6cd4143773c6 100644
+--- a/chrome/browser/search/BUILD.gn
++++ b/chrome/browser/search/BUILD.gn
+@@ -2,7 +2,7 @@
+ # Use of this source code is governed by a BSD-style license that can be
+ # found in the LICENSE file.
+ 
+-assert(is_win || is_mac || is_linux || is_chromeos || is_android)
++assert(is_win || is_mac || is_linux || is_chromeos || is_android || is_qnx)
+ 
+ source_set("search") {
+   sources = [
+diff --git a/chrome/browser/search/background/BUILD.gn b/chrome/browser/search/background/BUILD.gn
+index 606c8e9096c56..ce949d2460cc0 100644
+--- a/chrome/browser/search/background/BUILD.gn
++++ b/chrome/browser/search/background/BUILD.gn
+@@ -2,7 +2,7 @@
+ # Use of this source code is governed by a BSD-style license that can be
+ # found in the LICENSE file.
+ 
+-assert(is_win || is_mac || is_linux || is_chromeos || is_android)
++assert(is_win || is_mac || is_linux || is_chromeos || is_android || is_qnx)
+ 
+ import("//third_party/protobuf/proto_library.gni")
+ 
+diff --git a/chrome/browser/search_engine_choice/BUILD.gn b/chrome/browser/search_engine_choice/BUILD.gn
+index 20662a32b3f59..cbf4895db3b20 100644
+--- a/chrome/browser/search_engine_choice/BUILD.gn
++++ b/chrome/browser/search_engine_choice/BUILD.gn
+@@ -5,7 +5,7 @@
+ import("//build/config/chrome_build.gni")
+ import("//build/config/chromeos/args.gni")
+ 
+-assert(is_win || is_mac || is_linux || is_chromeos || is_android)
++assert(is_win || is_mac || is_linux || is_chromeos || is_android || is_qnx)
+ 
+ source_set("search_engine_choice") {
+   sources = [ "search_engine_choice_service_factory.h" ]
+diff --git a/chrome/browser/search_engines/BUILD.gn b/chrome/browser/search_engines/BUILD.gn
+index 031c0154efa03..6699bc1fd8b41 100644
+--- a/chrome/browser/search_engines/BUILD.gn
++++ b/chrome/browser/search_engines/BUILD.gn
+@@ -4,7 +4,7 @@
+ 
+ import("//rlz/buildflags/buildflags.gni")
+ 
+-assert(is_win || is_mac || is_linux || is_chromeos || is_android)
++assert(is_win || is_mac || is_linux || is_chromeos || is_android || is_qnx)
+ 
+ source_set("search_engines") {
+   public = [
+diff --git a/chrome/browser/sharing_hub/BUILD.gn b/chrome/browser/sharing_hub/BUILD.gn
+index bfeb5bd3dc028..9a0374af457dd 100644
+--- a/chrome/browser/sharing_hub/BUILD.gn
++++ b/chrome/browser/sharing_hub/BUILD.gn
+@@ -2,7 +2,7 @@
+ # Use of this source code is governed by a BSD-style license that can be
+ # found in the LICENSE file.
+ 
+-assert(is_win || is_mac || is_linux || is_chromeos)
++assert(is_win || is_mac || is_linux || is_chromeos || is_qnx)
+ 
+ source_set("sharing_hub") {
+   sources = [
+diff --git a/chrome/browser/themes/BUILD.gn b/chrome/browser/themes/BUILD.gn
+index 4924b822aa42e..c556f57268622 100644
+--- a/chrome/browser/themes/BUILD.gn
++++ b/chrome/browser/themes/BUILD.gn
+@@ -4,7 +4,7 @@
+ 
+ import("//extensions/buildflags/buildflags.gni")
+ 
+-assert(is_win || is_mac || is_linux || is_chromeos)
++assert(is_win || is_mac || is_linux || is_chromeos || is_qnx)
+ 
+ source_set("themes") {
+   public = [
+diff --git a/chrome/browser/updates/BUILD.gn b/chrome/browser/updates/BUILD.gn
+index 912cb54fba2e6..14c986cef4abe 100644
+--- a/chrome/browser/updates/BUILD.gn
++++ b/chrome/browser/updates/BUILD.gn
+@@ -3,7 +3,7 @@
+ # found in the LICENSE file.
+ 
+ source_set("update_metrics") {
+-  assert(is_linux || is_win || is_mac)
++  assert(is_linux || is_win || is_mac || is_qnx)
+ 
+   sources = [ "update_metrics_provider.cc" ]
+ 
