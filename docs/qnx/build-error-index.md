@@ -62,6 +62,7 @@ rg -n "client_filterable_state|Study::PLATFORM|PLATFORM_QNX|Unknown platform" do
 rg -n "ipcz/reference_drivers/random|getrandom|DevUrandom" docs/qnx/history/build-errors
 rg -n "kQnxShmHandle|QnxShmMemory|QnxShmHandle|wrapped_file_descriptor" docs/qnx/history/build-errors
 rg -n "IPCZ_MEMFD_QNX_SKIP_IMPL|MFD_ALLOW_SEALING|MultiprocessMemory" docs/qnx/history/build-errors
+rg -n "rust_bindgen_generator|mojo_c_system_bindings|Endian not defined" docs/qnx/history/build-errors
 rg -n "crashpad_client.h|capture_context.h|NativeCPUContext" docs/qnx/history/build-errors
 ```
 
