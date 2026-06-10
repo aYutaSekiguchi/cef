@@ -1,0 +1,13 @@
+diff --git a/components/signin/features.gni b/components/signin/features.gni
+index cbd5ae2384760..f63ab60458702 100644
+--- a/components/signin/features.gni
++++ b/components/signin/features.gni
+@@ -10,7 +10,7 @@ declare_args() {
+ }
+ 
+ # Dice is supported on the platform (but not necessarily enabled).
+-enable_dice_support = is_linux || is_mac || is_win || is_fuchsia
++enable_dice_support = is_linux || is_qnx || is_mac || is_win || is_fuchsia
+ 
+ # Mirror is enabled and other account consistency mechanisms are not available.
+ enable_mirror = is_android || is_chromeos || is_ios

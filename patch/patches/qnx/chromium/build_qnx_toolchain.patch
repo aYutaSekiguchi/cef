@@ -40,8 +40,7 @@ index 4d1ac59b9b7dc..fda4af594d07c 100644
  is_chromeos = current_os == "chromeos"
  is_fuchsia = current_os == "fuchsia"
  is_ios = current_os == "ios"
--is_linux = current_os == "linux"
-+is_linux = current_os == "linux" || is_qnx
+ is_linux = current_os == "linux"
  is_mac = current_os == "mac"
  is_wasm = current_os == "emscripten"
  is_watchos = current_os == "watchos"

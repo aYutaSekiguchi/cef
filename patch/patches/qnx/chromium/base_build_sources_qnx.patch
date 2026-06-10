@@ -111,25 +111,6 @@ index c9811ba7835ed..51abfc3ce236f 100644
      sources += [ "debug/stack_trace_posix.cc" ]
    }
  
-@@ -2367,6 +2417,18 @@ component("base") {
-     }
-   }
- 
-+  if (is_qnx) {
-+    sources -= [
-+      "linux_util.cc",
-+      "linux_util.h",
-+      "memory/available_memory_monitor.cc",
-+      "memory/available_memory_monitor.h",
-+      # sys_info_linux.cc uses /proc/meminfo and Linux-specific APIs.
-+      # sys_info_qnx.cc provides QNX-native implementations instead.
-+      "system/sys_info_linux.cc",
-+    ]
-+  }
-+
-   if (use_blink) {
-     sources += [
-       "files/file_path_watcher.cc",
 @@ -2404,6 +2466,12 @@ component("base") {
        "time/time_now_posix.cc",
      ]

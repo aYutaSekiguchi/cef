@@ -1,0 +1,13 @@
+diff --git a/media/cdm/library_cdm/cdm_paths.gni b/media/cdm/library_cdm/cdm_paths.gni
+index b7de69a69e4f9..b43a7e71f8d86 100644
+--- a/media/cdm/library_cdm/cdm_paths.gni
++++ b/media/cdm/library_cdm/cdm_paths.gni
+@@ -16,6 +16,8 @@ if (is_chromeos) {
+   component_os = "cros"
+ } else if (is_linux) {
+   component_os = "linux"
++} else if (is_qnx) {
++  component_os = "linux"
+ } else if (is_win) {
+   component_os = "win"
+ } else if (is_mac) {

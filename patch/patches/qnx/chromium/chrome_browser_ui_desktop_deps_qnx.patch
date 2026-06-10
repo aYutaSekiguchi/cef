@@ -1,0 +1,13 @@
+diff --git a/chrome/browser/ui/BUILD.gn b/chrome/browser/ui/BUILD.gn
+index 00b9254990f24..3d927ee1e4e34 100644
+--- a/chrome/browser/ui/BUILD.gn
++++ b/chrome/browser/ui/BUILD.gn
+@@ -2925,7 +2925,7 @@ static_library("ui") {
+     }
+   }
+ 
+-  if (is_win || is_mac || is_linux || is_chromeos) {
++  if (is_win || is_mac || is_linux || is_chromeos || is_qnx) {
+     sources += [
+       "frame/window_frame_util.cc",
+       "frame/window_frame_util.h",
