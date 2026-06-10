@@ -1,0 +1,13 @@
+diff --git a/chrome/services/speech/buildflags/buildflags.gni b/chrome/services/speech/buildflags/buildflags.gni
+index 5baed7d1e7d1d..2a2e2fccea462 100644
+--- a/chrome/services/speech/buildflags/buildflags.gni
++++ b/chrome/services/speech/buildflags/buildflags.gni
+@@ -8,7 +8,7 @@ import("//build/config/chromeos/ui_mode.gni")
+ declare_args() {
+   # Whether the browser provides a speech recognition service
+   # (//media/mojo/mojom/speech_recognition_service.mojom) to the renderer.
+-  enable_speech_service = is_chromeos || is_linux || is_mac || is_win
++  enable_speech_service = is_chromeos || is_linux || is_qnx || is_mac || is_win
+ }
+ 
+ declare_args() {
