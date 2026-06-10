@@ -16,6 +16,7 @@ from qnx_tests.modules.angle import AngleModule
 from qnx_tests.modules.base import BaseModule
 from qnx_tests.modules.v8 import V8Module
 from qnx_tests.modules.swiftshader import SwiftShaderModule
+from qnx_tests.modules.mojo import MojoModule
 
 
 MODULES = {
@@ -23,6 +24,7 @@ MODULES = {
     "v8": V8Module(),
     "swiftshader": SwiftShaderModule(),
     "angle": AngleModule(),
+    "mojo": MojoModule(),
 }
 
 
@@ -32,4 +34,5 @@ __all__ = [
     "BaseModule",
     "V8Module",
     "SwiftShaderModule",
+    "MojoModule",
 ]

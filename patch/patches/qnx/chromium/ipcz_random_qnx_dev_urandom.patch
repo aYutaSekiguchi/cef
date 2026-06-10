@@ -1,0 +1,16 @@
+diff --git a/third_party/ipcz/src/reference_drivers/random.cc b/third_party/ipcz/src/reference_drivers/random.cc
+index 29f8862b1a854..b41651d7f5bf1 100644
+--- a/third_party/ipcz/src/reference_drivers/random.cc
++++ b/third_party/ipcz/src/reference_drivers/random.cc
+@@ -100,7 +100,10 @@ void RandomBytes(absl::Span<uint8_t> destination) {
+ #elif BUILDFLAG(IS_MAC)
+   const bool ok = getentropy(destination.data(), destination.size()) == 0;
+   ABSL_ASSERT(ok);
+-#elif BUILDFLAG(IS_IOS)
++#elif BUILDFLAG(IS_IOS) || BUILDFLAG(IS_QNX)
++  // QNX lacks __NR_getrandom (the Linux branch above) but ships
++  // /dev/urandom as a stable entropy source. Reuse the same DevUrandom
++  // path that iOS uses, gated by the POSIX helper above.
+   RandomBytesFromDevUrandom(destination);
+ #else
+ #error "Unsupported platform"
