@@ -38,12 +38,3 @@ index bc9a221e6b..0723636437 100644
    import("angle_perftests.gni")
  
    # This test suite is for perf tests that use ANGLE's internals in some direct way.
-@@ -703,7 +703,7 @@ if (build_angle_perftests) {
-       data_deps += [ "$angle_root/third_party/mesa" ]
-     }
- 
--    if (is_win || is_linux || is_qnx || is_chromeos) {
-+    if (is_win || is_linux || is_chromeos) {
-       data_deps += [ "${angle_root}/third_party/glmark2:glmark2_angle" ]
-     }
-     if (is_win && target_cpu != "arm64") {

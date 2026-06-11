@@ -14,7 +14,7 @@
 ## Root cause
 
 - The `glmark2_angle` benchmark in ANGLE's third-party glmark2 tree does not have a QNX native-state backend.
-- The earlier QNX allow-list change made `glmark2_angle` reachable again, but the benchmark source still only supports X11/DRM/GBM/Wayland/Dispmanx/Win32 state objects.
+- A temporary QNX allow-list experiment made `glmark2_angle` reachable, but the benchmark source still only supports X11/DRM/GBM/Wayland/Dispmanx/Win32 state objects.
 - QNX needs the ANGLE unit/perf tests, but not this benchmark target for the build to remain healthy.
 
 ## Fix pattern
@@ -24,8 +24,8 @@
 
 ## Applied change
 
-- Removed QNX from the `glmark2_angle` `data_deps` condition in `third_party/angle/src/tests/BUILD.gn`.
-- Updated the CEF patch and its comment to note that `glmark2_angle` stays excluded on QNX.
+- Kept the QNX allow-list only for the main ANGLE test targets.
+- Removed the stale `glmark2_angle` hunk from the CEF patch so it applies cleanly on upstream ANGLE HEAD.
 
 ## Verification
 
