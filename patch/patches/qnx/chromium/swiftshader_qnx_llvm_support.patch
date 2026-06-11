@@ -1,0 +1,17 @@
+# QNX: keep SwiftShader LLVM Reactor tests available even when QNX no
+# longer masquerades as is_linux. The QNX test runner expects the LLVM
+# variant in the graph.
+
+diff --git a/src/Reactor/reactor.gni b/src/Reactor/reactor.gni
+index 67dfeb0ec..7ddaa8aab 100644
+--- a/src/Reactor/reactor.gni
++++ b/src/Reactor/reactor.gni
+@@ -16,7 +16,7 @@ declare_args() {
+ }
+ 
+ declare_args() {
+-  supports_llvm = is_linux || is_chromeos || is_fuchsia || is_win || is_android
++  supports_llvm = is_qnx || is_linux || is_chromeos || is_fuchsia || is_win || is_android
+     # LLVM uses C++17 features which require macOS 10.12, while Chrome's minimum platform for x86 is 10.11.
+     # Don't build LLVM on Mac, unless we have to. This only happens on ARM64 devices, which launched with 11.0.
+     # TODO(b/174843857): Remove check for !supports_subzero once Chrome supports macOS 10.12
