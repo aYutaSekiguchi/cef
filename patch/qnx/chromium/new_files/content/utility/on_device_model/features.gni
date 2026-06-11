@@ -1,0 +1,12 @@
+# Copyright 2026 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//services/on_device_model/on_device_model.gni")
+
+declare_args() {
+  # Master switch for the on-device model service integration in content/.
+  # Consumers that also depend on Dawn should additionally check use_dawn
+  # at the BUILD.gn level (see content/utility/BUILD.gn).
+  enable_on_device_model = use_on_device_model_service
+}
