@@ -1,0 +1,106 @@
+diff --git a/ash/BUILD.gn b/ash/BUILD.gn
+index 1efac12f7100b..dcfa2d340299d 100644
+--- a/ash/BUILD.gn
++++ b/ash/BUILD.gn
+@@ -5504,10 +5504,12 @@ static_library("test_support") {
+     "//ui/snapshot",
+     "//ui/views",
+     "//ui/views:test_support",
+-    "//ui/views:view_pixel_diff_test_support",
+     "//ui/wm",
+     "//ui/wm/public",
+   ]
++    if (!is_qnx) {
++      deps += [ "//ui/views:view_pixel_diff_test_support" ]
++    }
+ 
+   # TODO(crbug.com/40031409): Fix code that adds exit-time destructors and
+   # enable the diagnostic by removing this line.
+diff --git a/chrome/browser/actor/ui/BUILD.gn b/chrome/browser/actor/ui/BUILD.gn
+index ec72fc4bdbfcc..09ad035cece32 100644
+--- a/chrome/browser/actor/ui/BUILD.gn
++++ b/chrome/browser/actor/ui/BUILD.gn
+@@ -229,8 +229,10 @@ if (!skip_android_unmigrated_actor_files) {
+       "//content/test:test_support",
+       "//testing/gmock",
+       "//testing/gtest",
+-      "//ui/views:view_pixel_diff_test_support",
+     ]
++      if (!is_qnx) {
++        deps += [ "//ui/views:view_pixel_diff_test_support" ]
++      }
+   }
+ 
+   source_set("interactive_ui_tests") {
+diff --git a/chrome/browser/ash/app_mode/BUILD.gn b/chrome/browser/ash/app_mode/BUILD.gn
+index b511f01198c46..163fac0169872 100644
+--- a/chrome/browser/ash/app_mode/BUILD.gn
++++ b/chrome/browser/ash/app_mode/BUILD.gn
+@@ -303,13 +303,15 @@ source_set("browser_tests") {
+     "//extensions/browser",
+     "//pdf:buildflags",
+     "//ui/events:test_support",
+-    "//ui/views:view_pixel_diff_test_support",
+ 
+     # Test from sub-directories
+     "//chrome/browser/ash/app_mode/auto_sleep:browser_tests",
+     "//chrome/browser/ash/app_mode/test:browser_tests",
+     "//chrome/browser/ash/app_mode/web_app:browser_tests",
+   ]
++    if (!is_qnx) {
++      deps += [ "//ui/views:view_pixel_diff_test_support" ]
++    }
+ 
+   if (enable_pdf) {
+     deps += [ "//pdf:features" ]
+diff --git a/chrome/browser/ash/policy/remote_commands/BUILD.gn b/chrome/browser/ash/policy/remote_commands/BUILD.gn
+index 0698ba319ed43..429e3c5ca4333 100644
+--- a/chrome/browser/ash/policy/remote_commands/BUILD.gn
++++ b/chrome/browser/ash/policy/remote_commands/BUILD.gn
+@@ -274,8 +274,10 @@ source_set("browser_tests") {
+     "//testing/gmock",
+     "//testing/gtest",
+     "//ui/views",
+-    "//ui/views:view_pixel_diff_test_support",
+   ]
++    if (!is_qnx) {
++      deps += [ "//ui/views:view_pixel_diff_test_support" ]
++    }
+ }
+ 
+ if (use_fuzzing_engine_with_lpm) {
+diff --git a/chrome/test/BUILD.gn b/chrome/test/BUILD.gn
+index 4b46e2174d632..ece0384e812eb 100644
+--- a/chrome/test/BUILD.gn
++++ b/chrome/test/BUILD.gn
+@@ -1159,7 +1159,7 @@ static_library("test_support") {
+     ]
+   }
+ 
+-  if (is_win || is_mac || is_linux || is_chromeos) {
++  if ((is_win || is_mac || is_linux || is_chromeos) && !is_qnx) {
+     public_deps += [
+       "//ui/base:pixel_diff_test_support",
+       "//ui/views:view_pixel_diff_test_support",
+diff --git a/ui/views/BUILD.gn b/ui/views/BUILD.gn
+index 5c0cad2640d84..fdb881ca9625b 100644
+--- a/ui/views/BUILD.gn
++++ b/ui/views/BUILD.gn
+@@ -985,7 +985,7 @@ component("views") {
+   }
+ }
+ 
+-if (is_win || is_mac || is_linux || is_chromeos) {
++if ((is_win || is_mac || is_linux || is_chromeos) && !is_qnx) {
+   static_library("view_pixel_diff_test_support") {
+     testonly = true
+     sources = [
+@@ -1595,7 +1595,7 @@ test("views_unittests") {
+     ]
+   }
+ 
+-  if (is_win || is_mac || is_linux || is_chromeos) {
++  if ((is_win || is_mac || is_linux || is_chromeos) && !is_qnx) {
+     sources += [ "test/view_skia_gold_pixel_diff_unittest.cc" ]
+     deps += [ "//ui/views:view_pixel_diff_test_support" ]
+   }

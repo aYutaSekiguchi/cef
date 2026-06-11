@@ -1,0 +1,13 @@
+diff --git a/BUILD.gn b/BUILD.gn
+index f8b354bf16203..ed9b40ca67eaa 100644
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -643,7 +643,7 @@ group("gn_all") {
+       }
+     }
+ 
+-    if (!is_fuchsia) {
++    if (!is_fuchsia && !is_qnx) {
+       # The official builders use this binary from the default toolchain's
+       # output directory after building in order to upload the symbols of that
+       # binary. They build the binary like `ninja symupload` which requires the

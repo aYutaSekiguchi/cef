@@ -1,0 +1,26 @@
+diff --git a/content/shell/BUILD.gn b/content/shell/BUILD.gn
+index d6457551b24af..3d5dc7b95e8c0 100644
+--- a/content/shell/BUILD.gn
++++ b/content/shell/BUILD.gn
+@@ -1115,7 +1115,7 @@ group("content_shell_crash_test") {
+   if (is_win) {
+     data_deps += [ "//build/win:copy_cdb_to_output" ]
+   }
+-  if (is_posix) {
++  if (is_posix && !is_qnx) {
+     data_deps += [
+       "//third_party/breakpad:dump_syms",
+       "//third_party/breakpad:minidump_stackwalk",
+diff --git a/third_party/breakpad/BUILD.gn b/third_party/breakpad/BUILD.gn
+index f90260b668753..d4c30678f8a8f 100644
+--- a/third_party/breakpad/BUILD.gn
++++ b/third_party/breakpad/BUILD.gn
+@@ -652,7 +652,7 @@ if (is_ios) {
+   }
+ }
+ 
+-if (is_linux || is_chromeos || is_android) {
++if ((is_linux || is_chromeos || is_android) && !is_qnx) {
+   if (current_toolchain == host_system_allocator_toolchain ||
+       current_toolchain == default_system_allocator_toolchain) {
+     executable("symupload") {
