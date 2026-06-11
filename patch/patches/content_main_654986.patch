@@ -1,9 +1,15 @@
 diff --git base/process/set_process_title.cc base/process/set_process_title.cc
-index aacd4a841f3940c27c5c73c03fa9bcc6e56448cc..f4488f8259836a8f3bb5c465df28ca40f2bdd455 100644
+index aacd4a841f3940c27c5c73c03fa9bcc6e56448cc..0844bb70508966813b77396aa0b33c66f664e733 100644
 --- base/process/set_process_title.cc
 +++ base/process/set_process_title.cc
-@@ -54,9 +54,6 @@ void SetProcessTitleFromCommandLine(const char** main_argv) {
+@@ -51,12 +51,12 @@ void SetProcessTitleFromCommandLine(const char** main_argv) {
+   // by spaces. We can't actually keep them separate due to the way the
+   // setproctitle() function works.
+   std::string title;
++
++#if !BUILDFLAG(IS_QNX)
    bool have_argv0 = false;
++#endif
  
  #if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
 -  DCHECK_EQ(base::PlatformThread::CurrentId(),
@@ -12,6 +18,16 @@ index aacd4a841f3940c27c5c73c03fa9bcc6e56448cc..f4488f8259836a8f3bb5c465df28ca40
    if (main_argv) {
      setproctitle_init(main_argv);
    }
+@@ -102,7 +102,9 @@ void SetProcessTitleFromCommandLine(const char** main_argv) {
+     title += command_line->argv()[i];
+   }
+   // Disable prepending argv[0] with '-' if we prepended it ourselves above.
++#if !BUILDFLAG(IS_QNX)
+   setproctitle(have_argv0 ? "-%s" : "%s", title.c_str());
++#endif
+ }
+ 
+ #else
 diff --git content/app/content_main.cc content/app/content_main.cc
 index f2b1cdff827eae3726febe590f2f30b5f6d89046..cb18a6fe7c76483fe79abf64bbec8ad21f55fa57 100644
 --- content/app/content_main.cc

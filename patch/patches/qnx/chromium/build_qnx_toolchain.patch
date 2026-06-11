@@ -1,5 +1,5 @@
 diff --git build/config/BUILD.gn build/config/BUILD.gn
-index 96085b41f084d..92577a21d502a 100644
+index 96085b41f084da34e7e405dc8cbabdaf2161c300..92577a21d502a1dd9f58fbbc3b452dc8374a0a62 100644
 --- build/config/BUILD.gn
 +++ build/config/BUILD.gn
 @@ -209,6 +209,15 @@ config("default_libs") {
@@ -19,7 +19,7 @@ index 96085b41f084d..92577a21d502a 100644
      libs = [
        "dl",
 diff --git build/config/BUILDCONFIG.gn build/config/BUILDCONFIG.gn
-index 4d1ac59b9b7dc..fda4af594d07c 100644
+index 4d1ac59b9b7dc05a20a3bb523b17706a00761cde..964371eae8b27488f0a95ba54454339acde8403c 100644
 --- build/config/BUILDCONFIG.gn
 +++ build/config/BUILDCONFIG.gn
 @@ -276,6 +276,9 @@ if (target_os == "android") {
@@ -32,7 +32,7 @@ index 4d1ac59b9b7dc..fda4af594d07c 100644
  } else if (target_os == "emscripten") {
    # Because it's too hard to remove all targets from //BUILD.gn that do not work with it.
    assert(
-@@ -312,10 +315,11 @@ if (custom_toolchain != "") {
+@@ -312,6 +315,7 @@ if (custom_toolchain != "") {
  # current_os value directly.
  
  is_android = current_os == "android"
@@ -40,15 +40,76 @@ index 4d1ac59b9b7dc..fda4af594d07c 100644
  is_chromeos = current_os == "chromeos"
  is_fuchsia = current_os == "fuchsia"
  is_ios = current_os == "ios"
- is_linux = current_os == "linux"
- is_mac = current_os == "mac"
- is_wasm = current_os == "emscripten"
- is_watchos = current_os == "watchos"
 diff --git build/config/clang/BUILD.gn build/config/clang/BUILD.gn
-index e05032c0c66f1..e4e95e35c7f27 100644
+index e05032c0c66f1a2801971fbe9ee8a85f43bda2f4..7b34df06343b03e7a6b4faa858364ddba5a7a093 100644
 --- build/config/clang/BUILD.gn
 +++ build/config/clang/BUILD.gn
-@@ -184,6 +184,14 @@ template("clang_lib") {
+@@ -156,6 +156,56 @@ group("llvm-symbolizer_data") {
+   }
+ }
+ 
++if (is_qnx) {
++  _qnx_host = getenv("QNX_HOST")
++  _qnx_target = getenv("QNX_TARGET")
++  assert(_qnx_host != "", "QNX_HOST must be set for QNX compiler-rt builtins")
++  assert(_qnx_target != "",
++         "QNX_TARGET must be set for QNX compiler-rt builtins")
++
++  if (current_cpu == "x64") {
++    _qnx_compiler_rt_target = "x86_64-unknown-nto"
++    _qnx_ar = "${_qnx_host}/usr/bin/ntox86_64-ar"
++    _qnx_ranlib = "${_qnx_host}/usr/bin/ntox86_64-ranlib"
++  } else if (current_cpu == "arm64") {
++    _qnx_compiler_rt_target = "aarch64-unknown-nto"
++    _qnx_ar = "${_qnx_host}/usr/bin/ntoaarch64-ar"
++    _qnx_ranlib = "${_qnx_host}/usr/bin/ntoaarch64-ranlib"
++  } else {
++    assert(false, "Unhandled QNX cpu type: $current_cpu")
++  }
++
++  _qnx_compiler_rt_output =
++      "$root_out_dir/qnx_clang_rt/${_qnx_compiler_rt_target}/libclang_rt.builtins.a"
++
++  action("qnx_compiler_builtins") {
++    script = "//build/config/qnx/build_compiler_rt_builtins.py"
++    depfile = "$target_gen_dir/qnx_compiler_builtins.d"
++    outputs = [ _qnx_compiler_rt_output ]
++    args = [
++      "--clang",
++      rebase_path("$clang_base_path/bin/clang", root_build_dir),
++      "--ar",
++      _qnx_ar,
++      "--ranlib",
++      _qnx_ranlib,
++      "--sysroot",
++      _qnx_target,
++      "--target",
++      _qnx_compiler_rt_target,
++      "--arch",
++      current_cpu,
++      "--source-root",
++      rebase_path("//third_party/compiler-rt/src/lib/builtins", root_build_dir),
++      "--output",
++      rebase_path(_qnx_compiler_rt_output, root_build_dir),
++      "--depfile",
++      rebase_path(depfile, root_build_dir),
++    ]
++    inputs = [ script ]
++  }
++}
++
+ template("clang_lib") {
+   if (!defined(invoker.libname) || is_wasm) {
+     not_needed(invoker, "*")
+@@ -168,6 +218,7 @@ template("clang_lib") {
+       _prefix = "lib"
+       _suffix = ""
+       _ext = "a"
++      _clang_lib_dir = "$clang_base_path/lib/clang/$clang_version/lib"
+ 
+       if (is_win) {
+         _dir = "windows"
+@@ -184,6 +235,15 @@ template("clang_lib") {
          }
        } else if (is_apple) {
          _dir = "darwin"
@@ -60,14 +121,37 @@ index e05032c0c66f1..e4e95e35c7f27 100644
 +        } else {
 +          assert(false)  # Unhandled cpu type
 +        }
++        _clang_lib_dir = "$root_out_dir/qnx_clang_rt"
        } else if (is_linux || is_chromeos) {
          if (current_cpu == "x64") {
            _dir = "x86_64-unknown-linux-gnu"
+@@ -231,7 +291,6 @@ template("clang_lib") {
+         assert(false)  # Unhandled target platform
+       }
+ 
+-      _clang_lib_dir = "$clang_base_path/lib/clang/$clang_version/lib"
+       _lib_file = "${_prefix}clang_rt.${_libname}${_suffix}.${_ext}"
+       libs = [ "$_clang_lib_dir/$_dir/$_lib_file" ]
+     }
 diff --git build/config/compiler/BUILD.gn build/config/compiler/BUILD.gn
-index ec3d374d13674..81163a8a9245e 100644
+index ec3d374d13674fde452beb555a6cf43b9a4dbd3a..63bcc2755a6621a18547b49004ae804bb5293110 100644
 --- build/config/compiler/BUILD.gn
 +++ build/config/compiler/BUILD.gn
-@@ -1313,7 +1313,11 @@ config("compiler_cpu_abi") {
+@@ -1059,6 +1059,13 @@ config("linker") {
+         current_os != "zos") {
+       ldflags += [ "-Wl,--fatal-warnings" ]
+     }
++    if (is_qnx) {
++      # QNX SDP startup objects (for example crtn.o) do not carry
++      # .note.GNU-stack, which makes GNU ld warn about an implied executable
++      # stack. Keep fatal linker warnings enabled, but suppress only this
++      # compatibility warning from the QNX-provided startup objects.
++      ldflags += [ "-Wl,--no-warn-execstack" ]
++    }
+     if (fatal_linker_warnings && is_apple) {
+       ldflags += [ "-Wl,-fatal_warnings" ]
+     }
+@@ -1313,7 +1320,11 @@ config("compiler_cpu_abi") {
      # CPU architecture. We may or may not be doing a cross compile now, so for
      # simplicity we always explicitly set the architecture.
      if (current_cpu == "x64") {
@@ -80,7 +164,7 @@ index ec3d374d13674..81163a8a9245e 100644
          cflags += [ "--target=x86_64-unknown-linux-gnu" ]
          ldflags += [ "--target=x86_64-unknown-linux-gnu" ]
        } else {
-@@ -1348,7 +1352,8 @@ config("compiler_cpu_abi") {
+@@ -1348,7 +1359,8 @@ config("compiler_cpu_abi") {
          "-mfloat-abi=$arm_float_abi",
        ]
      } else if (current_cpu == "arm64") {
@@ -90,7 +174,7 @@ index ec3d374d13674..81163a8a9245e 100644
          cflags += [ "--target=aarch64-linux-gnu" ]
          ldflags += [ "--target=aarch64-linux-gnu" ]
        }
-@@ -1739,7 +1744,7 @@ config("compiler_deterministic") {
+@@ -1739,7 +1751,7 @@ config("compiler_deterministic") {
      # directly there, not through the compiler driver.
      # We don't link on RBE, so this change is just for cleaner
      # internal linker invocations, for people who work on the build.
@@ -99,7 +183,7 @@ index ec3d374d13674..81163a8a9245e 100644
        ldflags += [ "-no-canonical-prefixes" ]
      }
    }
-@@ -2399,7 +2404,7 @@ config("chromium_code") {
+@@ -2399,7 +2411,7 @@ config("chromium_code") {
        "__STDC_FORMAT_MACROS",
      ]
  
@@ -108,7 +192,7 @@ index ec3d374d13674..81163a8a9245e 100644
          current_cpu != "ppc64" && current_cpu != "mips" &&
          current_cpu != "mips64" && current_cpu != "riscv64" &&
          current_cpu != "loong64") {
-@@ -2419,7 +2424,7 @@ config("chromium_code") {
+@@ -2419,7 +2431,7 @@ config("chromium_code") {
        # with the sysroot where support is guaranteed. Clang is also required since
        # the system gcc is often patched to add _FORTIFY_SOURCE=2 which would conflict
        # with our definition.
@@ -117,7 +201,7 @@ index ec3d374d13674..81163a8a9245e 100644
          fortify_level = "3"
        }
        defines += [ "_FORTIFY_SOURCE=" + fortify_level ]
-@@ -2596,7 +2601,8 @@ config("export_dynamic") {
+@@ -2596,7 +2608,8 @@ config("export_dynamic") {
  # 2. Remove the thin_archive config, so that the .a file actually contains all
  #    .o files, instead of just references to .o files in the build directoy
  config("thin_archive") {
@@ -128,7 +212,7 @@ index ec3d374d13674..81163a8a9245e 100644
      # symbol table, gcc on linux also throws the error `archive has no index`.
      # AIX does support -s option, not -S option.
 diff --git build/config/compiler/compiler.gni build/config/compiler/compiler.gni
-index beb5213714e1a..44d0bd5c6609d 100644
+index beb5213714e1ab6260ed735099b0bcac90cdab66..44d0bd5c6609d652a924b5af8c3b4963cb8e8e92 100644
 --- build/config/compiler/compiler.gni
 +++ build/config/compiler/compiler.gni
 @@ -56,6 +56,11 @@ declare_args() {
@@ -144,7 +228,7 @@ index beb5213714e1a..44d0bd5c6609d 100644
    declare_args() {
      # Enables the `--read-workers` flag for LLD.
 diff --git build/config/posix/BUILD.gn build/config/posix/BUILD.gn
-index 9638527df0271..25c75003b8d3b 100644
+index 9638527df0271a27fad3fe29a11f814e3b982ee5..25c75003b8d3b0a463cfc7b6029ccb8a46cba6f8 100644
 --- build/config/posix/BUILD.gn
 +++ build/config/posix/BUILD.gn
 @@ -37,7 +37,9 @@ config("runtime_library") {
@@ -159,7 +243,7 @@ index 9638527df0271..25c75003b8d3b 100644
      # When use_custom_libcxx=true, some -isystem flags get passed to
      # cflags_cc to set up libc++ include paths.  We want to make sure
 diff --git build/config/rust.gni build/config/rust.gni
-index a55e7c58b9c33..eadbd477d1f5d 100644
+index a55e7c58b9c33409e1cae96bbd81b6a286a93ab3..eadbd477d1f5d65e81661c57f43948ac4ca17dfe 100644
 --- build/config/rust.gni
 +++ build/config/rust.gni
 @@ -211,7 +211,15 @@ if (enable_rust) {
@@ -180,7 +264,7 @@ index a55e7c58b9c33..eadbd477d1f5d 100644
      rust_abi_target = "aarch64-unknown-linux-gnu"
    } else if (current_cpu == "x86") {
 diff --git build/config/sysroot.gni build/config/sysroot.gni
-index e7aaa18479d47..caa1b470108b6 100644
+index e7aaa18479d47958d6407f4d22bbe7ea939e1f92..caa1b470108b6586d40ced27ce19b21f106d5eba 100644
 --- build/config/sysroot.gni
 +++ build/config/sysroot.gni
 @@ -29,6 +29,8 @@ if (sysroot == "") {
@@ -193,7 +277,7 @@ index e7aaa18479d47..caa1b470108b6 100644
      # By default build against a sysroot image downloaded from Cloud Storage
      # during gclient runhooks.
 diff --git build/rust/known-target-triples.txt build/rust/known-target-triples.txt
-index fc4780bf65bb3..2c84c63f1716d 100644
+index fc4780bf65bb3df4c76555e72dce2110bf0bde0a..2c84c63f1716dee70d18991cbd29f2667c5913e7 100644
 --- build/rust/known-target-triples.txt
 +++ build/rust/known-target-triples.txt
 @@ -41,5 +41,7 @@ x86_64-linux-android
@@ -205,7 +289,7 @@ index fc4780bf65bb3..2c84c63f1716d 100644
  powerpc64le-unknown-linux-gnu
  s390x-unknown-linux-gnu
 diff --git build/toolchain/gcc_toolchain.gni build/toolchain/gcc_toolchain.gni
-index a22678bb17ff9..7b33e784ca839 100644
+index a22678bb17ff94386dec983cab699f1eee332d19..7b33e784ca8393e2560a2e84fd3060fb62c27f41 100644
 --- build/toolchain/gcc_toolchain.gni
 +++ build/toolchain/gcc_toolchain.gni
 @@ -415,7 +415,26 @@ template("single_gcc_toolchain") {
