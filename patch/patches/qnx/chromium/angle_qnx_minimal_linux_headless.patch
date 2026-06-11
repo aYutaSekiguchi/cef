@@ -11,7 +11,34 @@ index 0cb785515c6c1bde3f47226cef6da461b693adc2..7529ec7c8695f10f9402bddaf3d5d28c
        libs = [ "dl" ]
      }
  
-
+diff --git third_party/angle/src/libANGLE/renderer/gl/gl_backend.gni third_party/angle/src/libANGLE/renderer/gl/gl_backend.gni
+index c4801b59c56046bafe5bc391989f86633714df33..1516f90bba7f82b3e02e3094c95e6dcde2fd00d8 100644
+--- third_party/angle/src/libANGLE/renderer/gl/gl_backend.gni
++++ third_party/angle/src/libANGLE/renderer/gl/gl_backend.gni
+@@ -114,7 +114,7 @@ if (angle_use_x11) {
+   ]
+ }
+ 
+-if (is_android || is_linux || is_chromeos) {
++if (is_android || is_linux || is_qnx || is_chromeos) {
+   gl_backend_sources += [
+     "egl/ContextEGL.cpp",
+     "egl/ContextEGL.h",
+ 
+diff --git third_party/angle/src/libANGLE/renderer/gl/BUILD.gn third_party/angle/src/libANGLE/renderer/gl/BUILD.gn
+index 6be94901ed9bbc7a6b594198e5c3ec9e0352c8f1..922eb6378c228692d9e8bbfc622974160f2a50f5 100644
+--- third_party/angle/src/libANGLE/renderer/gl/BUILD.gn
++++ third_party/angle/src/libANGLE/renderer/gl/BUILD.gn
+@@ -61,7 +61,7 @@ angle_source_set("angle_gl_backend") {
+       "Xext",
+     ]
+   }
+-  if (is_android || is_linux || is_chromeos) {
++  if (is_android || is_linux || is_qnx || is_chromeos) {
+     deps += [ "$angle_root/src/common/linux:angle_dma_buf" ]
+   }
+   if (is_apple) {
+ 
 diff --git third_party/angle/src/common/SimpleMutex.h third_party/angle/src/common/SimpleMutex.h
 index 84ffa1a1da568de14247f8a10476634301089984..eb102daab817695ef8d0791238f44982cb528549 100644
 --- third_party/angle/src/common/SimpleMutex.h

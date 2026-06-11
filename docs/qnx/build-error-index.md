@@ -65,6 +65,7 @@ rg -n "IPCZ_MEMFD_QNX_SKIP_IMPL|MFD_ALLOW_SEALING|MultiprocessMemory" docs/qnx/h
 rg -n "rust_bindgen_generator|mojo_c_system_bindings|Endian not defined" docs/qnx/history/build-errors
 rg -n "SKIA_USE_DAWN|skia_use_dawn|gpu_info_collector|USE_DAWN" docs/qnx/history/build-errors
 rg -n "gpu_test_config|GetCurrentOS|unknown os|kOsLinux" docs/qnx/history/build-errors
+rg -n "DisplayEGL|DrmFourCCFormatToGLInternalFormat|angle_tests" docs/qnx/history/build-errors
 rg -n "crashpad_client.h|capture_context.h|NativeCPUContext" docs/qnx/history/build-errors
 rg -n "crtn.o|GNU-stack|no-warn-execstack|fatal-warnings" docs/qnx/history/build-errors
 ```
