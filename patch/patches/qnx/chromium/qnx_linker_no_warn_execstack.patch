@@ -1,0 +1,17 @@
+diff --git a/build/config/compiler/BUILD.gn b/build/config/compiler/BUILD.gn
+--- a/build/config/compiler/BUILD.gn
++++ b/build/config/compiler/BUILD.gn
+@@ -1059,6 +1059,13 @@
+         current_os != "zos") {
+       ldflags += [ "-Wl,--fatal-warnings" ]
+     }
++    if (is_qnx) {
++      # QNX SDP startup objects (for example crtn.o) do not carry
++      # .note.GNU-stack, which makes GNU ld warn about an implied executable
++      # stack. Keep fatal linker warnings enabled, but suppress only this
++      # compatibility warning from the QNX-provided startup objects.
++      ldflags += [ "-Wl,--no-warn-execstack" ]
++    }
+     if (fatal_linker_warnings && is_apple) {
+       ldflags += [ "-Wl,-fatal_warnings" ]
+     }
