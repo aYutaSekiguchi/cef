@@ -1,5 +1,5 @@
---- a/v8/BUILD.gn
-+++ b/v8/BUILD.gn
+--- v8/BUILD.gn
++++ v8/BUILD.gn
 @@ -1024,6 +1024,7 @@
    "V8_TARGET_OS_MACOS",
    "V8_TARGET_OS_WIN",
@@ -54,8 +54,8 @@
      sources += [
        "src/base/debug/stack_trace_posix.cc",
        "src/base/platform/platform-linux.cc",
---- a/v8/include/v8config.h
-+++ b/v8/include/v8config.h
+--- v8/include/v8config.h
++++ v8/include/v8config.h
 @@ -196,6 +196,7 @@
  //  V8_TARGET_OS_MACOS
  //  V8_TARGET_OS_WIN
@@ -104,8 +104,8 @@
  #else
  # define V8_TARGET_OS_STRING "unknown"
  #endif
---- a/v8/src/base/platform/platform-posix.cc
-+++ b/v8/src/base/platform/platform-posix.cc
+--- v8/src/base/platform/platform-posix.cc
++++ v8/src/base/platform/platform-posix.cc
 @@ -74,7 +74,7 @@
  #include <sys/resource.h>
  #endif
@@ -134,8 +134,8 @@
  
  namespace {
  #if DEBUG
---- a/v8/src/base/platform/platform-qnx.cc
-+++ b/v8/src/base/platform/platform-qnx.cc
+--- v8/src/base/platform/platform-qnx.cc
++++ v8/src/base/platform/platform-qnx.cc
 @@ -11,6 +11,7 @@
  #include <signal.h>
  #include <stdlib.h>
@@ -157,8 +157,8 @@
 +
  }  // namespace base
  }  // namespace v8
---- a/v8/src/wasm/std-object-sizes.h
-+++ b/v8/src/wasm/std-object-sizes.h
+--- v8/src/wasm/std-object-sizes.h
++++ v8/src/wasm/std-object-sizes.h
 @@ -68,7 +68,7 @@
  // When one of these checks fails, that probably means you've added fields to
  // a class guarded by it. Update the respective EstimateCurrentMemoryConsumption

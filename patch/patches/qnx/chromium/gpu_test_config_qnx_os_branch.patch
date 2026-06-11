@@ -1,7 +1,7 @@
-diff --git a/gpu/config/gpu_test_config.cc b/gpu/config/gpu_test_config.cc
+diff --git gpu/config/gpu_test_config.cc gpu/config/gpu_test_config.cc
 index 64e672a2ede06..b2a90f2a02070 100644
---- a/gpu/config/gpu_test_config.cc
-+++ b/gpu/config/gpu_test_config.cc
+--- gpu/config/gpu_test_config.cc
++++ gpu/config/gpu_test_config.cc
 @@ -87,6 +87,10 @@ GPUTestConfig::OS GetCurrentOS() {
    return GPUTestConfig::kOsFuchsia;
  #elif BUILDFLAG(IS_IOS)

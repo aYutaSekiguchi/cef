@@ -1,7 +1,7 @@
-diff --git a/base/allocator/partition_allocator/partition_alloc.gni b/base/allocator/partition_allocator/partition_alloc.gni
+diff --git base/allocator/partition_allocator/partition_alloc.gni base/allocator/partition_allocator/partition_alloc.gni
 index fc8889f39808f..f20e16fdc4900 100644
---- a/base/allocator/partition_allocator/partition_alloc.gni
-+++ b/base/allocator/partition_allocator/partition_alloc.gni
+--- base/allocator/partition_allocator/partition_alloc.gni
++++ base/allocator/partition_allocator/partition_alloc.gni
 @@ -496,7 +496,7 @@ assert(!use_asan_backup_ref_ptr || use_raw_ptr_hookable_impl,
  # dependencies that use partition_allocator are compiled in AOSP against a
  # version of glibc that does not include pkeys syscall numbers.
@@ -11,10 +11,10 @@ index fc8889f39808f..f20e16fdc4900 100644
  declare_args() {
    enable_pkeys = is_pkeys_available
  }
-diff --git a/base/allocator/partition_allocator/src/partition_alloc/BUILD.gn b/base/allocator/partition_allocator/src/partition_alloc/BUILD.gn
+diff --git base/allocator/partition_allocator/src/partition_alloc/BUILD.gn base/allocator/partition_allocator/src/partition_alloc/BUILD.gn
 index 275d6dbe1b05f..9cbe3038a066c 100644
---- a/base/allocator/partition_allocator/src/partition_alloc/BUILD.gn
-+++ b/base/allocator/partition_allocator/src/partition_alloc/BUILD.gn
+--- base/allocator/partition_allocator/src/partition_alloc/BUILD.gn
++++ base/allocator/partition_allocator/src/partition_alloc/BUILD.gn
 @@ -480,13 +480,18 @@ if (is_clang_or_gcc) {
        "thread_cache.cc",
        "thread_cache.h",
@@ -63,10 +63,10 @@ index 275d6dbe1b05f..9cbe3038a066c 100644
        deps += [ ":debug_proc_maps" ]
      }
  
-diff --git a/base/allocator/partition_allocator/src/partition_alloc/extended_api.cc b/base/allocator/partition_allocator/src/partition_alloc/extended_api.cc
+diff --git base/allocator/partition_allocator/src/partition_alloc/extended_api.cc base/allocator/partition_allocator/src/partition_alloc/extended_api.cc
 index 91180deb08311..7f6f1d5dfac9f 100644
---- a/base/allocator/partition_allocator/src/partition_alloc/extended_api.cc
-+++ b/base/allocator/partition_allocator/src/partition_alloc/extended_api.cc
+--- base/allocator/partition_allocator/src/partition_alloc/extended_api.cc
++++ base/allocator/partition_allocator/src/partition_alloc/extended_api.cc
 @@ -165,6 +165,18 @@ ThreadCacheProcessScopeForTesting::~ThreadCacheProcessScopeForTesting() {
    ThreadCache::SwapForTesting(nullptr, kDefaultRootThreadCacheIndex);
  #endif  // PA_BUILDFLAG(USE_PARTITION_ALLOC_AS_MALLOC)
@@ -86,10 +86,10 @@ index 91180deb08311..7f6f1d5dfac9f 100644
  #endif  // PA_CONFIG(THREAD_CACHE_SUPPORTED)
  
  }  // namespace partition_alloc::internal
-diff --git a/base/allocator/partition_allocator/src/partition_alloc/page_allocator.h b/base/allocator/partition_allocator/src/partition_alloc/page_allocator.h
+diff --git base/allocator/partition_allocator/src/partition_alloc/page_allocator.h base/allocator/partition_allocator/src/partition_alloc/page_allocator.h
 index 0711808209459..96f3f474b96ad 100644
---- a/base/allocator/partition_allocator/src/partition_alloc/page_allocator.h
-+++ b/base/allocator/partition_allocator/src/partition_alloc/page_allocator.h
+--- base/allocator/partition_allocator/src/partition_alloc/page_allocator.h
++++ base/allocator/partition_allocator/src/partition_alloc/page_allocator.h
 @@ -279,7 +279,7 @@ bool DecommitAndZeroSystemPages(void* address,
  // recommitted. Do not assume that this will not change over time.
  constexpr PA_COMPONENT_EXPORT(
@@ -99,10 +99,10 @@ index 0711808209459..96f3f474b96ad 100644
    return false;
  #else
    return true;
-diff --git a/base/allocator/partition_allocator/src/partition_alloc/page_allocator_internals_posix.h b/base/allocator/partition_allocator/src/partition_alloc/page_allocator_internals_posix.h
+diff --git base/allocator/partition_allocator/src/partition_alloc/page_allocator_internals_posix.h base/allocator/partition_allocator/src/partition_alloc/page_allocator_internals_posix.h
 index d3ae5c58d6e9d..9e96eb39dcc7e 100644
---- a/base/allocator/partition_allocator/src/partition_alloc/page_allocator_internals_posix.h
-+++ b/base/allocator/partition_allocator/src/partition_alloc/page_allocator_internals_posix.h
+--- base/allocator/partition_allocator/src/partition_alloc/page_allocator_internals_posix.h
++++ base/allocator/partition_allocator/src/partition_alloc/page_allocator_internals_posix.h
 @@ -5,8 +5,14 @@
  #ifndef PARTITION_ALLOC_PAGE_ALLOCATOR_INTERNALS_POSIX_H_
  #define PARTITION_ALLOC_PAGE_ALLOCATOR_INTERNALS_POSIX_H_
@@ -126,10 +126,10 @@ index d3ae5c58d6e9d..9e96eb39dcc7e 100644
  #ifndef MAP_ANONYMOUS
  #define MAP_ANONYMOUS MAP_ANON
  #endif
-diff --git a/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/debug/stack_trace_posix.cc b/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/debug/stack_trace_posix.cc
+diff --git base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/debug/stack_trace_posix.cc base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/debug/stack_trace_posix.cc
 index ae1070defaa2a..4fc80593386c0 100644
---- a/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/debug/stack_trace_posix.cc
-+++ b/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/debug/stack_trace_posix.cc
+--- base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/debug/stack_trace_posix.cc
++++ base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/debug/stack_trace_posix.cc
 @@ -14,7 +14,9 @@
  #include "partition_alloc/partition_alloc_base/posix/eintr_wrapper.h"
  #include "partition_alloc/partition_alloc_base/strings/safe_sprintf.h"
@@ -148,10 +148,10 @@ index ae1070defaa2a..4fc80593386c0 100644
 -}  // namespace partition_alloc::internal::base::debug
 +}  // namespace partition_alloc::internal::base::debug
 \ No newline at end of file
-diff --git a/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/rand_util_posix.cc b/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/rand_util_posix.cc
+diff --git base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/rand_util_posix.cc base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/rand_util_posix.cc
 index db79a65284dab..f4067b8b23bb3 100644
---- a/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/rand_util_posix.cc
-+++ b/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/rand_util_posix.cc
+--- base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/rand_util_posix.cc
++++ base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/rand_util_posix.cc
 @@ -5,7 +5,6 @@
  #include "partition_alloc/partition_alloc_base/rand_util.h"
  
@@ -179,10 +179,10 @@ index db79a65284dab..f4067b8b23bb3 100644
  #elif PA_BUILDFLAG(IS_MAC)
    // TODO(crbug.com/40641285): Enable this on iOS too, when sys/random.h arrives
    // in its SDK.
-diff --git a/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/time/time_now_posix.cc b/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/time/time_now_posix.cc
+diff --git base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/time/time_now_posix.cc base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/time/time_now_posix.cc
 index 04d5b3246059e..b33f0d2f65da5 100644
---- a/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/time/time_now_posix.cc
-+++ b/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/time/time_now_posix.cc
+--- base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/time/time_now_posix.cc
++++ base/allocator/partition_allocator/src/partition_alloc/partition_alloc_base/time/time_now_posix.cc
 @@ -67,8 +67,12 @@ int64_t ClockNow(clockid_t clk_id) {
  namespace subtle {
  Time TimeNowIgnoringOverride() {
@@ -196,10 +196,10 @@ index 04d5b3246059e..b33f0d2f65da5 100644
    // Combine seconds and microseconds in a 64-bit field containing microseconds
    // since the epoch.  That's enough for nearly 600 centuries.  Adjust from
    // Unix (1970) to Windows (1601) epoch.
-diff --git a/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_config.h b/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_config.h
+diff --git base/allocator/partition_allocator/src/partition_alloc/partition_alloc_config.h base/allocator/partition_allocator/src/partition_alloc/partition_alloc_config.h
 index 2ebe1f417c401..93f2cb3749ffc 100644
---- a/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_config.h
-+++ b/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_config.h
+--- base/allocator/partition_allocator/src/partition_alloc/partition_alloc_config.h
++++ base/allocator/partition_allocator/src/partition_alloc/partition_alloc_config.h
 @@ -55,8 +55,15 @@ static_assert(sizeof(void*) != 8, "");
     PA_BUILDFLAG(IS_ANDROID))
  
@@ -216,10 +216,10 @@ index 2ebe1f417c401..93f2cb3749ffc 100644
  
  // Too expensive for official builds, as it adds cache misses to all
  // allocations. On the other hand, we want wide metrics coverage to get
-diff --git a/base/allocator/partition_allocator/src/partition_alloc/partition_tls.h b/base/allocator/partition_allocator/src/partition_alloc/partition_tls.h
+diff --git base/allocator/partition_allocator/src/partition_alloc/partition_tls.h base/allocator/partition_allocator/src/partition_alloc/partition_tls.h
 index 619115520aec1..4fbaea1ad5297 100644
---- a/base/allocator/partition_allocator/src/partition_alloc/partition_tls.h
-+++ b/base/allocator/partition_allocator/src/partition_alloc/partition_tls.h
+--- base/allocator/partition_allocator/src/partition_alloc/partition_tls.h
++++ base/allocator/partition_allocator/src/partition_alloc/partition_tls.h
 @@ -6,6 +6,7 @@
  #define PARTITION_ALLOC_PARTITION_TLS_H_
  
@@ -244,10 +244,10 @@ index 619115520aec1..4fbaea1ad5297 100644
  }
  
  PA_ALWAYS_INLINE void* PartitionTlsGet(PartitionTlsKey key) {
-diff --git a/base/allocator/partition_allocator/src/partition_alloc/pointers/raw_ptr_unittest.cc b/base/allocator/partition_allocator/src/partition_alloc/pointers/raw_ptr_unittest.cc
+diff --git base/allocator/partition_allocator/src/partition_alloc/pointers/raw_ptr_unittest.cc base/allocator/partition_allocator/src/partition_alloc/pointers/raw_ptr_unittest.cc
 index 9b932955f7174..fdb85ec00fed8 100644
---- a/base/allocator/partition_allocator/src/partition_alloc/pointers/raw_ptr_unittest.cc
-+++ b/base/allocator/partition_allocator/src/partition_alloc/pointers/raw_ptr_unittest.cc
+--- base/allocator/partition_allocator/src/partition_alloc/pointers/raw_ptr_unittest.cc
++++ base/allocator/partition_allocator/src/partition_alloc/pointers/raw_ptr_unittest.cc
 @@ -1198,6 +1198,18 @@ TEST_F(RawPtrTest, SetLookupUsesGetForComparison) {
  
    RawPtrCountingImpl::ClearCounters();
@@ -303,10 +303,10 @@ index 9b932955f7174..fdb85ec00fed8 100644
  }
  
  TEST_F(RawPtrTest, ComparisonOperatorUsesGetForComparison) {
-diff --git a/base/allocator/partition_allocator/src/partition_alloc/scheduler_loop_quarantine_unittest.cc b/base/allocator/partition_allocator/src/partition_alloc/scheduler_loop_quarantine_unittest.cc
+diff --git base/allocator/partition_allocator/src/partition_alloc/scheduler_loop_quarantine_unittest.cc base/allocator/partition_allocator/src/partition_alloc/scheduler_loop_quarantine_unittest.cc
 index 25f73e868e00e..7454fde2aacaa 100644
---- a/base/allocator/partition_allocator/src/partition_alloc/scheduler_loop_quarantine_unittest.cc
-+++ b/base/allocator/partition_allocator/src/partition_alloc/scheduler_loop_quarantine_unittest.cc
+--- base/allocator/partition_allocator/src/partition_alloc/scheduler_loop_quarantine_unittest.cc
++++ base/allocator/partition_allocator/src/partition_alloc/scheduler_loop_quarantine_unittest.cc
 @@ -6,6 +6,7 @@
  
  #include "partition_alloc/extended_api.h"
@@ -346,10 +346,10 @@ index 25f73e868e00e..7454fde2aacaa 100644
    std::optional<internal::ThreadCacheProcessScopeForTesting>
        scoped_tcache_swap_;
  };
-diff --git a/base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_default_dispatch_to_partition_alloc.cc b/base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_default_dispatch_to_partition_alloc.cc
+diff --git base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_default_dispatch_to_partition_alloc.cc base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_default_dispatch_to_partition_alloc.cc
 index b114fc27cc55d..3462921c22409 100644
---- a/base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_default_dispatch_to_partition_alloc.cc
-+++ b/base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_default_dispatch_to_partition_alloc.cc
+--- base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_default_dispatch_to_partition_alloc.cc
++++ base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_default_dispatch_to_partition_alloc.cc
 @@ -1105,7 +1105,11 @@ extern "C" {
  
  SHIM_ALWAYS_EXPORT void malloc_stats(void) __THROW {}
@@ -363,10 +363,10 @@ index b114fc27cc55d..3462921c22409 100644
    return 0;
  }
  
-diff --git a/base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_internals.h b/base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_internals.h
+diff --git base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_internals.h base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_internals.h
 index 905b9f9be1027..fe3d9f5006c56 100644
---- a/base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_internals.h
-+++ b/base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_internals.h
+--- base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_internals.h
++++ base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_internals.h
 @@ -7,7 +7,9 @@
  
  #include "partition_alloc/build_config.h"
@@ -404,10 +404,10 @@ index 905b9f9be1027..fe3d9f5006c56 100644
 +#endif
  
  #endif  // PARTITION_ALLOC_SHIM_ALLOCATOR_SHIM_INTERNALS_H_
-diff --git a/base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_override_cpp_symbols.h b/base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_override_cpp_symbols.h
+diff --git base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_override_cpp_symbols.h base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_override_cpp_symbols.h
 index 1ba4cca8db9ee..53cd6e330b640 100644
---- a/base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_override_cpp_symbols.h
-+++ b/base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_override_cpp_symbols.h
+--- base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_override_cpp_symbols.h
++++ base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_override_cpp_symbols.h
 @@ -34,6 +34,13 @@
  #define SHIM_CPP_SYMBOLS_EXPORT PA_NOINLINE
  #endif
@@ -458,10 +458,10 @@ index 1ba4cca8db9ee..53cd6e330b640 100644
  #if PA_BUILDFLAG(FORWARD_THROUGH_MALLOC)
    return aligned_alloc(static_cast<size_t>(alignment), size);
  #else
-diff --git a/base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_unittest.cc b/base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_unittest.cc
+diff --git base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_unittest.cc base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_unittest.cc
 index b8e0f69584df0..657aad98f58e1 100644
---- a/base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_unittest.cc
-+++ b/base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_unittest.cc
+--- base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_unittest.cc
++++ base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_unittest.cc
 @@ -507,7 +507,7 @@ TEST_F(AllocatorShimTest, InterceptLibcSymbols) {
    ASSERT_GE(allocs_intercepted_by_alignment[128], 1u);
    ASSERT_GE(allocs_intercepted_by_size[53], 1u);
@@ -480,10 +480,10 @@ index b8e0f69584df0..657aad98f58e1 100644
    free(pvalloc_ptr);
    ASSERT_GE(frees_intercepted_by_addr[Hash(pvalloc_ptr)], 1u);
  #endif  // PA_BUILDFLAG(IS_POSIX) && !PA_BUILDFLAG(IS_ANDROID)
-diff --git a/base/allocator/partition_allocator/src/partition_alloc/stack/stack.cc b/base/allocator/partition_allocator/src/partition_alloc/stack/stack.cc
+diff --git base/allocator/partition_allocator/src/partition_alloc/stack/stack.cc base/allocator/partition_allocator/src/partition_alloc/stack/stack.cc
 index 81f0876bdf233..e6bb980c6383f 100644
---- a/base/allocator/partition_allocator/src/partition_alloc/stack/stack.cc
-+++ b/base/allocator/partition_allocator/src/partition_alloc/stack/stack.cc
+--- base/allocator/partition_allocator/src/partition_alloc/stack/stack.cc
++++ base/allocator/partition_allocator/src/partition_alloc/stack/stack.cc
 @@ -18,6 +18,12 @@
  #include <pthread.h>
  #endif

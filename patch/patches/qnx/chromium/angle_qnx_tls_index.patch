@@ -1,7 +1,7 @@
-diff --git a/src/libANGLE/Context.cpp b/src/libANGLE/Context.cpp
+diff --git src/libANGLE/Context.cpp src/libANGLE/Context.cpp
 index 44fb2a4bfe..45b8267f6e 100644
---- a/src/libANGLE/Context.cpp
-+++ b/src/libANGLE/Context.cpp
+--- src/libANGLE/Context.cpp
++++ src/libANGLE/Context.cpp
 @@ -639,6 +639,29 @@ void SetCurrentValidContextTLS(Context *context)
      ASSERT(CurrentValidContextIndex != TLS_INVALID_INDEX);
      angle::SetTLSValue(CurrentValidContextIndex, context);
@@ -42,10 +42,10 @@ index 44fb2a4bfe..45b8267f6e 100644
      SetCurrentValidContextTLS(context);
  #else
      gCurrentValidContext = context;
-diff --git a/src/libANGLE/Context.h b/src/libANGLE/Context.h
+diff --git src/libANGLE/Context.h src/libANGLE/Context.h
 index b18be15deb..2bca24bc5e 100644
---- a/src/libANGLE/Context.h
-+++ b/src/libANGLE/Context.h
+--- src/libANGLE/Context.h
++++ src/libANGLE/Context.h
 @@ -1186,7 +1186,8 @@ class [[nodiscard]] ScopedContextRef
  };
  
@@ -56,10 +56,10 @@ index b18be15deb..2bca24bc5e 100644
  extern Context *GetCurrentValidContextTLS();
  extern void SetCurrentValidContextTLS(Context *context);
  #else
-diff --git a/src/libANGLE/Display.cpp b/src/libANGLE/Display.cpp
+diff --git src/libANGLE/Display.cpp src/libANGLE/Display.cpp
 index 72fb02c02d..daf47bbe1b 100644
---- a/src/libANGLE/Display.cpp
-+++ b/src/libANGLE/Display.cpp
+--- src/libANGLE/Display.cpp
++++ src/libANGLE/Display.cpp
 @@ -132,6 +132,29 @@ void SetDisplayTLS(TLSData *tlsData)
      ASSERT(DisplayIndex != TLS_INVALID_INDEX);
      angle::SetTLSValue(DisplayIndex, tlsData);
@@ -99,10 +99,10 @@ index 72fb02c02d..daf47bbe1b 100644
      SetDisplayTLS(tlsData);
  #else
      gDisplayTLS = tlsData;
-diff --git a/src/libGLESv2/global_state.cpp b/src/libGLESv2/global_state.cpp
+diff --git src/libGLESv2/global_state.cpp src/libGLESv2/global_state.cpp
 index 0a248caa55..b673bbc772 100644
---- a/src/libGLESv2/global_state.cpp
-+++ b/src/libGLESv2/global_state.cpp
+--- src/libGLESv2/global_state.cpp
++++ src/libGLESv2/global_state.cpp
 @@ -52,7 +52,8 @@ Thread *AllocateCurrentThread()
          // Display TLS data is also intentionally leaked.
          ANGLE_SCOPED_DISABLE_LSAN();
@@ -163,10 +163,10 @@ index 0a248caa55..b673bbc772 100644
      Thread *currentThread = GetCurrentThreadTLS();
  #else
      Thread *currentThread = gCurrentThread;
-diff --git a/src/libGLESv2/global_state.h b/src/libGLESv2/global_state.h
+diff --git src/libGLESv2/global_state.h src/libGLESv2/global_state.h
 index 32c9921d9b..2faca8c999 100644
---- a/src/libGLESv2/global_state.h
-+++ b/src/libGLESv2/global_state.h
+--- src/libGLESv2/global_state.h
++++ src/libGLESv2/global_state.h
 @@ -21,7 +21,8 @@
  #include "libANGLE/features.h"
  #include "libANGLE/validationEGL.h"

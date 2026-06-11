@@ -1,7 +1,7 @@
-diff --git a/components/enterprise/client_certificates/core/private_key_factory.cc b/components/enterprise/client_certificates/core/private_key_factory.cc
+diff --git components/enterprise/client_certificates/core/private_key_factory.cc components/enterprise/client_certificates/core/private_key_factory.cc
 index f2365aaf5ab77..18a03ad8d0b1f 100644
---- a/components/enterprise/client_certificates/core/private_key_factory.cc
-+++ b/components/enterprise/client_certificates/core/private_key_factory.cc
+--- components/enterprise/client_certificates/core/private_key_factory.cc
++++ components/enterprise/client_certificates/core/private_key_factory.cc
 @@ -122,16 +122,19 @@ void PrivateKeyFactoryImpl::OnPrivateKeyCreated(
      PrivateKeyCallback callback,
      scoped_refptr<PrivateKey> private_key) {

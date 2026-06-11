@@ -1,7 +1,7 @@
-diff --git a/src/Reactor/BUILD.gn b/src/Reactor/BUILD.gn
+diff --git src/Reactor/BUILD.gn src/Reactor/BUILD.gn
 index 67dfeb0ec..7ddaa8aab 100644
---- a/src/Reactor/BUILD.gn
-+++ b/src/Reactor/BUILD.gn
+--- src/Reactor/BUILD.gn
++++ src/Reactor/BUILD.gn
 @@ -96,6 +96,14 @@ if (supports_subzero) {
      if (is_win) {
        include_dirs +=

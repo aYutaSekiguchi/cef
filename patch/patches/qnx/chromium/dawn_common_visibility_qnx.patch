@@ -1,7 +1,7 @@
-diff --git a/src/dawn/common/BUILD.gn b/src/dawn/common/BUILD.gn
+diff --git src/dawn/common/BUILD.gn src/dawn/common/BUILD.gn
 index 1178126255..395473120e 100644
---- a/src/dawn/common/BUILD.gn
-+++ b/src/dawn/common/BUILD.gn
+--- src/dawn/common/BUILD.gn
++++ src/dawn/common/BUILD.gn
 @@ -258,7 +258,7 @@ dawn_generator("dawn_gpu_info_gen") {
  # This GN file is discovered by all Chromium builds, but common doesn't support
  # all of Chromium's OSes so we explicitly make the target visible only on

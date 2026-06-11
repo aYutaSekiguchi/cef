@@ -1,7 +1,7 @@
-diff --git a/base/strings/to_string.h b/base/strings/to_string.h
+diff --git base/strings/to_string.h base/strings/to_string.h
 index da1db6682a134..e854a10aa1e3d 100644
---- a/base/strings/to_string.h
-+++ b/base/strings/to_string.h
+--- base/strings/to_string.h
++++ base/strings/to_string.h
 @@ -73,6 +73,25 @@ struct ToStringHelper<T> {
    }
  };

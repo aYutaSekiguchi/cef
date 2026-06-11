@@ -1,7 +1,7 @@
-diff --git a/crypto/rand/internal.h b/crypto/rand/internal.h
+diff --git crypto/rand/internal.h crypto/rand/internal.h
 index 9ed080f2a..f11d59662 100644
---- a/crypto/rand/internal.h
-+++ b/crypto/rand/internal.h
+--- crypto/rand/internal.h
++++ crypto/rand/internal.h
 @@ -25,6 +25,8 @@
  #define OPENSSL_RAND_WINDOWS
  #elif defined(OPENSSL_LINUX)
@@ -11,10 +11,10 @@ index 9ed080f2a..f11d59662 100644
  #elif defined(OPENSSL_APPLE) && !defined(OPENSSL_MACOS)
  // Unlike macOS, iOS and similar hide away getentropy().
  #define OPENSSL_RAND_IOS
-diff --git a/crypto/rand/urandom.cc b/crypto/rand/urandom.cc
+diff --git crypto/rand/urandom.cc crypto/rand/urandom.cc
 index d06ade712..ccee54041 100644
---- a/crypto/rand/urandom.cc
-+++ b/crypto/rand/urandom.cc
+--- crypto/rand/urandom.cc
++++ crypto/rand/urandom.cc
 @@ -25,9 +25,11 @@
  
  #include <errno.h>

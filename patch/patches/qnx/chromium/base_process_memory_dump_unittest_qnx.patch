@@ -1,7 +1,7 @@
-diff --git a/base/trace_event/process_memory_dump_unittest.cc b/base/trace_event/process_memory_dump_unittest.cc
+diff --git base/trace_event/process_memory_dump_unittest.cc base/trace_event/process_memory_dump_unittest.cc
 index c635ebcf08ea2..0d924584db1e4 100644
---- a/base/trace_event/process_memory_dump_unittest.cc
-+++ b/base/trace_event/process_memory_dump_unittest.cc
+--- base/trace_event/process_memory_dump_unittest.cc
++++ base/trace_event/process_memory_dump_unittest.cc
 @@ -47,7 +47,7 @@ void* Map(size_t size) {
                          PAGE_READWRITE);
  #elif BUILDFLAG(IS_POSIX) || BUILDFLAG(IS_FUCHSIA)

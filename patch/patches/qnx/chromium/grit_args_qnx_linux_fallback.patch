@@ -1,7 +1,7 @@
-diff --git a/tools/grit/grit_args.gni b/tools/grit/grit_args.gni
+diff --git tools/grit/grit_args.gni tools/grit/grit_args.gni
 index cd2b6b9337663..12360f4d9bf94 100644
---- a/tools/grit/grit_args.gni
-+++ b/tools/grit/grit_args.gni
+--- tools/grit/grit_args.gni
++++ tools/grit/grit_args.gni
 @@ -14,7 +14,7 @@ devtools_grd_path_no_ext = get_path_info(devtools_grd_path, "dir") + "/" +
  # Prefer using this (and excluding specific platforms) when a resource applies
  # to (most) desktop platforms.

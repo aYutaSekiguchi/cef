@@ -1,7 +1,7 @@
-diff --git a/src/tests/BUILD.gn b/src/tests/BUILD.gn
+diff --git src/tests/BUILD.gn src/tests/BUILD.gn
 index bc9a221e6b..20043a16e1 100644
---- a/src/tests/BUILD.gn
-+++ b/src/tests/BUILD.gn
+--- src/tests/BUILD.gn
++++ src/tests/BUILD.gn
 @@ -10,7 +10,7 @@ declare_args() {
    build_angle_gles1_conform_tests = checkout_angle_internal
    build_angle_trace_perf_tests = false

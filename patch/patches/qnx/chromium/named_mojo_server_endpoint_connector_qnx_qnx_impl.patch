@@ -1,7 +1,7 @@
-diff --git a/components/named_mojo_ipc_server/endpoint_options.h b/components/named_mojo_ipc_server/endpoint_options.h
+diff --git components/named_mojo_ipc_server/endpoint_options.h components/named_mojo_ipc_server/endpoint_options.h
 index 6fa6d3b407793..b6ff4e836eda6 100644
---- a/components/named_mojo_ipc_server/endpoint_options.h
-+++ b/components/named_mojo_ipc_server/endpoint_options.h
+--- components/named_mojo_ipc_server/endpoint_options.h
++++ components/named_mojo_ipc_server/endpoint_options.h
 @@ -65,9 +65,13 @@ struct EndpointOptions {
    std::wstring security_descriptor;
  #endif
@@ -18,10 +18,10 @@ index 6fa6d3b407793..b6ff4e836eda6 100644
    bool require_same_peer_user = true;
  #endif
  };
-diff --git a/components/named_mojo_ipc_server/BUILD.gn b/components/named_mojo_ipc_server/BUILD.gn
+diff --git components/named_mojo_ipc_server/BUILD.gn components/named_mojo_ipc_server/BUILD.gn
 index b423173187d6e..153875197abb0 100644
---- a/components/named_mojo_ipc_server/BUILD.gn
-+++ b/components/named_mojo_ipc_server/BUILD.gn
+--- components/named_mojo_ipc_server/BUILD.gn
++++ components/named_mojo_ipc_server/BUILD.gn
 @@ -35,8 +35,10 @@ static_library("named_mojo_ipc_server") {
      "//mojo/public/cpp/system",
    ]

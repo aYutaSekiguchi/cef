@@ -1,7 +1,7 @@
-diff --git a/base/memory/discardable_shared_memory.cc b/base/memory/discardable_shared_memory.cc
+diff --git base/memory/discardable_shared_memory.cc base/memory/discardable_shared_memory.cc
 index 4adee24c01744..ff9de978d7437 100644
---- a/base/memory/discardable_shared_memory.cc
-+++ b/base/memory/discardable_shared_memory.cc
+--- base/memory/discardable_shared_memory.cc
++++ base/memory/discardable_shared_memory.cc
 @@ -27,6 +27,10 @@
  #if BUILDFLAG(IS_POSIX)
  // For madvise() which is available on all POSIX compatible systems.
@@ -24,10 +24,10 @@ index 4adee24c01744..ff9de978d7437 100644
  #elif BUILDFLAG(IS_APPLE)
    // MADV_FREE_REUSABLE is similar to MADV_FREE, but also marks the pages with
    // the reusable bit, which allows both Activity Monitor and memory-infra to
-diff --git a/base/memory/platform_shared_memory_region.h b/base/memory/platform_shared_memory_region.h
+diff --git base/memory/platform_shared_memory_region.h base/memory/platform_shared_memory_region.h
 index 14b16a98df6af..943c6e163e908 100644
---- a/base/memory/platform_shared_memory_region.h
-+++ b/base/memory/platform_shared_memory_region.h
+--- base/memory/platform_shared_memory_region.h
++++ base/memory/platform_shared_memory_region.h
 @@ -104,7 +104,7 @@ class BASE_EXPORT PlatformSharedMemoryRegion {
  #if BUILDFLAG(IS_FUCHSIA)
      kNotVmo,
@@ -37,10 +37,10 @@ index 14b16a98df6af..943c6e163e908 100644
      kFcntlFailed,
      kReadOnlyFdNotReadOnly,
      kUnexpectedReadOnlyFd,
-diff --git a/base/memory/platform_shared_memory_region_posix.cc b/base/memory/platform_shared_memory_region_posix.cc
+diff --git base/memory/platform_shared_memory_region_posix.cc base/memory/platform_shared_memory_region_posix.cc
 index ebdaab8cada6c..07a671d547aa6 100644
---- a/base/memory/platform_shared_memory_region_posix.cc
-+++ b/base/memory/platform_shared_memory_region_posix.cc
+--- base/memory/platform_shared_memory_region_posix.cc
++++ base/memory/platform_shared_memory_region_posix.cc
 @@ -41,6 +41,7 @@ enum class FDAccessModeError {
    kMismatch,
  };
@@ -83,10 +83,10 @@ index ebdaab8cada6c..07a671d547aa6 100644
  }
  
  PlatformSharedMemoryRegion::PlatformSharedMemoryRegion(
-diff --git a/base/memory/platform_shared_memory_region_unittest.cc b/base/memory/platform_shared_memory_region_unittest.cc
+diff --git base/memory/platform_shared_memory_region_unittest.cc base/memory/platform_shared_memory_region_unittest.cc
 index 1a193bdb01703..103687975e577 100644
---- a/base/memory/platform_shared_memory_region_unittest.cc
-+++ b/base/memory/platform_shared_memory_region_unittest.cc
+--- base/memory/platform_shared_memory_region_unittest.cc
++++ base/memory/platform_shared_memory_region_unittest.cc
 @@ -200,6 +200,7 @@ TEST_F(PlatformSharedMemoryRegionTest, TakeOrFailReadOnly) {
      EXPECT_TRUE(result->IsValid());
    }
@@ -172,10 +172,10 @@ index 1a193bdb01703..103687975e577 100644
  }
  
  // Tests that it's impossible to create read-only platform shared memory region.
-diff --git a/base/memory/shared_memory_mapping_unittest.cc b/base/memory/shared_memory_mapping_unittest.cc
+diff --git base/memory/shared_memory_mapping_unittest.cc base/memory/shared_memory_mapping_unittest.cc
 index 3666b8f2a1fd9..23a1dcb81e46b 100644
---- a/base/memory/shared_memory_mapping_unittest.cc
-+++ b/base/memory/shared_memory_mapping_unittest.cc
+--- base/memory/shared_memory_mapping_unittest.cc
++++ base/memory/shared_memory_mapping_unittest.cc
 @@ -268,7 +268,7 @@ TEST_F(SharedMemoryMappingTest, TooBigAtomic) {
  // mapped.
  #if !BUILDFLAG(IS_IOS)
@@ -185,10 +185,10 @@ index 3666b8f2a1fd9..23a1dcb81e46b 100644
  #define MAYBE_TotalMappedSizeLimit DISABLED_TotalMappedSizeLimit
  #else
  #define MAYBE_TotalMappedSizeLimit TotalMappedSizeLimit
-diff --git a/base/message_loop/message_pump_epoll.cc b/base/message_loop/message_pump_epoll.cc
+diff --git base/message_loop/message_pump_epoll.cc base/message_loop/message_pump_epoll.cc
 index f36682af0e2ab..bb508c2aac9ae 100644
---- a/base/message_loop/message_pump_epoll.cc
-+++ b/base/message_loop/message_pump_epoll.cc
+--- base/message_loop/message_pump_epoll.cc
++++ base/message_loop/message_pump_epoll.cc
 @@ -26,6 +26,32 @@
  #include "base/time/time.h"
  #include "base/trace_event/heap_profiler.h"
@@ -272,10 +272,10 @@ index f36682af0e2ab..bb508c2aac9ae 100644
      int rv = epoll_ctl(epoll_.get(), EPOLL_CTL_MOD, entry.fd, &event);
      DPCHECK(rv == 0);
  #if DCHECK_IS_ON()
-diff --git a/base/message_loop/message_pump_for_ui.h b/base/message_loop/message_pump_for_ui.h
+diff --git base/message_loop/message_pump_for_ui.h base/message_loop/message_pump_for_ui.h
 index e421d75201851..03b915937a9ee 100644
---- a/base/message_loop/message_pump_for_ui.h
-+++ b/base/message_loop/message_pump_for_ui.h
+--- base/message_loop/message_pump_for_ui.h
++++ base/message_loop/message_pump_for_ui.h
 @@ -20,7 +20,7 @@
  // No MessagePumpForUI, see below.
  #elif defined(USE_GLIB)
@@ -294,10 +294,10 @@ index e421d75201851..03b915937a9ee 100644
  using MessagePumpForUI = MessagePumpEpoll;
  #elif BUILDFLAG(IS_FUCHSIA)
  using MessagePumpForUI = MessagePumpFuchsia;
-diff --git a/base/metrics/persistent_histogram_allocator_unittest.cc b/base/metrics/persistent_histogram_allocator_unittest.cc
+diff --git base/metrics/persistent_histogram_allocator_unittest.cc base/metrics/persistent_histogram_allocator_unittest.cc
 index 4752682030535..a8336e4103ec4 100644
---- a/base/metrics/persistent_histogram_allocator_unittest.cc
-+++ b/base/metrics/persistent_histogram_allocator_unittest.cc
+--- base/metrics/persistent_histogram_allocator_unittest.cc
++++ base/metrics/persistent_histogram_allocator_unittest.cc
 @@ -694,6 +694,9 @@ TEST_F(PersistentHistogramAllocatorTest, RangesDeDuplication) {
  }
  
@@ -316,10 +316,10 @@ index 4752682030535..a8336e4103ec4 100644
  }
  
  }  // namespace base
-diff --git a/base/path_service_unittest.cc b/base/path_service_unittest.cc
+diff --git base/path_service_unittest.cc base/path_service_unittest.cc
 index 7a5c2b428e7c2..2ad879195f4cc 100644
---- a/base/path_service_unittest.cc
-+++ b/base/path_service_unittest.cc
+--- base/path_service_unittest.cc
++++ base/path_service_unittest.cc
 @@ -58,8 +58,9 @@ bool ReturnsValidPath(int key) {
      check_path_exists = false;
    }
@@ -332,10 +332,10 @@ index 7a5c2b428e7c2..2ad879195f4cc 100644
    // but it doesn't exist.
    if (key == DIR_USER_DESKTOP) {
      check_path_exists = false;
-diff --git a/base/posix/can_lower_nice_to.cc b/base/posix/can_lower_nice_to.cc
+diff --git base/posix/can_lower_nice_to.cc base/posix/can_lower_nice_to.cc
 index d9117138b4427..27f19e2f8b151 100644
---- a/base/posix/can_lower_nice_to.cc
-+++ b/base/posix/can_lower_nice_to.cc
+--- base/posix/can_lower_nice_to.cc
++++ base/posix/can_lower_nice_to.cc
 @@ -14,7 +14,7 @@
  // Not defined on AIX by default.
  #if BUILDFLAG(IS_AIX)
@@ -365,10 +365,10 @@ index d9117138b4427..27f19e2f8b151 100644
  }
  
  }  // namespace base::internal
-diff --git a/base/posix/unix_domain_socket.cc b/base/posix/unix_domain_socket.cc
+diff --git base/posix/unix_domain_socket.cc base/posix/unix_domain_socket.cc
 index 8cb4a7156f17c..54abed9dd8523 100644
---- a/base/posix/unix_domain_socket.cc
-+++ b/base/posix/unix_domain_socket.cc
+--- base/posix/unix_domain_socket.cc
++++ base/posix/unix_domain_socket.cc
 @@ -43,13 +43,17 @@ bool CreateSocketPair(ScopedFD* one, ScopedFD* two) {
  
  // static
@@ -484,10 +484,10 @@ index 8cb4a7156f17c..54abed9dd8523 100644
  #else
      // |pid| will legitimately be -1 if we read EOF, so only DCHECK if we
      // actually received a message.  Unfortunately, Linux allows sending zero
-diff --git a/base/posix/unix_domain_socket_unittest.cc b/base/posix/unix_domain_socket_unittest.cc
+diff --git base/posix/unix_domain_socket_unittest.cc base/posix/unix_domain_socket_unittest.cc
 index 678defed72f82..d0a3c3cc6fcfb 100644
---- a/base/posix/unix_domain_socket_unittest.cc
-+++ b/base/posix/unix_domain_socket_unittest.cc
+--- base/posix/unix_domain_socket_unittest.cc
++++ base/posix/unix_domain_socket_unittest.cc
 @@ -94,6 +94,9 @@ TEST(UnixDomainSocketTest, SendRecvMsgAvoidsSIGPIPE) {
  
  // Simple sanity check within a single process that receiving PIDs works.

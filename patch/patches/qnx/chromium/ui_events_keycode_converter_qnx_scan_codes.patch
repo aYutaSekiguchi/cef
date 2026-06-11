@@ -1,7 +1,7 @@
-diff --git a/ui/events/keycodes/dom/keycode_converter.cc b/ui/events/keycodes/dom/keycode_converter.cc
+diff --git ui/events/keycodes/dom/keycode_converter.cc ui/events/keycodes/dom/keycode_converter.cc
 index e7072792d32d5..ccd5b1dcb4d0a 100644
---- a/ui/events/keycodes/dom/keycode_converter.cc
-+++ b/ui/events/keycodes/dom/keycode_converter.cc
+--- ui/events/keycodes/dom/keycode_converter.cc
++++ ui/events/keycodes/dom/keycode_converter.cc
 @@ -22,6 +22,25 @@ namespace ui {
  
  namespace {

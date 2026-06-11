@@ -1,7 +1,7 @@
-diff --git a/third_party/cpuinfo/BUILD.gn b/third_party/cpuinfo/BUILD.gn
+diff --git third_party/cpuinfo/BUILD.gn third_party/cpuinfo/BUILD.gn
 index b076eb7195e9f..96ce1d518117c 100644
---- a/third_party/cpuinfo/BUILD.gn
-+++ b/third_party/cpuinfo/BUILD.gn
+--- third_party/cpuinfo/BUILD.gn
++++ third_party/cpuinfo/BUILD.gn
 @@ -8,6 +8,19 @@ config("cpuinfo_include") {
      "src/src",
      "src/deps/clog/include",

@@ -1,7 +1,7 @@
-diff --git a/.gitmodules b/.gitmodules
+diff --git .gitmodules .gitmodules
 index d136e5d2532a9..1457bb6444862 100644
---- a/.gitmodules
-+++ b/.gitmodules
+--- .gitmodules
++++ .gitmodules
 @@ -914,3 +914,9 @@
  	path = webkit/data/test_shell/plugins
  	url = https://chrome-internal.googlesource.com/chrome/data/webkit_plugin_tests
@@ -12,10 +12,10 @@ index d136e5d2532a9..1457bb6444862 100644
 +[submodule "third_party/farmhash_qnx/src"]
 +	path = third_party/farmhash_qnx/src
 +	url = https://github.com/qnx-ports/farmhash.git
-diff --git a/DEPS b/DEPS
+diff --git DEPS DEPS
 index 40049e447ccd1..63e34be8015fa 100644
---- a/DEPS
-+++ b/DEPS
+--- DEPS
++++ DEPS
 @@ -2048,6 +2048,9 @@ deps = {
    'src/third_party/cpuinfo/src':
      Var('chromium_git') + '/external/github.com/pytorch/cpuinfo.git' + '@' + '7364b490b5f78d58efe23ea76e74210fd6c3c76f',

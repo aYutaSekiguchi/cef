@@ -1,6 +1,6 @@
-diff --git a/third_party/webrtc/rtc_base/byte_order.h b/third_party/webrtc/rtc_base/byte_order.h
---- a/third_party/webrtc/rtc_base/byte_order.h
-+++ b/third_party/webrtc/rtc_base/byte_order.h
+diff --git third_party/webrtc/rtc_base/byte_order.h third_party/webrtc/rtc_base/byte_order.h
+--- third_party/webrtc/rtc_base/byte_order.h
++++ third_party/webrtc/rtc_base/byte_order.h
 @@ -82,12 +82,56 @@
  #endif  // defined(WEBRTC_WIN)
  #else

@@ -1,7 +1,7 @@
-diff --git a/epoll-mgr.c b/epoll-mgr.c
+diff --git epoll-mgr.c epoll-mgr.c
 index 316cb34..add8bb0 100644
---- a/epoll-mgr.c
-+++ b/epoll-mgr.c
+--- epoll-mgr.c
++++ epoll-mgr.c
 @@ -298,10 +298,10 @@ _epoll_interest_fd_ionotify(struct _epoll_interest_fd *interest_fd, int action,
  		msg.i.flags |= exten_flag | extra_mask;
  

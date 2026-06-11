@@ -1,7 +1,7 @@
-diff --git a/chrome/browser/ui/find_bar/BUILD.gn b/chrome/browser/ui/find_bar/BUILD.gn
+diff --git chrome/browser/ui/find_bar/BUILD.gn chrome/browser/ui/find_bar/BUILD.gn
 index 1775f6db1bac2..5dcdab7f67898 100644
---- a/chrome/browser/ui/find_bar/BUILD.gn
-+++ b/chrome/browser/ui/find_bar/BUILD.gn
+--- chrome/browser/ui/find_bar/BUILD.gn
++++ chrome/browser/ui/find_bar/BUILD.gn
 @@ -4,7 +4,7 @@
  
  import("//build/config/chromeos/args.gni")

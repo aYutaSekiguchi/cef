@@ -1,7 +1,7 @@
-diff --git a/components/crash/core/app/BUILD.gn b/components/crash/core/app/BUILD.gn
+diff --git components/crash/core/app/BUILD.gn components/crash/core/app/BUILD.gn
 index dd96becde4718..92077c70a9a1c 100644
---- a/components/crash/core/app/BUILD.gn
-+++ b/components/crash/core/app/BUILD.gn
+--- components/crash/core/app/BUILD.gn
++++ components/crash/core/app/BUILD.gn
 @@ -59,10 +59,15 @@ static_library("app") {
      "crash_export_thunks.h",
      "crash_switches.cc",

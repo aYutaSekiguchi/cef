@@ -1,7 +1,7 @@
-diff --git a/media/base/audio_parameters.h b/media/base/audio_parameters.h
+diff --git media/base/audio_parameters.h media/base/audio_parameters.h
 index 8dc6a6d1a8253..8b8463b0b6017 100644
---- a/media/base/audio_parameters.h
-+++ b/media/base/audio_parameters.h
+--- media/base/audio_parameters.h
++++ media/base/audio_parameters.h
 @@ -57,9 +57,19 @@ struct MEDIA_EXPORT alignas(kParametersAlignment) AudioOutputBufferParameters {
    // atomically accumulated on the AudioService side, and are differentiated on
    // the Renderer side to produce AudioGlitchInfo.

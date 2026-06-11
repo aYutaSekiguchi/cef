@@ -2,10 +2,10 @@
 # longer masquerades as is_linux. The QNX test runner expects the LLVM
 # variant in the graph.
 
-diff --git a/src/Reactor/reactor.gni b/src/Reactor/reactor.gni
+diff --git src/Reactor/reactor.gni src/Reactor/reactor.gni
 index 67dfeb0ec..7ddaa8aab 100644
---- a/src/Reactor/reactor.gni
-+++ b/src/Reactor/reactor.gni
+--- src/Reactor/reactor.gni
++++ src/Reactor/reactor.gni
 @@ -16,7 +16,7 @@ declare_args() {
  }
  

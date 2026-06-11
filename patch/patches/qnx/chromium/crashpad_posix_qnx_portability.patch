@@ -1,7 +1,7 @@
-diff --git a/third_party/crashpad/crashpad/util/posix/drop_privileges.cc b/third_party/crashpad/crashpad/util/posix/drop_privileges.cc
+diff --git third_party/crashpad/crashpad/util/posix/drop_privileges.cc third_party/crashpad/crashpad/util/posix/drop_privileges.cc
 index 1976c4fb7b506..2dd9e1cbd1390 100644
---- a/third_party/crashpad/crashpad/util/posix/drop_privileges.cc
-+++ b/third_party/crashpad/crashpad/util/posix/drop_privileges.cc
+--- third_party/crashpad/crashpad/util/posix/drop_privileges.cc
++++ third_party/crashpad/crashpad/util/posix/drop_privileges.cc
 @@ -85,6 +85,23 @@ void DropPrivileges() {
    // necessary to perform any additional checking anyway.
    //
@@ -26,10 +26,10 @@ index 1976c4fb7b506..2dd9e1cbd1390 100644
  #else
  #error Port this function to your system.
  #endif
-diff --git a/third_party/crashpad/crashpad/util/posix/close_multiple.cc b/third_party/crashpad/crashpad/util/posix/close_multiple.cc
+diff --git third_party/crashpad/crashpad/util/posix/close_multiple.cc third_party/crashpad/crashpad/util/posix/close_multiple.cc
 index f5d7b00f01882..2d3300dfa3b21 100644
---- a/third_party/crashpad/crashpad/util/posix/close_multiple.cc
-+++ b/third_party/crashpad/crashpad/util/posix/close_multiple.cc
+--- third_party/crashpad/crashpad/util/posix/close_multiple.cc
++++ third_party/crashpad/crashpad/util/posix/close_multiple.cc
 @@ -77,6 +77,8 @@ bool CloseMultipleNowOrOnExecUsingFDDir(int min_fd, int preserve_fd) {
    static constexpr char kFDDir[] = "/dev/fd";
  #elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_ANDROID)
@@ -48,10 +48,10 @@ index f5d7b00f01882..2d3300dfa3b21 100644
      defined(OPEN_MAX)
    // Linux does not provide OPEN_MAX. See
    // https://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commit/include/linux/limits.h?id=77293034696e3e0b6c8b8fc1f96be091104b3d2b.
-diff --git a/third_party/crashpad/crashpad/util/posix/symbolic_constants_posix.cc b/third_party/crashpad/crashpad/util/posix/symbolic_constants_posix.cc
+diff --git third_party/crashpad/crashpad/util/posix/symbolic_constants_posix.cc third_party/crashpad/crashpad/util/posix/symbolic_constants_posix.cc
 index 58c9057fbd933..9a8d217e6f3b8 100644
---- a/third_party/crashpad/crashpad/util/posix/symbolic_constants_posix.cc
-+++ b/third_party/crashpad/crashpad/util/posix/symbolic_constants_posix.cc
+--- third_party/crashpad/crashpad/util/posix/symbolic_constants_posix.cc
++++ third_party/crashpad/crashpad/util/posix/symbolic_constants_posix.cc
 @@ -68,6 +68,63 @@ constexpr const char* kSignalNames[] = {
      "INFO",
      "USR1",

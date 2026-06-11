@@ -1,7 +1,7 @@
-diff --git a/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_unittest.cc b/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_unittest.cc
+diff --git base/allocator/partition_allocator/src/partition_alloc/partition_alloc_unittest.cc base/allocator/partition_allocator/src/partition_alloc/partition_alloc_unittest.cc
 index 7141840824641..a369097eaab80 100644
---- a/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_unittest.cc
-+++ b/base/allocator/partition_allocator/src/partition_alloc/partition_alloc_unittest.cc
+--- base/allocator/partition_allocator/src/partition_alloc/partition_alloc_unittest.cc
++++ base/allocator/partition_allocator/src/partition_alloc/partition_alloc_unittest.cc
 @@ -6435,6 +6435,7 @@ TEST_P(PartitionAllocTest, SwitchBucketDistributionAfterAlloc) {
    root->Free(ptr);
  }

@@ -1,7 +1,7 @@
-diff --git a/components/supervised_user/buildflags.gni b/components/supervised_user/buildflags.gni
+diff --git components/supervised_user/buildflags.gni components/supervised_user/buildflags.gni
 index 7bb1f5758b0a3..fa7170b96ccf0 100644
---- a/components/supervised_user/buildflags.gni
-+++ b/components/supervised_user/buildflags.gni
+--- components/supervised_user/buildflags.gni
++++ components/supervised_user/buildflags.gni
 @@ -6,5 +6,5 @@ declare_args() {
    # Enables supervision for Family Link users.
    enable_supervised_users =
@@ -9,10 +9,10 @@ index 7bb1f5758b0a3..fa7170b96ccf0 100644
 -      is_android || is_chromeos || is_ios || is_linux || is_mac || is_win
 +      is_android || is_chromeos || is_ios || is_linux || is_mac || is_win || is_qnx
  }
-diff --git a/content/gpu/BUILD.gn b/content/gpu/BUILD.gn
+diff --git content/gpu/BUILD.gn content/gpu/BUILD.gn
 index 052263865c55c..6f9d633993612 100644
---- a/content/gpu/BUILD.gn
-+++ b/content/gpu/BUILD.gn
+--- content/gpu/BUILD.gn
++++ content/gpu/BUILD.gn
 @@ -125,7 +125,7 @@ target(link_target_type, "gpu_sources") {
  
    # Use DRI on desktop Linux builds.
@@ -22,10 +22,10 @@ index 052263865c55c..6f9d633993612 100644
      configs += [ "//build/config/linux/dri" ]
    }
  }
-diff --git a/content/test/BUILD.gn b/content/test/BUILD.gn
+diff --git content/test/BUILD.gn content/test/BUILD.gn
 index 605f7c158f128..b6325df65b5bf 100644
---- a/content/test/BUILD.gn
-+++ b/content/test/BUILD.gn
+--- content/test/BUILD.gn
++++ content/test/BUILD.gn
 @@ -3226,7 +3226,7 @@ test("content_unittests") {
      ]
    }
@@ -35,10 +35,10 @@ index 605f7c158f128..b6325df65b5bf 100644
      data = [
        "$root_out_dir/content_shell.pak",
        "data/",
-diff --git a/media/gpu/sandbox/BUILD.gn b/media/gpu/sandbox/BUILD.gn
+diff --git media/gpu/sandbox/BUILD.gn media/gpu/sandbox/BUILD.gn
 index 7987b932c6eb4..0f9f2f9e37bbb 100644
---- a/media/gpu/sandbox/BUILD.gn
-+++ b/media/gpu/sandbox/BUILD.gn
+--- media/gpu/sandbox/BUILD.gn
++++ media/gpu/sandbox/BUILD.gn
 @@ -26,7 +26,7 @@ source_set("sandbox") {
      deps += [ "//media/gpu/v4l2" ]
    }
@@ -48,10 +48,10 @@ index 7987b932c6eb4..0f9f2f9e37bbb 100644
      # For DRI_DRIVER_DIR.
      configs += [ "//build/config/linux/dri" ]
    }
-diff --git a/pdf/BUILD.gn b/pdf/BUILD.gn
+diff --git pdf/BUILD.gn pdf/BUILD.gn
 index 5c85ee259b622..996af3868c2fc 100644
---- a/pdf/BUILD.gn
-+++ b/pdf/BUILD.gn
+--- pdf/BUILD.gn
++++ pdf/BUILD.gn
 @@ -233,6 +233,11 @@ if (enable_pdf) {
        "//ui/gfx/range",
      ]
@@ -97,10 +97,10 @@ index 5c85ee259b622..996af3868c2fc 100644
      data_deps = [
        ":pdf_unittests_pak",
        "//ui/resources:ui_test_pak_data",
-diff --git a/third_party/abseil-cpp/absl/base/internal/low_level_alloc.cc b/third_party/abseil-cpp/absl/base/internal/low_level_alloc.cc
+diff --git third_party/abseil-cpp/absl/base/internal/low_level_alloc.cc third_party/abseil-cpp/absl/base/internal/low_level_alloc.cc
 index a5bd71da6de5a..162748143bc5c 100644
---- a/third_party/abseil-cpp/absl/base/internal/low_level_alloc.cc
-+++ b/third_party/abseil-cpp/absl/base/internal/low_level_alloc.cc
+--- third_party/abseil-cpp/absl/base/internal/low_level_alloc.cc
++++ third_party/abseil-cpp/absl/base/internal/low_level_alloc.cc
 @@ -61,6 +61,10 @@
  #include "absl/base/internal/raw_logging.h"
  #include "absl/base/internal/spinlock.h"
@@ -112,10 +112,10 @@ index a5bd71da6de5a..162748143bc5c 100644
  #if defined(MAP_ANON) && !defined(MAP_ANONYMOUS)
  #define MAP_ANONYMOUS MAP_ANON
  #endif
-diff --git a/third_party/fontconfig/BUILD.gn b/third_party/fontconfig/BUILD.gn
+diff --git third_party/fontconfig/BUILD.gn third_party/fontconfig/BUILD.gn
 index 58e3e4e802edb..312c213f01f4c 100644
---- a/third_party/fontconfig/BUILD.gn
-+++ b/third_party/fontconfig/BUILD.gn
+--- third_party/fontconfig/BUILD.gn
++++ third_party/fontconfig/BUILD.gn
 @@ -77,13 +77,32 @@ if (use_bundled_fontconfig) {
    }
  
@@ -159,10 +159,10 @@ index 58e3e4e802edb..312c213f01f4c 100644
        libs = [ "uuid" ]
      }
    }
-diff --git a/third_party/fontconfig/include/meson-config.h b/third_party/fontconfig/include/meson-config.h
+diff --git third_party/fontconfig/include/meson-config.h third_party/fontconfig/include/meson-config.h
 index d9e3d64276b37..b126194d1a4b5 100644
---- a/third_party/fontconfig/include/meson-config.h
-+++ b/third_party/fontconfig/include/meson-config.h
+--- third_party/fontconfig/include/meson-config.h
++++ third_party/fontconfig/include/meson-config.h
 @@ -11,7 +11,9 @@
  
  #define CONFIGDIR "/etc/fonts/conf.d"
@@ -215,10 +215,10 @@ index d9e3d64276b37..b126194d1a4b5 100644
  
  #define HAVE_TIME_H 1
  
-diff --git a/third_party/google_benchmark/BUILD.gn b/third_party/google_benchmark/BUILD.gn
+diff --git third_party/google_benchmark/BUILD.gn third_party/google_benchmark/BUILD.gn
 index 6d1e9b1dd35bf..18c12477d686e 100644
---- a/third_party/google_benchmark/BUILD.gn
-+++ b/third_party/google_benchmark/BUILD.gn
+--- third_party/google_benchmark/BUILD.gn
++++ third_party/google_benchmark/BUILD.gn
 @@ -79,7 +79,7 @@ component("google_benchmark") {
      "BENCHMARK_VERSION=\"1.9.0\"",
    ]

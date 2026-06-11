@@ -1,7 +1,7 @@
-diff --git a/third_party/libxslt/BUILD.gn b/third_party/libxslt/BUILD.gn
+diff --git third_party/libxslt/BUILD.gn third_party/libxslt/BUILD.gn
 index 6460d87f5982b..f237dad535ef4 100644
---- a/third_party/libxslt/BUILD.gn
-+++ b/third_party/libxslt/BUILD.gn
+--- third_party/libxslt/BUILD.gn
++++ third_party/libxslt/BUILD.gn
 @@ -84,7 +84,7 @@ static_library("libxslt") {
    ]
    public_configs = [ ":libxslt_config" ]

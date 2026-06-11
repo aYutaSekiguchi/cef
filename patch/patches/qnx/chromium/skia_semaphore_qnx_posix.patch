@@ -1,6 +1,6 @@
-diff --git a/src/base/SkSemaphore.cpp b/src/base/SkSemaphore.cpp
---- a/src/base/SkSemaphore.cpp
-+++ b/src/base/SkSemaphore.cpp
+diff --git src/base/SkSemaphore.cpp src/base/SkSemaphore.cpp
+--- src/base/SkSemaphore.cpp
++++ src/base/SkSemaphore.cpp
 @@ -9,7 +9,7 @@
  
  #include "include/private/base/SkFeatures.h" // IWYU pragma: keep

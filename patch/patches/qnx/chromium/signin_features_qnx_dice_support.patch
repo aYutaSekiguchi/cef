@@ -1,7 +1,7 @@
-diff --git a/components/signin/features.gni b/components/signin/features.gni
+diff --git components/signin/features.gni components/signin/features.gni
 index cbd5ae2384760..f63ab60458702 100644
---- a/components/signin/features.gni
-+++ b/components/signin/features.gni
+--- components/signin/features.gni
++++ components/signin/features.gni
 @@ -10,7 +10,7 @@ declare_args() {
  }
  

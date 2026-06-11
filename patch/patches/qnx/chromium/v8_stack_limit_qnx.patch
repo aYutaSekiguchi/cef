@@ -1,5 +1,5 @@
---- a/v8/src/base/platform/platform.h
-+++ b/v8/src/base/platform/platform.h
+--- v8/src/base/platform/platform.h
++++ v8/src/base/platform/platform.h
 @@ -683,6 +683,11 @@
    // Gets the start of the stack of the current thread.
    static StackSlot GetStackStart();
@@ -13,8 +13,8 @@
    //
    // GetCurrentStackPosition() should not be inlined, because it works on stack
 
---- a/v8/src/base/platform/platform-posix.cc
-+++ b/v8/src/base/platform/platform-posix.cc
+--- v8/src/base/platform/platform-posix.cc
++++ v8/src/base/platform/platform-posix.cc
 @@ -1496,6 +1496,11 @@
    return __builtin_frame_address(0);
  }
@@ -28,8 +28,8 @@
  #undef MAP_ANONYMOUS
  #undef MADV_FREE
 
---- a/v8/src/base/platform/platform-qnx.cc
-+++ b/v8/src/base/platform/platform-qnx.cc
+--- v8/src/base/platform/platform-qnx.cc
++++ v8/src/base/platform/platform-qnx.cc
 @@ -156,6 +156,13 @@
  }
  
@@ -45,8 +45,8 @@
    struct _thread_local_storage* tls = __tls();
    if (!tls || !tls->__stackaddr || tls->__stacksize == 0) return nullptr;
 
---- a/v8/src/execution/stack-guard.cc
-+++ b/v8/src/execution/stack-guard.cc
+--- v8/src/execution/stack-guard.cc
++++ v8/src/execution/stack-guard.cc
 @@ -246,7 +246,17 @@
  
  void StackGuard::ThreadLocal::Initialize(Isolate* isolate,

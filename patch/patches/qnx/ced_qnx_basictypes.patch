@@ -1,7 +1,7 @@
-diff --git a/util/basictypes.h b/util/basictypes.h
+diff --git util/basictypes.h util/basictypes.h
 index af391c7..1f0b363 100644
---- a/util/basictypes.h
-+++ b/util/basictypes.h
+--- util/basictypes.h
++++ util/basictypes.h
 @@ -33,7 +33,9 @@ typedef signed char         int8;
  typedef short               int16;
  // TODO(mbelshe) Remove these type guards.  These are

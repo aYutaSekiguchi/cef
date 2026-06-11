@@ -1,7 +1,7 @@
-diff --git a/chrome/common/features.gni b/chrome/common/features.gni
+diff --git chrome/common/features.gni chrome/common/features.gni
 index b5ae03e3c7a7a..81acf28ba9d47 100644
---- a/chrome/common/features.gni
-+++ b/chrome/common/features.gni
+--- chrome/common/features.gni
++++ chrome/common/features.gni
 @@ -36,7 +36,7 @@ declare_args() {
    # supported on all desktop platforms, as opposed to the v1 UI which is only
    # supported on platforms using NSS (Linux and CrOS).

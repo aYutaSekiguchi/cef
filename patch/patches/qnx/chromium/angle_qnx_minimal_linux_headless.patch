@@ -1,7 +1,7 @@
-diff --git a/third_party/angle/BUILD.gn b/third_party/angle/BUILD.gn
+diff --git third_party/angle/BUILD.gn third_party/angle/BUILD.gn
 index 0cb785515c6c1bde3f47226cef6da461b693adc2..7529ec7c8695f10f9402bddaf3d5d28ceaab8b4d 100644
---- a/third_party/angle/BUILD.gn
-+++ b/third_party/angle/BUILD.gn
+--- third_party/angle/BUILD.gn
++++ third_party/angle/BUILD.gn
 @@ -553,7 +556,7 @@ template("angle_common_lib") {
        all_dependent_configs = [ ":angle_disable_pool_alloc" ]
      }
@@ -12,10 +12,10 @@ index 0cb785515c6c1bde3f47226cef6da461b693adc2..7529ec7c8695f10f9402bddaf3d5d28c
      }
  
 
-diff --git a/third_party/angle/src/common/SimpleMutex.h b/third_party/angle/src/common/SimpleMutex.h
+diff --git third_party/angle/src/common/SimpleMutex.h third_party/angle/src/common/SimpleMutex.h
 index 84ffa1a1da568de14247f8a10476634301089984..eb102daab817695ef8d0791238f44982cb528549 100644
---- a/third_party/angle/src/common/SimpleMutex.h
-+++ b/third_party/angle/src/common/SimpleMutex.h
+--- third_party/angle/src/common/SimpleMutex.h
++++ third_party/angle/src/common/SimpleMutex.h
 @@ -33,8 +33,11 @@
  //
  // There is no TSAN support for futex currently, so it is disabled in that case
@@ -30,10 +30,10 @@ index 84ffa1a1da568de14247f8a10476634301089984..eb102daab817695ef8d0791238f44982
  #        define ANGLE_USE_FUTEX 1
  #    elif defined(ANGLE_PLATFORM_WINDOWS) && !defined(ANGLE_ENABLE_WINDOWS_UWP) && \
          !defined(ANGLE_WINDOWS_NO_FUTEX)
-diff --git a/third_party/angle/src/common/platform.h b/third_party/angle/src/common/platform.h
+diff --git third_party/angle/src/common/platform.h third_party/angle/src/common/platform.h
 index 48d6c5dfa79c942fc5b99642d3e66e103b841846..148e7fac588197337199bcf6d0c7a3c7e3cc22b9 100644
---- a/third_party/angle/src/common/platform.h
-+++ b/third_party/angle/src/common/platform.h
+--- third_party/angle/src/common/platform.h
++++ third_party/angle/src/common/platform.h
 @@ -20,12 +20,12 @@
  #elif defined(ANDROID) && !defined(ANGLE_ANDROID_DMA_BUF)
  #    define ANGLE_PLATFORM_ANDROID 1
@@ -49,10 +49,10 @@ index 48d6c5dfa79c942fc5b99642d3e66e103b841846..148e7fac588197337199bcf6d0c7a3c7
  #    define ANGLE_PLATFORM_POSIX 1
  #else
  #    error Unsupported platform.
-diff --git a/third_party/angle/src/common/system_utils_linux.cpp b/third_party/angle/src/common/system_utils_linux.cpp
+diff --git third_party/angle/src/common/system_utils_linux.cpp third_party/angle/src/common/system_utils_linux.cpp
 index 97da0bee25c4adf11cf99bc45e7ef13df1361e65..266839ba8ae353e28482bfe27d715eb9783dcbaa 100644
---- a/third_party/angle/src/common/system_utils_linux.cpp
-+++ b/third_party/angle/src/common/system_utils_linux.cpp
+--- third_party/angle/src/common/system_utils_linux.cpp
++++ third_party/angle/src/common/system_utils_linux.cpp
 @@ -20,11 +20,37 @@
  #include <unistd.h>
  
@@ -91,10 +91,10 @@ index 97da0bee25c4adf11cf99bc45e7ef13df1361e65..266839ba8ae353e28482bfe27d715eb9
      // We cannot use lstat to get the size of /proc/self/exe as it always returns 0
      // so we just use a big buffer and hope the path fits in it.
      char path[4096];
-diff --git a/third_party/angle/src/tests/test_utils/RenderDoc.cpp b/third_party/angle/src/tests/test_utils/RenderDoc.cpp
+diff --git third_party/angle/src/tests/test_utils/RenderDoc.cpp third_party/angle/src/tests/test_utils/RenderDoc.cpp
 index 9a7b3a11199db6fc5969a5184c3fe47603c86e94..5088e8a9d55cab39c99bf02034a6c37f0ef71e6b 100644
---- a/third_party/angle/src/tests/test_utils/RenderDoc.cpp
-+++ b/third_party/angle/src/tests/test_utils/RenderDoc.cpp
+--- third_party/angle/src/tests/test_utils/RenderDoc.cpp
++++ third_party/angle/src/tests/test_utils/RenderDoc.cpp
 @@ -19,7 +19,8 @@ RenderDoc::~RenderDoc()
      SafeDelete(mRenderDocModule);
  }
@@ -123,10 +123,10 @@ index 9a7b3a11199db6fc5969a5184c3fe47603c86e94..5088e8a9d55cab39c99bf02034a6c37f
 +#endif  // defined(ANGLE_PLATFORM_ANDROID) ||
 +        // (defined(ANGLE_PLATFORM_LINUX) && !defined(__QNX__)) ||
          // defined(ANGLE_PLATFORM_WINDOWS)
-diff --git a/third_party/angle/util/BUILD.gn b/third_party/angle/util/BUILD.gn
+diff --git third_party/angle/util/BUILD.gn third_party/angle/util/BUILD.gn
 index 6e2473c4ddbd82490e406a79379f0a853316b016..1e2d66dc5c7a97f13cc1b96d6e16843ee871088b 100644
---- a/third_party/angle/util/BUILD.gn
-+++ b/third_party/angle/util/BUILD.gn
+--- third_party/angle/util/BUILD.gn
++++ third_party/angle/util/BUILD.gn
 @@ -41,7 +41,7 @@ if (is_win) {
    }
  }
@@ -145,10 +145,10 @@ index 6e2473c4ddbd82490e406a79379f0a853316b016..1e2d66dc5c7a97f13cc1b96d6e16843e
        libs += [
          "rt",
          "dl",
-diff --git a/third_party/angle/util/posix/crash_handler_posix.cpp b/third_party/angle/util/posix/crash_handler_posix.cpp
+diff --git third_party/angle/util/posix/crash_handler_posix.cpp third_party/angle/util/posix/crash_handler_posix.cpp
 index 3ac44d041c76c0a739a8f01aa20cfd6b7f749cbd..765c7cf7d57e963b023bba644698beda5d015bcc 100644
---- a/third_party/angle/util/posix/crash_handler_posix.cpp
-+++ b/third_party/angle/util/posix/crash_handler_posix.cpp
+--- third_party/angle/util/posix/crash_handler_posix.cpp
++++ third_party/angle/util/posix/crash_handler_posix.cpp
 @@ -28,7 +28,7 @@
  #include <unistd.h>
  #include <iostream>
@@ -176,10 +176,10 @@ index 3ac44d041c76c0a739a8f01aa20cfd6b7f749cbd..765c7cf7d57e963b023bba644698beda
  
  void PrintStackBacktrace()
  {
-diff --git a/third_party/angle/util/posix/test_utils_posix.cpp b/third_party/angle/util/posix/test_utils_posix.cpp
+diff --git third_party/angle/util/posix/test_utils_posix.cpp third_party/angle/util/posix/test_utils_posix.cpp
 index 92dfa30ef88288bceddf4d4447ebeac2fa93311c..dc1e8d6b1d18301105dc8e857a9dc6334b821be9 100644
---- a/third_party/angle/util/posix/test_utils_posix.cpp
-+++ b/third_party/angle/util/posix/test_utils_posix.cpp
+--- third_party/angle/util/posix/test_utils_posix.cpp
++++ third_party/angle/util/posix/test_utils_posix.cpp
 @@ -378,7 +378,7 @@ bool StabilizeCPUForBenchmarking()
              "default priority");
          success = false;

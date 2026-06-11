@@ -1,7 +1,7 @@
-diff --git a/components/enterprise/buildflags/buildflags.gni b/components/enterprise/buildflags/buildflags.gni
+diff --git components/enterprise/buildflags/buildflags.gni components/enterprise/buildflags/buildflags.gni
 index af60b8a89f1dc..a516b9ce56cec 100644
---- a/components/enterprise/buildflags/buildflags.gni
-+++ b/components/enterprise/buildflags/buildflags.gni
+--- components/enterprise/buildflags/buildflags.gni
++++ components/enterprise/buildflags/buildflags.gni
 @@ -10,33 +10,33 @@ declare_args() {
    # Indicates support for content analysis against a cloud agent for Enterprise
    # Connector policies.

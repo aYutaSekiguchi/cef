@@ -1,7 +1,7 @@
-diff --git a/third_party/dav1d/BUILD.gn b/third_party/dav1d/BUILD.gn
+diff --git third_party/dav1d/BUILD.gn third_party/dav1d/BUILD.gn
 index c521fe2c68c4c..45246b7a02f93 100644
---- a/third_party/dav1d/BUILD.gn
-+++ b/third_party/dav1d/BUILD.gn
+--- third_party/dav1d/BUILD.gn
++++ third_party/dav1d/BUILD.gn
 @@ -83,6 +83,25 @@ config("dav1d_config") {
    if (is_win && !is_clang) {
      include_dirs += [ "libdav1d/include/compat/msvc" ]

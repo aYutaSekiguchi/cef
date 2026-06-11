@@ -1,7 +1,7 @@
-diff --git a/chrome/browser/ui/views/toolbar/BUILD.gn b/chrome/browser/ui/views/toolbar/BUILD.gn
+diff --git chrome/browser/ui/views/toolbar/BUILD.gn chrome/browser/ui/views/toolbar/BUILD.gn
 index 35b6f0d3e2c1a..dfa83252c51fe 100644
---- a/chrome/browser/ui/views/toolbar/BUILD.gn
-+++ b/chrome/browser/ui/views/toolbar/BUILD.gn
+--- chrome/browser/ui/views/toolbar/BUILD.gn
++++ chrome/browser/ui/views/toolbar/BUILD.gn
 @@ -2,7 +2,7 @@
  # Use of this source code is governed by a BSD-style license that can be
  # found in the LICENSE file.

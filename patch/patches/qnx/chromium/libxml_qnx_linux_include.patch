@@ -1,7 +1,7 @@
-diff --git a/third_party/libxml/BUILD.gn b/third_party/libxml/BUILD.gn
+diff --git third_party/libxml/BUILD.gn third_party/libxml/BUILD.gn
 index 890afc0e83a92..2c9c6479af9a1 100644
---- a/third_party/libxml/BUILD.gn
-+++ b/third_party/libxml/BUILD.gn
+--- third_party/libxml/BUILD.gn
++++ third_party/libxml/BUILD.gn
 @@ -4,7 +4,7 @@
  
  # Define an "os_include" variable that points at the OS-specific generated

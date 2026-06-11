@@ -1,7 +1,7 @@
-diff --git a/third_party/llvm-subzero/include/llvm/Support/ELF.h b/third_party/llvm-subzero/include/llvm/Support/ELF.h
+diff --git third_party/llvm-subzero/include/llvm/Support/ELF.h third_party/llvm-subzero/include/llvm/Support/ELF.h
 index d951e552f..f32cdbf7f 100644
---- a/third_party/llvm-subzero/include/llvm/Support/ELF.h
-+++ b/third_party/llvm-subzero/include/llvm/Support/ELF.h
+--- third_party/llvm-subzero/include/llvm/Support/ELF.h
++++ third_party/llvm-subzero/include/llvm/Support/ELF.h
 @@ -20,6 +20,22 @@
  #ifndef LLVM_SUPPORT_ELF_H
  #define LLVM_SUPPORT_ELF_H

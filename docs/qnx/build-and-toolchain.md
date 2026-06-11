@@ -161,6 +161,7 @@ Use this workflow whenever a QNX fix must survive beyond the current working tre
 - for patched existing files, update the corresponding patch file under `cef/patch/...`
 - for new files, copy the finalized file into `cef/patch/qnx/chromium/new_files/...`
 - for submodule patches, ensure the patch is relative to the submodule root and that `cef/patch/patch.cfg` points at the correct `path`
+- generate CEF patches with `git diff --no-prefix --relative ...` so bootstrap can apply them consistently
 
 ### 4. Re-bootstrap from the durable artifacts
 

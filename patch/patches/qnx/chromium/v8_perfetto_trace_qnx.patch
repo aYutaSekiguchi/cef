@@ -1,7 +1,7 @@
-diff --git a/v8/test/unittests/libplatform/tracing-unittest.cc b/v8/test/unittests/libplatform/tracing-unittest.cc
+diff --git v8/test/unittests/libplatform/tracing-unittest.cc v8/test/unittests/libplatform/tracing-unittest.cc
 index f7d8a195e11..cf9a2f1f29b 100644
---- a/v8/test/unittests/libplatform/tracing-unittest.cc
-+++ b/v8/test/unittests/libplatform/tracing-unittest.cc
+--- v8/test/unittests/libplatform/tracing-unittest.cc
++++ v8/test/unittests/libplatform/tracing-unittest.cc
 @@ -536,6 +536,12 @@ TEST_F(PlatformTracingTest, AddTraceEventMultiThreaded) {
  
  using TrackEvent = ::perfetto::protos::TrackEvent;

@@ -1,7 +1,7 @@
-diff --git a/BUILD.gn b/BUILD.gn
+diff --git BUILD.gn BUILD.gn
 index ab491242..6e195f9c 100644
---- a/BUILD.gn
-+++ b/BUILD.gn
+--- BUILD.gn
++++ BUILD.gn
 @@ -32,6 +32,21 @@ config("libyuv_config") {
  
    # Define CHROMIUM to tell cpu_id to avoid sandbox unsafe system calls.

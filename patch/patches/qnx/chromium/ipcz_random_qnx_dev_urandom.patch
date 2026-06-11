@@ -1,7 +1,7 @@
-diff --git a/third_party/ipcz/src/reference_drivers/random.cc b/third_party/ipcz/src/reference_drivers/random.cc
+diff --git third_party/ipcz/src/reference_drivers/random.cc third_party/ipcz/src/reference_drivers/random.cc
 index 29f8862b1a854..b41651d7f5bf1 100644
---- a/third_party/ipcz/src/reference_drivers/random.cc
-+++ b/third_party/ipcz/src/reference_drivers/random.cc
+--- third_party/ipcz/src/reference_drivers/random.cc
++++ third_party/ipcz/src/reference_drivers/random.cc
 @@ -100,7 +100,10 @@ void RandomBytes(absl::Span<uint8_t> destination) {
  #elif BUILDFLAG(IS_MAC)
    const bool ok = getentropy(destination.data(), destination.size()) == 0;

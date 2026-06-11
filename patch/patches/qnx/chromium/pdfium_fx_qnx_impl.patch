@@ -1,7 +1,7 @@
-diff --git a/third_party/pdfium/core/fxge/BUILD.gn b/third_party/pdfium/core/fxge/BUILD.gn
+diff --git third_party/pdfium/core/fxge/BUILD.gn third_party/pdfium/core/fxge/BUILD.gn
 index 8aa2b3a62cfa4..29c713a8d252c 100644
---- a/third_party/pdfium/core/fxge/BUILD.gn
-+++ b/third_party/pdfium/core/fxge/BUILD.gn
+--- third_party/pdfium/core/fxge/BUILD.gn
++++ third_party/pdfium/core/fxge/BUILD.gn
 @@ -158,10 +158,14 @@ source_set("fxge") {
      ]
    }

@@ -1,7 +1,7 @@
-diff --git a/base/process/process_iterator.h b/base/process/process_iterator.h
+diff --git base/process/process_iterator.h base/process/process_iterator.h
 index f777ddc2dbc3d..da55c17025722 100644
---- a/base/process/process_iterator.h
-+++ b/base/process/process_iterator.h
+--- base/process/process_iterator.h
++++ base/process/process_iterator.h
 @@ -115,7 +115,7 @@ class BASE_EXPORT ProcessIterator {
  #elif BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_BSD)
    std::vector<kinfo_proc> kinfo_procs_;
@@ -23,10 +23,10 @@ index f777ddc2dbc3d..da55c17025722 100644
    raw_ptr<const ProcessFilter> filter_;
  };
  
-diff --git a/base/process/process_metrics.h b/base/process/process_metrics.h
+diff --git base/process/process_metrics.h base/process/process_metrics.h
 index 5a6105d1b547d..725dc3ac24acf 100644
---- a/base/process/process_metrics.h
-+++ b/base/process/process_metrics.h
+--- base/process/process_metrics.h
++++ base/process/process_metrics.h
 @@ -311,7 +311,7 @@ BASE_EXPORT void IncreaseFdLimitTo(unsigned int max_descriptors);
  
  #if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_LINUX) ||      \
@@ -36,10 +36,10 @@ index 5a6105d1b547d..725dc3ac24acf 100644
  // Data about system-wide memory consumption. Available on Windows, Mac, Linux,
  // Android and Chrome OS.
  //
-diff --git a/base/process/process_metrics_posix.cc b/base/process/process_metrics_posix.cc
+diff --git base/process/process_metrics_posix.cc base/process/process_metrics_posix.cc
 index 205200021c674..000a6d9bdfe1f 100644
---- a/base/process/process_metrics_posix.cc
-+++ b/base/process/process_metrics_posix.cc
+--- base/process/process_metrics_posix.cc
++++ base/process/process_metrics_posix.cc
 @@ -58,6 +58,8 @@ static const rlim_t kSystemDefaultMaxFds = 256;
  static const rlim_t kSystemDefaultMaxFds = 1024;
  #elif BUILDFLAG(IS_AIX)
@@ -59,10 +59,10 @@ index 205200021c674..000a6d9bdfe1f 100644
  #endif
  }
  
-diff --git a/base/process/process_unittest.cc b/base/process/process_unittest.cc
+diff --git base/process/process_unittest.cc base/process/process_unittest.cc
 index 2a3657ee8a8ba..c49c49e5ffe17 100644
---- a/base/process/process_unittest.cc
-+++ b/base/process/process_unittest.cc
+--- base/process/process_unittest.cc
++++ base/process/process_unittest.cc
 @@ -147,10 +147,10 @@ TEST_F(ProcessTest, CreationTimeOtherProcess) {
    // was spawned and a time recorded after it was spawned. However, since the
    // base::Time and process creation clocks don't match, tolerate some error.
@@ -78,10 +78,10 @@ index 2a3657ee8a8ba..c49c49e5ffe17 100644
        Milliseconds(1100);
  #elif BUILDFLAG(IS_WIN)
        // On Windows, process creation time is based on the system clock while
-diff --git a/base/process/process_util_unittest.cc b/base/process/process_util_unittest.cc
+diff --git base/process/process_util_unittest.cc base/process/process_util_unittest.cc
 index c36699aef7bcf..9e128feb1c69a 100644
---- a/base/process/process_util_unittest.cc
-+++ b/base/process/process_util_unittest.cc
+--- base/process/process_util_unittest.cc
++++ base/process/process_util_unittest.cc
 @@ -1282,6 +1282,10 @@ class WriteToPipeDelegate : public LaunchOptions::PreExecDelegate {
  };
  
@@ -101,10 +101,10 @@ index c36699aef7bcf..9e128feb1c69a 100644
  }
  #endif  // !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_FUCHSIA)
  
-diff --git a/base/process/set_process_title.cc b/base/process/set_process_title.cc
+diff --git base/process/set_process_title.cc base/process/set_process_title.cc
 index f4488f8259836..0844bb7050896 100644
---- a/base/process/set_process_title.cc
-+++ b/base/process/set_process_title.cc
+--- base/process/set_process_title.cc
++++ base/process/set_process_title.cc
 @@ -51,7 +51,10 @@ void SetProcessTitleFromCommandLine(const char** main_argv) {
    // by spaces. We can't actually keep them separate due to the way the
    // setproctitle() function works.
@@ -126,10 +126,10 @@ index f4488f8259836..0844bb7050896 100644
  }
  
  #else
-diff --git a/base/profiler/module_cache_posix.cc b/base/profiler/module_cache_posix.cc
+diff --git base/profiler/module_cache_posix.cc base/profiler/module_cache_posix.cc
 index 54c48a140c697..474887293ead6 100644
---- a/base/profiler/module_cache_posix.cc
-+++ b/base/profiler/module_cache_posix.cc
+--- base/profiler/module_cache_posix.cc
++++ base/profiler/module_cache_posix.cc
 @@ -5,7 +5,13 @@
  #include "base/profiler/module_cache.h"
  
@@ -144,10 +144,10 @@ index 54c48a140c697..474887293ead6 100644
  
  #include <optional>
  #include <string_view>
-diff --git a/base/profiler/stack_base_address_posix.cc b/base/profiler/stack_base_address_posix.cc
+diff --git base/profiler/stack_base_address_posix.cc base/profiler/stack_base_address_posix.cc
 index d043d6660d33c..cdf0fac3ac7c4 100644
---- a/base/profiler/stack_base_address_posix.cc
-+++ b/base/profiler/stack_base_address_posix.cc
+--- base/profiler/stack_base_address_posix.cc
++++ base/profiler/stack_base_address_posix.cc
 @@ -47,7 +47,7 @@ std::optional<uintptr_t> GetAndroidMainThreadStackBaseAddressImpl() {
  }
  #endif
@@ -190,10 +190,10 @@ index d043d6660d33c..cdf0fac3ac7c4 100644
  }
  
  }  // namespace base
-diff --git a/base/profiler/stack_base_address_posix_unittest.cc b/base/profiler/stack_base_address_posix_unittest.cc
+diff --git base/profiler/stack_base_address_posix_unittest.cc base/profiler/stack_base_address_posix_unittest.cc
 index fc7dd1a6df8aa..dc8fbb6ae4b10 100644
---- a/base/profiler/stack_base_address_posix_unittest.cc
-+++ b/base/profiler/stack_base_address_posix_unittest.cc
+--- base/profiler/stack_base_address_posix_unittest.cc
++++ base/profiler/stack_base_address_posix_unittest.cc
 @@ -19,8 +19,8 @@ using ::testing::Optional;
  // ASAN moves local variables outside of the stack extents.
  #if defined(ADDRESS_SANITIZER)
@@ -205,10 +205,10 @@ index fc7dd1a6df8aa..dc8fbb6ae4b10 100644
  // https://crbug.com/1394278
  #define MAYBE_CurrentThread DISABLED_CurrentThread
  #else
-diff --git a/base/sampling_heap_profiler/poisson_allocation_sampler_unittest.cc b/base/sampling_heap_profiler/poisson_allocation_sampler_unittest.cc
+diff --git base/sampling_heap_profiler/poisson_allocation_sampler_unittest.cc base/sampling_heap_profiler/poisson_allocation_sampler_unittest.cc
 index 15a4ca4c6c868..66b80d6b477e1 100644
---- a/base/sampling_heap_profiler/poisson_allocation_sampler_unittest.cc
-+++ b/base/sampling_heap_profiler/poisson_allocation_sampler_unittest.cc
+--- base/sampling_heap_profiler/poisson_allocation_sampler_unittest.cc
++++ base/sampling_heap_profiler/poisson_allocation_sampler_unittest.cc
 @@ -348,6 +348,7 @@ TEST(PoissonAllocationSamplerTest, NestedScopedMuteThreadSamples) {
  }
  
@@ -225,10 +225,10 @@ index 15a4ca4c6c868..66b80d6b477e1 100644
  }
  
  class PoissonAllocationSamplerLoadFactorTest
-diff --git a/base/std_clamp_unittest.cc b/base/std_clamp_unittest.cc
+diff --git base/std_clamp_unittest.cc base/std_clamp_unittest.cc
 index 603378e1383b8..daff15198a771 100644
---- a/base/std_clamp_unittest.cc
-+++ b/base/std_clamp_unittest.cc
+--- base/std_clamp_unittest.cc
++++ base/std_clamp_unittest.cc
 @@ -5,23 +5,26 @@
  #include <algorithm>
  #include <tuple>
@@ -267,10 +267,10 @@ index 603378e1383b8..daff15198a771 100644
  }  // namespace
 +#endif  // !BUILDFLAG(IS_QNX)
 \ No newline at end of file
-diff --git a/base/synchronization/cancelable_event.h b/base/synchronization/cancelable_event.h
+diff --git base/synchronization/cancelable_event.h base/synchronization/cancelable_event.h
 index aab14daae9504..e20251898cecb 100644
---- a/base/synchronization/cancelable_event.h
-+++ b/base/synchronization/cancelable_event.h
+--- base/synchronization/cancelable_event.h
++++ base/synchronization/cancelable_event.h
 @@ -11,7 +11,8 @@
  
  #if BUILDFLAG(IS_WIN)
@@ -291,10 +291,10 @@ index aab14daae9504..e20251898cecb 100644
    using NativeHandle = sem_t;
  #else
    using NativeHandle = WaitableEvent;
-diff --git a/base/synchronization/cancelable_event_unittest.cc b/base/synchronization/cancelable_event_unittest.cc
+diff --git base/synchronization/cancelable_event_unittest.cc base/synchronization/cancelable_event_unittest.cc
 index e8feb5344f630..57dd2f1d9697b 100644
---- a/base/synchronization/cancelable_event_unittest.cc
-+++ b/base/synchronization/cancelable_event_unittest.cc
+--- base/synchronization/cancelable_event_unittest.cc
++++ base/synchronization/cancelable_event_unittest.cc
 @@ -71,7 +71,7 @@ TEST_F(CancelableEventTest, TimedWaitSuccess) {
  
  // These are the platforms on which a functional CancelableEvent is implemented.
@@ -304,10 +304,10 @@ index e8feb5344f630..57dd2f1d9697b 100644
  
  TEST_F(CancelableEventTest, CancelSucceedsWhenNoWaiterAndWaitTimesOut) {
    CancelableEvent event;
-diff --git a/base/synchronization/lock_impl_posix.cc b/base/synchronization/lock_impl_posix.cc
+diff --git base/synchronization/lock_impl_posix.cc base/synchronization/lock_impl_posix.cc
 index 20a2582f4ae50..34766d3dcc0d5 100644
---- a/base/synchronization/lock_impl_posix.cc
-+++ b/base/synchronization/lock_impl_posix.cc
+--- base/synchronization/lock_impl_posix.cc
++++ base/synchronization/lock_impl_posix.cc
 @@ -139,6 +139,12 @@ bool LockImpl::PriorityInheritanceAvailable() {
    return IsMutexPriorityInheritanceEnabled();
  #elif PRIORITY_INHERITANCE_LOCKS_POSSIBLE() && BUILDFLAG(IS_APPLE)
@@ -321,10 +321,10 @@ index 20a2582f4ae50..34766d3dcc0d5 100644
  #else
    // Security concerns prevent the use of priority inheritance mutexes on Linux.
    //   * CVE-2010-0622 - Linux < 2.6.33-rc7, wake_futex_pi possible DoS.
-diff --git a/base/system/sys_info_unittest.cc b/base/system/sys_info_unittest.cc
+diff --git base/system/sys_info_unittest.cc base/system/sys_info_unittest.cc
 index b45335751a562..3e1cafdbd1a4c 100644
---- a/base/system/sys_info_unittest.cc
-+++ b/base/system/sys_info_unittest.cc
+--- base/system/sys_info_unittest.cc
++++ base/system/sys_info_unittest.cc
 @@ -90,10 +90,16 @@ TEST_F(SysInfoTest, NumProcsWithSecurityMitigationEnabled) {
  #endif  // BUILDFLAG(IS_MAC)
  
@@ -342,10 +342,10 @@ index b45335751a562..3e1cafdbd1a4c 100644
  }
  
  #if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_ANDROID)
-diff --git a/base/task/thread_pool/environment_config_unittest.cc b/base/task/thread_pool/environment_config_unittest.cc
+diff --git base/task/thread_pool/environment_config_unittest.cc base/task/thread_pool/environment_config_unittest.cc
 index 52b0fff1b193d..3dfa420c4a959 100644
---- a/base/task/thread_pool/environment_config_unittest.cc
-+++ b/base/task/thread_pool/environment_config_unittest.cc
+--- base/task/thread_pool/environment_config_unittest.cc
++++ base/task/thread_pool/environment_config_unittest.cc
 @@ -4,6 +4,9 @@
  
  #include "base/task/thread_pool/environment_config.h"
@@ -383,10 +383,10 @@ index 52b0fff1b193d..3dfa420c4a959 100644
  #else
  #error Platform doesn't match any block
  #endif
-diff --git a/base/test/launcher/test_launcher.cc b/base/test/launcher/test_launcher.cc
+diff --git base/test/launcher/test_launcher.cc base/test/launcher/test_launcher.cc
 index 9c4feebee7138..1061abd8d795a 100644
---- a/base/test/launcher/test_launcher.cc
-+++ b/base/test/launcher/test_launcher.cc
+--- base/test/launcher/test_launcher.cc
++++ base/test/launcher/test_launcher.cc
 @@ -732,6 +732,9 @@ ChildProcessResults DoLaunchChildTestProcess(
    if (redirect_stdio) {
      int output_file_fd = fileno(output_file.get());
@@ -397,10 +397,10 @@ index 9c4feebee7138..1061abd8d795a 100644
      options.fds_to_remap.emplace_back(output_file_fd, STDOUT_FILENO);
      options.fds_to_remap.emplace_back(output_file_fd, STDERR_FILENO);
    }
-diff --git a/base/test/task_environment_unittest.cc b/base/test/task_environment_unittest.cc
+diff --git base/test/task_environment_unittest.cc base/test/task_environment_unittest.cc
 index d8beb2e23f7a5..92dc087c8c0a6 100644
---- a/base/test/task_environment_unittest.cc
-+++ b/base/test/task_environment_unittest.cc
+--- base/test/task_environment_unittest.cc
++++ base/test/task_environment_unittest.cc
 @@ -1498,8 +1498,10 @@ TEST_F(TaskEnvironmentTest, NoCOMEnvironment) {
  // TODO(crbug.com/40835641): Re-enable this test
  // TODO(crbug.com/475624916): This test is flaky on Fuchsia when host
@@ -413,10 +413,10 @@ index d8beb2e23f7a5..92dc087c8c0a6 100644
  #define MAYBE_ParallelExecutionFence DISABLED_ParallelExecutionFence
  #else
  #define MAYBE_ParallelExecutionFence ParallelExecutionFence
-diff --git a/base/test/test_timeouts.cc b/base/test/test_timeouts.cc
+diff --git base/test/test_timeouts.cc base/test/test_timeouts.cc
 index da87447eaac5e..aac7d2343e188 100644
---- a/base/test/test_timeouts.cc
-+++ b/base/test/test_timeouts.cc
+--- base/test/test_timeouts.cc
++++ base/test/test_timeouts.cc
 @@ -112,7 +112,11 @@ bool TestTimeouts::initialized_ = false;
  base::TimeDelta TestTimeouts::tiny_timeout_ = base::Milliseconds(100);
  base::TimeDelta TestTimeouts::action_timeout_ = base::Seconds(10);
@@ -438,10 +438,10 @@ index da87447eaac5e..aac7d2343e188 100644
    InitializeTimeout(switches::kTestLauncherTimeout, action_timeout_,
                      &test_launcher_timeout_);
  
-diff --git a/base/third_party/symbolize/symbolize.cc b/base/third_party/symbolize/symbolize.cc
+diff --git base/third_party/symbolize/symbolize.cc base/third_party/symbolize/symbolize.cc
 index a3b8399f411bf..eecc1bfdece9c 100644
---- a/base/third_party/symbolize/symbolize.cc
-+++ b/base/third_party/symbolize/symbolize.cc
+--- base/third_party/symbolize/symbolize.cc
++++ base/third_party/symbolize/symbolize.cc
 @@ -118,6 +118,8 @@ _END_GOOGLE_NAMESPACE_
  #endif
  #if defined(GLOG_OS_OPENBSD)
@@ -451,10 +451,10 @@ index a3b8399f411bf..eecc1bfdece9c 100644
  #else
  #include <elf.h>
  #endif
-diff --git a/base/third_party/symbolize/symbolize.h b/base/third_party/symbolize/symbolize.h
+diff --git base/third_party/symbolize/symbolize.h base/third_party/symbolize/symbolize.h
 index 987569fdde67f..d7f76d904cbed 100644
---- a/base/third_party/symbolize/symbolize.h
-+++ b/base/third_party/symbolize/symbolize.h
+--- base/third_party/symbolize/symbolize.h
++++ base/third_party/symbolize/symbolize.h
 @@ -34,7 +34,7 @@
  // This library has a minimal implementation of an ELF symbol table
  // reader (i.e. it doesn't depend on libelf, etc.).
@@ -491,10 +491,10 @@ index 987569fdde67f..d7f76d904cbed 100644
 -#endif  // BASE_SYMBOLIZE_H_
 +#endif  // BASE_SYMBOLIZE_H_
 \ No newline at end of file
-diff --git a/base/threading/platform_thread_metrics.h b/base/threading/platform_thread_metrics.h
+diff --git base/threading/platform_thread_metrics.h base/threading/platform_thread_metrics.h
 index f51333e43c61f..45bfad8a1b7b5 100644
---- a/base/threading/platform_thread_metrics.h
-+++ b/base/threading/platform_thread_metrics.h
+--- base/threading/platform_thread_metrics.h
++++ base/threading/platform_thread_metrics.h
 @@ -68,7 +68,8 @@ class BASE_EXPORT PlatformThreadMetrics {
  #endif
  
@@ -514,10 +514,10 @@ index f51333e43c61f..45bfad8a1b7b5 100644
    explicit PlatformThreadMetrics(PlatformThreadId tid) : tid_(tid) {}
  
    PlatformThreadId tid_;
-diff --git a/base/threading/platform_thread_posix.cc b/base/threading/platform_thread_posix.cc
+diff --git base/threading/platform_thread_posix.cc base/threading/platform_thread_posix.cc
 index 620790a827423..49498c9548d5f 100644
---- a/base/threading/platform_thread_posix.cc
-+++ b/base/threading/platform_thread_posix.cc
+--- base/threading/platform_thread_posix.cc
++++ base/threading/platform_thread_posix.cc
 @@ -358,8 +358,9 @@ void PlatformThreadBase::Detach(PlatformThreadHandle thread_handle) {
  }
  
@@ -545,10 +545,10 @@ index 620790a827423..49498c9548d5f 100644
  // static
  ThreadType PlatformThreadBase::GetCurrentEffectiveThreadTypeForTest() {
    // Mirrors SetCurrentThreadPriority()'s implementation.
-diff --git a/base/threading/thread_id_name_manager_unittest.cc b/base/threading/thread_id_name_manager_unittest.cc
+diff --git base/threading/thread_id_name_manager_unittest.cc base/threading/thread_id_name_manager_unittest.cc
 index b61131e94dcb3..66975394432e3 100644
---- a/base/threading/thread_id_name_manager_unittest.cc
-+++ b/base/threading/thread_id_name_manager_unittest.cc
+--- base/threading/thread_id_name_manager_unittest.cc
++++ base/threading/thread_id_name_manager_unittest.cc
 @@ -6,6 +6,7 @@
  
  #include "base/threading/platform_thread.h"
@@ -573,10 +573,10 @@ index b61131e94dcb3..66975394432e3 100644
    EXPECT_STREQ(kAThread, manager->GetName(thread_a.GetThreadId()));
    thread_a.Stop();
  }
-diff --git a/base/threading/thread_unittest.cc b/base/threading/thread_unittest.cc
+diff --git base/threading/thread_unittest.cc base/threading/thread_unittest.cc
 index 3b6d6b69276da..cc3de7367d18c 100644
---- a/base/threading/thread_unittest.cc
-+++ b/base/threading/thread_unittest.cc
+--- base/threading/thread_unittest.cc
++++ base/threading/thread_unittest.cc
 @@ -446,7 +446,13 @@ TEST_F(ThreadTest, ThreadIdWithRestart) {
    for (size_t i = 0; i < 16; ++i) {
      EXPECT_TRUE(a.Start());
@@ -591,10 +591,10 @@ index 3b6d6b69276da..cc3de7367d18c 100644
      previous_id = current_id;
      a.Stop();
    }
-diff --git a/base/trace_event/process_memory_dump.cc b/base/trace_event/process_memory_dump.cc
+diff --git base/trace_event/process_memory_dump.cc base/trace_event/process_memory_dump.cc
 index 299240e6d82e2..af511fbdaeee3 100644
---- a/base/trace_event/process_memory_dump.cc
-+++ b/base/trace_event/process_memory_dump.cc
+--- base/trace_event/process_memory_dump.cc
++++ base/trace_event/process_memory_dump.cc
 @@ -136,12 +136,12 @@ std::optional<size_t> ProcessMemoryDump::CountResidentBytes(
      for (size_t i = 0; i < page_count; i++) {
        resident_page_count += vec[i].VirtualAttributes.Valid;
@@ -621,10 +621,10 @@ index 299240e6d82e2..af511fbdaeee3 100644
      int error_counter = 0;
      int result = 0;
      // HANDLE_EINTR tries for 100 times. So following the same pattern.
-diff --git a/base/trace_event/process_memory_dump_unittest.cc b/base/trace_event/process_memory_dump_unittest.cc
+diff --git base/trace_event/process_memory_dump_unittest.cc base/trace_event/process_memory_dump_unittest.cc
 index c635ebcf08ea2..0d924584db1e4 100644
---- a/base/trace_event/process_memory_dump_unittest.cc
-+++ b/base/trace_event/process_memory_dump_unittest.cc
+--- base/trace_event/process_memory_dump_unittest.cc
++++ base/trace_event/process_memory_dump_unittest.cc
 @@ -47,7 +47,7 @@ void* Map(size_t size) {
                          PAGE_READWRITE);
  #elif BUILDFLAG(IS_POSIX) || BUILDFLAG(IS_FUCHSIA)
@@ -634,10 +634,10 @@ index c635ebcf08ea2..0d924584db1e4 100644
  #endif
  }
  
-diff --git a/base/types/optional_unittest.cc b/base/types/optional_unittest.cc
+diff --git base/types/optional_unittest.cc base/types/optional_unittest.cc
 index fc39a953626e0..e84748f825285 100644
---- a/base/types/optional_unittest.cc
-+++ b/base/types/optional_unittest.cc
+--- base/types/optional_unittest.cc
++++ base/types/optional_unittest.cc
 @@ -2168,6 +2168,11 @@ TEST(OptionalTest, DontCallNewMemberFunction) {
  }
  

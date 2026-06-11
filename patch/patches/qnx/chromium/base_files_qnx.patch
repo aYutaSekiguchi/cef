@@ -1,7 +1,7 @@
-diff --git a/base/files/file_enumerator_posix.cc b/base/files/file_enumerator_posix.cc
+diff --git base/files/file_enumerator_posix.cc base/files/file_enumerator_posix.cc
 index 7c5d83c917524..9bab4888ce466 100644
---- a/base/files/file_enumerator_posix.cc
-+++ b/base/files/file_enumerator_posix.cc
+--- base/files/file_enumerator_posix.cc
++++ base/files/file_enumerator_posix.cc
 @@ -23,6 +23,29 @@
  namespace base {
  namespace {
@@ -42,10 +42,10 @@ index 7c5d83c917524..9bab4888ce466 100644
      closedir(dir);
      if (readdir_errno != 0 && error_policy_ != ErrorPolicy::IGNORE_ERRORS) {
        error_ = File::OSErrorToFileError(readdir_errno);
-diff --git a/base/files/file_path_watcher.h b/base/files/file_path_watcher.h
+diff --git base/files/file_path_watcher.h base/files/file_path_watcher.h
 index 70612cc8381a3..e329cb8779bbd 100644
---- a/base/files/file_path_watcher.h
-+++ b/base/files/file_path_watcher.h
+--- base/files/file_path_watcher.h
++++ base/files/file_path_watcher.h
 @@ -105,14 +105,14 @@ class BASE_EXPORT FilePathWatcher {
      Type type = Type::kNonRecursive;
  
@@ -63,10 +63,10 @@ index 70612cc8381a3..e329cb8779bbd 100644
    };
  
    // Callback type for Watch(). |path| points to the file that was updated,
-diff --git a/base/files/file_path_watcher_inotify.cc b/base/files/file_path_watcher_inotify.cc
+diff --git base/files/file_path_watcher_inotify.cc base/files/file_path_watcher_inotify.cc
 index 7ad81339dc4a1..e78cfa3f16a96 100644
---- a/base/files/file_path_watcher_inotify.cc
-+++ b/base/files/file_path_watcher_inotify.cc
+--- base/files/file_path_watcher_inotify.cc
++++ base/files/file_path_watcher_inotify.cc
 @@ -335,7 +335,14 @@ void InotifyReaderThreadDelegate::ThreadMain() {
  InotifyReader::InotifyReader()
      : inotify_fd_(inotify_init()), thread_delegate_(inotify_fd_) {
@@ -82,10 +82,10 @@ index 7ad81339dc4a1..e78cfa3f16a96 100644
      return;
    }
  
-diff --git a/base/files/file_path_watcher_unittest.cc b/base/files/file_path_watcher_unittest.cc
+diff --git base/files/file_path_watcher_unittest.cc base/files/file_path_watcher_unittest.cc
 index a8762883c1881..ae772b00c0e3e 100644
---- a/base/files/file_path_watcher_unittest.cc
-+++ b/base/files/file_path_watcher_unittest.cc
+--- base/files/file_path_watcher_unittest.cc
++++ base/files/file_path_watcher_unittest.cc
 @@ -385,6 +385,15 @@ class FilePathWatcherTest : public testing::Test {
  #else   // BUILDFLAG(IS_ANDROID)
      ASSERT_TRUE(temp_dir_.CreateUniqueTempDir());
@@ -102,10 +102,10 @@ index a8762883c1881..ae772b00c0e3e 100644
    }
  
    void TearDown() override { RunLoop().RunUntilIdle(); }
-diff --git a/base/files/file_posix.cc b/base/files/file_posix.cc
+diff --git base/files/file_posix.cc base/files/file_posix.cc
 index 9a19153a0abe9..ebf0dd5f9fa4b 100644
---- a/base/files/file_posix.cc
-+++ b/base/files/file_posix.cc
+--- base/files/file_posix.cc
++++ base/files/file_posix.cc
 @@ -95,7 +95,7 @@ int CallFtruncate(PlatformFile file, int64_t length) {
  }
  
@@ -115,10 +115,10 @@ index 9a19153a0abe9..ebf0dd5f9fa4b 100644
    // futimens should be available, but futimes might not be
    // http://pubs.opengroup.org/onlinepubs/9699919799/
  
-diff --git a/base/files/file_util.cc b/base/files/file_util.cc
+diff --git base/files/file_util.cc base/files/file_util.cc
 index 2b15b4439c6bf..23d1315db0d11 100644
---- a/base/files/file_util.cc
-+++ b/base/files/file_util.cc
+--- base/files/file_util.cc
++++ base/files/file_util.cc
 @@ -340,17 +340,87 @@ bool ReadStreamToStringWithMaxSize(FILE* stream,
    return read_successs;
  }
@@ -241,10 +241,10 @@ index 2b15b4439c6bf..23d1315db0d11 100644
  }
  
  bool IsDirectoryEmpty(const FilePath& dir_path) {
-diff --git a/base/files/file_util_posix.cc b/base/files/file_util_posix.cc
+diff --git base/files/file_util_posix.cc base/files/file_util_posix.cc
 index 455a73ac08ad4..9222c4cb4ac63 100644
---- a/base/files/file_util_posix.cc
-+++ b/base/files/file_util_posix.cc
+--- base/files/file_util_posix.cc
++++ base/files/file_util_posix.cc
 @@ -286,8 +286,32 @@ bool DoCopyDirectory(const FilePath& from_path,
    return true;
  }
@@ -313,10 +313,10 @@ index 455a73ac08ad4..9222c4cb4ac63 100644
    if (result) {
      SetCloseOnExec(fileno(result));
    }
-diff --git a/base/files/file_util_unittest.cc b/base/files/file_util_unittest.cc
+diff --git base/files/file_util_unittest.cc base/files/file_util_unittest.cc
 index 2c774de5a6ef0..6178faaea25a7 100644
---- a/base/files/file_util_unittest.cc
-+++ b/base/files/file_util_unittest.cc
+--- base/files/file_util_unittest.cc
++++ base/files/file_util_unittest.cc
 @@ -203,6 +203,14 @@ class FileUtilTest : public PlatformTest {
      ASSERT_TRUE(temp_dir_.CreateUniqueTempDir());
    }
@@ -422,10 +422,10 @@ index 2c774de5a6ef0..6178faaea25a7 100644
  }
  #endif  // BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_APPLE)
  
-diff --git a/base/logging_unittest.cc b/base/logging_unittest.cc
+diff --git base/logging_unittest.cc base/logging_unittest.cc
 index 7be97b1f5b8d7..b8ea50c7fada6 100644
---- a/base/logging_unittest.cc
-+++ b/base/logging_unittest.cc
+--- base/logging_unittest.cc
++++ base/logging_unittest.cc
 @@ -37,7 +37,8 @@
  #include "base/posix/eintr_wrapper.h"
  #endif  // BUILDFLAG(IS_POSIX)

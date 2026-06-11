@@ -1,6 +1,6 @@
-diff --git a/tools/variations/fieldtrial_to_struct.py b/tools/variations/fieldtrial_to_struct.py
---- a/tools/variations/fieldtrial_to_struct.py
-+++ b/tools/variations/fieldtrial_to_struct.py
+diff --git tools/variations/fieldtrial_to_struct.py tools/variations/fieldtrial_to_struct.py
+--- tools/variations/fieldtrial_to_struct.py
++++ tools/variations/fieldtrial_to_struct.py
 @@ -30,6 +30,7 @@ _platforms = [
      'ios',
      'linux',

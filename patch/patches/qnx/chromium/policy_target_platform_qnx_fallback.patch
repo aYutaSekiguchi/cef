@@ -1,7 +1,7 @@
-diff --git a/components/policy/tools/generate_policy_source.gni b/components/policy/tools/generate_policy_source.gni
+diff --git components/policy/tools/generate_policy_source.gni components/policy/tools/generate_policy_source.gni
 index 9bfa540933797..5436c5830ebb7 100644
---- a/components/policy/tools/generate_policy_source.gni
-+++ b/components/policy/tools/generate_policy_source.gni
+--- components/policy/tools/generate_policy_source.gni
++++ components/policy/tools/generate_policy_source.gni
 @@ -54,12 +54,26 @@ template("generate_policy_source") {
        chrome_settings_proto_path,
        cloud_policy_proto_path,

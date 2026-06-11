@@ -1,7 +1,7 @@
-diff --git a/build/rust/rust_bindgen_generator.gni b/build/rust/rust_bindgen_generator.gni
+diff --git build/rust/rust_bindgen_generator.gni build/rust/rust_bindgen_generator.gni
 index 57167634f5803..e34f9665808fa 100644
---- a/build/rust/rust_bindgen_generator.gni
-+++ b/build/rust/rust_bindgen_generator.gni
+--- build/rust/rust_bindgen_generator.gni
++++ build/rust/rust_bindgen_generator.gni
 @@ -265,6 +265,64 @@ template("rust_bindgen_generator") {
        args += [ "-fparse-all-comments" ]
      }

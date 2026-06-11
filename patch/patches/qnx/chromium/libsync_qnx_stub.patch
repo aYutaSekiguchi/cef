@@ -1,7 +1,7 @@
-diff --git a/third_party/libsync/BUILD.gn b/third_party/libsync/BUILD.gn
+diff --git third_party/libsync/BUILD.gn third_party/libsync/BUILD.gn
 index 2b374e8b4e06a..392395f1c6e9f 100644
---- a/third_party/libsync/BUILD.gn
-+++ b/third_party/libsync/BUILD.gn
+--- third_party/libsync/BUILD.gn
++++ third_party/libsync/BUILD.gn
 @@ -13,7 +13,16 @@ declare_args() {
    use_system_libsync = is_chromeos_device
  }

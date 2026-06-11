@@ -1,7 +1,7 @@
-diff --git a/third_party/libdrm/BUILD.gn b/third_party/libdrm/BUILD.gn
+diff --git third_party/libdrm/BUILD.gn third_party/libdrm/BUILD.gn
 index 16ce474e5cdb91d8a6e55f2f1aa771a47c141239..9f27b5ff5119ae3851ce0cf182b11726d65b1971 100644
---- a/third_party/libdrm/BUILD.gn
-+++ b/third_party/libdrm/BUILD.gn
+--- third_party/libdrm/BUILD.gn
++++ third_party/libdrm/BUILD.gn
 @@ -82,6 +82,14 @@ static_library("libdrm") {
      "-Wno-deprecated-declarations",
    ]
@@ -17,10 +17,10 @@ index 16ce474e5cdb91d8a6e55f2f1aa771a47c141239..9f27b5ff5119ae3851ce0cf182b11726
    public_configs = [ ":libdrm_config" ]
  }
  
-diff --git a/third_party/libdrm/src/xf86drm.c b/third_party/libdrm/src/xf86drm.c
+diff --git third_party/libdrm/src/xf86drm.c third_party/libdrm/src/xf86drm.c
 index d4bfec8a41ba785ff4b8d917669c8bbea214b36e..78e213cfd13e842a6c929ac9a6dc6f3d362471fc 100644
---- a/third_party/libdrm/src/xf86drm.c
-+++ b/third_party/libdrm/src/xf86drm.c
+--- third_party/libdrm/src/xf86drm.c
++++ third_party/libdrm/src/xf86drm.c
 @@ -58,6 +58,9 @@
  #ifdef MAJOR_IN_SYSMACROS
  #include <sys/sysmacros.h>

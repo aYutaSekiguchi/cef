@@ -1,7 +1,7 @@
-diff --git a/third_party/crashpad/crashpad/util/misc/address_types.h b/third_party/crashpad/crashpad/util/misc/address_types.h
+diff --git third_party/crashpad/crashpad/util/misc/address_types.h third_party/crashpad/crashpad/util/misc/address_types.h
 index c43d36cdf851d..5f0d9b94e143a 100644
---- a/third_party/crashpad/crashpad/util/misc/address_types.h
-+++ b/third_party/crashpad/crashpad/util/misc/address_types.h
+--- third_party/crashpad/crashpad/util/misc/address_types.h
++++ third_party/crashpad/crashpad/util/misc/address_types.h
 @@ -15,6 +15,7 @@
  #ifndef CRASHPAD_UTIL_MISC_ADDRESS_TYPES_H_
  #define CRASHPAD_UTIL_MISC_ADDRESS_TYPES_H_
@@ -30,10 +30,10 @@ index c43d36cdf851d..5f0d9b94e143a 100644
  #elif BUILDFLAG(IS_FUCHSIA)
  
  using VMAddress = zx_vaddr_t;
-diff --git a/third_party/crashpad/crashpad/minidump/minidump_misc_info_writer.cc b/third_party/crashpad/crashpad/minidump/minidump_misc_info_writer.cc
+diff --git third_party/crashpad/crashpad/minidump/minidump_misc_info_writer.cc third_party/crashpad/crashpad/minidump/minidump_misc_info_writer.cc
 index 1abb46c318142..d0418feb05249 100644
---- a/third_party/crashpad/crashpad/minidump/minidump_misc_info_writer.cc
-+++ b/third_party/crashpad/crashpad/minidump/minidump_misc_info_writer.cc
+--- third_party/crashpad/crashpad/minidump/minidump_misc_info_writer.cc
++++ third_party/crashpad/crashpad/minidump/minidump_misc_info_writer.cc
 @@ -155,6 +155,8 @@ std::string MinidumpMiscInfoDebugBuildString() {
    static constexpr char kOS[] = "android";
  #elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
@@ -43,10 +43,10 @@ index 1abb46c318142..d0418feb05249 100644
  #elif BUILDFLAG(IS_WIN)
    static constexpr char kOS[] = "win";
  #elif BUILDFLAG(IS_FUCHSIA)
-diff --git a/third_party/crashpad/crashpad/handler/handler_main.cc b/third_party/crashpad/crashpad/handler/handler_main.cc
+diff --git third_party/crashpad/crashpad/handler/handler_main.cc third_party/crashpad/crashpad/handler/handler_main.cc
 index 0a457a6542397..70a3231d9db2c 100644
---- a/third_party/crashpad/crashpad/handler/handler_main.cc
-+++ b/third_party/crashpad/crashpad/handler/handler_main.cc
+--- third_party/crashpad/crashpad/handler/handler_main.cc
++++ third_party/crashpad/crashpad/handler/handler_main.cc
 @@ -68,6 +68,10 @@
  #include "handler/linux/crash_report_exception_handler.h"
  #include "handler/linux/exception_handler_server.h"

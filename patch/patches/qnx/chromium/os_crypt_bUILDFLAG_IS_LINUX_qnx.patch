@@ -1,7 +1,7 @@
-diff --git a/components/os_crypt/sync/os_crypt.h b/components/os_crypt/sync/os_crypt.h
+diff --git components/os_crypt/sync/os_crypt.h components/os_crypt/sync/os_crypt.h
 index 7a67acb08027c..f5a3ae316a3a3 100644
---- a/components/os_crypt/sync/os_crypt.h
-+++ b/components/os_crypt/sync/os_crypt.h
+--- components/os_crypt/sync/os_crypt.h
++++ components/os_crypt/sync/os_crypt.h
 @@ -25,9 +25,9 @@ class KeychainV2;
  }
  #endif

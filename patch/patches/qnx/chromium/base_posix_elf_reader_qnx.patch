@@ -1,7 +1,7 @@
-diff --git a/base/BUILD.gn b/base/BUILD.gn
+diff --git base/BUILD.gn base/BUILD.gn
 index c9811ba7835ed..f260f540569c2 100644
---- a/base/BUILD.gn
-+++ b/base/BUILD.gn
+--- base/BUILD.gn
++++ base/BUILD.gn
 @@ -1755,7 +1755,7 @@ component("base") {
      }
    }

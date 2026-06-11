@@ -1,7 +1,7 @@
-diff --git a/components/variations/proto/study.proto b/components/variations/proto/study.proto
+diff --git components/variations/proto/study.proto components/variations/proto/study.proto
 index 7a5b63ee8cc83..57c5c63ccce04 100644
---- a/components/variations/proto/study.proto
-+++ b/components/variations/proto/study.proto
+--- components/variations/proto/study.proto
++++ components/variations/proto/study.proto
 @@ -246,6 +246,7 @@ message Study {
      PLATFORM_FUCHSIA = 7;
      PLATFORM_ANDROID_WEBLAYER = 8;
@@ -10,10 +10,10 @@ index 7a5b63ee8cc83..57c5c63ccce04 100644
    }
  
    // Possible form factors Chrome is running on.
-diff --git a/components/variations/client_filterable_state.cc b/components/variations/client_filterable_state.cc
+diff --git components/variations/client_filterable_state.cc components/variations/client_filterable_state.cc
 index 621634d55eb5f..160c386c73c22 100644
---- a/components/variations/client_filterable_state.cc
-+++ b/components/variations/client_filterable_state.cc
+--- components/variations/client_filterable_state.cc
++++ components/variations/client_filterable_state.cc
 @@ -57,6 +57,8 @@ Study::Platform ClientFilterableState::GetCurrentPlatform() {
    // Default BSD and SOLARIS to Linux to not break those builds, although these
    // platforms are not officially supported by Chrome.

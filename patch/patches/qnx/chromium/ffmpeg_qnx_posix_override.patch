@@ -1,7 +1,7 @@
-diff --git a/BUILD.gn b/BUILD.gn
+diff --git BUILD.gn BUILD.gn
 index 8f6f13e189..fd3f833a45 100644
---- a/BUILD.gn
-+++ b/BUILD.gn
+--- BUILD.gn
++++ BUILD.gn
 @@ -241,6 +241,28 @@ target(link_target_type, "ffmpeg_internal") {
  
    # So we can append below and assume they're defined.

@@ -1,7 +1,7 @@
-diff --git a/src/dawn/common/Platform.h b/src/dawn/common/Platform.h
+diff --git src/dawn/common/Platform.h src/dawn/common/Platform.h
 index b4ac61004d..36d716b8eb 100644
---- a/src/dawn/common/Platform.h
-+++ b/src/dawn/common/Platform.h
+--- src/dawn/common/Platform.h
++++ src/dawn/common/Platform.h
 @@ -60,7 +60,7 @@
  #error "Unsupported Windows platform."
  #endif

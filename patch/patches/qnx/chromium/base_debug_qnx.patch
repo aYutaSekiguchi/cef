@@ -1,7 +1,7 @@
-diff --git a/base/debug/debugger_posix.cc b/base/debug/debugger_posix.cc
+diff --git base/debug/debugger_posix.cc base/debug/debugger_posix.cc
 index d5dc8c41319e8..97147ca714739 100644
---- a/base/debug/debugger_posix.cc
-+++ b/base/debug/debugger_posix.cc
+--- base/debug/debugger_posix.cc
++++ base/debug/debugger_posix.cc
 @@ -243,6 +243,17 @@ void VerifyDebugger() {
  #endif
  }
@@ -20,10 +20,10 @@ index d5dc8c41319e8..97147ca714739 100644
  #else
  
  bool BeingDebugged() {
-diff --git a/base/debug/elf_reader.cc b/base/debug/elf_reader.cc
+diff --git base/debug/elf_reader.cc base/debug/elf_reader.cc
 index 5d2a0c2779b08..4119e89b22e9a 100644
---- a/base/debug/elf_reader.cc
-+++ b/base/debug/elf_reader.cc
+--- base/debug/elf_reader.cc
++++ base/debug/elf_reader.cc
 @@ -5,7 +5,11 @@
  #include "base/debug/elf_reader.h"
  
@@ -53,10 +53,10 @@ index 5d2a0c2779b08..4119e89b22e9a 100644
          strtab_addr =
              UNSAFE_TODO(static_cast<size_t>(dynamic_iter->d_un.d_ptr) +
                          reinterpret_cast<const char*>(relocation_offset));
-diff --git a/base/debug/elf_reader.h b/base/debug/elf_reader.h
+diff --git base/debug/elf_reader.h base/debug/elf_reader.h
 index a48472405173b..d15793ac59d1f 100644
---- a/base/debug/elf_reader.h
-+++ b/base/debug/elf_reader.h
+--- base/debug/elf_reader.h
++++ base/debug/elf_reader.h
 @@ -5,7 +5,13 @@
  #ifndef BASE_DEBUG_ELF_READER_H_
  #define BASE_DEBUG_ELF_READER_H_
@@ -71,10 +71,10 @@ index a48472405173b..d15793ac59d1f 100644
  
  #include <optional>
  #include <string_view>
-diff --git a/base/debug/elf_reader_unittest.cc b/base/debug/elf_reader_unittest.cc
+diff --git base/debug/elf_reader_unittest.cc base/debug/elf_reader_unittest.cc
 index 9be01511199db..5fe7392656bed 100644
---- a/base/debug/elf_reader_unittest.cc
-+++ b/base/debug/elf_reader_unittest.cc
+--- base/debug/elf_reader_unittest.cc
++++ base/debug/elf_reader_unittest.cc
 @@ -181,7 +181,7 @@ TEST(ElfReaderTestWithCurrentElfImage, ReadElfBuildId) {
    size_t build_id_size = ReadElfBuildId(&__executable_start, true, build_id);
    ASSERT_NE(build_id_size, 0u);
@@ -84,10 +84,10 @@ index 9be01511199db..5fe7392656bed 100644
    constexpr size_t kExpectedBuildIdStringLength = 40;  // SHA1 hash in hex.
  #else
    constexpr size_t kExpectedBuildIdStringLength = 16;  // 64-bit int in hex.
-diff --git a/base/debug/stack_trace.cc b/base/debug/stack_trace.cc
+diff --git base/debug/stack_trace.cc base/debug/stack_trace.cc
 index ebde49a9ffe9c..ed311def6e9db 100644
---- a/base/debug/stack_trace.cc
-+++ b/base/debug/stack_trace.cc
+--- base/debug/stack_trace.cc
++++ base/debug/stack_trace.cc
 @@ -306,10 +306,10 @@ bool StackTrace::WillSymbolizeToStreamForTesting() {
    // Official Mac OS X builds contain enough information to unwind the stack,
    // but not enough to symbolize the output.
@@ -103,10 +103,10 @@ index ebde49a9ffe9c..ed311def6e9db 100644
    return false;
  #elif BUILDFLAG(PRINT_UNSYMBOLIZED_STACK_TRACES)
    // Typically set in sanitizer configurations (ASan, TSan, MSan), which emit
-diff --git a/base/debug/test_elf_image_builder.cc b/base/debug/test_elf_image_builder.cc
+diff --git base/debug/test_elf_image_builder.cc base/debug/test_elf_image_builder.cc
 index 027ad0f959f7e..5cd29ad2c102c 100644
---- a/base/debug/test_elf_image_builder.cc
-+++ b/base/debug/test_elf_image_builder.cc
+--- base/debug/test_elf_image_builder.cc
++++ base/debug/test_elf_image_builder.cc
 @@ -271,9 +271,10 @@ TestElfImage TestElfImageBuilder::Build() {
    Dyn strtab_dyn;
    strtab_dyn.d_tag = DT_STRTAB;
@@ -120,10 +120,10 @@ index 027ad0f959f7e..5cd29ad2c102c 100644
    strtab_dyn.d_un.d_ptr =
        GetVirtualAddressForOffset(measures.strtab_start, elf_start);
  #else
-diff --git a/base/debug/test_elf_image_builder.h b/base/debug/test_elf_image_builder.h
+diff --git base/debug/test_elf_image_builder.h base/debug/test_elf_image_builder.h
 index 7dfee81fab428..31c1d0e428935 100644
---- a/base/debug/test_elf_image_builder.h
-+++ b/base/debug/test_elf_image_builder.h
+--- base/debug/test_elf_image_builder.h
++++ base/debug/test_elf_image_builder.h
 @@ -5,7 +5,13 @@
  #ifndef BASE_DEBUG_TEST_ELF_IMAGE_BUILDER_H_
  #define BASE_DEBUG_TEST_ELF_IMAGE_BUILDER_H_

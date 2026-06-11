@@ -1,7 +1,7 @@
-diff --git a/sandbox/BUILD.gn b/sandbox/BUILD.gn
+diff --git sandbox/BUILD.gn sandbox/BUILD.gn
 index 0820bc89c5ba3..41d9e06bf7dd0 100644
---- a/sandbox/BUILD.gn
-+++ b/sandbox/BUILD.gn
+--- sandbox/BUILD.gn
++++ sandbox/BUILD.gn
 @@ -49,7 +49,7 @@ group("sandbox") {
        "//sandbox/mac:system_services",
        "//sandbox/mac/mojom",
@@ -11,10 +11,10 @@ index 0820bc89c5ba3..41d9e06bf7dd0 100644
      public_deps = [ "//sandbox/linux:sandbox" ]
    }
  }
-diff --git a/content/common/BUILD.gn b/content/common/BUILD.gn
+diff --git content/common/BUILD.gn content/common/BUILD.gn
 index 5487c3756c603..463f7160eb5e1 100644
---- a/content/common/BUILD.gn
-+++ b/content/common/BUILD.gn
+--- content/common/BUILD.gn
++++ content/common/BUILD.gn
 @@ -367,7 +367,7 @@ source_set("common") {
      sources -= [ "cursors/webcursor_aura.cc" ]
    }
@@ -24,10 +24,10 @@ index 5487c3756c603..463f7160eb5e1 100644
      sources += [
        "gpu_pre_sandbox_hook_linux.cc",
        "gpu_pre_sandbox_hook_linux.h",
-diff --git a/services/audio/BUILD.gn b/services/audio/BUILD.gn
+diff --git services/audio/BUILD.gn services/audio/BUILD.gn
 index 735d0629d663e..006e49100108d 100644
---- a/services/audio/BUILD.gn
-+++ b/services/audio/BUILD.gn
+--- services/audio/BUILD.gn
++++ services/audio/BUILD.gn
 @@ -84,7 +84,7 @@ source_set("audio") {
      "//services/audio/public/mojom",
    ]
@@ -37,10 +37,10 @@ index 735d0629d663e..006e49100108d 100644
      sources += [
        "audio_sandbox_hook_linux.cc",
        "audio_sandbox_hook_linux.h",
-diff --git a/services/network/BUILD.gn b/services/network/BUILD.gn
+diff --git services/network/BUILD.gn services/network/BUILD.gn
 index 8e9c0d3aeb7ad..a795236b538cb 100644
---- a/services/network/BUILD.gn
-+++ b/services/network/BUILD.gn
+--- services/network/BUILD.gn
++++ services/network/BUILD.gn
 @@ -395,7 +395,7 @@ component("network_service") {
      "//url",
    ]
@@ -59,10 +59,10 @@ index 8e9c0d3aeb7ad..a795236b538cb 100644
    source_set("network_sandbox_hook") {
      sources = [
        "network_sandbox_hook_linux.cc",
-diff --git a/chrome/common/BUILD.gn b/chrome/common/BUILD.gn
+diff --git chrome/common/BUILD.gn chrome/common/BUILD.gn
 index e6ec5782e6634..785c908b02c4d 100644
---- a/chrome/common/BUILD.gn
-+++ b/chrome/common/BUILD.gn
+--- chrome/common/BUILD.gn
++++ chrome/common/BUILD.gn
 @@ -407,7 +407,7 @@ static_library("common_lib") {
      public_deps += [ "//chrome/common/safe_browsing" ]
    }
@@ -72,10 +72,10 @@ index e6ec5782e6634..785c908b02c4d 100644
      sources += [
        "auto_start_linux.cc",
        "auto_start_linux.h",
-diff --git a/components/on_device_translation/service/BUILD.gn b/components/on_device_translation/service/BUILD.gn
+diff --git components/on_device_translation/service/BUILD.gn components/on_device_translation/service/BUILD.gn
 index 5acb4c7382ddc..b6998a0231209 100644
---- a/components/on_device_translation/service/BUILD.gn
-+++ b/components/on_device_translation/service/BUILD.gn
+--- components/on_device_translation/service/BUILD.gn
++++ components/on_device_translation/service/BUILD.gn
 @@ -29,7 +29,7 @@ source_set("on_device_translation_service") {
      "//mojo/public/cpp/bindings",
    ]
@@ -85,10 +85,10 @@ index 5acb4c7382ddc..b6998a0231209 100644
      sources += [
        "sandbox_hook.cc",
        "sandbox_hook.h",
-diff --git a/content/utility/BUILD.gn b/content/utility/BUILD.gn
+diff --git content/utility/BUILD.gn content/utility/BUILD.gn
 index b89c0138ae595..0a58e7a7e5d2a 100644
---- a/content/utility/BUILD.gn
-+++ b/content/utility/BUILD.gn
+--- content/utility/BUILD.gn
++++ content/utility/BUILD.gn
 @@ -97,7 +97,7 @@ source_set("utility") {
      }
    }
@@ -107,10 +107,10 @@ index b89c0138ae595..0a58e7a7e5d2a 100644
      deps += [ "//services/screen_ai:screen_ai_sandbox_hook" ]
    }
  
-diff --git a/content/utility/speech/BUILD.gn b/content/utility/speech/BUILD.gn
+diff --git content/utility/speech/BUILD.gn content/utility/speech/BUILD.gn
 index 37c4a8dfc48ab..fb952280680b5 100644
---- a/content/utility/speech/BUILD.gn
-+++ b/content/utility/speech/BUILD.gn
+--- content/utility/speech/BUILD.gn
++++ content/utility/speech/BUILD.gn
 @@ -2,7 +2,8 @@
  # Use of this source code is governed by a BSD-style license that can be
  # found in the LICENSE file.
@@ -127,10 +127,10 @@ index 37c4a8dfc48ab..fb952280680b5 100644
    public_deps = [ "//sandbox/policy" ]
 +  }
  }
-diff --git a/services/screen_ai/BUILD.gn b/services/screen_ai/BUILD.gn
+diff --git services/screen_ai/BUILD.gn services/screen_ai/BUILD.gn
 index 5235382b56d31..03e4cacb087ac 100644
---- a/services/screen_ai/BUILD.gn
-+++ b/services/screen_ai/BUILD.gn
+--- services/screen_ai/BUILD.gn
++++ services/screen_ai/BUILD.gn
 @@ -76,7 +76,7 @@ if (is_chromeos) {
    }
  }

@@ -78,6 +78,10 @@ if [[ ! -d "${QNX_HOST}" ]]; then
 	exit 1
 fi
 
+# Validate QNX patch format before applying anything.
+"${PYTHON3:-python3}" "${SCRIPT_DIR}/qnx_validate_patch_format.py" --root "${CEF_DIR}"
+echo ""
+
 # Initialize submodules if needed (same prerequisites as cef_create_projects.sh).
 echo "Checking submodules..."
 cd "${CHROMIUM_SRC_DIR}"

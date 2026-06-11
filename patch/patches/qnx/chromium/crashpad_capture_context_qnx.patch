@@ -1,7 +1,7 @@
-diff --git a/third_party/crashpad/crashpad/util/misc/capture_context.h b/third_party/crashpad/crashpad/util/misc/capture_context.h
+diff --git third_party/crashpad/crashpad/util/misc/capture_context.h third_party/crashpad/crashpad/util/misc/capture_context.h
 index ac7707b48cab5..48145fee0187e 100644
---- a/third_party/crashpad/crashpad/util/misc/capture_context.h
-+++ b/third_party/crashpad/crashpad/util/misc/capture_context.h
+--- third_party/crashpad/crashpad/util/misc/capture_context.h
++++ third_party/crashpad/crashpad/util/misc/capture_context.h
 @@ -21,7 +21,7 @@
  #include <mach/mach.h>
  #elif BUILDFLAG(IS_WIN)

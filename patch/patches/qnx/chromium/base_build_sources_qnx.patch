@@ -1,7 +1,7 @@
-diff --git a/base/BUILD.gn b/base/BUILD.gn
+diff --git base/BUILD.gn base/BUILD.gn
 index c9811ba7835ed..51abfc3ce236f 100644
---- a/base/BUILD.gn
-+++ b/base/BUILD.gn
+--- base/BUILD.gn
++++ base/BUILD.gn
 @@ -167,7 +167,7 @@ buildflag_header("ios_cronet_buildflags") {
    flags = [ "CRONET_BUILD=$is_cronet_build" ]
  }
@@ -246,10 +246,10 @@ index c9811ba7835ed..51abfc3ce236f 100644
    nocompile_source_set("base_nocompile_tests") {
      sources = [
        "allocator/partition_allocator/src/partition_alloc/partition_alloc_base/thread_annotations_pa_nocompile.nc",
-diff --git a/base/atomicops.cc b/base/atomicops.cc
+diff --git base/atomicops.cc base/atomicops.cc
 index 7b6aca4d6c3c3..0ee3d99c85ac7 100644
---- a/base/atomicops.cc
-+++ b/base/atomicops.cc
+--- base/atomicops.cc
++++ base/atomicops.cc
 @@ -17,17 +17,18 @@ void RelaxedAtomicWriteMemcpy(base::span<uint8_t> dst,
    uint8_t* dst_byte_ptr = dst.data();
    const uint8_t* src_byte_ptr = src.data();
@@ -296,10 +296,10 @@ index 7b6aca4d6c3c3..0ee3d99c85ac7 100644
      // SAFETY: We check above that `dst_byte_ptr` and `src_byte_ptr` point
      // to spans of sufficient size.
      UNSAFE_BUFFERS(++dst_byte_ptr);
-diff --git a/base/base_paths_posix.cc b/base/base_paths_posix.cc
+diff --git base/base_paths_posix.cc base/base_paths_posix.cc
 index 284e5382bf2fe..2824d7382501b 100644
---- a/base/base_paths_posix.cc
-+++ b/base/base_paths_posix.cc
+--- base/base_paths_posix.cc
++++ base/base_paths_posix.cc
 @@ -61,6 +61,16 @@ bool PathProviderPosix(int key, FilePath* result) {
        }
        *result = FilePath(bin_dir);
@@ -317,10 +317,10 @@ index 284e5382bf2fe..2824d7382501b 100644
  #elif BUILDFLAG(IS_OPENBSD) || BUILDFLAG(IS_AIX)
        // There is currently no way to get the executable path on OpenBSD
        char* cpath;
-diff --git a/base/command_line_unittest.cc b/base/command_line_unittest.cc
+diff --git base/command_line_unittest.cc base/command_line_unittest.cc
 index 23180c4dd1507..e44b25bf04367 100644
---- a/base/command_line_unittest.cc
-+++ b/base/command_line_unittest.cc
+--- base/command_line_unittest.cc
++++ base/command_line_unittest.cc
 @@ -92,7 +92,7 @@ TEST(CommandLineTest, CommandLineConstructor) {
              cl.GetProgram().value());
  
@@ -330,10 +330,10 @@ index 23180c4dd1507..e44b25bf04367 100644
    EXPECT_TRUE(cl.HasSwitch("bar"));
  #else
    EXPECT_FALSE(cl.HasSwitch("bar"));
-diff --git a/base/containers/to_value_list.h b/base/containers/to_value_list.h
+diff --git base/containers/to_value_list.h base/containers/to_value_list.h
 index 839dcf716777b..3facc5df309f9 100644
---- a/base/containers/to_value_list.h
-+++ b/base/containers/to_value_list.h
+--- base/containers/to_value_list.h
++++ base/containers/to_value_list.h
 @@ -14,6 +14,7 @@
  #include <utility>
  

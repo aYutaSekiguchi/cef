@@ -1,7 +1,7 @@
-diff --git a/build/config/ui.gni b/build/config/ui.gni
+diff --git build/config/ui.gni build/config/ui.gni
 index 529d1c55f5b39..1121f099226b0 100644
---- a/build/config/ui.gni
-+++ b/build/config/ui.gni
+--- build/config/ui.gni
++++ build/config/ui.gni
 @@ -25,12 +25,13 @@ import("//build/config/ozone.gni")
  declare_args() {
    # Indicates if Aura is enabled. Aura is a low-level windowing library, sort

@@ -1,7 +1,7 @@
-diff --git a/ui/base/unowned_user_data/BUILD.gn b/ui/base/unowned_user_data/BUILD.gn
+diff --git ui/base/unowned_user_data/BUILD.gn ui/base/unowned_user_data/BUILD.gn
 index a236ecd3ea335..381a7cc211f14 100644
---- a/ui/base/unowned_user_data/BUILD.gn
-+++ b/ui/base/unowned_user_data/BUILD.gn
+--- ui/base/unowned_user_data/BUILD.gn
++++ ui/base/unowned_user_data/BUILD.gn
 @@ -5,7 +5,7 @@
  # Technically, this could be supported on more platforms, but these are the only
  # ones where it's needed today.
@@ -11,10 +11,10 @@ index a236ecd3ea335..381a7cc211f14 100644
  
  component("unowned_user_data") {
    defines = [ "IS_UNOWNED_USER_DATA_IMPL" ]
-diff --git a/ui/events/ozone/evdev/BUILD.gn b/ui/events/ozone/evdev/BUILD.gn
+diff --git ui/events/ozone/evdev/BUILD.gn ui/events/ozone/evdev/BUILD.gn
 index efd393486efbd..3918dd213a57b 100644
---- a/ui/events/ozone/evdev/BUILD.gn
-+++ b/ui/events/ozone/evdev/BUILD.gn
+--- ui/events/ozone/evdev/BUILD.gn
++++ ui/events/ozone/evdev/BUILD.gn
 @@ -6,7 +6,7 @@ import("//build/config/chromeos/args.gni")
  import("//build/config/linux/pkg_config.gni")
  import("//build/config/ui.gni")
@@ -24,10 +24,10 @@ index efd393486efbd..3918dd213a57b 100644
  
  visibility = [ ":*" ]
  
-diff --git a/ui/ozone/platform/x11/BUILD.gn b/ui/ozone/platform/x11/BUILD.gn
+diff --git ui/ozone/platform/x11/BUILD.gn ui/ozone/platform/x11/BUILD.gn
 index 75a94f4deaec7..ea9685dc23f16 100644
---- a/ui/ozone/platform/x11/BUILD.gn
-+++ b/ui/ozone/platform/x11/BUILD.gn
+--- ui/ozone/platform/x11/BUILD.gn
++++ ui/ozone/platform/x11/BUILD.gn
 @@ -8,7 +8,7 @@ import("//ui/base/ui_features.gni")
  
  visibility = [ "//ui/ozone/*" ]

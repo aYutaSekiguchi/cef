@@ -1,10 +1,10 @@
 # QNX: keep SwiftShader test binaries in the GN graph so the
 # qnx test runner can build and execute them.
 
-diff --git a/BUILD.gn b/BUILD.gn
+diff --git BUILD.gn BUILD.gn
 index f8b354bf16203..ed9b40ca67eaa 100644
---- a/BUILD.gn
-+++ b/BUILD.gn
+--- BUILD.gn
++++ BUILD.gn
 @@ -112,6 +112,7 @@ group("gn_all") {
        "//third_party/angle/src/tests:angle_end2end_tests",
        "//third_party/angle/src/tests:angle_unittests",

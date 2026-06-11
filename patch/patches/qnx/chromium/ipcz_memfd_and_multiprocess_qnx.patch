@@ -1,7 +1,7 @@
-diff --git a/third_party/ipcz/src/reference_drivers/memfd_memory.cc b/third_party/ipcz/src/reference_drivers/memfd_memory.cc
+diff --git third_party/ipcz/src/reference_drivers/memfd_memory.cc third_party/ipcz/src/reference_drivers/memfd_memory.cc
 index fadf967c313e4..b89d238749da0 100644
---- a/third_party/ipcz/src/reference_drivers/memfd_memory.cc
-+++ b/third_party/ipcz/src/reference_drivers/memfd_memory.cc
+--- third_party/ipcz/src/reference_drivers/memfd_memory.cc
++++ third_party/ipcz/src/reference_drivers/memfd_memory.cc
 @@ -6,12 +6,23 @@
  
  #include <fcntl.h>
@@ -55,10 +55,10 @@ index fadf967c313e4..b89d238749da0 100644
  
  MemfdMemory::MemfdMemory(MemfdMemory&&) = default;
  
-diff --git a/third_party/ipcz/src/reference_drivers/multiprocess_reference_driver.cc b/third_party/ipcz/src/reference_drivers/multiprocess_reference_driver.cc
+diff --git third_party/ipcz/src/reference_drivers/multiprocess_reference_driver.cc third_party/ipcz/src/reference_drivers/multiprocess_reference_driver.cc
 index 4f655f496cd24..e759191d02705 100644
---- a/third_party/ipcz/src/reference_drivers/multiprocess_reference_driver.cc
-+++ b/third_party/ipcz/src/reference_drivers/multiprocess_reference_driver.cc
+--- third_party/ipcz/src/reference_drivers/multiprocess_reference_driver.cc
++++ third_party/ipcz/src/reference_drivers/multiprocess_reference_driver.cc
 @@ -68,8 +68,13 @@ class MultiprocessTransport
                        absl::Span<const IpczDriverHandle> handles) {
      std::vector<FileDescriptor> descriptors(handles.size());

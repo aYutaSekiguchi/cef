@@ -1,7 +1,7 @@
-diff --git a/tools/perf/chrome_telemetry_build/BUILD.gn b/tools/perf/chrome_telemetry_build/BUILD.gn
+diff --git tools/perf/chrome_telemetry_build/BUILD.gn tools/perf/chrome_telemetry_build/BUILD.gn
 index d93d0c5f9fc84..62ecb078a7769 100644
---- a/tools/perf/chrome_telemetry_build/BUILD.gn
-+++ b/tools/perf/chrome_telemetry_build/BUILD.gn
+--- tools/perf/chrome_telemetry_build/BUILD.gn
++++ tools/perf/chrome_telemetry_build/BUILD.gn
 @@ -56,7 +56,7 @@ group("telemetry_chrome_test") {
      data_deps += [ "//chrome:reorder_imports" ]
    }

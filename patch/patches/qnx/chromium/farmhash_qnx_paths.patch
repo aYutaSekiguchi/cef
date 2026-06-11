@@ -1,7 +1,7 @@
-diff --git a/third_party/farmhash/BUILD.gn b/third_party/farmhash/BUILD.gn
+diff --git third_party/farmhash/BUILD.gn third_party/farmhash/BUILD.gn
 index 90b192ef654ad..b108976cde5b1 100644
---- a/third_party/farmhash/BUILD.gn
-+++ b/third_party/farmhash/BUILD.gn
+--- third_party/farmhash/BUILD.gn
++++ third_party/farmhash/BUILD.gn
 @@ -4,6 +4,14 @@
  
  config("farmhash_include") {

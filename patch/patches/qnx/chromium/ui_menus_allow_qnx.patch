@@ -1,7 +1,7 @@
-diff --git a/ui/menus/BUILD.gn b/ui/menus/BUILD.gn
+diff --git ui/menus/BUILD.gn ui/menus/BUILD.gn
 index 479de16855b88..2710011f0513d 100644
---- a/ui/menus/BUILD.gn
-+++ b/ui/menus/BUILD.gn
+--- ui/menus/BUILD.gn
++++ ui/menus/BUILD.gn
 @@ -4,7 +4,7 @@
  
  import("//testing/test.gni")

@@ -1,7 +1,7 @@
-diff --git a/services/network/public/cpp/network_interface_change_listener_mojom_traits.h b/services/network/public/cpp/network_interface_change_listener_mojom_traits.h
+diff --git services/network/public/cpp/network_interface_change_listener_mojom_traits.h services/network/public/cpp/network_interface_change_listener_mojom_traits.h
 index 8876e398c56a0..18aeec84fb2ec 100644
---- a/services/network/public/cpp/network_interface_change_listener_mojom_traits.h
-+++ b/services/network/public/cpp/network_interface_change_listener_mojom_traits.h
+--- services/network/public/cpp/network_interface_change_listener_mojom_traits.h
++++ services/network/public/cpp/network_interface_change_listener_mojom_traits.h
 @@ -5,6 +5,7 @@
  #ifndef SERVICES_NETWORK_PUBLIC_CPP_NETWORK_INTERFACE_CHANGE_LISTENER_MOJOM_TRAITS_H_
  #define SERVICES_NETWORK_PUBLIC_CPP_NETWORK_INTERFACE_CHANGE_LISTENER_MOJOM_TRAITS_H_

@@ -1,7 +1,7 @@
-diff --git a/build/config/BUILD.gn b/build/config/BUILD.gn
+diff --git build/config/BUILD.gn build/config/BUILD.gn
 index 96085b41f084d..92577a21d502a 100644
---- a/build/config/BUILD.gn
-+++ b/build/config/BUILD.gn
+--- build/config/BUILD.gn
++++ build/config/BUILD.gn
 @@ -209,6 +209,15 @@ config("default_libs") {
      # Targets should choose to explicitly link frameworks they require. Since
      # linking can have run-time side effects, nothing should be listed here.
@@ -18,10 +18,10 @@ index 96085b41f084d..92577a21d502a 100644
    } else if (is_linux || is_chromeos) {
      libs = [
        "dl",
-diff --git a/build/config/BUILDCONFIG.gn b/build/config/BUILDCONFIG.gn
+diff --git build/config/BUILDCONFIG.gn build/config/BUILDCONFIG.gn
 index 4d1ac59b9b7dc..fda4af594d07c 100644
---- a/build/config/BUILDCONFIG.gn
-+++ b/build/config/BUILDCONFIG.gn
+--- build/config/BUILDCONFIG.gn
++++ build/config/BUILDCONFIG.gn
 @@ -276,6 +276,9 @@ if (target_os == "android") {
    _default_toolchain = "//build/toolchain/aix:$target_cpu"
  } else if (target_os == "zos") {
@@ -44,10 +44,10 @@ index 4d1ac59b9b7dc..fda4af594d07c 100644
  is_mac = current_os == "mac"
  is_wasm = current_os == "emscripten"
  is_watchos = current_os == "watchos"
-diff --git a/build/config/clang/BUILD.gn b/build/config/clang/BUILD.gn
+diff --git build/config/clang/BUILD.gn build/config/clang/BUILD.gn
 index e05032c0c66f1..e4e95e35c7f27 100644
---- a/build/config/clang/BUILD.gn
-+++ b/build/config/clang/BUILD.gn
+--- build/config/clang/BUILD.gn
++++ build/config/clang/BUILD.gn
 @@ -184,6 +184,14 @@ template("clang_lib") {
          }
        } else if (is_apple) {
@@ -63,10 +63,10 @@ index e05032c0c66f1..e4e95e35c7f27 100644
        } else if (is_linux || is_chromeos) {
          if (current_cpu == "x64") {
            _dir = "x86_64-unknown-linux-gnu"
-diff --git a/build/config/compiler/BUILD.gn b/build/config/compiler/BUILD.gn
+diff --git build/config/compiler/BUILD.gn build/config/compiler/BUILD.gn
 index ec3d374d13674..81163a8a9245e 100644
---- a/build/config/compiler/BUILD.gn
-+++ b/build/config/compiler/BUILD.gn
+--- build/config/compiler/BUILD.gn
++++ build/config/compiler/BUILD.gn
 @@ -1313,7 +1313,11 @@ config("compiler_cpu_abi") {
      # CPU architecture. We may or may not be doing a cross compile now, so for
      # simplicity we always explicitly set the architecture.
@@ -127,10 +127,10 @@ index ec3d374d13674..81163a8a9245e 100644
      # The macOS and iOS linker ld64.ldd doesn't support thin archive without
      # symbol table, gcc on linux also throws the error `archive has no index`.
      # AIX does support -s option, not -S option.
-diff --git a/build/config/compiler/compiler.gni b/build/config/compiler/compiler.gni
+diff --git build/config/compiler/compiler.gni build/config/compiler/compiler.gni
 index beb5213714e1a..44d0bd5c6609d 100644
---- a/build/config/compiler/compiler.gni
-+++ b/build/config/compiler/compiler.gni
+--- build/config/compiler/compiler.gni
++++ build/config/compiler/compiler.gni
 @@ -56,6 +56,11 @@ declare_args() {
        !is_high_end_android && (is_android || is_castos || is_fuchsia)
  }
@@ -143,10 +143,10 @@ index beb5213714e1a..44d0bd5c6609d 100644
  if (is_mac && use_lld) {
    declare_args() {
      # Enables the `--read-workers` flag for LLD.
-diff --git a/build/config/posix/BUILD.gn b/build/config/posix/BUILD.gn
+diff --git build/config/posix/BUILD.gn build/config/posix/BUILD.gn
 index 9638527df0271..25c75003b8d3b 100644
---- a/build/config/posix/BUILD.gn
-+++ b/build/config/posix/BUILD.gn
+--- build/config/posix/BUILD.gn
++++ build/config/posix/BUILD.gn
 @@ -37,7 +37,9 @@ config("runtime_library") {
        defines += [ "CR_SYSROOT_KEY=$cr_sysroot_key" ]
      }
@@ -158,10 +158,10 @@ index 9638527df0271..25c75003b8d3b 100644
  
      # When use_custom_libcxx=true, some -isystem flags get passed to
      # cflags_cc to set up libc++ include paths.  We want to make sure
-diff --git a/build/config/rust.gni b/build/config/rust.gni
+diff --git build/config/rust.gni build/config/rust.gni
 index a55e7c58b9c33..eadbd477d1f5d 100644
---- a/build/config/rust.gni
-+++ b/build/config/rust.gni
+--- build/config/rust.gni
++++ build/config/rust.gni
 @@ -211,7 +211,15 @@ if (enable_rust) {
  # (see '*_toolchain_supports_platform above') to enable experimentation with
  # other toolchains.
@@ -179,10 +179,10 @@ index a55e7c58b9c33..eadbd477d1f5d 100644
    if (current_cpu == "arm64") {
      rust_abi_target = "aarch64-unknown-linux-gnu"
    } else if (current_cpu == "x86") {
-diff --git a/build/config/sysroot.gni b/build/config/sysroot.gni
+diff --git build/config/sysroot.gni build/config/sysroot.gni
 index e7aaa18479d47..caa1b470108b6 100644
---- a/build/config/sysroot.gni
-+++ b/build/config/sysroot.gni
+--- build/config/sysroot.gni
++++ build/config/sysroot.gni
 @@ -29,6 +29,8 @@ if (sysroot == "") {
  
      # Android uses unified headers, and thus a single compile time sysroot
@@ -192,10 +192,10 @@ index e7aaa18479d47..caa1b470108b6 100644
    } else if ((is_linux || is_chromeos) && use_sysroot) {
      # By default build against a sysroot image downloaded from Cloud Storage
      # during gclient runhooks.
-diff --git a/build/rust/known-target-triples.txt b/build/rust/known-target-triples.txt
+diff --git build/rust/known-target-triples.txt build/rust/known-target-triples.txt
 index fc4780bf65bb3..2c84c63f1716d 100644
---- a/build/rust/known-target-triples.txt
-+++ b/build/rust/known-target-triples.txt
+--- build/rust/known-target-triples.txt
++++ build/rust/known-target-triples.txt
 @@ -41,5 +41,7 @@ x86_64-linux-android
  x86_64-pc-windows-msvc
  x86_64-unknown-fuchsia
@@ -204,10 +204,10 @@ index fc4780bf65bb3..2c84c63f1716d 100644
 +aarch64-unknown-nto-qnx800
  powerpc64le-unknown-linux-gnu
  s390x-unknown-linux-gnu
-diff --git a/build/toolchain/gcc_toolchain.gni b/build/toolchain/gcc_toolchain.gni
+diff --git build/toolchain/gcc_toolchain.gni build/toolchain/gcc_toolchain.gni
 index a22678bb17ff9..7b33e784ca839 100644
---- a/build/toolchain/gcc_toolchain.gni
-+++ b/build/toolchain/gcc_toolchain.gni
+--- build/toolchain/gcc_toolchain.gni
++++ build/toolchain/gcc_toolchain.gni
 @@ -415,7 +415,26 @@ template("single_gcc_toolchain") {
          # -soname flag is not available on aix ld
          soname_flag = "-Wl,-soname=\"$soname\""

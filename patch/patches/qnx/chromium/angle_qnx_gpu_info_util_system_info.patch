@@ -1,7 +1,7 @@
-diff --git a/BUILD.gn b/BUILD.gn
+diff --git BUILD.gn BUILD.gn
 index 0cb785515c..2caa7d101b 100644
---- a/BUILD.gn
-+++ b/BUILD.gn
+--- BUILD.gn
++++ BUILD.gn
 @@ -704,7 +704,7 @@ angle_static_library("angle_gpu_info_util") {
      libs += [ "dxgi.lib" ]
    }

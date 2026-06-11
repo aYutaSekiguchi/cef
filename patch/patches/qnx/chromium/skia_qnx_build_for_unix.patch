@@ -1,6 +1,6 @@
-diff --git a/BUILD.gn b/BUILD.gn
---- a/BUILD.gn
-+++ b/BUILD.gn
+diff --git BUILD.gn BUILD.gn
+--- BUILD.gn
++++ BUILD.gn
 @@ -29,6 +29,19 @@ config("skia_public") {
    if (is_linux) {
      defines += [ "SK_R32_SHIFT=16" ]

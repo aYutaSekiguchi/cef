@@ -1,7 +1,7 @@
-diff --git a/third_party/marl/src/memory.cpp b/third_party/marl/src/memory.cpp
+diff --git third_party/marl/src/memory.cpp third_party/marl/src/memory.cpp
 index f52be5599..1a9b3dfdc 100644
---- a/third_party/marl/src/memory.cpp
-+++ b/third_party/marl/src/memory.cpp
+--- third_party/marl/src/memory.cpp
++++ third_party/marl/src/memory.cpp
 @@ -123,6 +123,36 @@ inline void protectPage(void* addr) {
    MARL_ASSERT(res != 0, "Failed to protect page at %p", addr);
  }

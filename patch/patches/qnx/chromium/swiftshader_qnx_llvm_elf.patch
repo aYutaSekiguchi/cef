@@ -1,7 +1,7 @@
-diff --git a/third_party/llvm-10.0/llvm/include/llvm/BinaryFormat/ELF.h b/third_party/llvm-10.0/llvm/include/llvm/BinaryFormat/ELF.h
+diff --git third_party/llvm-10.0/llvm/include/llvm/BinaryFormat/ELF.h third_party/llvm-10.0/llvm/include/llvm/BinaryFormat/ELF.h
 index 25abbb2e0..1158c0095 100644
---- a/third_party/llvm-10.0/llvm/include/llvm/BinaryFormat/ELF.h
-+++ b/third_party/llvm-10.0/llvm/include/llvm/BinaryFormat/ELF.h
+--- third_party/llvm-10.0/llvm/include/llvm/BinaryFormat/ELF.h
++++ third_party/llvm-10.0/llvm/include/llvm/BinaryFormat/ELF.h
 @@ -19,6 +19,22 @@
  #ifndef LLVM_BINARYFORMAT_ELF_H
  #define LLVM_BINARYFORMAT_ELF_H

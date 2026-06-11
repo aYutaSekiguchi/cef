@@ -1,7 +1,7 @@
-diff --git a/third_party/llvm-10.0/llvm/include/llvm/Support/SwapByteOrder.h b/third_party/llvm-10.0/llvm/include/llvm/Support/SwapByteOrder.h
+diff --git third_party/llvm-10.0/llvm/include/llvm/Support/SwapByteOrder.h third_party/llvm-10.0/llvm/include/llvm/Support/SwapByteOrder.h
 index 6cec87006..d7368c7cf 100644
---- a/third_party/llvm-10.0/llvm/include/llvm/Support/SwapByteOrder.h
-+++ b/third_party/llvm-10.0/llvm/include/llvm/Support/SwapByteOrder.h
+--- third_party/llvm-10.0/llvm/include/llvm/Support/SwapByteOrder.h
++++ third_party/llvm-10.0/llvm/include/llvm/Support/SwapByteOrder.h
 @@ -36,6 +36,24 @@
  #else
  #define BYTE_ORDER LITTLE_ENDIAN

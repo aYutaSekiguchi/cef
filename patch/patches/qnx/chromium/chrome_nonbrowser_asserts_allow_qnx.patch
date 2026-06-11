@@ -1,7 +1,7 @@
-diff --git a/chrome/common/record_replay/BUILD.gn b/chrome/common/record_replay/BUILD.gn
+diff --git chrome/common/record_replay/BUILD.gn chrome/common/record_replay/BUILD.gn
 index 736afe7a5a40a..90097e131269e 100644
---- a/chrome/common/record_replay/BUILD.gn
-+++ b/chrome/common/record_replay/BUILD.gn
+--- chrome/common/record_replay/BUILD.gn
++++ chrome/common/record_replay/BUILD.gn
 @@ -4,7 +4,7 @@
  
  import("//mojo/public/tools/bindings/mojom.gni")
@@ -11,10 +11,10 @@ index 736afe7a5a40a..90097e131269e 100644
  
  static_library("record_replay") {
    sources = [
-diff --git a/chrome/renderer/record_replay/BUILD.gn b/chrome/renderer/record_replay/BUILD.gn
+diff --git chrome/renderer/record_replay/BUILD.gn chrome/renderer/record_replay/BUILD.gn
 index 22b903f9a6b0a..00159fda6ddea 100644
---- a/chrome/renderer/record_replay/BUILD.gn
-+++ b/chrome/renderer/record_replay/BUILD.gn
+--- chrome/renderer/record_replay/BUILD.gn
++++ chrome/renderer/record_replay/BUILD.gn
 @@ -2,7 +2,7 @@
  # Use of this source code is governed by a BSD-style license that can be
  # found in the LICENSE file.
@@ -24,10 +24,10 @@ index 22b903f9a6b0a..00159fda6ddea 100644
  
  static_library("record_replay") {
    sources = [
-diff --git a/chrome/test/data/webui/app_home/BUILD.gn b/chrome/test/data/webui/app_home/BUILD.gn
+diff --git chrome/test/data/webui/app_home/BUILD.gn chrome/test/data/webui/app_home/BUILD.gn
 index c78c832d95a83..425372f92f36e 100644
---- a/chrome/test/data/webui/app_home/BUILD.gn
-+++ b/chrome/test/data/webui/app_home/BUILD.gn
+--- chrome/test/data/webui/app_home/BUILD.gn
++++ chrome/test/data/webui/app_home/BUILD.gn
 @@ -4,7 +4,7 @@
  
  import("../build_webui_tests.gni")
@@ -37,10 +37,10 @@ index c78c832d95a83..425372f92f36e 100644
  assert(!is_fuchsia, "Fuchsia shouldn't use anything in //chrome")
  
  build_webui_tests("build") {
-diff --git a/chrome/test/data/webui/app_settings/BUILD.gn b/chrome/test/data/webui/app_settings/BUILD.gn
+diff --git chrome/test/data/webui/app_settings/BUILD.gn chrome/test/data/webui/app_settings/BUILD.gn
 index 36a77a3834621..f6f58b91766f3 100644
---- a/chrome/test/data/webui/app_settings/BUILD.gn
-+++ b/chrome/test/data/webui/app_settings/BUILD.gn
+--- chrome/test/data/webui/app_settings/BUILD.gn
++++ chrome/test/data/webui/app_settings/BUILD.gn
 @@ -4,7 +4,7 @@
  
  import("../build_webui_tests.gni")
@@ -50,10 +50,10 @@ index 36a77a3834621..f6f58b91766f3 100644
  
  assert(!is_fuchsia, "Fuchsia shouldn't use anything in //chrome")
  
-diff --git a/chrome/test/data/webui/on_device_translation_internals/BUILD.gn b/chrome/test/data/webui/on_device_translation_internals/BUILD.gn
+diff --git chrome/test/data/webui/on_device_translation_internals/BUILD.gn chrome/test/data/webui/on_device_translation_internals/BUILD.gn
 index 5571db1c873a6..a4e30819a0d23 100644
---- a/chrome/test/data/webui/on_device_translation_internals/BUILD.gn
-+++ b/chrome/test/data/webui/on_device_translation_internals/BUILD.gn
+--- chrome/test/data/webui/on_device_translation_internals/BUILD.gn
++++ chrome/test/data/webui/on_device_translation_internals/BUILD.gn
 @@ -4,7 +4,7 @@
  
  import("../build_webui_tests.gni")
@@ -63,10 +63,10 @@ index 5571db1c873a6..a4e30819a0d23 100644
  
  build_webui_tests("build") {
    cc_test_files = [ "on_device_translation_internals_browsertest.cc" ]
-diff --git a/chrome/test/data/webui/updater/BUILD.gn b/chrome/test/data/webui/updater/BUILD.gn
+diff --git chrome/test/data/webui/updater/BUILD.gn chrome/test/data/webui/updater/BUILD.gn
 index ccbd64bf374f3..7e4d1555f46a5 100644
---- a/chrome/test/data/webui/updater/BUILD.gn
-+++ b/chrome/test/data/webui/updater/BUILD.gn
+--- chrome/test/data/webui/updater/BUILD.gn
++++ chrome/test/data/webui/updater/BUILD.gn
 @@ -1,6 +1,6 @@
  import("../build_webui_tests.gni")
  

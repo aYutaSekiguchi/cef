@@ -1,7 +1,7 @@
-diff --git a/third_party/ipcz/src/reference_drivers/object.h b/third_party/ipcz/src/reference_drivers/object.h
+diff --git third_party/ipcz/src/reference_drivers/object.h third_party/ipcz/src/reference_drivers/object.h
 index dd4c1f9a97499..23d9baa0591be 100644
---- a/third_party/ipcz/src/reference_drivers/object.h
-+++ b/third_party/ipcz/src/reference_drivers/object.h
+--- third_party/ipcz/src/reference_drivers/object.h
++++ third_party/ipcz/src/reference_drivers/object.h
 @@ -24,6 +24,11 @@ class Object : public RefCounted<Object> {
  #if defined(OS_LINUX)
      // A non-standard driver object type which wraps a FileDescriptor object.
@@ -14,10 +14,10 @@ index dd4c1f9a97499..23d9baa0591be 100644
  #endif
    };
  
-diff --git a/third_party/ipcz/src/reference_drivers/wrapped_file_descriptor.h b/third_party/ipcz/src/reference_drivers/wrapped_file_descriptor.h
+diff --git third_party/ipcz/src/reference_drivers/wrapped_file_descriptor.h third_party/ipcz/src/reference_drivers/wrapped_file_descriptor.h
 index 651f29127fc10..05a39897d6fb1 100644
---- a/third_party/ipcz/src/reference_drivers/wrapped_file_descriptor.h
-+++ b/third_party/ipcz/src/reference_drivers/wrapped_file_descriptor.h
+--- third_party/ipcz/src/reference_drivers/wrapped_file_descriptor.h
++++ third_party/ipcz/src/reference_drivers/wrapped_file_descriptor.h
 @@ -5,6 +5,7 @@
  #ifndef IPCZ_SRC_REFERENCE_DRIVERS_WRAPPED_FILE_DESCRIPTOR_H_
  #define IPCZ_SRC_REFERENCE_DRIVERS_WRAPPED_FILE_DESCRIPTOR_H_
@@ -57,10 +57,10 @@ index 651f29127fc10..05a39897d6fb1 100644
  
    FileDescriptor fd_;
  };
-diff --git a/third_party/ipcz/src/reference_drivers/wrapped_file_descriptor.cc b/third_party/ipcz/src/reference_drivers/wrapped_file_descriptor.cc
+diff --git third_party/ipcz/src/reference_drivers/wrapped_file_descriptor.cc third_party/ipcz/src/reference_drivers/wrapped_file_descriptor.cc
 index f7f63b1951dfd..b49643d5e2ab6 100644
---- a/third_party/ipcz/src/reference_drivers/wrapped_file_descriptor.cc
-+++ b/third_party/ipcz/src/reference_drivers/wrapped_file_descriptor.cc
+--- third_party/ipcz/src/reference_drivers/wrapped_file_descriptor.cc
++++ third_party/ipcz/src/reference_drivers/wrapped_file_descriptor.cc
 @@ -4,14 +4,19 @@
  
  #include "reference_drivers/wrapped_file_descriptor.h"

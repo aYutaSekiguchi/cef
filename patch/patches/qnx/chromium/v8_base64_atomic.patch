@@ -1,7 +1,7 @@
-diff --git a/v8/src/builtins/builtins-typed-array.cc b/v8/src/builtins/builtins-typed-array.cc
+diff --git v8/src/builtins/builtins-typed-array.cc v8/src/builtins/builtins-typed-array.cc
 index 2256a6c493b..1f396764f7b 100644
---- a/v8/src/builtins/builtins-typed-array.cc
-+++ b/v8/src/builtins/builtins-typed-array.cc
+--- v8/src/builtins/builtins-typed-array.cc
++++ v8/src/builtins/builtins-typed-array.cc
 @@ -526,12 +526,15 @@ simdutf::result ArrayBufferSetFromBase64(
      DirectHandle<JSTypedArray> typed_array, size_t& output_length) {
    output_length = array_length;

@@ -1,7 +1,7 @@
-diff --git a/base/atomicops.cc b/base/atomicops.cc
+diff --git base/atomicops.cc base/atomicops.cc
 index 7b6aca4d6c3c3..0ee3d99c85ac7 100644
---- a/base/atomicops.cc
-+++ b/base/atomicops.cc
+--- base/atomicops.cc
++++ base/atomicops.cc
 @@ -17,17 +17,18 @@ void RelaxedAtomicWriteMemcpy(base::span<uint8_t> dst,
    uint8_t* dst_byte_ptr = dst.data();
    const uint8_t* src_byte_ptr = src.data();

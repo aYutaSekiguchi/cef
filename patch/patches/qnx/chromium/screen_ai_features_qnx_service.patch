@@ -1,7 +1,7 @@
-diff --git a/services/screen_ai/buildflags/features.gni b/services/screen_ai/buildflags/features.gni
+diff --git services/screen_ai/buildflags/features.gni services/screen_ai/buildflags/features.gni
 index d60a9583d345a..fd3cf7d7d144f 100644
---- a/services/screen_ai/buildflags/features.gni
-+++ b/services/screen_ai/buildflags/features.gni
+--- services/screen_ai/buildflags/features.gni
++++ services/screen_ai/buildflags/features.gni
 @@ -6,7 +6,7 @@ import("//build/config/sanitizers/sanitizers.gni")
  
  declare_args() {

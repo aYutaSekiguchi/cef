@@ -1,7 +1,7 @@
-diff --git a/third_party/llvm-subzero/lib/Support/Path.cpp b/third_party/llvm-subzero/lib/Support/Path.cpp
+diff --git third_party/llvm-subzero/lib/Support/Path.cpp third_party/llvm-subzero/lib/Support/Path.cpp
 index 694841297..39ab0b8d6 100644
---- a/third_party/llvm-subzero/lib/Support/Path.cpp
-+++ b/third_party/llvm-subzero/lib/Support/Path.cpp
+--- third_party/llvm-subzero/lib/Support/Path.cpp
++++ third_party/llvm-subzero/lib/Support/Path.cpp
 @@ -12,6 +12,7 @@
  //===----------------------------------------------------------------------===//
  

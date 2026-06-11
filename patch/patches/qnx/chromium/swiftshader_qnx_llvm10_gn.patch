@@ -1,7 +1,7 @@
-diff --git a/third_party/llvm-10.0/BUILD.gn b/third_party/llvm-10.0/BUILD.gn
+diff --git third_party/llvm-10.0/BUILD.gn third_party/llvm-10.0/BUILD.gn
 index a98c3b0f9..6d0d8f9a1 100644
---- a/third_party/llvm-10.0/BUILD.gn
-+++ b/third_party/llvm-10.0/BUILD.gn
+--- third_party/llvm-10.0/BUILD.gn
++++ third_party/llvm-10.0/BUILD.gn
 @@ -104,7 +104,14 @@ llvm_include_dirs = [
    "configs/common/lib/Transforms/InstCombine/",
  ]
