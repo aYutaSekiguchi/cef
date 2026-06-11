@@ -1,11 +1,12 @@
-diff --git a/skia/BUILD.gn b/skia/BUILD.gn
-index 31fad5923ad2d..b1ac038d51b77 100644
---- a/skia/BUILD.gn
-+++ b/skia/BUILD.gn
-@@ -101,6 +101,15 @@ config("skia_config") {
-   # blitting, chosen to approximate the system browser.
-   if (is_linux || is_chromeos) {
-     defines += [
+diff --git a/BUILD.gn b/BUILD.gn
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -29,6 +29,19 @@ config("skia_public") {
+   if (is_linux) {
+     defines += [ "SK_R32_SHIFT=16" ]
+   }
++  if (is_linux || is_chromeos || is_qnx) {
++    defines += [
 +      # QNX builds reach this branch via `is_linux = current_os == "linux" ||
 +      # is_qnx` in build/config/BUILDCONFIG.gn. Pre-define SK_BUILD_FOR_UNIX
 +      # here so that third_party/skia/include/private/base/SkFeatures.h
@@ -15,6 +16,8 @@ index 31fad5923ad2d..b1ac038d51b77 100644
 +      # third_party/skia/src/base/SkSemaphore.cpp to #include
 +      # <dispatch/dispatch.h> (Apple GCD), which QNX SDP 8 does not ship.
 +      "SK_BUILD_FOR_UNIX",
-       "SK_GAMMA_EXPONENT=1.2",
-       "SK_GAMMA_CONTRAST=0.2",
-     ]
++    ]
++  }
+   if (skia_enable_optimize_size) {
+     defines += [ "SK_ENABLE_OPTIMIZE_SIZE" ]
+   }

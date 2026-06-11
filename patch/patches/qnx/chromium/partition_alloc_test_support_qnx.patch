@@ -1,0 +1,16 @@
+diff --git a/base/allocator/partition_allocator/src/partition_alloc/BUILD.gn b/base/allocator/partition_allocator/src/partition_alloc/BUILD.gn
+index 275d6dbe1b05f..3648f685550e4 100644
+--- a/base/allocator/partition_allocator/src/partition_alloc/BUILD.gn
++++ b/base/allocator/partition_allocator/src/partition_alloc/BUILD.gn
+@@ -1207,6 +1207,11 @@ source_set("test_support") {
+       "partition_alloc_base/threading/platform_thread_linux_for_testing.cc",
+     ]
+   }
++  if (is_qnx) {
++    sources += [
++      "partition_alloc_base/threading/platform_thread_qnx_for_testing.cc",
++    ]
++  }
+   if (is_android) {
+     sources += [
+       "partition_alloc_base/threading/platform_thread_android_for_testing.cc",

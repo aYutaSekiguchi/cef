@@ -1,0 +1,22 @@
+diff --git a/third_party/libxslt/BUILD.gn b/third_party/libxslt/BUILD.gn
+index 6460d87f5982b..f237dad535ef4 100644
+--- a/third_party/libxslt/BUILD.gn
++++ b/third_party/libxslt/BUILD.gn
+@@ -84,7 +84,7 @@ static_library("libxslt") {
+   ]
+   public_configs = [ ":libxslt_config" ]
+ 
+-  if (is_linux || is_chromeos) {
++  if (is_linux || is_chromeos || is_qnx) {
+     sources += [ "linux/config.h" ]
+   }
+   if (is_apple) {
+@@ -92,7 +92,7 @@ static_library("libxslt") {
+   }
+ 
+   cflags = []
+-  if (is_linux || is_chromeos || is_android || is_fuchsia) {
++  if (is_linux || is_chromeos || is_android || is_fuchsia || is_qnx) {
+     include_dirs = [ "linux" ]
+   } else if (is_win) {
+     include_dirs = [ "win32" ]

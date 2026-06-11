@@ -1,0 +1,19 @@
+diff --git a/services/network/public/cpp/network_interface_change_listener_mojom_traits.h b/services/network/public/cpp/network_interface_change_listener_mojom_traits.h
+index 8876e398c56a0..18aeec84fb2ec 100644
+--- a/services/network/public/cpp/network_interface_change_listener_mojom_traits.h
++++ b/services/network/public/cpp/network_interface_change_listener_mojom_traits.h
+@@ -5,6 +5,7 @@
+ #ifndef SERVICES_NETWORK_PUBLIC_CPP_NETWORK_INTERFACE_CHANGE_LISTENER_MOJOM_TRAITS_H_
+ #define SERVICES_NETWORK_PUBLIC_CPP_NETWORK_INTERFACE_CHANGE_LISTENER_MOJOM_TRAITS_H_
+ 
++#if defined(__linux__) || defined(__GLIBC__) || defined(__GNU__)
+ #include <linux/rtnetlink.h>
+ 
+ #include "mojo/public/cpp/bindings/struct_traits.h"
+@@ -62,4 +63,6 @@ struct COMPONENT_EXPORT(NETWORK_CPP_BASE)
+ 
+ }  // namespace mojo
+ 
++#endif  // defined(__linux__) || defined(__GLIBC__) || defined(__GNU__)
++
+ #endif  // SERVICES_NETWORK_PUBLIC_CPP_NETWORK_INTERFACE_CHANGE_LISTENER_MOJOM_TRAITS_H_

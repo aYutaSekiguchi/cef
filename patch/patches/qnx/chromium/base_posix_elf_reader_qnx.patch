@@ -1,0 +1,37 @@
+diff --git a/base/BUILD.gn b/base/BUILD.gn
+index c9811ba7835ed..f260f540569c2 100644
+--- a/base/BUILD.gn
++++ b/base/BUILD.gn
+@@ -1755,7 +1755,7 @@ component("base") {
+     }
+   }
+ 
+-  if (is_linux || is_chromeos) {
++  if (is_linux || is_chromeos || is_qnx) {
+     sources += [
+       "base_paths_posix.cc",
+       "debug/elf_reader.cc",
+@@ -2367,6 +2367,14 @@ component("base") {
+     }
+   }
+ 
++  if (is_qnx) {
++    sources += [
++      "nix/xdg_util.cc",
++      "nix/xdg_util.h",
++    ]
++    deps += [ "//base/third_party/xdg_user_dirs" ]
++  }
++
+   if (use_blink) {
+     sources += [
+       "files/file_path_watcher.cc",
+@@ -2661,7 +2669,7 @@ rust_static_library("rust_logger") {
+   cxx_bindings = [ "logging/rust_logger.rs" ]
+ }
+ 
+-if (is_linux || is_chromeos) {
++if (is_linux || is_chromeos || is_qnx) {
+   # Split out as a separate target for two reasons:
+   # - the line number reader is 2x slower in debug builds if not optimized,
+   #   leading to a worse dev experience and test timeouts.

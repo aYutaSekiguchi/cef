@@ -1,0 +1,18 @@
+diff --git a/base/BUILD.gn b/base/BUILD.gn
+index c9811ba7835ed..0a1b7291ff1de 100644
+--- a/base/BUILD.gn
++++ b/base/BUILD.gn
+@@ -1724,11 +1724,11 @@ component("base") {
+   if (is_posix && !is_ios) {
+     sources += [ "process/process_posix.cc" ]
+   }
+-  if (!is_win && !is_chromeos && !is_android && !is_linux) {
++  if (!is_win && !is_chromeos && !is_android && !is_linux && !is_qnx) {
+     sources += [ "synchronization/cancelable_event_default.cc" ]
+   }
+ 
+-  if (is_linux || is_chromeos || is_android) {
++  if (is_linux || is_chromeos || is_android || is_qnx) {
+     sources += [ "synchronization/cancelable_event_posix.cc" ]
+   }
+ 

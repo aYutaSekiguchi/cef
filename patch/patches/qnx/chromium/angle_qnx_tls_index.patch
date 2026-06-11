@@ -1,0 +1,209 @@
+diff --git a/src/libANGLE/Context.cpp b/src/libANGLE/Context.cpp
+index 44fb2a4bfe..45b8267f6e 100644
+--- a/src/libANGLE/Context.cpp
++++ b/src/libANGLE/Context.cpp
+@@ -639,6 +639,29 @@ void SetCurrentValidContextTLS(Context *context)
+     ASSERT(CurrentValidContextIndex != TLS_INVALID_INDEX);
+     angle::SetTLSValue(CurrentValidContextIndex, context);
+ }
++#elif defined(__QNXNTO__)
++static angle::TLSIndex GetCurrentValidContextTLSIndex()
++{
++    static pthread_once_t once = PTHREAD_ONCE_INIT;
++    static angle::TLSIndex CurrentValidContextIndex = TLS_INVALID_INDEX;
++    pthread_once(&once, []() {
++      ASSERT(CurrentValidContextIndex == TLS_INVALID_INDEX);
++      CurrentValidContextIndex = angle::CreateTLSIndex(nullptr);
++    });
++    return CurrentValidContextIndex;
++}
++Context *GetCurrentValidContextTLS()
++{
++    angle::TLSIndex CurrentValidContextIndex = GetCurrentValidContextTLSIndex();
++    ASSERT(CurrentValidContextIndex != TLS_INVALID_INDEX);
++    return static_cast<Context *>(angle::GetTLSValue(CurrentValidContextIndex));
++}
++void SetCurrentValidContextTLS(Context *context)
++{
++    angle::TLSIndex CurrentValidContextIndex = GetCurrentValidContextTLSIndex();
++    ASSERT(CurrentValidContextIndex != TLS_INVALID_INDEX);
++    angle::SetTLSValue(CurrentValidContextIndex, context);
++}
+ #elif defined(ANGLE_USE_STATIC_THREAD_LOCAL_VARIABLES)
+ static thread_local Context *gCurrentValidContext = nullptr;
+ Context *GetCurrentValidContextTLS()
+@@ -664,7 +687,8 @@ extern void SetCurrentValidContext(Context *context)
+     }
+ #endif
+ 
+-#if defined(ANGLE_PLATFORM_APPLE) || defined(ANGLE_USE_STATIC_THREAD_LOCAL_VARIABLES)
++#if defined(ANGLE_PLATFORM_APPLE) || defined(ANGLE_USE_STATIC_THREAD_LOCAL_VARIABLES) || \
++    defined(__QNXNTO__)
+     SetCurrentValidContextTLS(context);
+ #else
+     gCurrentValidContext = context;
+diff --git a/src/libANGLE/Context.h b/src/libANGLE/Context.h
+index b18be15deb..2bca24bc5e 100644
+--- a/src/libANGLE/Context.h
++++ b/src/libANGLE/Context.h
+@@ -1186,7 +1186,8 @@ class [[nodiscard]] ScopedContextRef
+ };
+ 
+ // Thread-local current valid context bound to the thread.
+-#if defined(ANGLE_PLATFORM_APPLE) || defined(ANGLE_USE_STATIC_THREAD_LOCAL_VARIABLES)
++#if defined(ANGLE_PLATFORM_APPLE) || defined(ANGLE_USE_STATIC_THREAD_LOCAL_VARIABLES) || \
++    defined(__QNXNTO__)
+ extern Context *GetCurrentValidContextTLS();
+ extern void SetCurrentValidContextTLS(Context *context);
+ #else
+diff --git a/src/libANGLE/Display.cpp b/src/libANGLE/Display.cpp
+index 72fb02c02d..daf47bbe1b 100644
+--- a/src/libANGLE/Display.cpp
++++ b/src/libANGLE/Display.cpp
+@@ -132,6 +132,29 @@ void SetDisplayTLS(TLSData *tlsData)
+     ASSERT(DisplayIndex != TLS_INVALID_INDEX);
+     angle::SetTLSValue(DisplayIndex, tlsData);
+ }
++#elif defined(__QNXNTO__)
++static angle::TLSIndex GetDisplayTLSIndex()
++{
++    static pthread_once_t once = PTHREAD_ONCE_INIT;
++    static angle::TLSIndex DisplayIndex = TLS_INVALID_INDEX;
++    pthread_once(&once, []() {
++      ASSERT(DisplayIndex == TLS_INVALID_INDEX);
++      DisplayIndex = angle::CreateTLSIndex(nullptr);
++    });
++    return DisplayIndex;
++}
++TLSData *GetDisplayTLS()
++{
++    angle::TLSIndex DisplayIndex = GetDisplayTLSIndex();
++    ASSERT(DisplayIndex != TLS_INVALID_INDEX);
++    return static_cast<TLSData *>(angle::GetTLSValue(DisplayIndex));
++}
++void SetDisplayTLS(TLSData *tlsData)
++{
++    angle::TLSIndex DisplayIndex = GetDisplayTLSIndex();
++    ASSERT(DisplayIndex != TLS_INVALID_INDEX);
++    angle::SetTLSValue(DisplayIndex, tlsData);
++}
+ #else
+ // Tail calls generated during execution of the entry point, to be run at the end of the entry
+ // point.  gTLSData->unlockedTailCall.run() is called at the end of any EGL entry point that is
+@@ -2805,7 +2828,7 @@ void Display::InitTLS()
+ {
+     TLSData *tlsData = new TLSData;
+ 
+-#if defined(ANGLE_PLATFORM_APPLE)
++#if defined(ANGLE_PLATFORM_APPLE) || defined(__QNXNTO__)
+     SetDisplayTLS(tlsData);
+ #else
+     gDisplayTLS = tlsData;
+diff --git a/src/libGLESv2/global_state.cpp b/src/libGLESv2/global_state.cpp
+index 0a248caa55..b673bbc772 100644
+--- a/src/libGLESv2/global_state.cpp
++++ b/src/libGLESv2/global_state.cpp
+@@ -52,7 +52,8 @@ Thread *AllocateCurrentThread()
+         // Display TLS data is also intentionally leaked.
+         ANGLE_SCOPED_DISABLE_LSAN();
+         thread = new Thread();
+-#if defined(ANGLE_PLATFORM_APPLE) || defined(ANGLE_USE_STATIC_THREAD_LOCAL_VARIABLES)
++#if defined(ANGLE_PLATFORM_APPLE) || defined(ANGLE_USE_STATIC_THREAD_LOCAL_VARIABLES) || \
++    defined(__QNXNTO__)
+         SetCurrentThreadTLS(thread);
+ #else
+         gCurrentThread = thread;
+@@ -112,6 +113,29 @@ void SetCurrentThreadTLS(Thread *thread)
+     ASSERT(CurrentThreadIndex != TLS_INVALID_INDEX);
+     angle::SetTLSValue(CurrentThreadIndex, thread);
+ }
++#elif defined(__QNXNTO__)
++static angle::TLSIndex GetCurrentThreadTLSIndex()
++{
++    static pthread_once_t once = PTHREAD_ONCE_INIT;
++    static angle::TLSIndex CurrentThreadIndex = TLS_INVALID_INDEX;
++    pthread_once(&once, []() {
++      ASSERT(CurrentThreadIndex == TLS_INVALID_INDEX);
++      CurrentThreadIndex = angle::CreateTLSIndex(nullptr);
++    });
++    return CurrentThreadIndex;
++}
++Thread *GetCurrentThreadTLS()
++{
++    angle::TLSIndex CurrentThreadIndex = GetCurrentThreadTLSIndex();
++    ASSERT(CurrentThreadIndex != TLS_INVALID_INDEX);
++    return static_cast<Thread *>(angle::GetTLSValue(CurrentThreadIndex));
++}
++void SetCurrentThreadTLS(Thread *thread)
++{
++    angle::TLSIndex CurrentThreadIndex = GetCurrentThreadTLSIndex();
++    ASSERT(CurrentThreadIndex != TLS_INVALID_INDEX);
++    angle::SetTLSValue(CurrentThreadIndex, thread);
++}
+ #elif defined(ANGLE_USE_STATIC_THREAD_LOCAL_VARIABLES)
+ static thread_local Thread *gCurrentThread = nullptr;
+ Thread *GetCurrentThreadTLS()
+@@ -140,7 +164,8 @@ void SetGlobalLastContext(gl::Context *context)
+ // It also causes a flaky false positive in TSAN. http://crbug.com/1223970
+ ANGLE_NO_SANITIZE_MEMORY ANGLE_NO_SANITIZE_THREAD Thread *GetCurrentThread()
+ {
+-#if defined(ANGLE_PLATFORM_APPLE) || defined(ANGLE_USE_STATIC_THREAD_LOCAL_VARIABLES)
++#if defined(ANGLE_PLATFORM_APPLE) || defined(ANGLE_USE_STATIC_THREAD_LOCAL_VARIABLES) || \
++    defined(__QNXNTO__)
+     Thread *current = GetCurrentThreadTLS();
+ #else
+     Thread *current = gCurrentThread;
+@@ -150,7 +175,8 @@ ANGLE_NO_SANITIZE_MEMORY ANGLE_NO_SANITIZE_THREAD Thread *GetCurrentThread()
+ 
+ void SetContextCurrent(Thread *thread, gl::Context *context)
+ {
+-#if defined(ANGLE_PLATFORM_APPLE) || defined(ANGLE_USE_STATIC_THREAD_LOCAL_VARIABLES)
++#if defined(ANGLE_PLATFORM_APPLE) || defined(ANGLE_USE_STATIC_THREAD_LOCAL_VARIABLES) || \
++    defined(__QNXNTO__)
+     Thread *currentThread = GetCurrentThreadTLS();
+ #else
+     Thread *currentThread = gCurrentThread;
+diff --git a/src/libGLESv2/global_state.h b/src/libGLESv2/global_state.h
+index 32c9921d9b..2faca8c999 100644
+--- a/src/libGLESv2/global_state.h
++++ b/src/libGLESv2/global_state.h
+@@ -21,7 +21,8 @@
+ #include "libANGLE/features.h"
+ #include "libANGLE/validationEGL.h"
+ 
+-#if defined(ANGLE_PLATFORM_APPLE) || (ANGLE_PLATFORM_ANDROID) || defined(ANGLE_USE_ANDROID_TLS_SLOT)
++#if defined(ANGLE_PLATFORM_APPLE) || (ANGLE_PLATFORM_ANDROID) || defined(ANGLE_USE_ANDROID_TLS_SLOT) || \
++    defined(__QNXNTO__)
+ #    include "common/tls.h"
+ #endif
+ 
+@@ -32,7 +33,8 @@ namespace egl
+ class Debug;
+ class Thread;
+ 
+-#if defined(ANGLE_PLATFORM_APPLE) || defined(ANGLE_USE_STATIC_THREAD_LOCAL_VARIABLES)
++#if defined(ANGLE_PLATFORM_APPLE) || defined(ANGLE_USE_STATIC_THREAD_LOCAL_VARIABLES) || \
++    defined(__QNXNTO__)
+ extern Thread *GetCurrentThreadTLS();
+ extern void SetCurrentThreadTLS(Thread *thread);
+ #else
+@@ -126,7 +128,8 @@ namespace gl
+ {
+ ANGLE_INLINE Context *GetGlobalContext()
+ {
+-#if defined(ANGLE_PLATFORM_APPLE) || defined(ANGLE_USE_STATIC_THREAD_LOCAL_VARIABLES)
++#if defined(ANGLE_PLATFORM_APPLE) || defined(ANGLE_USE_STATIC_THREAD_LOCAL_VARIABLES) || \
++    defined(__QNXNTO__)
+     egl::Thread *currentThread = egl::GetCurrentThreadTLS();
+ #else
+     egl::Thread *currentThread = egl::gCurrentThread;
+@@ -145,7 +148,8 @@ ANGLE_INLINE Context *GetValidGlobalContext()
+     }
+ #endif
+ 
+-#if defined(ANGLE_PLATFORM_APPLE) || defined(ANGLE_USE_STATIC_THREAD_LOCAL_VARIABLES)
++#if defined(ANGLE_PLATFORM_APPLE) || defined(ANGLE_USE_STATIC_THREAD_LOCAL_VARIABLES) || \
++    defined(__QNXNTO__)
+     return GetCurrentValidContextTLS();
+ #else
+     return gCurrentValidContext;
