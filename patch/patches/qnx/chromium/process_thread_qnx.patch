@@ -101,31 +101,6 @@ index c36699aef7bcf..9e128feb1c69a 100644
  }
  #endif  // !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_FUCHSIA)
  
-diff --git base/process/set_process_title.cc base/process/set_process_title.cc
-index f4488f8259836..0844bb7050896 100644
---- base/process/set_process_title.cc
-+++ base/process/set_process_title.cc
-@@ -51,7 +51,10 @@ void SetProcessTitleFromCommandLine(const char** main_argv) {
-   // by spaces. We can't actually keep them separate due to the way the
-   // setproctitle() function works.
-   std::string title;
-+
-+#if !BUILDFLAG(IS_QNX)
-   bool have_argv0 = false;
-+#endif
- 
- #if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
-   if (main_argv) {
-@@ -99,7 +102,9 @@ void SetProcessTitleFromCommandLine(const char** main_argv) {
-     title += command_line->argv()[i];
-   }
-   // Disable prepending argv[0] with '-' if we prepended it ourselves above.
-+#if !BUILDFLAG(IS_QNX)
-   setproctitle(have_argv0 ? "-%s" : "%s", title.c_str());
-+#endif
- }
- 
- #else
 diff --git base/profiler/module_cache_posix.cc base/profiler/module_cache_posix.cc
 index 54c48a140c697..474887293ead6 100644
 --- base/profiler/module_cache_posix.cc
