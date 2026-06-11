@@ -1,7 +1,7 @@
-diff --git a/third_party/angle/src/tests/BUILD.gn b/third_party/angle/src/tests/BUILD.gn
-index bc9a221e6b..0723636437 100644
---- a/third_party/angle/src/tests/BUILD.gn
-+++ b/third_party/angle/src/tests/BUILD.gn
+diff --git a/src/tests/BUILD.gn b/src/tests/BUILD.gn
+index bc9a221e6b..20043a16e1 100644
+--- a/src/tests/BUILD.gn
++++ b/src/tests/BUILD.gn
 @@ -10,7 +10,7 @@ declare_args() {
    build_angle_gles1_conform_tests = checkout_angle_internal
    build_angle_trace_perf_tests = false
@@ -38,3 +38,20 @@ index bc9a221e6b..0723636437 100644
    import("angle_perftests.gni")
  
    # This test suite is for perf tests that use ANGLE's internals in some direct way.
+@@ -681,10 +681,12 @@ if (build_angle_perftests) {
+     include_dirs = [ "." ]
+     sources = angle_perf_tests_sources + [ "angle_perftests_main.cpp" ]
+ 
+-    deps = [ "$angle_spirv_tools_dir:spvtools_val" ]
+-    if (is_qnx) {
+-      deps += [ ":angle_perftests_static" ]
+-    } else {
+-      deps += [ ":angle_perftests_shared" ]
+-    }
++    deps = [
++      ":angle_perftests_shared",
++      "$angle_spirv_tools_dir:spvtools_val",
++    ]
+ 
+     data = [
+       "$angle_root/scripts/process_angle_perf_results.py",

@@ -51,11 +51,12 @@ template("qnx_clang_toolchain") {
     # -fPIC is required so QNX shared libraries can link thread_local/TLS
     # objects without tripping local-exec relocation errors. QNX also needs
     # -femulated-tls because several third_party libraries still emit ELF TLS
-    # relocations that QNX's linker rejects in shared objects. Keep -fPIE too
-    # so executables retain the earlier PIE fix.
-    extra_cflags = "${_target_flags} -include time.h -fPIC -fPIE -femulated-tls"
-    extra_cppflags = "${_target_flags} -include time.h -fPIC -fPIE -femulated-tls"
-    extra_cxxflags = "${_target_flags} -I${_qnx_shim_dir} -I${_qnx_target}/usr/include/c++/v1 -include time.h -include ${_qnx_macros} -include ${_qnx_std_polyfill} -fPIC -fPIE -femulated-tls"
+    # relocations that QNX's linker rejects in shared objects. Keep the PIE
+    # support flags in the toolchain, but place -fPIC last so shared objects
+    # stay PIC-safe under the QNX linker.
+    extra_cflags = "${_target_flags} -include time.h -fPIE -fPIC -femulated-tls"
+    extra_cppflags = "${_target_flags} -include time.h -fPIE -fPIC -femulated-tls"
+    extra_cxxflags = "${_target_flags} -I${_qnx_shim_dir} -I${_qnx_target}/usr/include/c++/v1 -include time.h -include ${_qnx_macros} -include ${_qnx_std_polyfill} -fPIE -fPIC -femulated-tls"
 
     ld = "${_qnx_host}/usr/bin/qcc"
 

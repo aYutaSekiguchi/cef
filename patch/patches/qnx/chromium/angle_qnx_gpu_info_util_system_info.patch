@@ -1,0 +1,13 @@
+diff --git a/BUILD.gn b/BUILD.gn
+index 0cb785515c..2caa7d101b 100644
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -704,7 +704,7 @@ angle_static_library("angle_gpu_info_util") {
+     libs += [ "dxgi.lib" ]
+   }
+ 
+-  if (is_linux || is_chromeos) {
++  if (is_linux || is_qnx || is_chromeos) {
+     sources += libangle_gpu_info_util_linux_sources
+ 
+     if (angle_use_x11 && angle_has_build) {
