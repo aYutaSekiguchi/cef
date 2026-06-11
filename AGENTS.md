@@ -18,11 +18,13 @@ This repository contains a QNX port of Chromium/CEF work centered on compatibili
 - use `cef/tools/cef_create_projects_qnx.sh` to regenerate a working QNX tree
 - use `out/qnx_release/ninja_qnx.sh` for builds after bootstrap
 - use `cef/tools/qnx_setup_env.sh` and `cef/tools/qnx_run_test.sh` for QEMU validation
+- create or refresh CEF-managed patch files with `git diff --no-prefix --relative --full-index` (or `cef/tools/patch_updater.py --resave`) from the correct patch root, and verify they apply cleanly on a clean tree before committing
 - check `cef/docs/qnx/build-error-index.md` and `cef/docs/qnx/history/` before inventing a new fix
 
 ## Do not
 
 - add unmanaged root-level `patches/` directories
+- hand-edit patch headers or leave patch files with `a/` / `b/` prefixes, truncation, or mixed roots; regenerate them instead
 - assume Linux runtime behavior just because GN treats QNX as Linux-like for some file selection
 - rely on local tree edits as the durable source of truth when the change should be carried by a CEF-managed patch
 
