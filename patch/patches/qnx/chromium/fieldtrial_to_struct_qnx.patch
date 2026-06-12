@@ -1,4 +1,5 @@
 diff --git tools/variations/fieldtrial_to_struct.py tools/variations/fieldtrial_to_struct.py
+index 000469b3d25a9e5b6341cd5764186792a0869d41..a7b7069e09a74798b376f821773019027e12e337 100755
 --- tools/variations/fieldtrial_to_struct.py
 +++ tools/variations/fieldtrial_to_struct.py
 @@ -30,6 +30,7 @@ _platforms = [

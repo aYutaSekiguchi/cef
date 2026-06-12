@@ -1,0 +1,28 @@
+diff --git skia/BUILD.gn skia/BUILD.gn
+index 31fad5923ad2df81559c7acefe69fe2ec0867cef..1444812f2c87ef1e3dac4b4dd79a6b7a158bd3ae 100644
+--- skia/BUILD.gn
++++ skia/BUILD.gn
+@@ -104,6 +104,23 @@ config("skia_config") {
+       "SK_GAMMA_EXPONENT=1.2",
+       "SK_GAMMA_CONTRAST=0.2",
+     ]
++  } else if (is_qnx) {
++    # QNX is `is_linux = false` on the is_linux=false experiment branch, so
++    # it no longer falls into the Linux/ChromeOS block above. QNX does not
++    # define __linux / __GLIBC__ / __unix__, so third_party/skia's
++    # include/private/base/SkFeatures.h platform auto-detection would
++    # otherwise fall into its `else` branch and define SK_BUILD_FOR_MAC.
++    # That would make `src/utils/mac/SkCTFont.cpp` and friends (kept in
++    # skia_utils_private unconditionally) #import
++    # ApplicationServices/ApplicationServices.h and
++    # src/base/SkSemaphore.cpp #include <dispatch/dispatch.h>, neither of
++    # which QNX SDP 8 ships. Pre-define SK_BUILD_FOR_UNIX so the auto-detect
++    # block is skipped entirely and QNX reuses the Linux gamma settings.
++    defines += [
++      "SK_BUILD_FOR_UNIX",
++      "SK_GAMMA_EXPONENT=1.2",
++      "SK_GAMMA_CONTRAST=0.2",
++    ]
+   } else if (is_android) {
+     defines += [
+       "SK_BUILD_FOR_ANDROID",
