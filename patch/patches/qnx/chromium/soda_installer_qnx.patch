@@ -1,13 +1,14 @@
 diff --git components/soda/soda_installer.cc components/soda/soda_installer.cc
-index 7ef6766be71c5ba454b3240285e91a5a365ef0c2..e05462c85cd658f2d862e6e4286e114f40d4c1e8 100644
+index 7ef6766be71c5ba454b3240285e91a5a365ef0c2..dcb1122268f92f280a09283b2cd98ab1a501f862 100644
 --- components/soda/soda_installer.cc
 +++ components/soda/soda_installer.cc
-@@ -295,7 +295,9 @@ void SodaInstaller::UnregisterLanguages(PrefService* global_prefs) {
+@@ -295,7 +295,8 @@ void SodaInstaller::UnregisterLanguages(PrefService* global_prefs) {
  }
  
  bool SodaInstaller::IsLanguageEnabled(std::string_view language) {
 -  return std::ranges::contains(GetLiveCaptionEnabledLanguages(), language);
-+  const auto live_caption_enabled_languages =
-+      GetLiveCaptionEnabledLanguages();
++  const auto live_caption_enabled_languages = GetLiveCaptionEnabledLanguages();
 +  return std::ranges::contains(live_caption_enabled_languages, language);
  }
+ 
+ bool SodaInstaller::IsSodaLanguageDownloading(

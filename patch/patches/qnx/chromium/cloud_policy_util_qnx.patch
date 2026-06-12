@@ -1,15 +1,19 @@
 diff --git components/policy/core/common/cloud/cloud_policy_util.cc components/policy/core/common/cloud/cloud_policy_util.cc
-index 779f4121875c4ad75f0198815e08ec11fbeb099d..2424ee42eb584bf6631198cb71a84be69f8dcd7d 100644
+index 779f4121875c4ad75f0198815e08ec11fbeb099d..a4c5a6aa1404dbad810648beaf05c495907d4566 100644
 --- components/policy/core/common/cloud/cloud_policy_util.cc
 +++ components/policy/core/common/cloud/cloud_policy_util.cc
-@@ -24,9 +24,10 @@
- #if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_FUCHSIA) || \
-     BUILDFLAG(IS_QNX)
+@@ -24,7 +24,8 @@
+ #include "base/win/wincred_shim.h"
+ #endif
+ 
+-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_FUCHSIA)
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_FUCHSIA) || \
++    BUILDFLAG(IS_QNX)
  #include <pwd.h>
  #include <sys/types.h>
  #include <unistd.h>
- #endif
-@@ -39,7 +40,7 @@
+@@ -39,8 +40,8 @@
+ #import <SystemConfiguration/SCDynamicStoreCopySpecific.h>
  #endif
  
 -#if BUILDFLAG(IS_LINUX)
@@ -17,25 +21,21 @@ index 779f4121875c4ad75f0198815e08ec11fbeb099d..2424ee42eb584bf6631198cb71a84be6
 +#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
 +#include <limits.h>  // For HOST_NAME_MAX / _POSIX_HOST_NAME_MAX
  #endif
-@@ -93,6 +94,10 @@ std::string GetMachineName() {
- #if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_FUCHSIA)
+ 
+ #include <algorithm>
+@@ -93,7 +94,7 @@ const int kMinimumVersionForExtensionInstallPolicy = 146;
+ }  // namespace
+ 
+ std::string GetMachineName() {
+-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_FUCHSIA)
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_FUCHSIA) || BUILDFLAG(IS_QNX)
    char hostname[HOST_NAME_MAX];
    if (gethostname(hostname, HOST_NAME_MAX) == 0)  // Success.
      return hostname;
-   return std::string();
-+#elif BUILDFLAG(IS_QNX)
-+  char hostname[_POSIX_HOST_NAME_MAX + 1];
-+  if (gethostname(hostname, sizeof(hostname)) == 0)  // Success.
-+    return hostname;
-+  return std::string();
- #elif BUILDFLAG(IS_IOS)
-@@ -148,7 +153,7 @@ std::string GetOSVersion() {
--#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_APPLE) || \
--    BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_FUCHSIA)
-+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_APPLE) || \
-+    BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_FUCHSIA) || BUILDFLAG(IS_QNX)
-   return base::SysInfo::OperatingSystemVersion();
-@@ -171,7 +176,7 @@ std::string GetOSUsername() {
+@@ -171,7 +172,7 @@ std::string GetOSArchitecture() {
+ }
+ 
+ std::string GetOSUsername() {
 -#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_APPLE)
 +#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_QNX)
    struct passwd* creds = getpwuid(getuid());

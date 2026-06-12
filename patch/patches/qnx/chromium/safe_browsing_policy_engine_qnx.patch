@@ -10,3 +10,5 @@ index e941538cfa26642bac77aaf07fb7d49209e10fc0..be95d2b0bb0211ef1a17b69aee7d3f12
 +  const auto excluded_countries = GetExcludedCountries();
 +  return std::ranges::contains(excluded_countries, country_code);
  }
+ 
+ // static

@@ -1,16 +1,9 @@
 diff --git components/sync_device_info/local_device_info_util.cc components/sync_device_info/local_device_info_util.cc
-index 79bf1af7e06f39d87689bda370b8655c5f440c53..638a159167975077ceef07751a1030c062c3399f 100644
+index 79bf1af7e06f39d87689bda370b8655c5f440c53..70794f10c2c4dd869d977de2ad43b1c2db2ec1b8 100644
 --- components/sync_device_info/local_device_info_util.cc
 +++ components/sync_device_info/local_device_info_util.cc
-@@ -76,7 +76,7 @@ sync_pb::SyncEnums::DeviceType GetLocalDeviceType() {
- #if BUILDFLAG(IS_CHROMEOS)
-   return sync_pb::SyncEnums_DeviceType_TYPE_CROS;
--#elif BUILDFLAG(IS_LINUX)
-+#elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
-   return sync_pb::SyncEnums_DeviceType_TYPE_LINUX;
- #elif BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_IOS)
-   switch (ui::GetDeviceFormFactor()) {
-@@ -102,7 +102,7 @@ DeviceInfo::OsType GetLocalDeviceOSType() {
+@@ -107,7 +107,7 @@ sync_pb::SyncEnums::DeviceType GetLocalDeviceType() {
+ DeviceInfo::OsType GetLocalDeviceOSType() {
  #if BUILDFLAG(IS_CHROMEOS)
    return DeviceInfo::OsType::kChromeOsAsh;
 -#elif BUILDFLAG(IS_LINUX)

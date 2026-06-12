@@ -2,7 +2,7 @@ diff --git device/fido/hid/fido_hid_packet.cc device/fido/hid/fido_hid_packet.cc
 index 1c2351d1c464e94321546103b7641455d7ce9e17..e766bd83d0c656383b6f39e8ca18d6c826904483 100644
 --- device/fido/hid/fido_hid_packet.cc
 +++ device/fido/hid/fido_hid_packet.cc
-@@ -33,7 +33,8 @@ std::unique_ptr<FidoHidInitPacket> FidoHidInitPacket::CreateFromSerializedData(
+@@ -34,7 +34,8 @@ std::unique_ptr<FidoHidInitPacket> FidoHidInitPacket::CreateFromSerializedData(
    channel_id |= serialized[index++] & 0xff;
  
    auto command = static_cast<FidoHidDeviceCommand>(serialized[index++] & 0x7f);
@@ -11,3 +11,4 @@ index 1c2351d1c464e94321546103b7641455d7ce9e17..e766bd83d0c656383b6f39e8ca18d6c8
 +  if (!std::ranges::contains(device_commands, command)) {
      return nullptr;
    }
+ 
