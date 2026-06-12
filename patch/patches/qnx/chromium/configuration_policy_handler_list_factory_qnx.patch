@@ -1,0 +1,23 @@
+diff --git chrome/browser/policy/configuration_policy_handler_list_factory.cc chrome/browser/policy/configuration_policy_handler_list_factory.cc
+index 067304136c6d82f048c7c616bb4727ad26a3c481..ba731b8e849f14e7d57164c291a5419005e8860c 100644
+--- chrome/browser/policy/configuration_policy_handler_list_factory.cc
++++ chrome/browser/policy/configuration_policy_handler_list_factory.cc
+@@ -256,14 +256,16 @@
+ #include "components/spellcheck/browser/pref_names.h"
+ #endif  // BUILDFLAG(ENABLE_SPELLCHECK)
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ #include "chrome/browser/browser_switcher/browser_switcher_prefs.h"
+ #include "chrome/browser/enterprise/idle/action.h"
+ #include "chrome/browser/enterprise/signin/enterprise_signin_prefs.h"
+ #include "chrome/browser/external_protocol/auto_launch_protocols_policy_handler.h"
+ #include "components/device_signals/core/browser/pref_names.h"  // nogncheck due to crbug.com/1125897
+ #include "components/proxy_config/proxy_config_pref_names.h"
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) ||
++        // BUILDFLAG(IS_QNX)
+ 
+ #if BUILDFLAG(ENTERPRISE_CLIENT_CERTIFICATES)
+ #include "components/enterprise/client_certificates/core/prefs.h"

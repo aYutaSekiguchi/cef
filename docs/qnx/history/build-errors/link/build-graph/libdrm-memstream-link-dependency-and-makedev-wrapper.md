@@ -6,6 +6,11 @@
 - Category: build-graph
 - Scope: third_party/libdrm
 
+## Current status
+
+- This is a historical fix note for the original QNX libdrm API mismatch.
+- The corresponding managed patch later became stale after upstream libdrm removed `third_party/libdrm/src/xf86drm.c`; the bootstrap-stage removal is documented in `bootstrap/build-graph/libdrm-stale-patch-after-xf86drm-removal.md`.
+
 ## Symptoms
 
 - `third_party/libdrm/src/xf86drm.c` failed on QNX with:
@@ -31,10 +36,11 @@
 
 ## Applied change
 
-- Added a QNX-only `#include <sys/memstream.h>` in `xf86drm.c`.
-- Added a `DRM_MAKEDEV(major, minor)` wrapper that expands to the QNX three-argument `makedev` form.
-- Replaced direct `makedev(...)` call sites with `DRM_MAKEDEV(...)`.
-- Added a QNX-only `libs = [ "memstream" ]` dependency in `third_party/libdrm/BUILD.gn`.
+- Historical fix (no longer in the managed patch stack):
+  - Added a QNX-only `#include <sys/memstream.h>` in `xf86drm.c`.
+  - Added a `DRM_MAKEDEV(major, minor)` wrapper that expands to the QNX three-argument `makedev` form.
+  - Replaced direct `makedev(...)` call sites with `DRM_MAKEDEV(...)`.
+  - Added a QNX-only `libs = [ "memstream" ]` dependency in `third_party/libdrm/BUILD.gn`.
 
 ## Verification
 

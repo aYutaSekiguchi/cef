@@ -1,5 +1,5 @@
 diff --git third_party/cpuinfo/BUILD.gn third_party/cpuinfo/BUILD.gn
-index b076eb7195e9f..96ce1d518117c 100644
+index b076eb7195e9f204b166846bd5117e52208dc2de..834c6b541367b2f835070494ccfd96cd1c4431e6 100644
 --- third_party/cpuinfo/BUILD.gn
 +++ third_party/cpuinfo/BUILD.gn
 @@ -8,6 +8,19 @@ config("cpuinfo_include") {
@@ -69,7 +69,21 @@ index b076eb7195e9f..96ce1d518117c 100644
    configs -= [
      "//build/config/compiler:chromium_code",
      "//build/config/sanitizers:default_sanitizer_flags",
-@@ -149,7 +186,7 @@ source_set("x86_cache") {
+@@ -116,6 +153,13 @@ source_set("cpu_specific") {
+     sources = [ "src/src/riscv/uarch.c" ]
+   }
+ 
++  if (is_qnx) {
++    # The qnx-ports fork already supplies the x86-specific cpuinfo sources via
++    # cpu_and_os_specific. Leaving the Chromium cpu_specific x86 sources in the
++    # graph duplicates the same symbols at link time, so clear the list on QNX.
++    sources = []
++  }
++
+   # Because "init.c" is reused again, but only has sources in the corresponding
+   # build config.
+   deps = [ ":x86_cache" ]
+@@ -149,7 +193,7 @@ source_set("x86_cache") {
  }
  
  source_set("cpu_and_os_specific") {
@@ -78,7 +92,7 @@ index b076eb7195e9f..96ce1d518117c 100644
        (current_cpu == "x86" || current_cpu == "x64")) {
      sources = [
        "src/src/x86/linux/cpuinfo.c",
-@@ -157,6 +194,22 @@ source_set("cpu_and_os_specific") {
+@@ -157,6 +201,21 @@ source_set("cpu_and_os_specific") {
      ]
    }
  
@@ -94,11 +108,9 @@ index b076eb7195e9f..96ce1d518117c 100644
 +      "//third_party/cpuinfo_qnx/src/src/x86/topology.c",
 +      "//third_party/cpuinfo_qnx/src/src/x86/uarch.c",
 +      "//third_party/cpuinfo_qnx/src/src/x86/vendor.c",
-+      "//third_party/cpuinfo_qnx/src/src/qnx/api.c",
 +    ]
 +  }
 +
    if ((is_linux || is_chromeos) && current_cpu == "arm") {
      sources = [
        "src/src/arm/linux/aarch32-isa.c",
-

@@ -1,0 +1,15 @@
+diff --git components/safe_browsing/content/resources/BUILD.gn components/safe_browsing/content/resources/BUILD.gn
+index b8007a1d29839dbfabf2a1f8ae6d12c0ed05506a..9f102ef50825eab7635b498be88f53bc5289e3c8 100644
+--- components/safe_browsing/content/resources/BUILD.gn
++++ components/safe_browsing/content/resources/BUILD.gn
+@@ -31,6 +31,10 @@
+     target_arch = "mac"
+   } else if (is_linux) {
+     target_arch = "linux"
++  } else if (is_qnx) {
++    # QNX uses the Linux safe-browsing file-type set as the closest
++    # compatible platform bucket.
++    target_arch = "linux"
+   } else {
+     # This will cause the script to fail.
+     target_arch = "unknown_target_arch"

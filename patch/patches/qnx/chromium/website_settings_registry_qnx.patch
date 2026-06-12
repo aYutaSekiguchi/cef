@@ -1,0 +1,14 @@
+diff --git components/content_settings/core/browser/website_settings_registry.cc components/content_settings/core/browser/website_settings_registry.cc
+index 4744bbe541e165f3a25a44676c80b088ae81055f..8353f7c3165305fdbf7be4df6fbaaca4336e458c 100644
+--- components/content_settings/core/browser/website_settings_registry.cc
++++ components/content_settings/core/browser/website_settings_registry.cc
+@@ -31,6 +31,9 @@ WebsiteSettingsRegistry::Register(
+ #elif BUILDFLAG(IS_LINUX)
+   if (!(platform & PLATFORM_LINUX))
+     return nullptr;
++#elif BUILDFLAG(IS_QNX)
++  if (!(platform & PLATFORM_LINUX))
++    return nullptr;
+ #elif BUILDFLAG(IS_MAC)
+   if (!(platform & PLATFORM_MAC))
+     return nullptr;

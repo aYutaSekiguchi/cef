@@ -47,6 +47,7 @@ rg -n "posix_spawnp|EBADF|launch_qnx" docs/qnx/history/build-errors
 rg -n "F_GETFL|TakeError::kUnexpectedReadOnlyFd" docs/qnx/history/build-errors
 rg -n "fieldtrial_to_struct|--platform=qnx" docs/qnx/history/build-errors
 rg -n "open_memstream|libmemstream|makedev" docs/qnx/history/build-errors/link
+rg -n "libdrm_qnx_memstream_makedev|xf86drm.c|patches failed to apply" docs/qnx/history/build-errors/bootstrap
 rg -n "linux/prctl.h|pthread_setname_np|platform_thread_types" docs/qnx/history/build-errors
 rg -n "sys/prctl.h|NativeCPUContext|Port\." docs/qnx/history/build-errors
 rg -n "suid_sandbox_client|compile_suid_client|sandbox/policy:policy" docs/qnx/history/build-errors

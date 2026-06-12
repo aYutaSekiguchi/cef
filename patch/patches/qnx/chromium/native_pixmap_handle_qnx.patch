@@ -1,0 +1,35 @@
+--- ui/gfx/native_pixmap_handle.h
++++ ui/gfx/native_pixmap_handle.h
+@@ -78,10 +78,10 @@
+ 
+   std::vector<NativePixmapPlane> planes;
+ 
+-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
+-  // The modifier is retrieved from GBM library and passed to EGL driver.
+-  // Generally it's platform specific, and we don't need to modify it in
+-  // Chromium code. Also one per plane per entry.
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_QNX)
++  // The modifier is retrieved from GBM/library-specific metadata and passed to
++  // the driver. Generally it's platform specific, and we don't need to modify
++  // it in Chromium code. Also one per plane per entry.
+   uint64_t modifier = kNoModifier;
+ 
+   // WebGPU can directly import the handle to create texture from it.
+--- ui/gfx/native_pixmap_handle.cc
++++ ui/gfx/native_pixmap_handle.cc
+@@ -108,12 +108,14 @@
+     cloned_plane.size = plane.size;
+     cloned_plane.vmo = std::move(vmo_dup);
+     clone.planes.push_back(std::move(cloned_plane));
++#elif BUILDFLAG(IS_QNX)
++    clone.planes.emplace_back(plane.stride, plane.offset, plane.size);
+ #else
+ #error Unsupported OS
+ #endif
+   }
+ 
+-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_QNX)
+   clone.modifier = handle.modifier;
+   clone.supports_zero_copy_webgpu_import =
+       handle.supports_zero_copy_webgpu_import;

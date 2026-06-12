@@ -377,6 +377,11 @@ treat_warnings_as_errors = false
 
 # Test/settings overrides
 enable_base_tracing = false
+# The QNX smoke targets do not need clang nocompile verification sources,
+# and those targets tend to trip platform-specific diagnostics that are not
+# actionable for the smoke build. Disable them globally instead of chasing
+# each compile-only test target one by one.
+enable_nocompile_tests = false
 use_custom_libcxx = false
 use_custom_libcxx_for_host = true
 chrome_pgo_phase = 0
@@ -394,6 +399,7 @@ use_dbus = false
 use_pangocairo = false
 use_xkbcommon = false
 use_nss_certs = false
+use_kerberos = false
 use_udev = false
 # QNX audio backends require dedicated porting work. Do not inherit the
 # generic POSIX/Linux defaults from media/media_options.gni.

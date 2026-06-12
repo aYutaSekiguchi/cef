@@ -1,0 +1,46 @@
+--- gpu/command_buffer/service/shared_image/ozone_image_backing_factory.cc
++++ gpu/command_buffer/service/shared_image/ozone_image_backing_factory.cc
+@@ -37,6 +37,7 @@
+ #endif  // BUILDFLAG(ENABLE_VULKAN)
+ 
+ namespace gpu {
++class VulkanDeviceQueue;
+ namespace {
+ 
+ gfx::BufferUsage GetBufferUsage(SharedImageUsageSet usage) {
+@@ -91,14 +92,18 @@
+     const gfx::Size& size,
+     viz::SharedImageFormat format,
+     gfx::BufferUsage usage) {
++  VulkanDeviceQueue* device_queue = nullptr;
++#if BUILDFLAG(ENABLE_VULKAN)
++  if (vulkan_context_provider) {
++    device_queue = vulkan_context_provider->GetDeviceQueue();
++  }
++#endif  // BUILDFLAG(ENABLE_VULKAN)
++
+   scoped_refptr<gfx::NativePixmap> pixmap =
+       ui::OzonePlatform::GetInstance()
+           ->GetSurfaceFactoryOzone()
+-          ->CreateNativePixmap(gpu::kNullSurfaceHandle,
+-                               vulkan_context_provider
+-                                   ? vulkan_context_provider->GetDeviceQueue()
+-                                   : nullptr,
+-                               size, format, usage, size);
++          ->CreateNativePixmap(gpu::kNullSurfaceHandle, device_queue, size,
++                               format, usage, size);
+ 
+   if (!pixmap.get()) {
+     DLOG(ERROR) << "Failed to create pixmap " << size.ToString() << ",  "
+--- gpu/command_buffer/service/shared_image/ozone_image_backing.cc
++++ gpu/command_buffer/service/shared_image/ozone_image_backing.cc
+@@ -135,7 +135,9 @@
+ #if BUILDFLAG(IS_FUCHSIA)
+   NOTREACHED() << "Cannot get single plane from GPU memory buffer";
+ #else
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_QNX)
+   DCHECK(native_pixmap_handle.modifier == 0);
++#endif
+   auto& planes = native_pixmap_handle.planes;
+   CHECK(!planes.empty());
+   DCHECK(index < planes.size());

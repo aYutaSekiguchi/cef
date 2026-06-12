@@ -1,0 +1,66 @@
+diff --git chrome/browser/signin/signin_util.cc chrome/browser/signin/signin_util.cc
+index 52716a3af6937eab9b132cfd4b48aef9314060d4..2c8e3df23688aa277d22b153e3fa77dee5b37931 100644
+--- chrome/browser/signin/signin_util.cc
++++ chrome/browser/signin/signin_util.cc
+@@ -49,13 +49,15 @@
+ #include "services/network/public/mojom/cookie_manager.mojom.h"
+ #include "ui/base/l10n/l10n_util.h"
+ 
+-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN)
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN) || \
++    BUILDFLAG(IS_QNX)
+ #include "chrome/browser/ui/browser_finder.h"
+ #include "chrome/browser/ui/dialogs/browser_dialogs.h"
+ #include "components/strings/grit/components_strings.h"
+ #include "ui/base/interaction/element_identifier.h"
+ #include "ui/base/models/dialog_model.h"
+-#endif  // BUILDFLAG(IS_LINUX) ||  BUILDFLAG(IS_MAC) ||  BUILDFLAG(IS_WIN)
++#endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN) ||
++        // BUILDFLAG(IS_QNX)
+ 
+ namespace signin_util {
+ 
+@@ -402,7 +404,8 @@ bool IsSyncingUserSelectableTypesAllowedByPolicy(
+   return true;
+ }
+ 
+-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN)
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN) || \
++    BUILDFLAG(IS_QNX)
+ bool HasExplicitlyDisabledHistorySync(
+     const syncer::SyncService* sync_service,
+     const signin::IdentityManager* identity_manager) {
+@@ -637,7 +640,8 @@ void ShowErrorDialogWithMessage(Browser* browser, int error_message_id) {
+   chrome::ShowBrowserModal(browser, std::move(dialog_model));
+ }
+ 
+-#endif  // BUILDFLAG(IS_LINUX) ||  BUILDFLAG(IS_MAC) ||  BUILDFLAG(IS_WIN)
++#endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN) ||
++        // BUILDFLAG(IS_QNX)
+ 
+ std::vector<net::SchemefulSite> GetDeviceBoundSessionRestrictedSites() {
+   return {net::SchemefulSite(GURL("https://google.com")),
+diff --git chrome/browser/signin/signin_util.h chrome/browser/signin/signin_util.h
+index f55fe7166eaf63e0b1e0e9ae8e8512be74095f27..b95cc4a805c7e14fd5783b5729478f382e806eae 100644
+--- chrome/browser/signin/signin_util.h
++++ chrome/browser/signin/signin_util.h
+@@ -207,7 +207,8 @@ bool IsSyncingUserSelectableTypesAllowedByPolicy(
+     const syncer::SyncService* sync_service,
+     const syncer::UserSelectableTypeSet& types);
+ 
+-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN)
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN) || \
++    BUILDFLAG(IS_QNX)
+ // True if the user has explicitly disabled syncing history, tabs or saved tab
+ // groups through the settings. The primary account must be set (this crashes
+ // otherwise).
+@@ -250,7 +251,8 @@ bool ShouldShowAvatarSyncPromo(Profile* profile);
+ // `error_message_id`.
+ void ShowErrorDialogWithMessage(Browser* browser, int error_message_id);
+ 
+-#endif  // BUILDFLAG(IS_LINUX) ||  BUILDFLAG(IS_MAC) ||  BUILDFLAG(IS_WIN)
++#endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN) ||
++        // BUILDFLAG(IS_QNX)
+ 
+ // Returns the list of sites that register Device Bound Sessions that
+ // are of interest to signin code.

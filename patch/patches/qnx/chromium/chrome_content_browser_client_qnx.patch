@@ -1,0 +1,121 @@
+diff --git chrome/browser/chrome_content_browser_client.cc chrome/browser/chrome_content_browser_client.cc
+index 25458578a830674aac9f57e55257c5f2fb2314ec..ffbc30746702ebddbb9a486200b92fed54d919aa 100644
+--- chrome/browser/chrome_content_browser_client.cc
++++ chrome/browser/chrome_content_browser_client.cc
+@@ -52,6 +52,7 @@
+ #include "build/branding_buildflags.h"
+ #include "build/build_config.h"
+ #include "build/config/chromebox_for_meetings/buildflags.h"  // PLATFORM_CFM
++#include "cef/libcef/features/features.h"
+ #include "chrome/browser/after_startup_task_utils.h"
+ #include "chrome/browser/ai/ai_manager.h"
+ #include "chrome/browser/app_mode/app_mode_utils.h"
+@@ -530,7 +531,9 @@
+ #include "chrome/browser/metrics/usage_scenario/chrome_responsiveness_calculator_delegate.h"
+ #include "chrome/browser/new_tab_page/new_tab_page_util.h"
+ #include "chrome/browser/picture_in_picture/auto_picture_in_picture_tab_helper.h"
++#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
+ #include "chrome/browser/printing/print_preview_dialog_controller.h"
++#endif
+ #include "chrome/browser/screen_ai/screen_ai_install_state.h"
+ #include "chrome/browser/search/instant_service.h"
+ #include "chrome/browser/search/instant_service_factory.h"
+@@ -1434,6 +1437,8 @@ ChromeContentBrowserClient::GetPopupNavigationDelegateFactoryForTesting() {
+ }
+ 
+ ChromeContentBrowserClient::ChromeContentBrowserClient() {
++  keepalive_timer_.reset(new base::OneShotTimer());
++
+ #if BUILDFLAG(ENABLE_PLUGINS)
+   extra_parts_.push_back(
+       std::make_unique<ChromeContentBrowserClientPluginsPart>());
+@@ -1474,6 +1479,11 @@ ChromeContentBrowserClient::~ChromeContentBrowserClient() {
+   }
+ }
+ 
++void ChromeContentBrowserClient::CleanupOnUIThread() {
++  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
++  keepalive_timer_.reset();
++}
++
+ // static
+ void ChromeContentBrowserClient::RegisterLocalStatePrefs(
+     PrefRegistrySimple* registry) {
+@@ -2782,12 +2792,14 @@ void ChromeContentBrowserClient::AppendExtraCommandLineSwitches(
+   }
+ #elif BUILDFLAG(IS_POSIX)
+ #if !BUILDFLAG(IS_ANDROID)
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
+   pid_t pid;
+   if (crash_reporter::GetHandlerSocket(nullptr, &pid)) {
+     command_line->AppendSwitchASCII(
+         crash_reporter::switches::kCrashpadHandlerPid,
+         base::NumberToString(pid));
+   }
++#endif
+ #endif
+   std::string switch_value;
+   std::unique_ptr<metrics::ClientInfo> client_info =
+@@ -5038,9 +5050,11 @@ void ChromeContentBrowserClient::BrowserURLHandlerCreated(
+                           &search::HandleNewTabURLReverseRewrite);
+ #endif  // BUILDFLAG(IS_ANDROID)
+ 
++#if !BUILDFLAG(ENABLE_CEF)
+   // chrome: & friends.
+   handler->AddHandlerPair(&ChromeContentBrowserClient::HandleWebUI,
+                           &ChromeContentBrowserClient::HandleWebUIReverse);
++#endif
+ }
+ 
+ base::FilePath ChromeContentBrowserClient::GetDefaultDownloadDirectory() {
+@@ -6726,7 +6740,7 @@ void ChromeContentBrowserClient::OnNetworkServiceCreated(
+   }
+ }
+ 
+-void ChromeContentBrowserClient::ConfigureNetworkContextParams(
++bool ChromeContentBrowserClient::ConfigureNetworkContextParams(
+     content::BrowserContext* context,
+     bool in_memory,
+     const base::FilePath& relative_partition_path,
+@@ -6744,6 +6758,8 @@ void ChromeContentBrowserClient::ConfigureNetworkContextParams(
+     network_context_params->user_agent = GetUserAgent();
+     network_context_params->accept_language = GetApplicationLocale();
+   }
++
++  return true;
+ }
+ 
+ std::vector<base::FilePath>
+@@ -8051,11 +8067,11 @@ void ChromeContentBrowserClient::OnKeepaliveRequestStarted(
+   const auto now = base::TimeTicks::Now();
+   const auto timeout = GetKeepaliveTimerTimeout(context);
+   keepalive_deadline_ = std::max(keepalive_deadline_, now + timeout);
+-  if (keepalive_deadline_ > now && !keepalive_timer_.IsRunning()) {
++  if (keepalive_deadline_ > now && !keepalive_timer_->IsRunning()) {
+     if (!KeepAliveRegistry::GetInstance()->IsShuttingDown()) {
+       DVLOG(1) << "Starting a keepalive timer(" << timeout.InSecondsF()
+                << " seconds)";
+-      keepalive_timer_.Start(
++      keepalive_timer_->Start(
+           FROM_HERE, keepalive_deadline_ - now,
+           base::BindOnce(
+               &ChromeContentBrowserClient::OnKeepaliveTimerFired,
+@@ -8077,7 +8093,8 @@ void ChromeContentBrowserClient::OnKeepaliveRequestFinished() {
+   --num_keepalive_requests_;
+   if (num_keepalive_requests_ == 0) {
+     DVLOG(1) << "Stopping the keepalive timer";
+-    keepalive_timer_.Stop();
++    if (keepalive_timer_)
++      keepalive_timer_->Stop();
+     // This deletes the keep alive handle attached to the timer function and
+     // unblock the shutdown sequence.
+   }
+@@ -8250,7 +8267,7 @@ void ChromeContentBrowserClient::OnKeepaliveTimerFired(
+   const auto now = base::TimeTicks::Now();
+   const auto then = keepalive_deadline_;
+   if (now < then) {
+-    keepalive_timer_.Start(
++    keepalive_timer_->Start(
+         FROM_HERE, then - now,
+         base::BindOnce(&ChromeContentBrowserClient::OnKeepaliveTimerFired,
+                        weak_factory_.GetWeakPtr(),

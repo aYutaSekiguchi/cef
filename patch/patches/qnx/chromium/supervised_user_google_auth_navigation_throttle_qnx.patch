@@ -1,0 +1,13 @@
+diff --git chrome/browser/supervised_user/supervised_user_google_auth_navigation_throttle.cc chrome/browser/supervised_user/supervised_user_google_auth_navigation_throttle.cc
+index 63416163ad4aa9977d8b0b12d5dc8b251d3ab430..b35e986fbb5ad6fa9144a72891e89a591fdf8f98 100644
+--- chrome/browser/supervised_user/supervised_user_google_auth_navigation_throttle.cc
++++ chrome/browser/supervised_user/supervised_user_google_auth_navigation_throttle.cc
+@@ -259,6 +259,8 @@ SupervisedUserGoogleAuthNavigationThrottle::ShouldProceed() {
+     }
+   }
+   return content::NavigationThrottle::DEFER;
++#elif BUILDFLAG(IS_QNX)
++  return content::NavigationThrottle::PROCEED;
+ #else
+ #error Unsupported platform
+ #endif

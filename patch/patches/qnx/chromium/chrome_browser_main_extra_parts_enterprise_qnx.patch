@@ -1,0 +1,47 @@
+--- chrome/browser/enterprise/chrome_browser_main_extra_parts_enterprise.h
++++ chrome/browser/enterprise/chrome_browser_main_extra_parts_enterprise.h
+@@ -25,8 +25,8 @@
+   ~ChromeBrowserMainExtraPartsEnterprise() override;
+ 
+   // ChromeBrowserMainExtraParts:
+-#if (BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN)) && \
+-    BUILDFLAG(ENTERPRISE_LOCAL_CONTENT_ANALYSIS)
++#if (BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN) || \
++     BUILDFLAG(IS_QNX)) && BUILDFLAG(ENTERPRISE_LOCAL_CONTENT_ANALYSIS)
+   void PostProfileInit(Profile* profile, bool is_initial_profile) override;
+ #endif
+   void PostCreateMainMessageLoop() override;
+--- chrome/browser/enterprise/chrome_browser_main_extra_parts_enterprise.cc
++++ chrome/browser/enterprise/chrome_browser_main_extra_parts_enterprise.cc
+@@ -7,8 +7,8 @@
+ #include "components/enterprise/buildflags/buildflags.h"
+ #include "content/public/browser/browser_thread.h"
+ 
+-#if (BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN)) && \
+-    BUILDFLAG(ENTERPRISE_LOCAL_CONTENT_ANALYSIS)
++#if (BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN) || \
++     BUILDFLAG(IS_QNX)) && BUILDFLAG(ENTERPRISE_LOCAL_CONTENT_ANALYSIS)
+ #include "chrome/browser/enterprise/connectors/analysis/content_analysis_sdk_manager.h"  // nogncheck
+ #include "chrome/browser/enterprise/connectors/connectors_service.h"  // nogncheck
+ #endif
+@@ -17,7 +17,8 @@
+ 
+ namespace {
+ 
+-#if BUILDFLAG(ENTERPRISE_LOCAL_CONTENT_ANALYSIS)
++#if (BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN) || \
++     BUILDFLAG(IS_QNX)) && BUILDFLAG(ENTERPRISE_LOCAL_CONTENT_ANALYSIS)
+ // If a local agent has been configured for content analysis, this function
+ // connects to the agent immediately.  Agents expect chrome to connect to them
+ // at some point during startup to determine if chrome is configuredcorrectly.
+@@ -53,8 +54,8 @@
+ ChromeBrowserMainExtraPartsEnterprise::
+     ~ChromeBrowserMainExtraPartsEnterprise() = default;
+ 
+-#if (BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN)) && \
+-    BUILDFLAG(ENTERPRISE_LOCAL_CONTENT_ANALYSIS)
++#if (BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN) || \
++     BUILDFLAG(IS_QNX)) && BUILDFLAG(ENTERPRISE_LOCAL_CONTENT_ANALYSIS)
+ void ChromeBrowserMainExtraPartsEnterprise::PostProfileInit(
+     Profile* profile,
+     bool is_initial_profile) {

@@ -1,0 +1,22 @@
+diff --git chrome/browser/notifications/notification_display_service_impl.cc chrome/browser/notifications/notification_display_service_impl.cc
+index bba7b7b6f668f7c3b7b4ebe27f8b54451817b4b8..660a6ae30b8606d872e480db32376940b5e9594e 100644
+--- chrome/browser/notifications/notification_display_service_impl.cc
++++ chrome/browser/notifications/notification_display_service_impl.cc
+@@ -31,7 +31,7 @@
+ #endif
+ 
+ #if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_MAC) || \
+-    BUILDFLAG(IS_WIN)
++    BUILDFLAG(IS_WIN) || BUILDFLAG(IS_QNX)
+ #include "chrome/browser/send_tab_to_self/desktop_notification_handler.h"
+ #include "chrome/browser/sharing/sharing_notification_handler.h"
+ #endif
+@@ -80,7 +80,7 @@ NotificationDisplayServiceImpl::NotificationDisplayServiceImpl(Profile* profile)
+                            std::make_unique<PersistentNotificationHandler>());
+ 
+ #if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_MAC) || \
+-    BUILDFLAG(IS_WIN)
++    BUILDFLAG(IS_WIN) || BUILDFLAG(IS_QNX)
+     AddNotificationHandler(
+         NotificationHandler::Type::SEND_TAB_TO_SELF,
+         std::make_unique<send_tab_to_self::DesktopNotificationHandler>(

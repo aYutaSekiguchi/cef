@@ -1,0 +1,18 @@
+diff --git components/page_content_annotations/core/page_content_annotations_service.h components/page_content_annotations/core/page_content_annotations_service.h
+index 73f3e265be23bbffa26e6edae8cfeebddaff0de1..e1343ce9828f1ac859ca6c0cc76143e9e1681a36 100644
+--- components/page_content_annotations/core/page_content_annotations_service.h
++++ components/page_content_annotations/core/page_content_annotations_service.h
+@@ -127,8 +127,11 @@ enum class PageContentAnnotationsType {
+ class PageContentAnnotationsService
+     : public KeyedService,
+       public history::HistoryServiceObserver,
+-      public ZeroSuggestCacheServiceInterface::Observer,
+-      public OnDeviceCategoryClassifier::Observer {
++      public ZeroSuggestCacheServiceInterface::Observer
++#if BUILDFLAG(BUILD_WITH_TFLITE_LIB)
++      , public OnDeviceCategoryClassifier::Observer
++#endif
++{
+  public:
+   // Observer interface to listen for PageContentAnnotations for page loads.
+   // Annotations will be sent for each page load for the registered annotation

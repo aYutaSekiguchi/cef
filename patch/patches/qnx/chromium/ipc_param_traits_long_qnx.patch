@@ -1,0 +1,13 @@
+diff --git ipc/param_traits_utils.h ipc/param_traits_utils.h
+index 6824969ae3b2f8a5e9e2f02dea0f69ba1a4af6da..e7fc8c000a78acb1a35ed0626ba9082c48bf3f66 100644
+--- ipc/param_traits_utils.h
++++ ipc/param_traits_utils.h
+@@ -174,7 +174,7 @@ struct ParamTraits<unsigned int> {
+ // Since we want to support Android 32<>64 bit IPC, as long as we don't have
+ // these traits for 32 bit ARM then that'll catch any errors.
+ #if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || \
+-    BUILDFLAG(IS_FUCHSIA) ||                                              \
++    BUILDFLAG(IS_FUCHSIA) || BUILDFLAG(IS_QNX) ||                        \
+     (BUILDFLAG(IS_ANDROID) && defined(ARCH_CPU_64_BITS))
+ template <>
+ struct ParamTraits<long> {

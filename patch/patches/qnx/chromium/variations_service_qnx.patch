@@ -1,0 +1,21 @@
+diff --git components/variations/service/variations_service.cc components/variations/service/variations_service.cc
+index 8a82dde4bb01201cb1eb3fc5a3d8cd15f1706ea8..f0c0a954eede2d48a0f2b6b8a96fb9eb4f5b69c5 100644
+--- components/variations/service/variations_service.cc
++++ components/variations/service/variations_service.cc
+@@ -100,9 +100,10 @@ std::string GetPlatformString() {
+ #elif BUILDFLAG(IS_CHROMEOS)
+   return "chromeos";
+ #elif BUILDFLAG(IS_ANDROID)
+   return "android";
+ #elif BUILDFLAG(IS_FUCHSIA)
+   return "fuchsia";
+-#elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_BSD) || BUILDFLAG(IS_SOLARIS)
+-  // Default BSD and SOLARIS to Linux to not break those builds, although these
+-  // platforms are not officially supported by Chrome.
++#elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_BSD) || BUILDFLAG(IS_SOLARIS) || \
++    BUILDFLAG(IS_QNX)
++  // Default BSD, SOLARIS, and QNX to Linux to not break those builds,
++  // although these platforms are not officially supported by Chrome.
+   return "linux";
+ #else
+ #error Unknown platform

@@ -1,5 +1,5 @@
 diff --git BUILD.gn BUILD.gn
-index 8f6f13e189..fd3f833a45 100644
+index 8f6f13e189b4ef998bf2f845f27b8190c532a664..aad204d86ef6f2b8e8f3022ca081ad89de6e5538 100644
 --- BUILD.gn
 +++ BUILD.gn
 @@ -241,6 +241,28 @@ target(link_target_type, "ffmpeg_internal") {
@@ -31,3 +31,15 @@ index 8f6f13e189..fd3f833a45 100644
    ldflags = []
    libs = []
    deps = [
+@@ -362,8 +384,10 @@ target(link_target_type, "ffmpeg_internal") {
+       libs += [
+         "m",
+         "z",
+-        "rt",
+       ]
++      if (!is_qnx) {
++        libs += [ "rt" ]
++      }
+     }
+     if (is_component_ffmpeg) {
+       # Export all symbols when building as component.

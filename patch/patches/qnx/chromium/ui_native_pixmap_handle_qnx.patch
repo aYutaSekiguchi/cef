@@ -1,0 +1,13 @@
+diff --git ui/gfx/native_pixmap_handle.cc ui/gfx/native_pixmap_handle.cc
+index d4f1df1daeec59ac8c53a8fd6c8d8e9834a04979..c4c21c0ffdd33f9c2e7cd1f122e90d8e4803cef2 100644
+--- ui/gfx/native_pixmap_handle.cc
++++ ui/gfx/native_pixmap_handle.cc
+@@ -108,6 +108,8 @@ NativePixmapHandle CloneHandleForIPC(const NativePixmapHandle& handle) {
+     cloned_plane.size = plane.size;
+     cloned_plane.vmo = std::move(vmo_dup);
+     clone.planes.push_back(std::move(cloned_plane));
++#elif BUILDFLAG(IS_QNX)
++    clone.planes.emplace_back(plane.stride, plane.offset, plane.size);
+ #else
+ #error Unsupported OS
+ #endif

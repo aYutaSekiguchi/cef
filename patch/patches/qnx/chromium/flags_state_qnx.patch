@@ -1,0 +1,12 @@
+diff --git components/webui/flags/flags_state.cc components/webui/flags/flags_state.cc
+index 0b5f764ee492b240ccb684ebdd18a7832db3a990..752033703c03c6c9e315eab9a0a305e1b0229267 100644
+--- components/webui/flags/flags_state.cc
++++ components/webui/flags/flags_state.cc
+@@ -783,7 +783,7 @@ unsigned short FlagsState::GetCurrentPlatform() {
+ #elif BUILDFLAG(IS_CHROMEOS)
+   return kOsCrOS;
+-#elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_OPENBSD)
++#elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_OPENBSD) || BUILDFLAG(IS_QNX)
+   return kOsLinux;
+ #elif BUILDFLAG(IS_ANDROID)
+   return kOsAndroid;

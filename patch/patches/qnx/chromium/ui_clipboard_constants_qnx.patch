@@ -1,0 +1,23 @@
+diff --git ui/base/clipboard/clipboard_constants.h ui/base/clipboard/clipboard_constants.h
+index 6b09cddef751fe76751ba9c46cb61000addd501a..0e8de23d601bbe8baeabf2fd7100fdb3bc929a79 100644
+--- ui/base/clipboard/clipboard_constants.h
++++ ui/base/clipboard/clipboard_constants.h
+@@ -44,7 +44,8 @@ inline constexpr char kMimeTypeWindowDrag[] = "chromium/x-window-drag";
+ 
+ // ----- LINUX & CHROMEOS & FUCHSIA MIME TYPES -----
+ 
+-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_FUCHSIA)
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_FUCHSIA) || \
++    BUILDFLAG(IS_QNX)
+ inline constexpr char kMimeTypeLinuxUtf8String[] = "UTF8_STRING";
+ inline constexpr char kMimeTypeLinuxString[] = "STRING";
+ inline constexpr char kMimeTypeLinuxText[] = "TEXT";
+@@ -57,7 +58,7 @@ inline constexpr char kMimeTypePortalFiles[] = "application/vnd.portal.files";
+         // BUILDFLAG(IS_FUCHSIA)
+ 
+ #if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_FUCHSIA) || \
+-    BUILDFLAG(IS_ANDROID)
++    BUILDFLAG(IS_QNX) || BUILDFLAG(IS_ANDROID)
+ inline constexpr char kMimeTypeSourceUrl[] = "chromium/x-source-url";
+ #endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) ||
+         // BUILDFLAG(IS_FUCHSIA) || BUILDFLAG(IS_ANDROID)

@@ -1,0 +1,13 @@
+diff --git chrome/browser/enterprise/connectors/analysis/analysis_service_settings.cc chrome/browser/enterprise/connectors/analysis/analysis_service_settings.cc
+index ab8805535e02a87e912f26e7b6453b3ffb506b09..22751f28c7b1382287d7351077cb707acc8700f8 100644
+--- chrome/browser/enterprise/connectors/analysis/analysis_service_settings.cc
++++ chrome/browser/enterprise/connectors/analysis/analysis_service_settings.cc
+@@ -54,7 +54,7 @@ void AnalysisServiceSettings::ParseVerificationSignatures(
+   const char* verification_key = kKeyWindowsVerification;
+ #elif BUILDFLAG(IS_MAC)
+   const char* verification_key = kKeyMacVerification;
+-#elif BUILDFLAG(IS_LINUX)
++#elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+   const char* verification_key = kKeyLinuxVerification;
+ #endif
+ 

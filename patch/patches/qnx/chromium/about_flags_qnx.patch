@@ -1,0 +1,28 @@
+diff --git chrome/browser/about_flags.cc chrome/browser/about_flags.cc
+index 016ba0e25ff2b6dabca957a27bd4953b808b0740..9380e2c8c7edbdf9a1c3e4aaa52fccfb59643ed4 100644
+--- chrome/browser/about_flags.cc
++++ chrome/browser/about_flags.cc
+@@ -1241,7 +1241,7 @@ const FeatureEntry::FeatureVariation
+ };
+ 
+ #if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_MAC) || \
+-    BUILDFLAG(IS_WIN)
++    BUILDFLAG(IS_WIN) || BUILDFLAG(IS_QNX)
+ 
+ // A limited number of combinations of the rich autocompletion params.
+ const FeatureEntry::FeatureParam kOmniboxRichAutocompletionAggressive1[] = {
+@@ -11397,12 +11397,14 @@ const FeatureEntry kFeatureEntries[] = {
+      FEATURE_VALUE_TYPE(printing::features::kApiPrintingMarginsAndScale)},
+ #endif  // BUILDFLAG(IS_CHROMEOS)
+ 
++#if BUILDFLAG(ENABLE_PRINTING)
+     {"align-pdf-default-print-settings-with-html",
+      flag_descriptions::kAlignPdfDefaultPrintSettingsWithHTMLName,
+      flag_descriptions::kAlignPdfDefaultPrintSettingsWithHTMLDescription,
+      kOsAll,
+      FEATURE_VALUE_TYPE(
+          printing::features::kAlignPdfDefaultPrintSettingsWithHTML)},
++#endif
+ 
+     {"supervised-user-block-interstitial-v3",
+      flag_descriptions::kSupervisedUserBlockInterstitialV3Name,

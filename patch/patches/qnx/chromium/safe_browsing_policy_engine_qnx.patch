@@ -1,0 +1,12 @@
+diff --git components/safe_browsing/core/browser/realtime/policy_engine.cc components/safe_browsing/core/browser/realtime/policy_engine.cc
+index e941538cfa26642bac77aaf07fb7d49209e10fc0..be95d2b0bb0211ef1a17b69aee7d3f120dc27cc8 100644
+--- components/safe_browsing/core/browser/realtime/policy_engine.cc
++++ components/safe_browsing/core/browser/realtime/policy_engine.cc
+@@ -46,7 +46,8 @@ namespace safe_browsing {
+ // static
+ bool RealTimePolicyEngine::IsInExcludedCountry(
+     const std::string& country_code) {
+-  return std::ranges::contains(GetExcludedCountries(), country_code);
++  const auto excluded_countries = GetExcludedCountries();
++  return std::ranges::contains(excluded_countries, country_code);
+ }

@@ -1,0 +1,14 @@
+diff --git mojo/public/cpp/platform/socket_utils_posix.cc mojo/public/cpp/platform/socket_utils_posix.cc
+index 8cebec59fddd58165c5f323017245b45bedced46..08b0e8e7368b4e6ffba80c353372334ac3a0733e 100644
+--- mojo/public/cpp/platform/socket_utils_posix.cc
++++ mojo/public/cpp/platform/socket_utils_posix.cc
+@@ -26,7 +26,8 @@ bool IsRecoverableError() {
+ }
+ 
+ bool GetPeerEuid(base::PlatformFile fd, uid_t* peer_euid) {
+-#if BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_OPENBSD) || BUILDFLAG(IS_FREEBSD)
++#if BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_OPENBSD) || BUILDFLAG(IS_FREEBSD) || \
++    BUILDFLAG(IS_QNX)
+   uid_t socket_euid;
+   gid_t socket_gid;
+   if (getpeereid(fd, &socket_euid, &socket_gid) < 0) {

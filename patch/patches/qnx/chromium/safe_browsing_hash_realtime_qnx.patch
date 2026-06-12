@@ -1,0 +1,15 @@
+diff --git components/safe_browsing/core/common/hashprefix_realtime/hash_realtime_utils.cc components/safe_browsing/core/common/hashprefix_realtime/hash_realtime_utils.cc
+index 19b654187dce455518b1d476d5a4f0a6317d119e..0bee10dff8c3827dca617db58dbd695b516b7f88 100644
+--- components/safe_browsing/core/common/hashprefix_realtime/hash_realtime_utils.cc
++++ components/safe_browsing/core/common/hashprefix_realtime/hash_realtime_utils.cc
+@@ -84,7 +84,8 @@ bool IsHashRealTimeLookupEligibleInSession() {
+ }
+ bool IsHashRealTimeLookupEligibleInLocation(
+     std::optional<std::string> latest_country) {
+-  return (
+-      !latest_country.has_value() ||
+-      !std::ranges::contains(GetExcludedCountries(), latest_country.value()));
++  const auto excluded_countries = GetExcludedCountries();
++  return (!latest_country.has_value() ||
++          !std::ranges::contains(excluded_countries, latest_country.value()));
+ }

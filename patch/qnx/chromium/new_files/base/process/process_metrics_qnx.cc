@@ -5,12 +5,18 @@
 #include "base/process/process_metrics.h"
 
 #include <fcntl.h>
+#include <sys/resource.h>
 #include <devctl.h>
 #include <sys/procfs.h>
 #include <unistd.h>
 
+#include <string>
+#include <string_view>
+#include <vector>
+
 #include "base/files/scoped_file.h"
 #include "base/memory/ptr_util.h"
+#include "base/process/launch.h"
 #include "base/types/expected.h"
 
 namespace base {
@@ -22,6 +28,43 @@ std::unique_ptr<ProcessMetrics> ProcessMetrics::CreateProcessMetrics(
     ProcessHandle process) {
   return WrapUnique(new ProcessMetrics(process));
 }
+
+namespace {
+
+int CountPidinFdEntries(ProcessHandle process) {
+  std::string output;
+  const std::vector<std::string> argv = {
+      "pidin",
+      "-p",
+      std::to_string(static_cast<int>(process)),
+      "fds",
+  };
+  if (!GetAppOutput(argv, &output)) {
+    return -1;
+  }
+
+  int count = 0;
+  size_t pos = 0;
+  while (pos < output.size()) {
+    size_t end = output.find('\n', pos);
+    if (end == std::string::npos) {
+      end = output.size();
+    }
+    std::string_view line(output.data() + pos, end - pos);
+    pos = end + 1;
+
+    size_t start = line.find_first_not_of(" \t\r");
+    if (start == std::string_view::npos) {
+      continue;
+    }
+    if (line[start] >= '0' && line[start] <= '9') {
+      ++count;
+    }
+  }
+  return count;
+}
+
+}  // namespace
 
 size_t GetSystemCommitCharge() {
   // QNX does not have a concept of virtual memory overcommit.
@@ -59,6 +102,18 @@ ProcessMetrics::GetMemoryInfo() const {
   ProcessMemoryInfo memory_info;
   memory_info.resident_set_bytes = info.private_mem;
   return memory_info;
+}
+
+int ProcessMetrics::GetOpenFdCount() const {
+  return CountPidinFdEntries(process_);
+}
+
+int ProcessMetrics::GetOpenFdSoftLimit() const {
+  struct rlimit limit;
+  if (getrlimit(RLIMIT_NOFILE, &limit) != 0) {
+    return -1;
+  }
+  return static_cast<int>(limit.rlim_cur);
 }
 
 }  // namespace base

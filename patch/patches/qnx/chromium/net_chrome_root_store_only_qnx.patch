@@ -1,0 +1,32 @@
+diff --git net/cert/internal/system_trust_store.cc net/cert/internal/system_trust_store.cc
+index a4e0ae75bae704165ac7c01d591ad4eca7fd2c27..cc24eedc4d9c48894b8670d451d934988f1e9eda 100644
+--- net/cert/internal/system_trust_store.cc
++++ net/cert/internal/system_trust_store.cc
+@@ -403,6 +403,13 @@ void InitializeTrustStoreAndroid() {}
+ 
+ #endif  // CHROME_ROOT_STORE_SUPPORTED
+ 
++#elif BUILDFLAG(IS_QNX)
++
++std::unique_ptr<SystemTrustStore> CreateSslSystemTrustStoreChromeRoot(
++    std::unique_ptr<TrustStoreChrome> chrome_root) {
++  return CreateChromeOnlySystemTrustStore(std::move(chrome_root));
++}
++
+ #endif
+ 
+ }  // namespace net
+diff --git net/features.gni net/features.gni
+index 58807c2250c4598a47ebdac1c9191c6dd5405774..7b7739c6fbf18791d8b03773949ecb4d1c0e71c1 100644
+--- net/features.gni
++++ net/features.gni
+@@ -54,7 +54,8 @@ declare_args() {
+ 
+   # Platforms for which certificate verification can only be performed using
+   # the builtin cert verifier with the Chrome Root Store.
+-  chrome_root_store_only = is_win || is_mac || is_linux || is_chromeos
++  chrome_root_store_only =
++      is_win || is_mac || is_linux || is_chromeos || is_qnx
+ 
+   # DBSC is only supported on Windows, Linux and Mac for now.
+   enable_device_bound_sessions = is_win || is_linux || is_mac

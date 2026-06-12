@@ -1,0 +1,27 @@
+diff --git ui/base/dragdrop/os_exchange_data_provider_factory.cc ui/base/dragdrop/os_exchange_data_provider_factory.cc
+index 4f3f3f5398224345648a10708b629c50515c437d..4442774223fc0290ac93f9abee72d65e44979d1d 100644
+--- ui/base/dragdrop/os_exchange_data_provider_factory.cc
++++ ui/base/dragdrop/os_exchange_data_provider_factory.cc
+@@ -7,7 +7,8 @@
+ #include "base/notreached.h"
+ #include "build/build_config.h"
+ 
+-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_FUCHSIA)
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_FUCHSIA) || \
++    BUILDFLAG(IS_QNX)
+ #include "ui/base/dragdrop/os_exchange_data_provider_factory_ozone.h"
+ #include "ui/base/dragdrop/os_exchange_data_provider_non_backed.h"
+ #elif BUILDFLAG(IS_APPLE)
+@@ -35,9 +36,10 @@ OSExchangeDataProviderFactory::CreateProvider() {
+   return BuildOSExchangeDataProviderMac();
+ #elif BUILDFLAG(IS_WIN)
+   return std::make_unique<OSExchangeDataProviderWin>();
+-#elif BUILDFLAG(IS_FUCHSIA)
++#elif BUILDFLAG(IS_FUCHSIA) || BUILDFLAG(IS_QNX)
+   // Fuchsia uses OSExchangeDataProviderNonBacked since a platform-specific
+-  // implementation is not planned. See crbug.com/42050646 for context.
++  // implementation is not planned. QNX follows the same fallback for the
++  // smoke-target build.
+   return std::make_unique<OSExchangeDataProviderNonBacked>();
+ #else
+ #error "Unknown operating system"

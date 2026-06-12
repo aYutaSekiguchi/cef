@@ -1,0 +1,13 @@
+diff --git media/capture/video/fake_video_capture_device_factory.cc media/capture/video/fake_video_capture_device_factory.cc
+index 60fbb61f0bbda0517f69c41590103ea9e6455150..8aec84ad95b1686b3c580e749b586b20b7512ef5 100644
+--- media/capture/video/fake_video_capture_device_factory.cc
++++ media/capture/video/fake_video_capture_device_factory.cc
+@@ -240,6 +240,8 @@ void FakeVideoCaptureDeviceFactory::GetDevicesInfo(
+         VideoCaptureApi::ANDROID_API2_LEGACY;
+ #elif BUILDFLAG(IS_FUCHSIA)
+         VideoCaptureApi::FUCHSIA_CAMERA3;
++#elif BUILDFLAG(IS_QNX)
++        VideoCaptureApi::UNKNOWN;
+ #else
+ #error Unsupported platform
+ #endif

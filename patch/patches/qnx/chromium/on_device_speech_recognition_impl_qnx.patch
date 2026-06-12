@@ -1,0 +1,18 @@
+diff --git chrome/browser/speech/on_device_speech_recognition_impl.cc chrome/browser/speech/on_device_speech_recognition_impl.cc
+index 180326ea7b52a0c793d402b7d92d6f3ea741ac4b..3506b0dc1334816a38d1d48b43766cf11608675e 100644
+--- chrome/browser/speech/on_device_speech_recognition_impl.cc
++++ chrome/browser/speech/on_device_speech_recognition_impl.cc
+@@ -40,9 +40,10 @@ const char kEnglishLanguageCodeKey[] = "en-US";
+ // Returns a boolean indicating whether the language is enabled.
+ bool IsLanguageInstallable(std::string_view language_code,
+                            bool is_soda_binary_installed) {
+-  return std::ranges::contains(
+-      speech::SodaInstaller::GetInstance()->GetLiveCaptionEnabledLanguages(),
+-      language_code);
++  const auto enabled_languages =
++      speech::SodaInstaller::GetInstance()->GetLiveCaptionEnabledLanguages();
++  return std::find(enabled_languages.begin(), enabled_languages.end(),
++                   language_code) != enabled_languages.end();
+ }
+ 
+ }  // namespace
