@@ -321,47 +321,12 @@ Process LaunchProcess(const std::vector<std::string>& argv,
     posix_spawn_file_actions_addclose(&raw_fa, close_fd);
   }
 
-  // Close superfluous FDs in the child to prevent inheriting parent FDs
-  // that were not explicitly remapped. We use fcntl(fd, F_GETFD) to check
-  // which FDs are actually open, rather than scanning /dev/fd (which can
-  // return inconsistent results on QNX NFS).
-  //
-  // Build a set of FDs to keep (already remapped destinations, the remap
-  // sources that are being closed explicitly above, and standard streams).
-  // Remap sources are in keep_fds because they are already handled by the
-  // remap_sources_to_close loop above; adding another addclose for them
-  // would cause EBADF on QNX (double close action).
-  //
-  // Note: We only close extra FDs when fds_to_remap is non-empty.  When
-  // fds_to_remap is empty, the no-op spawn (inherit all FDs) is valid and
-  // closer to the fork+exec semantics on other platforms.  Aggressively
-  // closing FDs in the no-remap case can conflict with internal FDs that
-  // QNX's posix_spawnp uses for the addopen(stdin=/dev/null) action.
-  if (!options.fds_to_remap.empty()) {
-    std::vector<int> keep_fds = {STDIN_FILENO, STDOUT_FILENO,
-                                 STDERR_FILENO};
-    keep_fds.reserve(keep_fds.size() + options.fds_to_remap.size() +
-                     remap_sources_to_close.size());
-    for (const auto& dup2_pair : options.fds_to_remap) {
-      keep_fds.push_back(dup2_pair.second);
-    }
-    keep_fds.insert(keep_fds.end(), remap_sources_to_close.begin(),
-                    remap_sources_to_close.end());
-    std::sort(keep_fds.begin(), keep_fds.end());
-    keep_fds.erase(std::unique(keep_fds.begin(), keep_fds.end()),
-                   keep_fds.end());
-
-    int max_fd_to_check = static_cast<int>(getdtablesize());
-    for (int fd = 0; fd < max_fd_to_check; ++fd) {
-      if (std::binary_search(keep_fds.begin(), keep_fds.end(), fd)) {
-        continue;
-      }
-      if (fcntl(fd, F_GETFD) == -1) {
-        continue;  // Not open.
-      }
-      posix_spawn_file_actions_addclose(&raw_fa, fd);
-    }
-  }
+  // Do not add a close-superfluous-FDs sweep here. QNX posix_spawnp() can
+  // fail the whole spawn with EBADF when a large close action set interacts
+  // with descriptor remapping and the NFS-backed executable used by the test
+  // runner. This intentionally keeps the implementation close to POSIX
+  // fork+exec semantics: remap requested descriptors, close their original
+  // sources, and otherwise inherit the parent's descriptor table.
 
   pid_t pid = 0;
   int rv = posix_spawnp(&pid, executable_path, &raw_fa, &raw_attr,
