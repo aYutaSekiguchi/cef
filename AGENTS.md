@@ -16,6 +16,7 @@ This repository contains a QNX port of Chromium/CEF work centered on compatibili
 - keep QNX-specific changes under `cef/patch/...`
 - keep new files under `cef/patch/qnx/chromium/new_files/...`
 - use `cef/tools/cef_create_projects_qnx.sh` to regenerate a working QNX tree
+- for bootstrap-stage failures, hand off to the `qnx-bootstrap` skill (`cef/.agents/skills/qnx-cef-build/SKILL.md`) before debugging build/link/test issues
 - use `out/qnx_release/ninja_qnx.sh` for builds after bootstrap
 - use `cef/tools/qnx_setup_env.sh` and `cef/tools/qnx_run_test.sh` for QEMU validation
 - run `cef/tools/qnx_sync_sources.sh -f -R` before `cef/tools/cef_create_projects_qnx.sh` when refreshing a QNX working tree

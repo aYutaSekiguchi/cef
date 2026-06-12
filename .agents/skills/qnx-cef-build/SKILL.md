@@ -21,7 +21,7 @@ A QNX-port-specific recovery workflow for `cef_create_projects_qnx.sh`. Scope is
 This is the durable workflow as of 2026-06-07. Run **all four steps in order**. Do not skip `gclient sync` — without it QNX-specific submodules (`third_party/farmhash_qnx`, `third_party/epoll`, `third_party/cpuinfo_qnx`) are absent and downstream patches fail to find their targets.
 
 ```bash
-cd ~/chromium/src
+cd <CHROMIUM_SRC>
 git checkout -f                    # parent repo tracked files → HEAD
 gclient sync -f -R                 # force submodule reset to DEPS.lock
 ./cef/tools/cef_create_projects_qnx.sh --build-type Release --qnx-sdp-root <QNX_SDP_ROOT>
@@ -29,6 +29,8 @@ gclient sync -f -R                 # force submodule reset to DEPS.lock
 ```
 
 The first three steps together take ~30 s on this machine. Bootstrap itself is normally 25-35 s.
+
+`<CHROMIUM_SRC>` means the Chromium checkout root on the current machine (the directory that contains `cef/`).
 
 ### gclient sync WARNINGs: what they mean and what to do
 
@@ -79,9 +81,9 @@ These patches require exact-match context that Chromium 147 broke. Until they ar
 
 ## Subtle traps in the CEF patcher
 
-1. **`b/` prefix in patch paths**: `patch_updater.py --revert` outputs messages like `Skipping non-existing file /home/yuta/chromium/src/b/third_party/angle/BUILD.gn`. The `b/` comes from `git apply` style patches and is **expected** — the file does not actually exist at that path, so the message is informational, not an error. Ignore it.
+1. **`b/` prefix in patch paths**: `patch_updater.py --revert` outputs messages like `Skipping non-existing file <CHROMIUM_SRC>/b/third_party/angle/BUILD.gn`. The `b/` comes from `git apply` style patches and is **expected** — the file does not actually exist at that path, so the message is informational, not an error. Ignore it.
 
-2. **CWD-sensitive git operations**: `patch_updater.py` runs `git checkout -- file` from the chromium parent repo CWD (`/home/yuta/chromium/src`). If a CEF core patch deletes a CEF API header (e.g. `chrome_browser_context_menus.patch` deletes `include/base/cef_build.h` and `include/internal/cef_types.h`), the parent-repo CWD cannot find that path. The revert then runs `os.remove` on it, **which is what is supposed to happen** — the deletion is the patch's purpose. Subsequent bootstraps re-delete the header as part of the apply, so the cycle is consistent.
+2. **CWD-sensitive git operations**: `patch_updater.py` runs `git checkout -- file` from the chromium parent repo CWD (`<CHROMIUM_SRC>`). If a CEF core patch deletes a CEF API header (e.g. `chrome_browser_context_menus.patch` deletes `include/base/cef_build.h` and `include/internal/cef_types.h`), the parent-repo CWD cannot find that path. The revert then runs `os.remove` on it, **which is what is supposed to happen** — the deletion is the patch's purpose. Subsequent bootstraps re-delete the header as part of the apply, so the cycle is consistent.
 
 3. **`cef/` is an independent git repo**. It is not a submodule. It has its own HEAD, its own `origin/qnx_7727`, and its own `tools/`. Do not run `git rebase` from the chromium parent repo CWD when you mean to rebase the CEF branch.
 
@@ -92,7 +94,7 @@ These patches require exact-match context that Chromium 147 broke. Until they ar
 When the user asks to rebase `cef/` against `origin/qnx_7727`:
 
 ```bash
-cd ~/chromium/src/cef
+cd <CHROMIUM_SRC>/cef
 git fetch origin
 git rebase origin/qnx_7727
 ```
