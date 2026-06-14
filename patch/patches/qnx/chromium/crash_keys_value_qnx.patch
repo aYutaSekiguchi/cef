@@ -1,0 +1,18 @@
+diff --git chrome/common/crash_keys.cc chrome/common/crash_keys.cc
+--- chrome/common/crash_keys.cc
++++ chrome/common/crash_keys.cc
+@@ -52,7 +52,14 @@ class CrashKeyWithName {
+   ~CrashKeyWithName() = delete;
+
+   std::string_view Name() const { return name_; }
++#if BUILDFLAG(USE_CRASHPAD_ANNOTATION)
+   std::string_view Value() const { return crash_key_.value(); }
++#else
++  // Breakpad and stub CrashKeyString implementations do not expose a value()
++  // accessor. The string-annotations switch is a no-op on these platforms,
++  // so returning an empty view is the safe equivalent.
++  std::string_view Value() const { return std::string_view(); }
++#endif
+   void Clear() { crash_key_.Clear(); }
+   void Set(std::string_view value) { crash_key_.Set(value); }
+
