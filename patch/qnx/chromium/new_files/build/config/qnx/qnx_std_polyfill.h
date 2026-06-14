@@ -40,6 +40,7 @@
     __cpp_lib_ranges_contains < 202207L
 
 #include <algorithm>
+#include <functional>
 #include <utility>
 
 // NOTE: We avoid depending on std::ranges concepts (indirect_binary_predicate,
@@ -55,8 +56,12 @@ namespace std::ranges {
 // comparison.
 template <class R, class T, class Proj = identity>
 [[nodiscard]] constexpr bool contains(R&& r, const T& value, Proj proj = {}) {
-  return ranges::find(std::forward<R>(r), value, std::move(proj)) !=
-         ranges::end(r);
+  for (auto&& element : r) {
+    if (std::invoke(proj, element) == value) {
+      return true;
+    }
+  }
+  return false;
 }
 
 }  // namespace std::ranges
