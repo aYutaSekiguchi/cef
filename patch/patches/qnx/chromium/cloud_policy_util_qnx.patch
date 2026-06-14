@@ -1,5 +1,5 @@
 diff --git components/policy/core/common/cloud/cloud_policy_util.cc components/policy/core/common/cloud/cloud_policy_util.cc
-index 779f4121875c4ad75f0198815e08ec11fbeb099d..a4c5a6aa1404dbad810648beaf05c495907d4566 100644
+index 779f4121875c4ad75f0198815e08ec11fbeb099d..232af680951a40af73758e58b22f968d2267e02f 100644
 --- components/policy/core/common/cloud/cloud_policy_util.cc
 +++ components/policy/core/common/cloud/cloud_policy_util.cc
 @@ -24,7 +24,8 @@
@@ -12,27 +12,27 @@ index 779f4121875c4ad75f0198815e08ec11fbeb099d..a4c5a6aa1404dbad810648beaf05c495
  #include <pwd.h>
  #include <sys/types.h>
  #include <unistd.h>
-@@ -39,8 +40,8 @@
- #import <SystemConfiguration/SCDynamicStoreCopySpecific.h>
- #endif
+@@ -41,6 +42,8 @@
  
--#if BUILDFLAG(IS_LINUX)
--#include <limits.h>  // For HOST_NAME_MAX
-+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
-+#include <limits.h>  // For HOST_NAME_MAX / _POSIX_HOST_NAME_MAX
+ #if BUILDFLAG(IS_LINUX)
+ #include <limits.h>  // For HOST_NAME_MAX
++#elif BUILDFLAG(IS_QNX)
++#include <limits.h>  // For _POSIX_HOST_NAME_MAX
  #endif
  
  #include <algorithm>
-@@ -93,7 +94,7 @@ const int kMinimumVersionForExtensionInstallPolicy = 146;
- }  // namespace
- 
- std::string GetMachineName() {
--#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_FUCHSIA)
-+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_FUCHSIA) || BUILDFLAG(IS_QNX)
+@@ -97,6 +100,10 @@ std::string GetMachineName() {
    char hostname[HOST_NAME_MAX];
    if (gethostname(hostname, HOST_NAME_MAX) == 0)  // Success.
      return hostname;
-@@ -171,7 +172,7 @@ std::string GetOSArchitecture() {
++#elif BUILDFLAG(IS_QNX)
++  char hostname[_POSIX_HOST_NAME_MAX];
++  if (gethostname(hostname, _POSIX_HOST_NAME_MAX) == 0)  // Success.
++    return hostname;
+   return std::string();
+ #elif BUILDFLAG(IS_IOS)
+   // Use the Vendor ID as the machine name.
+@@ -171,7 +178,7 @@ std::string GetOSArchitecture() {
  }
  
  std::string GetOSUsername() {
