@@ -1,0 +1,44 @@
+diff --git components/autofill/core/browser/foundations/autofill_manager.cc components/autofill/core/browser/foundations/autofill_manager.cc
+--- components/autofill/core/browser/foundations/autofill_manager.cc
++++ components/autofill/core/browser/foundations/autofill_manager.cc
+@@ -140,8 +140,10 @@ struct AutofillManager::AsyncContext {
+ 
+   std::vector<FormData> forms;
+   std::vector<RegexPredictions> regex_predictions;
++#if BUILDFLAG(BUILD_WITH_TFLITE_LIB)
+   std::vector<ModelPredictions> autofill_predictions;
+   std::vector<ModelPredictions> password_manager_predictions;
++#endif
+   GeoIpCountryCode country_code;
+   LanguageCode current_page_language;
+   std::unique_ptr<BufferingLogManager> log_manager;
+@@ -1053,12 +1055,14 @@ void AutofillManager::UpdateFormCache(
+ 
+   auto apply_predictions = [](FormStructure& form_structure,
+                               const AsyncContext& context, size_t i) {
++#if BUILDFLAG(BUILD_WITH_TFLITE_LIB)
+     if (!context.autofill_predictions.empty()) {
+       context.autofill_predictions[i].ApplyTo(form_structure.fields());
+     }
+     if (!context.password_manager_predictions.empty()) {
+       context.password_manager_predictions[i].ApplyTo(form_structure.fields());
+     }
++#endif
+     if (!context.regex_predictions.empty()) {
+       context.regex_predictions[i].ApplyTo(form_structure.fields());
+     }
+@@ -1174,6 +1178,7 @@ void AutofillManager::LogCurrentFieldTypes(
+   }
+ }
+ 
++#if BUILDFLAG(BUILD_WITH_TFLITE_LIB)
+ void AutofillManager::SubscribeToMlModelChanges(
+     FieldClassificationModelHandler& handler) {
+   switch (handler.optimization_target()) {
+@@ -1197,5 +1202,6 @@ void AutofillManager::SubscribeToMlModelChanges(
+       NOTREACHED();
+   }
+ }
++#endif
+ 
+ }  // namespace autofill
