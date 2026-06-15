@@ -68,3 +68,30 @@ Do not use these actions to get around a failed bootstrap patch phase:
 Manual source edits are acceptable only as the temporary working state used to
 regenerate a CEF-managed patch. They are not a durable fix until the patch stack
 applies cleanly from bootstrap.
+
+## Verifying patch format before committing
+
+A CEF-managed patch is durable source of truth, so its format is part of the
+contract. The bootstrap aborts on a "corrupt patch" — there is no fuzzy fallback
+for structural problems (only for context mismatches in otherwise-valid hunks).
+
+Before committing a new or edited QNX patch, confirm:
+
+- The hunk header (`@@ -OLD,COUNT +NEW,COUNT @@`) matches the body:
+  `COUNT` on the old side must equal `context + removed` lines in the body;
+  `COUNT` on the new side must equal `context + added` lines.
+- The file ends with a trailing empty line after the last hunk. Both `git apply`
+  and `patch` reject a hunk that is missing this terminator with
+  `corrupt patch at line N` (where N is one past the last visible line).
+- `python3 cef/tools/qnx_validate_patch_format.py --root cef` reports no
+  failures. This catches no-prefix violations and other format issues.
+- `patch -p0 --batch --dry-run` against a clean source tree exits 0 with
+  `checking file <path>` output and no `failed` lines.
+
+If any check fails, regenerate the patch with
+`python3 cef/tools/patch_updater.py --resave --patch=<patch-name>` from the
+correct patch root. Do not hand-edit hunks to satisfy these checks; the
+regenerate-from-tree path is faster and provably correct.
+
+See `docs/qnx/history/build-errors/bootstrap/build-graph/qnx-patch-hunk-missing-trailing-empty-line-breaks-patch-application.md`
+for a worked example of a corrupt-hunk failure and its durable fix.

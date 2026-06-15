@@ -10,3 +10,4 @@ index 0f5a2f56cea5c4dd6e391e57969f4d5fead38aca..bc91770535675abfbd09fca6c9cccf8d
 +if (is_mac || is_win || is_linux || is_chromeos || is_android || is_qnx) {
    mojo_ts_files += [ "mojo/public/mojom/base/version.mojom-webui.ts" ]
  }
+ 

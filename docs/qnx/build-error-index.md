@@ -69,6 +69,8 @@ rg -n "gpu_test_config|GetCurrentOS|unknown os|kOsLinux" docs/qnx/history/build-
 rg -n "DisplayEGL|DrmFourCCFormatToGLInternalFormat|angle_tests" docs/qnx/history/build-errors
 rg -n "crashpad_client.h|capture_context.h|NativeCPUContext" docs/qnx/history/build-errors
 rg -n "crtn.o|GNU-stack|no-warn-execstack|fatal-warnings" docs/qnx/history/build-errors
+rg -n "corrupt patch at line|hunk body shorter than header|trailing empty line" docs/qnx/history/build-errors/bootstrap
+rg -n "mojo_webui_version_ts_qnx|is_qnx.*mojo|version.mojom-webui" docs/qnx/history/build-errors/bootstrap
 ```
 
 If the immediate search misses:
