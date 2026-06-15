@@ -1,0 +1,13 @@
+diff --git mojo/public/tools/bindings/mojom.gni mojo/public/tools/bindings/mojom.gni
+index 6641078e2f046c27f5f18362c67142f17b32a3c5..8e35828701060792f751ace53fc71ebe065c5721 100644
+--- mojo/public/tools/bindings/mojom.gni
++++ mojo/public/tools/bindings/mojom.gni
+@@ -745,6 +745,8 @@ template("mojom") {
+       enabled_features += [ "is_mac" ]
+     } else if (is_win) {
+       enabled_features += [ "is_win" ]
++    } else if (is_qnx) {
++      enabled_features += [ "is_qnx" ]
+     }
+ 
+     if (is_apple) {

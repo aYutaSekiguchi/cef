@@ -71,6 +71,9 @@ rg -n "crashpad_client.h|capture_context.h|NativeCPUContext" docs/qnx/history/bu
 rg -n "crtn.o|GNU-stack|no-warn-execstack|fatal-warnings" docs/qnx/history/build-errors
 rg -n "corrupt patch at line|hunk body shorter than header|trailing empty line" docs/qnx/history/build-errors/bootstrap
 rg -n "mojo_webui_version_ts_qnx|is_qnx.*mojo|version.mojom-webui" docs/qnx/history/build-errors/bootstrap
+rg -n "FontCache::DeviceScaleFactor|font_platform_data.cc" docs/qnx/history/build-errors/compile
+rg -n "kServiceSandbox|ScreenAIServiceFactory|kScreenAI|conditional_features|RemoveDisabledDefinitions" docs/qnx/history/build-errors/compile
+rg -n "screen_ai_features_qnx_service|sandbox_mojom_kScreenAI|mojom_gni_is_qnx" docs/qnx/history/build-errors/compile
 ```
 
 If the immediate search misses:

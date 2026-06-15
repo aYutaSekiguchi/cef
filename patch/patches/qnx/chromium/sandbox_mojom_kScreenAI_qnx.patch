@@ -1,0 +1,13 @@
+diff --git sandbox/policy/mojom/sandbox.mojom sandbox/policy/mojom/sandbox.mojom
+index 2d3a6a01e8bec4d040ae5c8db4b83eaf12185d7a..f5e559fe96421c10980f6f866c7cd0548e6016c8 100644
+--- sandbox/policy/mojom/sandbox.mojom
++++ sandbox/policy/mojom/sandbox.mojom
+@@ -87,7 +87,7 @@ enum Sandbox {
+   [EnableIf=is_chromeos|is_linux|is_mac|is_win] kPrintBackend,
+ 
+   // Like kUtility but allows loading of screen AI library.
+-  [EnableIf=is_chromeos|is_linux|is_mac|is_win] kScreenAI,
++  [EnableIf=is_chromeos|is_linux|is_qnx|is_mac|is_win] kScreenAI,
+ 
+   // |kXrCompositing| hosts XR Device Service on Windows.
+   [EnableIf=is_win] kXrCompositing,

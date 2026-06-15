@@ -1,0 +1,24 @@
+diff --git third_party/blink/renderer/platform/fonts/font_platform_data.cc third_party/blink/renderer/platform/fonts/font_platform_data.cc
+index f9e8c1095e454a70946738b56eee71040a359bbe..87ee873314a9d101025ad4d26e60da817b9493b6 100644
+--- third_party/blink/renderer/platform/fonts/font_platform_data.cc
++++ third_party/blink/renderer/platform/fonts/font_platform_data.cc
+@@ -236,9 +236,19 @@ WebFontRenderStyle FontPlatformData::QuerySystemRenderStyle(
+   if (family.length() && Platform::Current()->GetSandboxSupport()) {
+     bool is_bold = font_style.weight() >= SkFontStyle::kSemiBold_Weight;
+     bool is_italic = font_style.slant() != SkFontStyle::kUpright_Slant;
++    // FontCache::DeviceScaleFactor() is only defined on Linux/ChromeOS.
++    // QNX follows the same default (1.0f) as every other non-Linux/ChromeOS
++    // platform; the DSF fallback in font_description.cc:320 sets the
++    // precedent. See crbug.com/1327530 for why Linux/Cros are the only
++    // platforms that adjust render settings by DSF.
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
+     Platform::Current()->GetSandboxSupport()->GetWebFontRenderStyleForStrike(
+         family.data(), text_size, is_bold, is_italic,
+         FontCache::DeviceScaleFactor(), &result);
++#else
++    Platform::Current()->GetSandboxSupport()->GetWebFontRenderStyleForStrike(
++        family.data(), text_size, is_bold, is_italic, 1.0f, &result);
++#endif
+   }
+ 
+   // If `text-rendering: geometric-precision`, use subpixel positioning.
