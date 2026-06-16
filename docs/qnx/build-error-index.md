@@ -90,6 +90,7 @@ rg -n "cef/grit/cef_resources.h|enable_cef|gen/cef/grit" docs/qnx/history/build-
 rg -n "cef/grit/cef_resources.h|about_ui.cc|about:impl|cef_resources" docs/qnx/history/build-errors/compile
 rg -n "print_preview_dialog_controller|print.mojom.h|ENABLE_PRINT_PREVIEW|chrome_content_browser_client" docs/qnx/history/build-errors/compile
 rg -n "webrtc_log_uploader|Platform not supported|Chrome_Linux|GetLogUploadProduct" docs/qnx/history/build-errors/compile
+rg -n "memory_details|ZygoteHost|IsZygotePid|USE_ZYGOTE" docs/qnx/history/build-errors/compile
 ```
 
 If the immediate search misses:

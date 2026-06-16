@@ -1,0 +1,13 @@
+diff --git chrome/browser/memory_details.cc chrome/browser/memory_details.cc
+index 4ecc992df8df08e6882d8fe1c82a247218ee5e93..ededa45e10f2846128e8dd7699b19797cc615b20 100644
+--- chrome/browser/memory_details.cc
++++ chrome/browser/memory_details.cc
+@@ -334,7 +334,7 @@ void MemoryDetails::CollectChildInfoOnUIThread() {
+           });
+     }
+ 
+-#if BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_MAC) && !BUILDFLAG(IS_ANDROID)
++#if BUILDFLAG(USE_ZYGOTE)
+     if (content::ZygoteHost::GetInstance()->IsZygotePid(process.pid)) {
+       process.process_type = content::PROCESS_TYPE_ZYGOTE;
+     }
