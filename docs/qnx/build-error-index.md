@@ -83,6 +83,7 @@ rg -n "value_or\(\{\}\)|couldn't infer template argument '_Up'|full_card_request
 rg -n "std::from_range|flat_hash_set<std::string>|deduced conflicting types for parameter 'InputIter'" docs/qnx/history/build-errors/compile
 rg -n "Unsupported target architecture|LaunchDateAndTimeSettings|security_interstitials/content/utils.cc" docs/qnx/history/build-errors/compile
 rg -n "ZygoteStarting|ZygoteForked|USE_ZYGOTE|use_zygote|content_main_runner_impl" docs/qnx/history/build-errors/compile
+rg -n "Unsupported platform|navigator_base|GetReducedNavigatorPlatform" docs/qnx/history/build-errors/compile
 ```
 
 If the immediate search misses:
