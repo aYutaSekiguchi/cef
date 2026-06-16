@@ -1,0 +1,13 @@
+diff --git components/optimization_guide/features.gni components/optimization_guide/features.gni
+index 1b2af13fc5a22377b749b08a70c049a2f95bed72..f3bb68da64d8a33372f89762616bab7303d1b772 100644
+--- components/optimization_guide/features.gni
++++ components/optimization_guide/features.gni
+@@ -16,7 +16,7 @@ declare_args() {
+   # TODO(b/269198471): Make sure the internal archive files for opt guide get
+   #   updated when win arm64 gets added as a supported platform for TFLite.
+   build_with_tflite_lib = is_android || is_win || is_linux || is_mac ||
+-                          is_chromeos || is_fuchsia || is_ios
++                          is_chromeos || is_fuchsia || is_ios || is_qnx
+ }
+ 
+ if (is_ios) {
