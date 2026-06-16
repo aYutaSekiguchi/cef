@@ -85,6 +85,7 @@ rg -n "Unsupported target architecture|LaunchDateAndTimeSettings|security_inters
 rg -n "ZygoteStarting|ZygoteForked|USE_ZYGOTE|use_zygote|content_main_runner_impl" docs/qnx/history/build-errors/compile
 rg -n "Unsupported platform|navigator_base|GetReducedNavigatorPlatform" docs/qnx/history/build-errors/compile
 rg -n "Unsupported platform|extensions/common/command|CommandPlatform" docs/qnx/history/build-errors/compile
+rg -n "DIR_USER_NATIVE_MESSAGING|DIR_NATIVE_MESSAGING|launch_context_posix|chrome_paths_linux" docs/qnx/history/build-errors/compile
 ```
 
 If the immediate search misses:

@@ -1,0 +1,39 @@
+diff --git chrome/common/BUILD.gn chrome/common/BUILD.gn
+index e6ec5782e66340524576cbb0d09768dc296ce994..47c2bfd8ce0bf5f849eecc8329cffd23c5504de1 100644
+--- chrome/common/BUILD.gn
++++ chrome/common/BUILD.gn
+@@ -592,7 +592,7 @@ static_library("constants") {
+     # implemented in //ui/base, so we need that dependency.
+     deps += [ "//ui/base" ]
+   }
+-  if (is_linux || is_chromeos) {
++  if (is_linux || is_chromeos || is_qnx) {
+     sources += [ "chrome_paths_linux.cc" ]
+     deps += [ ":channel_info" ]
+   }
+diff --git chrome/common/chrome_paths.cc chrome/common/chrome_paths.cc
+index eae95c5f35740f6d72fbdd26b74d6726f6bf29d2..2cf136ebe4c1ba839ca289246efc9b2778b0ba7a 100644
+--- chrome/common/chrome_paths.cc
++++ chrome/common/chrome_paths.cc
+@@ -460,7 +460,7 @@ bool PathProvider(int key, base::FilePath* result) {
+ 
+ #if BUILDFLAG(ENABLE_EXTENSIONS_CORE) &&                                   \
+     (BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_MAC) || \
+-     BUILDFLAG(IS_ANDROID))
++     BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_QNX))
+     case chrome::DIR_NATIVE_MESSAGING:
+ #if BUILDFLAG(IS_MAC)
+ #if BUILDFLAG(GOOGLE_CHROME_BRANDING)
+diff --git chrome/common/chrome_paths.h chrome/common/chrome_paths.h
+index 9b3e9be1f14c1d40c31a93c27db966fb7ff96e44..fbc6be8e8ba18b661c2b0b43bb672ce11603bfeb 100644
+--- chrome/common/chrome_paths.h
++++ chrome/common/chrome_paths.h
+@@ -107,7 +107,7 @@ enum {
+ 
+ #if BUILDFLAG(ENABLE_EXTENSIONS_CORE) &&                                   \
+     (BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_MAC) || \
+-     BUILDFLAG(IS_ANDROID))
++     BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_QNX))
+   DIR_NATIVE_MESSAGING,       // System directory where native messaging host
+                               // manifest files are stored.
+   DIR_USER_NATIVE_MESSAGING,  // Directory with Native Messaging Hosts
