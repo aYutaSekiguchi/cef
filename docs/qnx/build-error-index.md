@@ -78,6 +78,7 @@ rg -n "kSizesNeededForShortcutCreation|GetOsSpecificSizes|icon_badging" docs/qnx
 rg -n "only virtual member functions can be marked 'override'|GetFirstPartyActions|sharing_hub_bubble_controller_desktop_impl" docs/qnx/history/build-errors/compile
 rg -n "unterminated function-like macro invocation|kIsolatedAppScheme|SetIsolationData|web_app.cc" docs/qnx/history/build-errors/compile
 rg -n "tensorflow/compiler/mlir/lite/allocation.h|read_aloud_app_model|dependency_parser_model|build_with_tflite_lib" docs/qnx/history/build-errors/compile
+rg -n "NSSDecryptor not implemented|firefox_importer|nss_decryptor|USE_NSS_CERTS" docs/qnx/history/build-errors/compile
 ```
 
 If the immediate search misses:
