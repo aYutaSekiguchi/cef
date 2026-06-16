@@ -1,0 +1,13 @@
+diff --git extensions/common/command.cc extensions/common/command.cc
+index 80bfe1714f0fad2a917377a9e31ee88056735120..5ae24d213cc5d724f0fda8c6b860679ce8b0cfdc 100644
+--- extensions/common/command.cc
++++ extensions/common/command.cc
+@@ -117,7 +117,7 @@ std::string Command::CommandPlatform() {
+   return ui::kKeybindingPlatformMac;
+ #elif BUILDFLAG(IS_CHROMEOS)
+   return ui::kKeybindingPlatformChromeOs;
+-#elif BUILDFLAG(IS_LINUX)
++#elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+   return ui::kKeybindingPlatformLinux;
+ #elif BUILDFLAG(IS_DESKTOP_ANDROID)
+   // For now, we use linux keybindings on desktop android.
