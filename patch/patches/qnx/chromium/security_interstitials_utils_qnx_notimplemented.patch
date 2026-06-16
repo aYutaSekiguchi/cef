@@ -1,0 +1,13 @@
+diff --git components/security_interstitials/content/utils.cc components/security_interstitials/content/utils.cc
+index ad6ebc3b68158b45d0a91d14f4b9ec3215b48d9b..8b8380d36cffb9bec7d09ccf9149665ceeee6789 100644
+--- components/security_interstitials/content/utils.cc
++++ components/security_interstitials/content/utils.cc
+@@ -92,7 +92,7 @@ void LaunchDateAndTimeSettings() {
+   options.wait = false;
+   base::LaunchProcess(command, options);
+ 
+-#elif BUILDFLAG(IS_FUCHSIA) || BUILDFLAG(IS_IOS)
++#elif BUILDFLAG(IS_FUCHSIA) || BUILDFLAG(IS_IOS) || BUILDFLAG(IS_QNX)
+   // TODO(crbug.com/40191566): Send to the platform settings.
+   // The iOS Blink port also need to send the platform settings.
+   NOTIMPLEMENTED_LOG_ONCE();

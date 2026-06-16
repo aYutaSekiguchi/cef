@@ -81,6 +81,7 @@ rg -n "tensorflow/compiler/mlir/lite/allocation.h|read_aloud_app_model|dependenc
 rg -n "NSSDecryptor not implemented|firefox_importer|nss_decryptor|USE_NSS_CERTS" docs/qnx/history/build-errors/compile
 rg -n "value_or\(\{\}\)|couldn't infer template argument '_Up'|full_card_request" docs/qnx/history/build-errors/compile
 rg -n "std::from_range|flat_hash_set<std::string>|deduced conflicting types for parameter 'InputIter'" docs/qnx/history/build-errors/compile
+rg -n "Unsupported target architecture|LaunchDateAndTimeSettings|security_interstitials/content/utils.cc" docs/qnx/history/build-errors/compile
 ```
 
 If the immediate search misses:
