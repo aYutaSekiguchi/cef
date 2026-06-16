@@ -87,6 +87,7 @@ rg -n "Unsupported platform|navigator_base|GetReducedNavigatorPlatform" docs/qnx
 rg -n "Unsupported platform|extensions/common/command|CommandPlatform" docs/qnx/history/build-errors/compile
 rg -n "DIR_USER_NATIVE_MESSAGING|DIR_NATIVE_MESSAGING|launch_context_posix|chrome_paths_linux" docs/qnx/history/build-errors/compile
 rg -n "cef/grit/cef_resources.h|enable_cef|gen/cef/grit" docs/qnx/history/build-errors/bootstrap
+rg -n "cef/grit/cef_resources.h|about_ui.cc|about:impl|cef_resources" docs/qnx/history/build-errors/compile
 ```
 
 If the immediate search misses:
