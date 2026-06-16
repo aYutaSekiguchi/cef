@@ -1,0 +1,22 @@
+diff --git chrome/browser/web_applications/web_app.cc chrome/browser/web_applications/web_app.cc
+index bd94c400d72d3f1df0c5dde94867466222eee6e5..1c2d8a40bf71c200fc9bad37f1a9643ad11343e1 100644
+--- chrome/browser/web_applications/web_app.cc
++++ chrome/browser/web_applications/web_app.cc
+@@ -78,7 +78,7 @@
+ #include "url/origin.h"
+ 
+ #if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
+-    BUILDFLAG(IS_CHROMEOS)
++    BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_QNX)
+ #include "components/webapps/isolated_web_apps/scheme.h"
+ #endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) ||
+         // BUILDFLAG(IS_CHROMEOS)
+@@ -760,7 +760,7 @@ void WebApp::SetCurrentOsIntegrationStates(
+ void WebApp::SetIsolationData(IsolationData isolation_data) {
+   CHECK(manifest_id_.is_valid()
+ #if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
+-    BUILDFLAG(IS_CHROMEOS)
++    BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_QNX)
+         && manifest_id_.SchemeIs(webapps::kIsolatedAppScheme))
+ #endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) ||
+         // BUILDFLAG(IS_CHROMEOS)

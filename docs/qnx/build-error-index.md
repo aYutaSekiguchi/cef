@@ -76,6 +76,7 @@ rg -n "kServiceSandbox|ScreenAIServiceFactory|kScreenAI|conditional_features|Rem
 rg -n "screen_ai_features_qnx_service|sandbox_mojom_kScreenAI|mojom_gni_is_qnx" docs/qnx/history/build-errors/compile
 rg -n "kSizesNeededForShortcutCreation|GetOsSpecificSizes|icon_badging" docs/qnx/history/build-errors/compile
 rg -n "only virtual member functions can be marked 'override'|GetFirstPartyActions|sharing_hub_bubble_controller_desktop_impl" docs/qnx/history/build-errors/compile
+rg -n "unterminated function-like macro invocation|kIsolatedAppScheme|SetIsolationData|web_app.cc" docs/qnx/history/build-errors/compile
 ```
 
 If the immediate search misses:
