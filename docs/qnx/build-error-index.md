@@ -74,6 +74,7 @@ rg -n "mojo_webui_version_ts_qnx|is_qnx.*mojo|version.mojom-webui" docs/qnx/hist
 rg -n "FontCache::DeviceScaleFactor|font_platform_data.cc" docs/qnx/history/build-errors/compile
 rg -n "kServiceSandbox|ScreenAIServiceFactory|kScreenAI|conditional_features|RemoveDisabledDefinitions" docs/qnx/history/build-errors/compile
 rg -n "screen_ai_features_qnx_service|sandbox_mojom_kScreenAI|mojom_gni_is_qnx" docs/qnx/history/build-errors/compile
+rg -n "kSizesNeededForShortcutCreation|GetOsSpecificSizes|icon_badging" docs/qnx/history/build-errors/compile
 ```
 
 If the immediate search misses:

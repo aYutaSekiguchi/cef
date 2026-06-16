@@ -1,0 +1,26 @@
+diff --git chrome/browser/shortcuts/icon_badging.cc chrome/browser/shortcuts/icon_badging.cc
+index 35cd2cb10bf55167b95372a08df6bf20f0f10fb2..da5c7b2e515464050e030cd529742e839e283588 100644
+--- chrome/browser/shortcuts/icon_badging.cc
++++ chrome/browser/shortcuts/icon_badging.cc
+@@ -58,7 +58,7 @@ enum class BadgeSize {
+ constexpr ShortcutSize kSizesNeededForShortcutCreation[] = {
+     ShortcutSize::k16, ShortcutSize::k32, ShortcutSize::k128,
+     ShortcutSize::k256, ShortcutSize::k512};
+-#elif BUILDFLAG(IS_LINUX)
++#elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ constexpr ShortcutSize kSizesNeededForShortcutCreation[] = {ShortcutSize::k32,
+                                                             ShortcutSize::k128};
+ #elif BUILDFLAG(IS_WIN)
+diff --git chrome/browser/shortcuts/icon_badging_unittest.cc chrome/browser/shortcuts/icon_badging_unittest.cc
+index e24c511e88ba48603af21aed1cd2bdd4c3ecf3ef..3125c2a1bf19f73613395bb03f71f659e79ffdeb 100644
+--- chrome/browser/shortcuts/icon_badging_unittest.cc
++++ chrome/browser/shortcuts/icon_badging_unittest.cc
+@@ -110,7 +110,7 @@ void WriteTestIconsToDiskOrDie(const gfx::ImageFamily& family) {
+ int GetOsSpecificSizes() {
+ #if BUILDFLAG(IS_MAC)
+   return 5;
+-#elif BUILDFLAG(IS_LINUX)
++#elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+   return 2;
+ #elif BUILDFLAG(IS_WIN)
+   return 4;
