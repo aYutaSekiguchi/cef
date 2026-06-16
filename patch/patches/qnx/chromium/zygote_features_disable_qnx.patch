@@ -1,0 +1,10 @@
+diff --git content/public/common/zygote/features.gni content/public/common/zygote/features.gni
+index 5f8775d57801014a38ec6e0be376fea27ff5ab6b..c55079e145c6938fa3784a8479517b1b288d924f 100644
+--- content/public/common/zygote/features.gni
++++ content/public/common/zygote/features.gni
+@@ -2,4 +2,4 @@
+ # Use of this source code is governed by a BSD-style license that can be
+ # found in the LICENSE file.
+ 
+-use_zygote = is_posix && !is_android && !is_apple
++use_zygote = is_posix && !is_android && !is_apple && !is_qnx
