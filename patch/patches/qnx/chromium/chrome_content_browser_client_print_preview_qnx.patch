@@ -1,0 +1,14 @@
+diff --git chrome/browser/chrome_content_browser_client.cc chrome/browser/chrome_content_browser_client.cc
+index 4b1e2c2bd40a4fddfe82a1f7e790acbe66a6b810..db89b497ba10591987dd8b780a5c7bd3d127b0a8 100644
+--- chrome/browser/chrome_content_browser_client.cc
++++ chrome/browser/chrome_content_browser_client.cc
+@@ -530,7 +530,9 @@
+ #include "chrome/browser/metrics/usage_scenario/chrome_responsiveness_calculator_delegate.h"
+ #include "chrome/browser/new_tab_page/new_tab_page_util.h"
+ #include "chrome/browser/picture_in_picture/auto_picture_in_picture_tab_helper.h"
++#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
+ #include "chrome/browser/printing/print_preview_dialog_controller.h"
++#endif
+ #include "chrome/browser/screen_ai/screen_ai_install_state.h"
+ #include "chrome/browser/search/instant_service.h"
+ #include "chrome/browser/search/instant_service_factory.h"
