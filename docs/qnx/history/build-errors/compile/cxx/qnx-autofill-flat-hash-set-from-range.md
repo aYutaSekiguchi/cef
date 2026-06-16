@@ -20,7 +20,7 @@ error: no matching constructor for initialization of 'absl::flat_hash_set<std::s
 ../../third_party/abseil-cpp/absl/container/internal/raw_hash_set.h:2140:3: note: candidate template ignored: deduced conflicting types for parameter 'InputIter' ('from_range_t' vs. 'StorageKeyList')
 ```
 
-The same pattern appeared in four autofill sync bridges.
+The same pattern appeared first in four autofill sync bridges and then in two valuables sync bridges.
 
 ## Root cause
 
@@ -28,7 +28,10 @@ The QNX build uses the QNX libc++/Abseil combination where `absl::flat_hash_set`
 
 ## Fix
 
-Patch: `qnx/chromium/autofill_flat_hash_set_from_range_qnx`
+Patches:
+
+- `qnx/chromium/autofill_flat_hash_set_from_range_qnx`
+- `qnx/chromium/autofill_valuables_flat_hash_set_from_range_qnx`
 
 Replace:
 
@@ -43,7 +46,7 @@ absl::flat_hash_set<std::string> keys_set(storage_keys.begin(),
                                          storage_keys.end());
 ```
 
-and apply the same transformation for `storage_keys_set` in payment metadata/credential sync bridges.
+and apply the same transformation for `storage_keys_set` in payment metadata/credential sync bridges and valuables sync bridges.
 
 ## Verification
 
@@ -56,7 +59,9 @@ ninja -C . \
   obj/components/autofill/core/browser/browser/autofill_profile_sync_bridge.o \
   obj/components/autofill/core/browser/browser/autocomplete_sync_bridge.o \
   obj/components/autofill/core/browser/browser/autofill_wallet_credential_sync_bridge.o \
-  obj/components/autofill/core/browser/browser/autofill_wallet_metadata_sync_bridge.o
+  obj/components/autofill/core/browser/browser/autofill_wallet_metadata_sync_bridge.o \
+  obj/components/autofill/core/browser/browser/valuable_sync_bridge.o \
+  obj/components/autofill/core/browser/browser/valuable_metadata_sync_bridge.o
 ```
 
 Result:
@@ -66,6 +71,8 @@ Result:
 [101/103] CXX obj/components/autofill/core/browser/browser/autofill_profile_sync_bridge.o
 [102/103] CXX obj/components/autofill/core/browser/browser/autocomplete_sync_bridge.o
 [103/103] CXX obj/components/autofill/core/browser/browser/autofill_wallet_metadata_sync_bridge.o
+[100/101] CXX obj/components/autofill/core/browser/browser/valuable_sync_bridge.o
+[101/101] CXX obj/components/autofill/core/browser/browser/valuable_metadata_sync_bridge.o
 ```
 
 ## Search hints
