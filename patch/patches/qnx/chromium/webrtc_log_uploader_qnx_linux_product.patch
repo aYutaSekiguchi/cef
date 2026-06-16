@@ -1,0 +1,13 @@
+diff --git chrome/browser/media/webrtc/webrtc_log_uploader.cc chrome/browser/media/webrtc/webrtc_log_uploader.cc
+index bc31f90d949d574e6469c9504bc8b994d48e2987..1b836e32425f95559477859f085f2d0a0b85f7a6 100644
+--- chrome/browser/media/webrtc/webrtc_log_uploader.cc
++++ chrome/browser/media/webrtc/webrtc_log_uploader.cc
+@@ -95,7 +95,7 @@ std::string GetLogUploadProduct() {
+   const char product[] = "Chrome";
+ #elif BUILDFLAG(IS_MAC)
+   const char product[] = "Chrome_Mac";
+-#elif BUILDFLAG(IS_LINUX)
++#elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ #if !defined(ADDRESS_SANITIZER)
+   const char product[] = "Chrome_Linux";
+ #else
