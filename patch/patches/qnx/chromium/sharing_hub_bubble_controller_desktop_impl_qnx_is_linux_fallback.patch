@@ -1,0 +1,56 @@
+diff --git chrome/browser/ui/sharing_hub/sharing_hub_bubble_controller.h chrome/browser/ui/sharing_hub/sharing_hub_bubble_controller.h
+index 6105325283c69c73b8bcf0f52f2da162abcbda93..372e2cd8f15191fe8abc25424b76173831723f95 100644
+--- chrome/browser/ui/sharing_hub/sharing_hub_bubble_controller.h
++++ chrome/browser/ui/sharing_hub/sharing_hub_bubble_controller.h
+@@ -39,7 +39,8 @@ class SharingHubBubbleController {
+   // Returns true if the omnibox icon should be shown.
+   virtual bool ShouldOfferOmniboxIcon() = 0;
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+   // This method returns the set of first-party actions, which are actions
+   // internal to Chrome. Third-party actions (those outside Chrome) are
+   // currently not supported.
+diff --git chrome/browser/ui/sharing_hub/sharing_hub_bubble_controller_desktop_impl.cc chrome/browser/ui/sharing_hub/sharing_hub_bubble_controller_desktop_impl.cc
+index 83dc9ff63cfd715acf7bbe7a9fa626fe3c747b49..2567ea0180d990cbdc1483fdac084bfa1971f559 100644
+--- chrome/browser/ui/sharing_hub/sharing_hub_bubble_controller_desktop_impl.cc
++++ chrome/browser/ui/sharing_hub/sharing_hub_bubble_controller_desktop_impl.cc
+@@ -89,6 +89,8 @@ Profile* SharingHubBubbleControllerDesktopImpl::GetProfile() const {
+   return Profile::FromBrowserContext(web_contents()->GetBrowserContext());
+ }
+ 
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN) || \
++    BUILDFLAG(IS_QNX)
+ std::vector<SharingHubAction>
+ SharingHubBubbleControllerDesktopImpl::GetFirstPartyActions() {
+   std::vector<SharingHubAction> actions;
+@@ -143,6 +145,8 @@ void SharingHubBubbleControllerDesktopImpl::OnActionSelected(
+ void SharingHubBubbleControllerDesktopImpl::OnBubbleClosed() {
+   sharing_hub_bubble_view_ = nullptr;
+ }
++#endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN) ||
++        // BUILDFLAG(IS_QNX)
+ 
+ SharingHubModel* SharingHubBubbleControllerDesktopImpl::GetSharingHubModel() {
+   if (!sharing_hub_model_) {
+diff --git chrome/browser/ui/sharing_hub/sharing_hub_bubble_controller_desktop_impl.h chrome/browser/ui/sharing_hub/sharing_hub_bubble_controller_desktop_impl.h
+index 750616aa97b34032d3feffb81f8c38dd685d5ea0..257263e2f7cde9c0b1b6da6b8f805333639d26b9 100644
+--- chrome/browser/ui/sharing_hub/sharing_hub_bubble_controller_desktop_impl.h
++++ chrome/browser/ui/sharing_hub/sharing_hub_bubble_controller_desktop_impl.h
+@@ -51,11 +51,15 @@ class SharingHubBubbleControllerDesktopImpl
+   // Returns the current profile.
+   Profile* GetProfile() const;
+ 
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN) || \
++    BUILDFLAG(IS_QNX)
+   // SharingHubBubbleController:
+   std::vector<SharingHubAction> GetFirstPartyActions() override;
+   base::WeakPtr<SharingHubBubbleController> GetWeakPtr() override;
+   void OnActionSelected(const SharingHubAction& action) override;
+   void OnBubbleClosed() override;
++#endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN) ||
++        // BUILDFLAG(IS_QNX)
+ 
+  protected:
+   explicit SharingHubBubbleControllerDesktopImpl(
