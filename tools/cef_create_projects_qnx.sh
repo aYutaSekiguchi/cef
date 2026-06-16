@@ -354,6 +354,7 @@ dawn_enable_vulkan = false
 dawn_use_swiftshader = false
 
 # CEF specific
+enable_cef = true
 cef_target_arch = "x64"
 cef_use_alloc_shim = false
 use_crash_key_stubs = true
