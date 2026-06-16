@@ -1,0 +1,13 @@
+diff --git components/autofill/core/browser/payments/full_card_request.cc components/autofill/core/browser/payments/full_card_request.cc
+index 149c2aa24167f62662fac3e705d55a5e0f3caf38..3322486613c87e40666803f7c32fc779014dfd50 100644
+--- components/autofill/core/browser/payments/full_card_request.cc
++++ components/autofill/core/browser/payments/full_card_request.cc
+@@ -124,7 +124,7 @@ void FullCardRequest::GetFullCardImpl(
+   request_->card = std::move(card);
+   request_->last_committed_primary_main_frame_origin =
+       last_committed_primary_main_frame_origin;
+-  request_->context_token = std::move(context_token).value_or({});
++  request_->context_token = std::move(context_token).value_or(std::string{});
+   request_->selected_challenge_option = std::move(selected_challenge_option);
+ 
+   should_unmask_card_ = request_->card.masked() ||

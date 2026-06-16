@@ -79,6 +79,7 @@ rg -n "only virtual member functions can be marked 'override'|GetFirstPartyActio
 rg -n "unterminated function-like macro invocation|kIsolatedAppScheme|SetIsolationData|web_app.cc" docs/qnx/history/build-errors/compile
 rg -n "tensorflow/compiler/mlir/lite/allocation.h|read_aloud_app_model|dependency_parser_model|build_with_tflite_lib" docs/qnx/history/build-errors/compile
 rg -n "NSSDecryptor not implemented|firefox_importer|nss_decryptor|USE_NSS_CERTS" docs/qnx/history/build-errors/compile
+rg -n "value_or\(\{\}\)|couldn't infer template argument '_Up'|full_card_request" docs/qnx/history/build-errors/compile
 ```
 
 If the immediate search misses:
