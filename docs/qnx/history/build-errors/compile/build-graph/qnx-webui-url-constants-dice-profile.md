@@ -42,15 +42,24 @@ C++ standard guards can suppress the call sites.
 
 ## Fix
 
-Extend the guard to allow QNX:
+Extend the guard to allow QNX. The first guard in the file
+(DefaultBrowserModal / WebAppSettings / WhatsNew) is already covered by
+`webui_url_constants_whatsnew_qnx`; this patch only needs to extend the
+*second* guard, which begins with the `kChromeUIBrowserSwitchHost` /
+`kChromeUIIntro*` / `kChromeUIManagedUserProfileNotice*` /
+`kChromeUIProfileCustomization*` / `kChromeUIProfilePicker*` /
+`kChromeUIHistorySyncOptin*` / `kChromeUIUpdater*` block:
 
 ```cpp
 #if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
     BUILDFLAG(IS_QNX)
+inline constexpr char kChromeUIBrowserSwitchHost[] = "browser-switch";
+...
+inline constexpr char kChromeUIUpdaterURL[] = "chrome://updater/";
+#endif
 ```
 
-This mirrors the rationale used by `webui_url_constants_whatsnew_qnx` and
-other webui URL patches.
+This mirrors the rationale used by `webui_url_constants_whatsnew_qnx`.
 
 ## Verification
 
