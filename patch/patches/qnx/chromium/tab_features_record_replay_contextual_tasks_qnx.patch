@@ -1,0 +1,13 @@
+diff --git chrome/browser/ui/tabs/tab_features.cc chrome/browser/ui/tabs/tab_features.cc
+index 20df9ee7deaf45b2b722ef4c5a05c55455b3a3a1..ccf7da2ccc600a8765ad91c076a7e78d48a7ef8d 100644
+--- chrome/browser/ui/tabs/tab_features.cc
++++ chrome/browser/ui/tabs/tab_features.cc
+@@ -100,7 +100,7 @@
+ #include "components/multistep_filter/core/features.h"
+ #include "components/skills/features.h"
+ #if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
+-    BUILDFLAG(IS_CHROMEOS)
++    BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_QNX)
+ #include "chrome/browser/contextual_tasks/contextual_tasks_tab_visit_tracker.h"
+ #include "chrome/browser/record_replay/chrome_record_replay_client.h"
+ #include "chrome/browser/ui/views/location_bar/record_replay_page_action_controller.h"
