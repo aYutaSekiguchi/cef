@@ -96,7 +96,7 @@ rg -n "kChromeUIProfileCustomization|kChromeUIManagedUserProfileNotice|webui_url
 rg -n "kGlicOnboardingCompleted|kSplitViewCreated|event_constants|feature_engagement::events" docs/qnx/history/build-errors/compile
 rg -n "kCreateShortcut|ShowWebAppSettings|WebAppInstallFlow|browser_command_controller" docs/qnx/history/build-errors/compile
 rg -n "ShowModalHistorySyncOptInDialog|signin_view_controller|history_sync_optin_service" docs/qnx/history/build-errors/compile
-rg -n "kProfileCreationFrictionReductionExperimentSkipCustomizeProfile|CreateSyncHistoryOptInDelegate|kEnableSupervisedUserVersionSignOutDialog" docs/qnx/history/build-errors/compile
+rg -n "kProfileCreationFrictionReductionExperimentSkipCustomizeProfile|kSignInPromoMaterialNextUI|CreateSyncHistoryOptInDelegate|kEnableSupervisedUserVersionSignOutDialog" docs/qnx/history/build-errors/compile
 rg -n "ScopedTabbedBrowserDisplayer|download_commands|browser_displayer" docs/qnx/history/build-errors/compile
 rg -n "translation_dispatcher_on_device|ENABLE_ON_DEVICE_TRANSLATION|translator.mojom.h|live_translate_controller_factory" docs/qnx/history/build-errors/compile
 rg -n "kEnterpriseShortcutsPolicyList|new_tab_page_util|ntp_tiles" docs/qnx/history/build-errors/compile

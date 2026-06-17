@@ -1,4 +1,4 @@
-# QNX: signin_view_controller missing symbols (history sync, supervised signout, profile creation)
+# QNX: signin missing symbols (history sync, supervised signout, profile creation, signin promo)
 
 ## Stage
 
@@ -18,8 +18,8 @@
 
 ## Root cause
 
-`signin_view_controller.cc` (DICE signin history-sync and signout flow)
-references three desktop-only symbols unconditionally:
+`signin_view_controller.cc` (DICE signin history-sync and signout flow) and
+`signin_promo.cc` reference desktop-only signin feature symbols unconditionally:
 
 1. `SigninViewControllerDelegate::CreateSyncHistoryOptInDelegate`, a
    static factory declared in `signin_view_controller_delegate.h` and
@@ -36,6 +36,9 @@ references three desktop-only symbols unconditionally:
    in `components/signin/public/base/signin_switches.cc` under
    `BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)`, excluding
    QNX from both declaration visibility and storage.
+4. `switches::kSignInPromoMaterialNextUI`, referenced by
+   `chrome/browser/signin/signin_promo.cc` and declared/defined under the same
+   Win/Mac/Linux-only signin switches guard.
 
 ## Fix
 
@@ -60,6 +63,9 @@ BASE_FEATURE(kEnableSupervisedUserVersionSignOutDialog, ...);
     BUILDFLAG(IS_QNX)
 BASE_DECLARE_FEATURE(kProfileCreationFrictionReductionExperimentSkipCustomizeProfile);
 BASE_FEATURE(kProfileCreationFrictionReductionExperimentSkipCustomizeProfile, ...);
+
+BASE_DECLARE_FEATURE(kSignInPromoMaterialNextUI);
+BASE_FEATURE(kSignInPromoMaterialNextUI, ...);
 #endif
 ```
 
@@ -69,6 +75,7 @@ BASE_FEATURE(kProfileCreationFrictionReductionExperimentSkipCustomizeProfile, ..
 cd /home/yuta/chromium/test/src/out/qnx_release
 source qnx_env.sh
 ninja -C . obj/chrome/browser/ui/signin/impl/signin_view_controller.o
+ninja -C . obj/chrome/browser/browser/signin_promo.o
 ```
 
 Result: `signin_view_controller.o` compiles successfully.
@@ -76,5 +83,5 @@ Result: `signin_view_controller.o` compiles successfully.
 ## Search hints
 
 ```bash
-rg -n "kProfileCreationFrictionReductionExperimentSkipCustomizeProfile|CreateSyncHistoryOptInDelegate|kEnableSupervisedUserVersionSignOutDialog|signin_view_controller" docs/qnx/history/build-errors/compile
+rg -n "kProfileCreationFrictionReductionExperimentSkipCustomizeProfile|kSignInPromoMaterialNextUI|CreateSyncHistoryOptInDelegate|kEnableSupervisedUserVersionSignOutDialog|signin_view_controller|signin_promo" docs/qnx/history/build-errors/compile
 ```
