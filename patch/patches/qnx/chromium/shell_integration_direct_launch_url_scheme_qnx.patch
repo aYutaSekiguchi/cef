@@ -1,0 +1,40 @@
+diff --git chrome/browser/BUILD.gn chrome/browser/BUILD.gn
+index 969c2af4439e4a534ad935dd09c0324a12e81829..26f077c3daf86d71d1dc09e35d033ade9ad07333 100644
+--- chrome/browser/BUILD.gn
++++ chrome/browser/BUILD.gn
+@@ -6925,6 +6925,13 @@ static_library("browser") {
+     }
+   }
+ 
++  if (is_linux || is_qnx) {
++    sources += [
++      "shell_integration_linux.cc",
++      "shell_integration_linux.h",
++    ]
++  }
++
+   if (is_linux) {
+     sources += [
+       "chrome_browser_main_extra_parts_linux.cc",
+@@ -6939,8 +6946,6 @@ static_library("browser") {
+       "metrics/pressure/pressure_metrics.h",
+       "metrics/pressure/pressure_metrics_reporter.cc",
+       "metrics/pressure/pressure_metrics_reporter.h",
+-      "shell_integration_linux.cc",
+-      "shell_integration_linux.h",
+     ]
+     deps += [
+       "//chrome/app/theme:chrome_unscaled_resources_grit",
+diff --git chrome/browser/shell_integration.h chrome/browser/shell_integration.h
+index 437f335e8a2048f1238344eb7b6e754570cbdb61..3824995d01ad14b84c0a2af9c8f8f6c898ead3d9 100644
+--- chrome/browser/shell_integration.h
++++ chrome/browser/shell_integration.h
+@@ -188,7 +188,7 @@ std::u16string GetAppShortcutsSubdirName();
+ #endif
+ 
+ #if BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || \
+-    BUILDFLAG(IS_WIN)
++    BUILDFLAG(IS_WIN) || BUILDFLAG(IS_QNX)
+ // Returns the URL scheme for google-chrome:// URLs.
+ // This varies based on channel, branding, and platform to ensure that
+ // different installations do not collide. For example:

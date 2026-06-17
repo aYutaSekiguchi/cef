@@ -107,6 +107,7 @@ rg -n "kComponentUpdaterTTSEngineExtensionId|read_anything_untrusted_page_handle
 rg -n "IsWasmTtsEngineAutoInstallDisabled|kWasmTtsEngineAutoInstallDisabled|read_anything_service" docs/qnx/history/build-errors/compile
 rg -n "FramebustBlockTabHelper|tab_helpers|framebust_block_tab_helper" docs/qnx/history/build-errors/compile
 rg -n "compose_optimization_guide.pb.h|compose_enabling|settings_ui|ENABLE_COMPOSE" docs/qnx/history/build-errors/compile
+rg -n "GetDirectLaunchUrlScheme|google_chrome_scheme_util|shell_integration" docs/qnx/history/build-errors/compile
 ```
 
 If the immediate search misses:
