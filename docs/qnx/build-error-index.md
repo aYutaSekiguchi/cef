@@ -103,6 +103,7 @@ rg -n "kEnterpriseShortcutsPolicyList|new_tab_page_util|ntp_tiles" docs/qnx/hist
 rg -n "kGuest|switch_utils|chrome_switches" docs/qnx/history/build-errors/compile
 rg -n "IDS_PASSWORD_MANAGER_FILLING_REAUTH|password_credential_ui_controller|FILLING_REAUTH" docs/qnx/history/build-errors/compile
 rg -n "SiteSettingsHandler|SendZoomLevels|HandleRemoveZoomLevel|kIsolatedAppScheme" docs/qnx/history/build-errors/compile
+rg -n "kComponentUpdaterTTSEngineExtensionId|read_anything_untrusted_page_handler|TTSEngineExtensionId" docs/qnx/history/build-errors/compile
 ```
 
 If the immediate search misses:
