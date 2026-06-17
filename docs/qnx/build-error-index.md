@@ -93,6 +93,7 @@ rg -n "webrtc_log_uploader|Platform not supported|Chrome_Linux|GetLogUploadProdu
 rg -n "memory_details|ZygoteHost|IsZygotePid|USE_ZYGOTE" docs/qnx/history/build-errors/compile
 rg -n "web_app_dialogs|web_app_dialog_utils|passwords_private_delegate_impl|IS_CHROMEOS" docs/qnx/history/build-errors/compile
 rg -n "kChromeUIProfileCustomization|kChromeUIManagedUserProfileNotice|webui_url_constants|signin_view_controller_delegate_views" docs/qnx/history/build-errors/compile
+rg -n "kGlicOnboardingCompleted|kSplitViewCreated|event_constants|feature_engagement::events" docs/qnx/history/build-errors/compile
 ```
 
 If the immediate search misses:

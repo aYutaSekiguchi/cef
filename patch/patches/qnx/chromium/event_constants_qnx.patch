@@ -1,0 +1,13 @@
+diff --git components/feature_engagement/public/event_constants.h components/feature_engagement/public/event_constants.h
+index 21c8585e1197705228a1c601d1407818474186e7..a23a4c1dd49e8b4ef159e27ef559acfb9a0f5c3d 100644
+--- components/feature_engagement/public/event_constants.h
++++ components/feature_engagement/public/event_constants.h
+@@ -14,7 +14,7 @@ namespace events {
+ 
+ // Desktop
+ #if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_LINUX) || \
+-    BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_FUCHSIA)
++    BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_FUCHSIA) || BUILDFLAG(IS_QNX)
+ // The user has explicitly opened a new tab via an entry point from inside of
+ // Chrome.
+ extern const char kNewTabOpened[];
