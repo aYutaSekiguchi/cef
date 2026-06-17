@@ -1,0 +1,15 @@
+diff --git chrome/browser/ui/webui/settings/settings_ui.cc chrome/browser/ui/webui/settings/settings_ui.cc
+index b950ec193da69f0b26bb7802480a70a50c42ceae..f6493a8f43f3d6b2443c0097ec1b1439e2175b08 100644
+--- chrome/browser/ui/webui/settings/settings_ui.cc
++++ chrome/browser/ui/webui/settings/settings_ui.cc
+@@ -21,7 +21,10 @@
+ #include "chrome/browser/browser_features.h"
+ #include "chrome/browser/browser_process.h"
+ #include "chrome/browser/commerce/shopping_service_factory.h"
++#include "components/compose/buildflags.h"
++#if BUILDFLAG(ENABLE_COMPOSE)
+ #include "chrome/browser/compose/compose_enabling.h"
++#endif  // BUILDFLAG(ENABLE_COMPOSE)
+ #include "chrome/browser/glic/public/glic_enabling.h"
+ #include "chrome/browser/glic/public/glic_keyed_service.h"
+ #include "chrome/browser/history_embeddings/history_embeddings_utils.h"
