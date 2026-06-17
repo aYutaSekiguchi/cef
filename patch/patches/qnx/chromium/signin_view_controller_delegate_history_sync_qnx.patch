@@ -23,10 +23,44 @@ index 65f2d8c8a4e828bf8f5ad1f07075b5a8e9945949..9ad031aa0d85f2e3252b4a79529ea2b7
    // Returns a platform-specific SigninViewControllerDelegate instance that
    // displays the modal sign in error dialog. The returned object should delete
 diff --git chrome/browser/ui/views/profiles/signin_view_controller_delegate_views.cc chrome/browser/ui/views/profiles/signin_view_controller_delegate_views.cc
-index 506fa3457868b196cf8f83e1885b96b7855427ef..07f2d5dd3a928f451bbcbc8f7efc8d731b003256 100644
+index 506fa3457868b196cf8f83e1885b96b7855427ef..471698b61e5b71d798128fa91ef8c97cc805fad7 100644
 --- chrome/browser/ui/views/profiles/signin_view_controller_delegate_views.cc
 +++ chrome/browser/ui/views/profiles/signin_view_controller_delegate_views.cc
-@@ -548,7 +548,8 @@ SigninViewControllerDelegate::CreateSyncConfirmationDelegate(
+@@ -65,9 +65,11 @@
+ #include "chrome/browser/ui/webui/signin/signout_confirmation/signout_confirmation_ui.h"
+ #endif  // BUILDFLAG(ENABLE_DICE_SUPPORT)
+ 
+-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN)
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN) || \
++    BUILDFLAG(IS_QNX)
+ #include "chrome/browser/ui/webui/signin/history_sync_optin/history_sync_optin_ui.h"
+-#endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN)
++#endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN) || \
++        // BUILDFLAG(IS_QNX)
+ 
+ namespace {
+ 
+@@ -139,7 +141,8 @@ SigninViewControllerDelegateViews::CreateSyncConfirmationWebView(
+       kSyncConfirmationDialogWidth, InitializeSigninWebDialogUI(true));
+ }
+ 
+-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN)
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN) || \
++    BUILDFLAG(IS_QNX)
+ std::unique_ptr<views::WebView>
+ SigninViewControllerDelegateViews::CreateHistorySyncOptInWebView(
+     Browser* browser,
+@@ -166,7 +169,8 @@ SigninViewControllerDelegateViews::CreateHistorySyncOptInWebView(
+   web_ui->Initialize(browser, should_close_modal_dialog, std::move(callback));
+   return web_view;
+ }
+-#endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN)
++#endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN) || \
++        // BUILDFLAG(IS_QNX)
+ 
+ // static
+ std::unique_ptr<views::WebView>
+@@ -548,7 +552,8 @@ SigninViewControllerDelegate::CreateSyncConfirmationDelegate(
        /*animate_on_resize=*/true);
  }
  
@@ -36,7 +70,7 @@ index 506fa3457868b196cf8f83e1885b96b7855427ef..07f2d5dd3a928f451bbcbc8f7efc8d73
  // static
  SigninViewControllerDelegate*
  SigninViewControllerDelegate::CreateSyncHistoryOptInDelegate(
-@@ -566,7 +567,8 @@ SigninViewControllerDelegate::CreateSyncHistoryOptInDelegate(
+@@ -566,7 +571,8 @@ SigninViewControllerDelegate::CreateSyncHistoryOptInDelegate(
        /*wait_for_size=*/true, /*should_show_close_button=*/false,
        /*animate_on_resize=*/true);
  }
@@ -46,3 +80,26 @@ index 506fa3457868b196cf8f83e1885b96b7855427ef..07f2d5dd3a928f451bbcbc8f7efc8d73
  
  // static
  SigninViewControllerDelegate*
+diff --git chrome/browser/ui/views/profiles/signin_view_controller_delegate_views.h chrome/browser/ui/views/profiles/signin_view_controller_delegate_views.h
+index cb704d2654ad98e80c2152c6fd34f2947f7b3785..66c4e413440e5e1cc0c843a21659d70028eddfed 100644
+--- chrome/browser/ui/views/profiles/signin_view_controller_delegate_views.h
++++ chrome/browser/ui/views/profiles/signin_view_controller_delegate_views.h
+@@ -58,14 +58,16 @@ class SigninViewControllerDelegateViews
+       SyncConfirmationStyle style,
+       bool is_sync_promo);
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+   static std::unique_ptr<views::WebView> CreateHistorySyncOptInWebView(
+       Browser* browser,
+       bool should_close_modal_dialog,
+       HistorySyncOptinLaunchContext launch_context,
+       HistorySyncOptinHelper::FlowCompletedCallback
+           history_optin_completed_callback);
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++        // BUILDFLAG(IS_QNX)
+ 
+   static std::unique_ptr<views::WebView> CreateSigninErrorWebView(
+       Browser* browser);
