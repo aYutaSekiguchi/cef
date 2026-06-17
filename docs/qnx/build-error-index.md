@@ -96,6 +96,7 @@ rg -n "kChromeUIProfileCustomization|kChromeUIManagedUserProfileNotice|webui_url
 rg -n "kGlicOnboardingCompleted|kSplitViewCreated|event_constants|feature_engagement::events" docs/qnx/history/build-errors/compile
 rg -n "kCreateShortcut|ShowWebAppSettings|WebAppInstallFlow|browser_command_controller" docs/qnx/history/build-errors/compile
 rg -n "ShowModalHistorySyncOptInDialog|signin_view_controller|history_sync_optin_service" docs/qnx/history/build-errors/compile
+rg -n "kProfileCreationFrictionReductionExperimentSkipCustomizeProfile|CreateSyncHistoryOptInDelegate|kEnableSupervisedUserVersionSignOutDialog" docs/qnx/history/build-errors/compile
 ```
 
 If the immediate search misses:

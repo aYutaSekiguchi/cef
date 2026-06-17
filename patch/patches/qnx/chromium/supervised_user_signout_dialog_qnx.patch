@@ -1,0 +1,28 @@
+diff --git components/supervised_user/core/common/features.cc components/supervised_user/core/common/features.cc
+index b0ba98e32c3c481f8cccc67983b2cdc5cf287f91..bea6d330e8fd75562b29983d712f6c185852c7ae 100644
+--- components/supervised_user/core/common/features.cc
++++ components/supervised_user/core/common/features.cc
+@@ -80,7 +80,8 @@ bool IsLocalWebApprovalsEnabledForSubframes() {
+   return base::FeatureList::IsEnabled(kAllowSubframeLocalWebApprovals);
+ }
+ 
+-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN)
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN) || \
++    BUILDFLAG(IS_QNX)
+ BASE_FEATURE(kEnableSupervisedUserVersionSignOutDialog,
+              base::FEATURE_ENABLED_BY_DEFAULT);
+ #endif
+diff --git components/supervised_user/core/common/features.h components/supervised_user/core/common/features.h
+index a5720908ffdf37935854dceeea84cadf0c9a07d4..1ceb0086c90cabd22fd8a352bc7a607fff3edb60 100644
+--- components/supervised_user/core/common/features.h
++++ components/supervised_user/core/common/features.h
+@@ -37,7 +37,8 @@ BASE_DECLARE_FEATURE(kLocalWebApprovalsWidgetSupportsUrlPayload);
+ // Whether supervised users see an updated URL filter interstitial.
+ BASE_DECLARE_FEATURE(kSupervisedUserBlockInterstitialV3);
+ 
+-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN)
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN) || \
++    BUILDFLAG(IS_QNX)
+ // Uses supervised user strings on the signout dialog.
+ BASE_DECLARE_FEATURE(kEnableSupervisedUserVersionSignOutDialog);
+ #endif
