@@ -1,0 +1,55 @@
+diff --git chrome/browser/ui/chrome_pages.cc chrome/browser/ui/chrome_pages.cc
+index e05fb064e75b72206b90347cc9925cc1011f0e7e..a8ccc438138edf7e6020797f23cc53a8c2761d13 100644
+--- chrome/browser/ui/chrome_pages.cc
++++ chrome/browser/ui/chrome_pages.cc
+@@ -700,7 +700,8 @@ void ShowAppManagementPage(Profile* profile,
+ }
+ #endif  // BUILDFLAG(IS_CHROMEOS)
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ void ShowWebAppSettingsImpl(Browser* browser,
+                             Profile* profile,
+                             const std::string& app_id,
+diff --git chrome/browser/ui/chrome_pages.h chrome/browser/ui/chrome_pages.h
+index 78cbb21ebc5d5e8052da408611459287da697f4b..151f8c6e5b2c5c4eac94690a9b3f211eb3e220ff 100644
+--- chrome/browser/ui/chrome_pages.h
++++ chrome/browser/ui/chrome_pages.h
+@@ -39,10 +39,9 @@ namespace signin {
+ enum class ConsentLevel;
+ }  // namespace signin
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
+-namespace web_app {
+-enum class AppSettingsPageEntryPoint;
+-}  // namespace web_app
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
++#include "chrome/browser/web_applications/web_app_utils.h"
+ #endif
+ 
+ class Browser;
+@@ -164,7 +163,8 @@ void ShowAppManagementPage(Profile* profile,
+                            ash::settings::AppManagementEntryPoint entry_point);
+ #endif
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ // Show chrome://app-settings/<app-id> page.
+ void ShowWebAppSettings(Browser* browser,
+                         const std::string& app_id,
+diff --git chrome/browser/web_applications/web_app_install_params.h chrome/browser/web_applications/web_app_install_params.h
+index 618952d89a3a1bd94c3323d0b0e55336b2323696..c25e7dd18422f66ef6e5def8e20e3edfa6fc2e8a 100644
+--- chrome/browser/web_applications/web_app_install_params.h
++++ chrome/browser/web_applications/web_app_install_params.h
+@@ -120,7 +120,7 @@ enum class WebAppInstallFlow {
+   // TODO(crbug.com/40184819): This should be removed by adding all known flows
+   // to this enum.
+   kUnknown,
+-#if BUILDFLAG(IS_CHROMEOS)
++#if BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_QNX)
+   // Perform the `Create Shortcut` flow on CrOS that creates a DIY app.
+   kCreateShortcut,
+ #endif
