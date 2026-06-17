@@ -1,0 +1,26 @@
+diff --git chrome/common/chrome_switches.cc chrome/common/chrome_switches.cc
+index 6297693612bf360dddad9a7116ca8b9c3f7f349e..aa1e0a9211926ec755857b112a197158cdf623d6 100644
+--- chrome/common/chrome_switches.cc
++++ chrome/common/chrome_switches.cc
+@@ -963,7 +963,7 @@ const char kDebugPrint[] = "debug-print";
+ #endif
+ 
+ #if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_MAC) || \
+-    BUILDFLAG(IS_WIN)
++    BUILDFLAG(IS_WIN) || BUILDFLAG(IS_QNX)
+ const char kEnableNewAppMenuIcon[] = "enable-new-app-menu-icon";
+ 
+ // Causes the browser to launch directly in guest mode.
+diff --git chrome/common/chrome_switches.h chrome/common/chrome_switches.h
+index ce957b6c4f4f78766998b0e0a0c0da3c0c9d6147..866a052c818360b84ed67ceefa61d91f39cc19e6 100644
+--- chrome/common/chrome_switches.h
++++ chrome/common/chrome_switches.h
+@@ -294,7 +294,7 @@ extern const char kDebugPrint[];
+ #endif
+ 
+ #if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_MAC) || \
+-    BUILDFLAG(IS_WIN)
++    BUILDFLAG(IS_WIN) || BUILDFLAG(IS_QNX)
+ extern const char kEnableNewAppMenuIcon[];
+ extern const char kGuest[];
+ #endif
