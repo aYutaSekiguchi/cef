@@ -1,17 +1,17 @@
---- chrome/browser/download/download_commands.h
-+++ chrome/browser/download/download_commands.h
-@@ -66,7 +66,7 @@
-   void ExecuteCommand(Command command);
+diff --git chrome/browser/download/download_commands.cc chrome/browser/download/download_commands.cc
+index 88661fa8834ff0c7d6bb79d8ab06d90b1ca9a4c6..29872f079c99035563295058e8ab52bd69ae32c3 100644
+--- chrome/browser/download/download_commands.cc
++++ chrome/browser/download/download_commands.cc
+@@ -27,7 +27,7 @@
+ #include "ui/base/clipboard/scoped_clipboard_writer.h"
  
  #if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || \
 -    BUILDFLAG(IS_MAC)
 +    BUILDFLAG(IS_MAC) || BUILDFLAG(IS_QNX)
-   bool IsDownloadPdf() const;
-   bool CanOpenPdfInSystemViewer() const;
-   Browser* GetBrowser() const;
---- chrome/browser/download/download_commands.cc
-+++ chrome/browser/download/download_commands.cc
-@@ -174,7 +174,7 @@
+ #include "chrome/browser/ui/browser.h"
+ #include "chrome/browser/ui/browser_finder.h"
+ #include "chrome/browser/ui/scoped_tabbed_browser_displayer.h"
+@@ -174,7 +174,7 @@ void DownloadCommands::ExecuteCommand(Command command) {
  }
  
  #if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
@@ -20,3 +20,16 @@
  
  Browser* DownloadCommands::GetBrowser() const {
    if (!model_)
+diff --git chrome/browser/download/download_commands.h chrome/browser/download/download_commands.h
+index 19f8a9741a816434e84c2545c8227f2228222c51..16e2b53227473d4ccbfb808b5bd4f7ba36047edd 100644
+--- chrome/browser/download/download_commands.h
++++ chrome/browser/download/download_commands.h
+@@ -66,7 +66,7 @@ class DownloadCommands {
+   void ExecuteCommand(Command command);
+ 
+ #if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || \
+-    BUILDFLAG(IS_MAC)
++    BUILDFLAG(IS_MAC) || BUILDFLAG(IS_QNX)
+   bool IsDownloadPdf() const;
+   bool CanOpenPdfInSystemViewer() const;
+   Browser* GetBrowser() const;
