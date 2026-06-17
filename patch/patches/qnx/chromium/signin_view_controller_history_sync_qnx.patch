@@ -1,0 +1,48 @@
+diff --git chrome/browser/ui/signin/signin_view_controller.cc chrome/browser/ui/signin/signin_view_controller.cc
+index 3fd0eb5a2ef04077cfccecfe0984792df5078112..d17cb93863cc3f390c204fe299501b9344d15790 100644
+--- chrome/browser/ui/signin/signin_view_controller.cc
++++ chrome/browser/ui/signin/signin_view_controller.cc
+@@ -524,7 +524,8 @@ void SigninViewController::ShowModalSyncConfirmationDialog(
+       GetOnModalDialogClosedCallback());
+ }
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ void SigninViewController::ShowModalHistorySyncOptInDialog(
+     bool should_close_modal_dialog,
+     HistorySyncOptinHelper::FlowCompletedCallback callback) {
+@@ -537,7 +538,8 @@ void SigninViewController::ShowModalHistorySyncOptInDialog(
+           HistorySyncOptinLaunchContext::kModal, std::move(callback)),
+       GetOnModalDialogClosedCallback());
+ }
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++        // BUILDFLAG(IS_QNX)
+ 
+ void SigninViewController::ShowModalManagedUserNoticeDialog(
+     std::unique_ptr<signin::EnterpriseProfileCreationDialogParams>
+diff --git chrome/browser/ui/signin/signin_view_controller.h chrome/browser/ui/signin/signin_view_controller.h
+index 4adbb0358d38f98561ae9d7962334292d496089c..7be0dc72e81d363e8b8957dfb11b7c936769553a 100644
+--- chrome/browser/ui/signin/signin_view_controller.h
++++ chrome/browser/ui/signin/signin_view_controller.h
+@@ -171,7 +171,8 @@ class SigninViewController {
+   void ShowModalSyncConfirmationDialog(bool is_signin_intercept,
+                                        bool is_sync_promo);
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+   // Shows the modal history sync opt in dialog as a browser-modal dialog on top
+   // of the `browser_`'s window. Executes the provided callback when the dialog
+   // closes.
+@@ -179,7 +180,8 @@ class SigninViewController {
+       bool should_close_modal_dialog,
+       HistorySyncOptinHelper::FlowCompletedCallback
+           history_optin_completed_callback);
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++        // BUILDFLAG(IS_QNX)
+ 
+   // Shows the modal managed user notice dialog as a browser-modal dialog on
+   // top of the `browser_`'s window. `domain_name` is the domain of the

@@ -95,6 +95,7 @@ rg -n "web_app_dialogs|web_app_dialog_utils|passwords_private_delegate_impl|IS_C
 rg -n "kChromeUIProfileCustomization|kChromeUIManagedUserProfileNotice|webui_url_constants|signin_view_controller_delegate_views" docs/qnx/history/build-errors/compile
 rg -n "kGlicOnboardingCompleted|kSplitViewCreated|event_constants|feature_engagement::events" docs/qnx/history/build-errors/compile
 rg -n "kCreateShortcut|ShowWebAppSettings|WebAppInstallFlow|browser_command_controller" docs/qnx/history/build-errors/compile
+rg -n "ShowModalHistorySyncOptInDialog|signin_view_controller|history_sync_optin_service" docs/qnx/history/build-errors/compile
 ```
 
 If the immediate search misses:
