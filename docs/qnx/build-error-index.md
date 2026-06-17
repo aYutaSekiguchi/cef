@@ -105,6 +105,7 @@ rg -n "IDS_PASSWORD_MANAGER_FILLING_REAUTH|password_credential_ui_controller|FIL
 rg -n "SiteSettingsHandler|SendZoomLevels|HandleRemoveZoomLevel|kIsolatedAppScheme" docs/qnx/history/build-errors/compile
 rg -n "kComponentUpdaterTTSEngineExtensionId|read_anything_untrusted_page_handler|TTSEngineExtensionId" docs/qnx/history/build-errors/compile
 rg -n "IsWasmTtsEngineAutoInstallDisabled|kWasmTtsEngineAutoInstallDisabled|read_anything_service" docs/qnx/history/build-errors/compile
+rg -n "FramebustBlockTabHelper|tab_helpers|framebust_block_tab_helper" docs/qnx/history/build-errors/compile
 ```
 
 If the immediate search misses:
