@@ -1,0 +1,43 @@
+diff --git ui/accessibility/accessibility_features.cc ui/accessibility/accessibility_features.cc
+index 16ab63f21d816c4bc1a1aff32aab8883b2eed24a..7e29b975f160ba41cd953b3aa679a619c6d586a9 100644
+--- ui/accessibility/accessibility_features.cc
++++ ui/accessibility/accessibility_features.cc
+@@ -500,13 +500,15 @@ bool IsBlockRootWindowAccessibleNameChangeEventEnabled() {
+ }
+ #endif  // BUILDFLAG(IS_MAC)
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ BASE_FEATURE(kWasmTtsEngineAutoInstallDisabled,
+              base::FEATURE_DISABLED_BY_DEFAULT);
+ bool IsWasmTtsEngineAutoInstallDisabled() {
+   return base::FeatureList::IsEnabled(
+       ::features::kWasmTtsEngineAutoInstallDisabled);
+ }
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++        // BUILDFLAG(IS_QNX)
+ 
+ }  // namespace features
+diff --git ui/accessibility/accessibility_features.h ui/accessibility/accessibility_features.h
+index e4fc0db301f06f844600e86e1c22e99cea5961ee..e3a93eddec6c8660ff97ed2667c5155fd87621d2 100644
+--- ui/accessibility/accessibility_features.h
++++ ui/accessibility/accessibility_features.h
+@@ -397,12 +397,14 @@ AX_BASE_EXPORT BASE_DECLARE_FEATURE(kBlockRootWindowAccessibleNameChangeEvent);
+ AX_BASE_EXPORT bool IsBlockRootWindowAccessibleNameChangeEventEnabled();
+ #endif  // BUILDFLAG(IS_MAC)
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ // Disable the wasm tts engine component to use dev version local extension
+ // files.
+ AX_BASE_EXPORT BASE_DECLARE_FEATURE(kWasmTtsEngineAutoInstallDisabled);
+ AX_BASE_EXPORT bool IsWasmTtsEngineAutoInstallDisabled();
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++        // BUILDFLAG(IS_QNX)
+ 
+ }  // namespace features
+ 
