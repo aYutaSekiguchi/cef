@@ -102,6 +102,7 @@ rg -n "translation_dispatcher_on_device|ENABLE_ON_DEVICE_TRANSLATION|translator.
 rg -n "kEnterpriseShortcutsPolicyList|new_tab_page_util|ntp_tiles" docs/qnx/history/build-errors/compile
 rg -n "kGuest|switch_utils|chrome_switches" docs/qnx/history/build-errors/compile
 rg -n "IDS_PASSWORD_MANAGER_FILLING_REAUTH|password_credential_ui_controller|FILLING_REAUTH" docs/qnx/history/build-errors/compile
+rg -n "SiteSettingsHandler|SendZoomLevels|HandleRemoveZoomLevel|kIsolatedAppScheme" docs/qnx/history/build-errors/compile
 ```
 
 If the immediate search misses:
