@@ -99,6 +99,7 @@ rg -n "ShowModalHistorySyncOptInDialog|signin_view_controller|history_sync_optin
 rg -n "kProfileCreationFrictionReductionExperimentSkipCustomizeProfile|CreateSyncHistoryOptInDelegate|kEnableSupervisedUserVersionSignOutDialog" docs/qnx/history/build-errors/compile
 rg -n "ScopedTabbedBrowserDisplayer|download_commands|browser_displayer" docs/qnx/history/build-errors/compile
 rg -n "translation_dispatcher_on_device|ENABLE_ON_DEVICE_TRANSLATION|translator.mojom.h|live_translate_controller_factory" docs/qnx/history/build-errors/compile
+rg -n "kEnterpriseShortcutsPolicyList|new_tab_page_util|ntp_tiles" docs/qnx/history/build-errors/compile
 ```
 
 If the immediate search misses:

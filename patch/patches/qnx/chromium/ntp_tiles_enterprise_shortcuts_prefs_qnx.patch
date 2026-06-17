@@ -1,0 +1,20 @@
+diff --git components/ntp_tiles/pref_names.h components/ntp_tiles/pref_names.h
+index 20bcf69c3419cc9fa4dff8be19a6c640aac74141..23c5e2dcd5513b09a033528cd731c3c36572172f 100644
+--- components/ntp_tiles/pref_names.h
++++ components/ntp_tiles/pref_names.h
+@@ -49,13 +49,13 @@ inline constexpr char kCustomLinksInitialized[] = "custom_links.initialized";
+ 
+ // Prefs used to cache enterprise shortcuts.
+ #if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN) || \
+-    BUILDFLAG(IS_CHROMEOS)
++    BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_QNX)
+ inline constexpr char kEnterpriseShortcutsPolicyList[] =
+     "enterprise_shortcuts.policy_list";
+ inline constexpr char kEnterpriseShortcutsUserList[] =
+     "enterprise_shortcuts.user_list";
+ #endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN) ||
+-        // BUILDFLAG(IS_CHROMEOS)
++        // BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_QNX)
+ 
+ // Pref used to verify whether custom links have been removed
+ // for preinstalled default chrome apps
