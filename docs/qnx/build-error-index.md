@@ -109,6 +109,7 @@ rg -n "FramebustBlockTabHelper|tab_helpers|framebust_block_tab_helper" docs/qnx/
 rg -n "compose_optimization_guide.pb.h|compose_enabling|settings_ui|ENABLE_COMPOSE" docs/qnx/history/build-errors/compile
 rg -n "GetDirectLaunchUrlScheme|google_chrome_scheme_util|shell_integration" docs/qnx/history/build-errors/compile
 rg -n "RecordReplayPageActionController|ChromeRecordReplayClient|ContextualTasksTabVisitTracker|tab_features" docs/qnx/history/build-errors/compile
+rg -n "history_sync_optin.mojom.h|signin_view_controller_delegate_views" docs/qnx/history/build-errors
 ```
 
 If the immediate search misses:
