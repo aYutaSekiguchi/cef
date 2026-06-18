@@ -1,0 +1,28 @@
+diff --git chrome/browser/ui/webui/app_home/app_home_page_handler.cc chrome/browser/ui/webui/app_home/app_home_page_handler.cc
+index 79f531431e18d5f76b9d627530007402b0607230..b33ca51e3ca519f49b13a6ad5aa96e76b4854d26 100644
+--- chrome/browser/ui/webui/app_home/app_home_page_handler.cc
++++ chrome/browser/ui/webui/app_home/app_home_page_handler.cc
+@@ -62,7 +62,8 @@
+ #include "ui/base/window_open_disposition_utils.h"
+ #include "url/gurl.h"
+ 
+-static_assert(BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX));
++static_assert(BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) ||
++              BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX));
+ 
+ using content::WebUI;
+ using extensions::Extension;
+diff --git chrome/browser/ui/webui/app_home/app_home_page_handler.h chrome/browser/ui/webui/app_home/app_home_page_handler.h
+index f520b41073bb3ccda635d7752077a8b35c139005..77f5f8872a3b4b9d492882708ebbea52c3c13acc 100644
+--- chrome/browser/ui/webui/app_home/app_home_page_handler.h
++++ chrome/browser/ui/webui/app_home/app_home_page_handler.h
+@@ -23,7 +23,8 @@
+ #include "mojo/public/cpp/bindings/receiver.h"
+ #include "mojo/public/cpp/bindings/remote.h"
+ 
+-static_assert(BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX));
++static_assert(BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) ||
++              BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX));
+ 
+ class Browser;
+ class ExtensionEnableFlow;
