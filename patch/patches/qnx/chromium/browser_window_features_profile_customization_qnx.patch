@@ -1,0 +1,103 @@
+diff --git chrome/browser/ui/BUILD.gn chrome/browser/ui/BUILD.gn
+index 00b9254990f2428a5e3205448d75bf7ede720454..948123c0d053face4535515e2d9756be388cca54 100644
+--- chrome/browser/ui/BUILD.gn
++++ chrome/browser/ui/BUILD.gn
+@@ -3144,6 +3144,19 @@ static_library("ui") {
+     }
+   }
+ 
++  if (is_qnx) {
++    sources += [
++      "views/profiles/profile_customization_bubble_sync_controller.cc",
++      "views/profiles/profile_customization_bubble_sync_controller.h",
++    ]
++    deps += [
++      "//chrome/browser/search/background",
++      "//chrome/browser/themes",
++      "//chrome/browser/ui/lens",
++      "//chrome/browser/ui/lens:impl",
++    ]
++  }
++
+   if (is_win || is_mac || is_linux || is_chromeos || is_android) {
+     deps += [
+       "//chrome/browser/enterprise/connectors/device_trust:features",
+diff --git chrome/browser/ui/browser_window/internal/BUILD.gn chrome/browser/ui/browser_window/internal/BUILD.gn
+index 25969faad4be7b51489b844cc2529d928b73108d..5bc1efebd214d396151afa3b0485fca9d79956a8 100644
+--- chrome/browser/ui/browser_window/internal/BUILD.gn
++++ chrome/browser/ui/browser_window/internal/BUILD.gn
+@@ -130,7 +130,7 @@ source_set("internal") {
+       }
+     }
+ 
+-    if (is_win || is_mac || is_linux) {
++    if (is_win || is_mac || is_linux || is_qnx) {
+       deps += [ "//chrome/browser/ui/views/session_restore_infobar" ]
+     }
+ 
+diff --git chrome/browser/ui/browser_window/internal/browser_window_features.cc chrome/browser/ui/browser_window/internal/browser_window_features.cc
+index 9ce3aad42c2927d4aa5788a58968b1a860706d2f..8e372bfd69f3c88f4ce91da310f04f59618c16e9 100644
+--- chrome/browser/ui/browser_window/internal/browser_window_features.cc
++++ chrome/browser/ui/browser_window/internal/browser_window_features.cc
+@@ -179,7 +179,7 @@
+ #include "chrome/browser/ui/startup/default_browser_prompt/pin_infobar/pin_infobar_controller.h"
+ #endif
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ #include "chrome/browser/ui/views/session_restore_infobar/session_restore_infobar_controller.h"
+ #endif
+ 
+@@ -447,7 +447,7 @@ void BrowserWindowFeatures::Init(BrowserWindowInterface* browser) {
+   call_to_action_lock_ =
+       GetUserDataFactory().CreateInstance<CallToActionLock>(*browser, browser);
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+   profile_customization_bubble_sync_controller_ =
+       std::make_unique<ProfileCustomizationBubbleSyncController>(browser,
+                                                                  profile);
+diff --git chrome/browser/ui/browser_window/public/browser_window_features.h chrome/browser/ui/browser_window/public/browser_window_features.h
+index 2bdba2a8de29e3e097b03bcc5d53558fcc7783f6..6a57d19f5b9572074da91b5f67d03d9d55769fb6 100644
+--- chrome/browser/ui/browser_window/public/browser_window_features.h
++++ chrome/browser/ui/browser_window/public/browser_window_features.h
+@@ -108,7 +108,7 @@ class PinInfoBarController;
+ }  // namespace default_browser
+ #endif
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ class ProfileCustomizationBubbleSyncController;
+ namespace session_restore_infobar {
+ class SessionRestoreInfobarController;
+@@ -453,7 +453,7 @@ class BrowserWindowFeatures {
+     return browser_select_file_dialog_controller_.get();
+   }
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+   ProfileCustomizationBubbleSyncController*
+   profile_customization_bubble_sync_controller() {
+     return profile_customization_bubble_sync_controller_.get();
+@@ -639,7 +639,7 @@ class BrowserWindowFeatures {
+   std::unique_ptr<BrowserSelectFileDialogController>
+       browser_select_file_dialog_controller_;
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+   std::unique_ptr<ProfileCustomizationBubbleSyncController>
+       profile_customization_bubble_sync_controller_;
+ 
+diff --git chrome/browser/ui/startup/BUILD.gn chrome/browser/ui/startup/BUILD.gn
+index 63784ff2206b77c0f148cbb1535e5310504be2da..efecea85b92393a9910b2a4e79ab2fbdf2111efc 100644
+--- chrome/browser/ui/startup/BUILD.gn
++++ chrome/browser/ui/startup/BUILD.gn
+@@ -260,7 +260,7 @@ source_set("impl") {
+       ]
+     }
+ 
+-    if (is_win || is_mac || is_linux) {
++    if (is_win || is_mac || is_linux || is_qnx) {
+       deps += [ "//chrome/browser/ui/views/session_restore_infobar" ]
+     }
+ 

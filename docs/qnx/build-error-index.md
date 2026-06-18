@@ -113,6 +113,7 @@ rg -n "history_sync_optin.mojom.h|signin_view_controller_delegate_views" docs/qn
 rg -n "CreateBrowserFrameViewLinux|browser_frame_view_factory_views" docs/qnx/history/build-errors
 rg -n "whats_new_registry|GlobalFeatures" docs/qnx/history/build-errors
 rg -n "IDS_SETTINGS_RESET_TO_DEFAULT_THEME|resetToDefaultTheme" docs/qnx/history/build-errors
+rg -n "profile_customization_bubble_sync_controller|SearchEngineChoice|BrowserWindowFeatures" docs/qnx/history/build-errors
 ```
 
 If the immediate search misses:
