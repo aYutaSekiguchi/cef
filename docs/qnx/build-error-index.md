@@ -117,6 +117,7 @@ rg -n "profile_customization_bubble_sync_controller|SearchEngineChoice|BrowserWi
 rg -n "kSessionRestoreInfoBarTimesShown|session_restore_infobar_prefs" docs/qnx/history/build-errors
 rg -n "BrowserDMTokenStorage|SaasUsageReportingDelegateFactoryDesktop|chrome_browser_cloud_management_controller_desktop" docs/qnx/history/build-errors
 rg -n "app_home_page_handler|app_home_ui|App Home" docs/qnx/history/build-errors
+rg -n "kPasskeyUnlockErrorUi|kPasskeyUnlockManager|PasskeyUnlockErrorUiExperimentArm" docs/qnx/history/build-errors
 ```
 
 If the immediate search misses:
