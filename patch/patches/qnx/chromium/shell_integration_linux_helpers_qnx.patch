@@ -1,0 +1,115 @@
+diff --git chrome/browser/web_applications/BUILD.gn chrome/browser/web_applications/BUILD.gn
+index a4f806027a907175da55dad487e0765c1e033f87..800b31b99fdded681fc56b3a3a23dc818d10cd87 100644
+--- chrome/browser/web_applications/BUILD.gn
++++ chrome/browser/web_applications/BUILD.gn
+@@ -471,6 +471,13 @@ source_set("web_applications") {
+     ]
+   }
+ 
++  if (is_qnx) {
++    sources += [
++      "os_integration/web_app_shortcut_linux.cc",
++      "os_integration/web_app_shortcut_linux.h",
++    ]
++  }
++
+   if (is_linux) {
+     # Desktop linux, doesn't count ChromeOS.
+     sources += [
+diff --git chrome/browser/web_applications/os_integration/os_integration_test_override.h chrome/browser/web_applications/os_integration/os_integration_test_override.h
+index a13dd7012c424a48c5d2d48eceb6b94066c7d425..adc115db72d4f015b658feb7cc124a1eb6150a63 100644
+--- chrome/browser/web_applications/os_integration/os_integration_test_override.h
++++ chrome/browser/web_applications/os_integration/os_integration_test_override.h
+@@ -99,7 +99,7 @@ class OsIntegrationTestOverride
+   virtual base::FilePath chrome_apps_folder() = 0;
+   virtual void EnableOrDisablePathOnLogin(const base::FilePath& file_path,
+                                           bool enable_on_login) = 0;
+-#elif BUILDFLAG(IS_LINUX)
++#elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+   virtual base::Environment* environment() = 0;
+ #endif
+ 
+diff --git chrome/browser/web_applications/os_integration/web_app_shortcut.h chrome/browser/web_applications/os_integration/web_app_shortcut.h
+index a3c1e48abc6e98e481fd04b982d78e83445c4cdc..bf1f47130fdaded3481b4a87656c70ca46c4ade6 100644
+--- chrome/browser/web_applications/os_integration/web_app_shortcut.h
++++ chrome/browser/web_applications/os_integration/web_app_shortcut.h
+@@ -22,9 +22,9 @@
+ #include "ui/gfx/image/image_family.h"
+ #include "url/gurl.h"
+ 
+-#if BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ #include "chrome/browser/web_applications/os_integration/web_app_shortcut_linux.h"
+-#endif  // BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ 
+ #if BUILDFLAG(IS_MAC)
+ #include "chrome/browser/web_applications/os_integration/mac/app_shim_registry.h"
+@@ -77,9 +77,9 @@ struct ShortcutInfo {
+   // the installed PWA experience and thus the icons are not designed to be
+   // displayed on an OS dock.
+   bool is_diy_app = false;
+-#if BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+   std::set<DesktopActionInfo> actions;
+-#endif  // BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ 
+   // An app is multi-profile if there is a single shortcut and single app shim
+   // for all profiles. The app itself has a profile switcher that may be used
+diff --git chrome/common/channel_info.h chrome/common/channel_info.h
+index 41d4f24eaa9d9804e99d4ee8ffd9d1a2cde9270d..abb546ad82353da4fa4ff2aecca4f83f5765b035 100644
+--- chrome/common/channel_info.h
++++ chrome/common/channel_info.h
+@@ -11,11 +11,11 @@
+ #include "build/branding_buildflags.h"
+ #include "build/build_config.h"
+ 
+-#if BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ namespace base {
+ class Environment;
+ }
+-#endif  // BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ 
+ namespace version_info {
+ enum class Channel;
+@@ -99,13 +99,13 @@ void ClearChannelIdForTesting();
+ std::string GetChannelSuffixForDataDir();
+ #endif
+ 
+-#if BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ std::string GetChannelSuffixForExtraFlagsEnvVarName();
+ 
+ // Returns the channel-specific filename of the desktop shortcut used to launch
+ // the browser.
+ std::string GetDesktopName(base::Environment* env);
+-#endif  // BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ 
+ }  // namespace chrome
+ 
+diff --git chrome/common/channel_info_posix.cc chrome/common/channel_info_posix.cc
+index f6bcb3cc8e8d620db3c5a0459a8e9220c20923b2..ccddbb833121d760a251ea264e0d555c8d2c9a2d 100644
+--- chrome/common/channel_info_posix.cc
++++ chrome/common/channel_info_posix.cc
+@@ -117,7 +117,7 @@ std::string GetChannelSuffixForExtraFlagsEnvVarName() {
+ }
+ #endif  // BUILDFLAG(IS_LINUX)
+ 
+-#if BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ std::string GetDesktopName(base::Environment* env) {
+ #if BUILDFLAG(GOOGLE_CHROME_BRANDING)
+   // Google Chrome packaged as a snap is a special case: the application name
+@@ -151,7 +151,7 @@ std::string GetDesktopName(base::Environment* env) {
+   return "chromium-browser.desktop";
+ #endif
+ }
+-#endif  // BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ 
+ version_info::Channel GetChannel() {
+   return GetChannelImpl().channel;

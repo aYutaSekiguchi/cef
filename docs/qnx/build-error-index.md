@@ -121,6 +121,7 @@ rg -n "kPasskeyUnlockErrorUi|kPasskeyUnlockManager|PasskeyUnlockErrorUiExperimen
 rg -n "kAutofillAddressSurvey|kAutofillCardSurvey|kAutofillPasswordSurvey|survey_config" docs/qnx/history/build-errors
 rg -n "kPrintingEnabled|IsPrintPreviewEnabled|render_view_context_menu" docs/qnx/history/build-errors
 rg -n "IsExtensionUnsupportedDeprecatedApp|kChromeAppsDeprecation|app_home_page_handler" docs/qnx/history/build-errors
+rg -n "GetDesktopName|GetAppDesktopShortcutFilename|DesktopActionInfo|shell_integration_linux" docs/qnx/history/build-errors
 ```
 
 If the immediate search misses:
