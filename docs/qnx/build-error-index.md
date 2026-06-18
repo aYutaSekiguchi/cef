@@ -115,6 +115,7 @@ rg -n "whats_new_registry|GlobalFeatures" docs/qnx/history/build-errors
 rg -n "IDS_SETTINGS_RESET_TO_DEFAULT_THEME|resetToDefaultTheme" docs/qnx/history/build-errors
 rg -n "profile_customization_bubble_sync_controller|SearchEngineChoice|BrowserWindowFeatures" docs/qnx/history/build-errors
 rg -n "kSessionRestoreInfoBarTimesShown|session_restore_infobar_prefs" docs/qnx/history/build-errors
+rg -n "BrowserDMTokenStorage|SaasUsageReportingDelegateFactoryDesktop|chrome_browser_cloud_management_controller_desktop" docs/qnx/history/build-errors
 ```
 
 If the immediate search misses:
