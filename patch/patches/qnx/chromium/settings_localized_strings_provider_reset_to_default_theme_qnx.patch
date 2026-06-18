@@ -1,0 +1,13 @@
+diff --git chrome/browser/ui/webui/settings/settings_localized_strings_provider.cc chrome/browser/ui/webui/settings/settings_localized_strings_provider.cc
+index 6f70406bc570c23177338c26a08b1fbe656069eb..d84ec1fa2194d142502f24e44438a2154ca1baf8 100644
+--- chrome/browser/ui/webui/settings/settings_localized_strings_provider.cc
++++ chrome/browser/ui/webui/settings/settings_localized_strings_provider.cc
+@@ -545,7 +545,7 @@ void AddAppearanceStrings(content::WebUIDataSource* html_source,
+       {"classicTheme", IDS_SETTINGS_CLASSIC_THEME},
+       {"useClassicTheme", IDS_SETTINGS_USE_CLASSIC_THEME},
+ #endif
+-#if !BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_CHROMEOS)
+       {"resetToDefaultTheme", IDS_SETTINGS_RESET_TO_DEFAULT_THEME},
+ #endif
+       {"resetToolbarToDefault", IDS_SETTINGS_RESET_TOOLBAR_TO_DEFAULT},
