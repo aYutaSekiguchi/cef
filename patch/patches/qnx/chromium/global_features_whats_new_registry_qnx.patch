@@ -1,0 +1,93 @@
+diff --git chrome/browser/BUILD.gn chrome/browser/BUILD.gn
+index 969c2af4439e4a534ad935dd09c0324a12e81829..3b3b486bbb2936ed5472ce1be3aac5a4414850e6 100644
+--- chrome/browser/BUILD.gn
++++ chrome/browser/BUILD.gn
+@@ -8597,7 +8597,7 @@ static_library("browser_generated_files") {
+     arflags = [ "/llvmlibempty" ]
+     public_deps += [ "//chrome/browser/ui/startup:buildflags" ]
+   }
+-  if (is_win || is_mac || is_linux) {
++  if (is_win || is_mac || is_linux || is_qnx) {
+     public_deps += [
+       "//chrome/browser/enterprise/connectors/device_trust/attestation/common/proto:attestation_ca_proto",
+       "//chrome/browser/enterprise/connectors/device_trust/attestation/common/proto:google_key_proto",
+diff --git chrome/browser/global_features.cc chrome/browser/global_features.cc
+index ef13b8f57457c08bec8d3dc17bfb730945bb6c52..4bc6d99acb2b4c0c452e16777166ab9a2c98bf39 100644
+--- chrome/browser/global_features.cc
++++ chrome/browser/global_features.cc
+@@ -36,7 +36,7 @@
+ #include "chrome/browser/background/glic/glic_background_mode_manager.h"  // nogncheck
+ #endif
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ // This causes a gn error on Android builds, because gn does not understand
+ // buildflags, so we include it only on platforms where it is used.
+ #include "chrome/browser/default_browser/default_browser_manager.h"
+@@ -156,7 +156,7 @@ void GlobalFeatures::PreBrowserProcessInitCore() {
+ 
+ void GlobalFeatures::PostBrowserProcessInitCore() {
+   system_permissions_platform_handle_ = CreateSystemPermissionsPlatformHandle();
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+   // TODO(crbug.com/463742800): Migrate WhatsNewRegistry (and other non-core
+   // features) to Init().
+   whats_new_registry_ = CreateWhatsNewRegistry();
+@@ -223,7 +223,7 @@ void GlobalFeatures::PostMainMessageLoopRun() {
+ 
+   application_advanced_protection_status_detector_.reset();
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+   DefaultBrowserPromptManager::GetInstance()->CloseAllPrompts(
+       DefaultBrowserPromptManager::CloseReason::kDismiss);
+ #endif
+@@ -244,7 +244,7 @@ GlobalFeatures::CreateSystemPermissionsPlatformHandle() {
+   return system_permission_settings::PlatformHandle::Create();
+ }
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ std::unique_ptr<whats_new::WhatsNewRegistry>
+ GlobalFeatures::CreateWhatsNewRegistry() {
+   return whats_new::CreateWhatsNewRegistry();
+diff --git chrome/browser/global_features.h chrome/browser/global_features.h
+index fd2454cba08a8a115180d8df7836a1163a079e42..73ff03adec519856b614be306708eff089892bc2 100644
+--- chrome/browser/global_features.h
++++ chrome/browser/global_features.h
+@@ -19,7 +19,7 @@ class GlobalBrowserCollection;
+ namespace system_permission_settings {
+ class PlatformHandle;
+ }  // namespace system_permission_settings
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ namespace whats_new {
+ class WhatsNewRegistry;
+ }  // namespace whats_new
+@@ -129,7 +129,7 @@ class GlobalFeatures {
+   system_permissions_platform_handle() {
+     return system_permissions_platform_handle_.get();
+   }
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+   whats_new::WhatsNewRegistry* whats_new_registry() {
+     return whats_new_registry_.get();
+   }
+@@ -201,7 +201,7 @@ class GlobalFeatures {
+ 
+   virtual std::unique_ptr<system_permission_settings::PlatformHandle>
+   CreateSystemPermissionsPlatformHandle();
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+   virtual std::unique_ptr<whats_new::WhatsNewRegistry> CreateWhatsNewRegistry();
+ #endif
+ 
+@@ -213,7 +213,7 @@ class GlobalFeatures {
+ 
+   std::unique_ptr<system_permission_settings::PlatformHandle>
+       system_permissions_platform_handle_;
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+   std::unique_ptr<whats_new::WhatsNewRegistry> whats_new_registry_;
+ 
+   std::unique_ptr<default_browser::DefaultBrowserManager>

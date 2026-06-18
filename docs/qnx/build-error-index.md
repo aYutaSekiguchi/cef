@@ -111,6 +111,7 @@ rg -n "GetDirectLaunchUrlScheme|google_chrome_scheme_util|shell_integration" doc
 rg -n "RecordReplayPageActionController|ChromeRecordReplayClient|ContextualTasksTabVisitTracker|tab_features" docs/qnx/history/build-errors/compile
 rg -n "history_sync_optin.mojom.h|signin_view_controller_delegate_views" docs/qnx/history/build-errors
 rg -n "CreateBrowserFrameViewLinux|browser_frame_view_factory_views" docs/qnx/history/build-errors
+rg -n "whats_new_registry|GlobalFeatures" docs/qnx/history/build-errors
 ```
 
 If the immediate search misses:
