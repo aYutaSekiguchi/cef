@@ -120,6 +120,7 @@ rg -n "app_home_page_handler|app_home_ui|App Home" docs/qnx/history/build-errors
 rg -n "kPasskeyUnlockErrorUi|kPasskeyUnlockManager|PasskeyUnlockErrorUiExperimentArm" docs/qnx/history/build-errors
 rg -n "kAutofillAddressSurvey|kAutofillCardSurvey|kAutofillPasswordSurvey|survey_config" docs/qnx/history/build-errors
 rg -n "kPrintingEnabled|IsPrintPreviewEnabled|render_view_context_menu" docs/qnx/history/build-errors
+rg -n "IsExtensionUnsupportedDeprecatedApp|kChromeAppsDeprecation|app_home_page_handler" docs/qnx/history/build-errors
 ```
 
 If the immediate search misses:

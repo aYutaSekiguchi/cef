@@ -1,0 +1,62 @@
+diff --git chrome/browser/web_applications/extension_status_utils.h chrome/browser/web_applications/extension_status_utils.h
+--- chrome/browser/web_applications/extension_status_utils.h
++++ chrome/browser/web_applications/extension_status_utils.h
+@@ -50,7 +50,8 @@ bool IsExtensionDefaultInstalled(content::BrowserContext* context,
+ bool IsExternalExtensionUninstalled(content::BrowserContext* context,
+                                     const std::string& extension_id);
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ // If this method returns true, then |extension_id| will not be launchable.
+ //
+ // The eventual goal is that this method should return true for all hosted apps,
+@@ -68,7 +69,8 @@ bool IsExternalExtensionUninstalled(content::BrowserContext* context,
+ // (4) This method and callsites are currently not compiled onto ChromeOS.
+ bool IsExtensionUnsupportedDeprecatedApp(content::BrowserContext* context,
+                                          const std::string& extension_id);
+-#endif
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++        // BUILDFLAG(IS_QNX)
+ 
+ // Waits for extension system ready to run callback.
+ void OnExtensionSystemReady(content::BrowserContext* context,
+diff --git chrome/browser/web_applications/extensions/extension_status_utils.cc chrome/browser/web_applications/extensions/extension_status_utils.cc
+--- chrome/browser/web_applications/extensions/extension_status_utils.cc
++++ chrome/browser/web_applications/extensions/extension_status_utils.cc
+@@ -93,7 +93,8 @@ bool IsExternalExtensionUninstalled(content::BrowserContext* context,
+   return prefs && prefs->IsExternalExtensionUninstalled(extension_id);
+ }
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ bool IsExtensionUnsupportedDeprecatedApp(content::BrowserContext* context,
+                                          const std::string& extension_id) {
+   if (testing::g_enable_chrome_apps_for_testing) {
+diff --git chrome/common/chrome_features.cc chrome/common/chrome_features.cc
+--- chrome/common/chrome_features.cc
++++ chrome/common/chrome_features.cc
+@@ -227,7 +227,8 @@ BASE_FEATURE(kEnableFullscreenToAnyScreenAndroid,
+ // Enables the new reset banner on the settings page.
+ BASE_FEATURE(kShowResetProfileBannerV2, base::FEATURE_ENABLED_BY_DEFAULT);
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ // Controls whether Chrome Apps are supported. See https://crbug.com/1221251.
+ // If the feature is disabled, Chrome Apps continue to work. If enabled, Chrome
+ // Apps will not launch and will be marked in the UI as deprecated.
+diff --git chrome/common/chrome_features.h chrome/common/chrome_features.h
+--- chrome/common/chrome_features.h
++++ chrome/common/chrome_features.h
+@@ -162,7 +162,8 @@ BASE_DECLARE_FEATURE(kDesktopPWAsTabStripSettings);
+ COMPONENT_EXPORT(CHROME_FEATURES)
+ BASE_DECLARE_FEATURE(kShowResetProfileBannerV2);
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ COMPONENT_EXPORT(CHROME_FEATURES) BASE_DECLARE_FEATURE(kChromeAppsDeprecation);
+ COMPONENT_EXPORT(CHROME_FEATURES)
+ BASE_DECLARE_FEATURE(kShortcutsNotApps);
