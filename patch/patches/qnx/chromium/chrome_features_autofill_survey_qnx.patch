@@ -1,0 +1,26 @@
+diff --git chrome/common/chrome_features.cc chrome/common/chrome_features.cc
+index 5157f02110be795503dd10b4418e82a5567116d4..1e5d90090b94aacb68c7c61ff227578da16d45a3 100644
+--- chrome/common/chrome_features.cc
++++ chrome/common/chrome_features.cc
+@@ -84,7 +84,7 @@ BASE_FEATURE(kUseKeychainKeyProvider, base::FEATURE_ENABLED_BY_DEFAULT);
+ #endif  // BUILDFLAG(IS_MAC)
+ 
+ #if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
+-    BUILDFLAG(IS_CHROMEOS)
++    BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_QNX)
+ // Enables or disables the Autofill survey triggered by opening a prompt to
+ // save address info.
+ BASE_FEATURE(kAutofillAddressSurvey, base::FEATURE_DISABLED_BY_DEFAULT);
+diff --git chrome/common/chrome_features.h chrome/common/chrome_features.h
+index a4fd711677055b75bb30f2ea89d8d5820f5b7fb3..6362a420614cee617510b5229e4d08b8bcbec2b7 100644
+--- chrome/common/chrome_features.h
++++ chrome/common/chrome_features.h
+@@ -81,7 +81,7 @@ BASE_DECLARE_FEATURE(kUseKeychainKeyProvider);
+ #endif  // BUILDFLAG(IS_MAC)
+ 
+ #if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
+-    BUILDFLAG(IS_CHROMEOS)
++    BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_QNX)
+ COMPONENT_EXPORT(CHROME_FEATURES) BASE_DECLARE_FEATURE(kAutofillAddressSurvey);
+ COMPONENT_EXPORT(CHROME_FEATURES) BASE_DECLARE_FEATURE(kAutofillCardSurvey);
+ COMPONENT_EXPORT(CHROME_FEATURES) BASE_DECLARE_FEATURE(kAutofillPasswordSurvey);
