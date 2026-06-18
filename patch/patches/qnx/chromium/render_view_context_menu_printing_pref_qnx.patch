@@ -1,0 +1,18 @@
+diff --git chrome/browser/renderer_context_menu/render_view_context_menu.cc chrome/browser/renderer_context_menu/render_view_context_menu.cc
+--- chrome/browser/renderer_context_menu/render_view_context_menu.cc
++++ chrome/browser/renderer_context_menu/render_view_context_menu.cc
+@@ -4035,12 +4035,14 @@ bool RenderViewContextMenu::IsPasteAndMatchStyleEnabled() const {
+ }
+ 
+ bool RenderViewContextMenu::IsPrintPreviewEnabled() const {
++#if BUILDFLAG(ENABLE_PRINTING)
+   if (IsGlicWindow(this, browser_context_) &&
+       base::FeatureList::IsEnabled(features::kGlicPrintMenuItem) &&
+       glic::GlicEnabling::IsMultiInstanceEnabled()) {
+     return GetPrefs(browser_context_)->GetBoolean(prefs::kPrintingEnabled) &&
+            (source_web_contents_ && !source_web_contents_->IsCrashed());
+   }
++#endif  // BUILDFLAG(ENABLE_PRINTING)
+ 
+   if (params_.media_type != ContextMenuDataMediaType::kNone &&
+       !(params_.media_flags & ContextMenuData::kMediaCanPrint)) {
