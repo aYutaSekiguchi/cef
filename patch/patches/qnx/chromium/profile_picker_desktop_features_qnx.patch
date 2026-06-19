@@ -1,0 +1,150 @@
+diff --git chrome/browser/regional_capabilities/regional_capabilities_service_factory.cc chrome/browser/regional_capabilities/regional_capabilities_service_factory.cc
+--- chrome/browser/regional_capabilities/regional_capabilities_service_factory.cc
++++ chrome/browser/regional_capabilities/regional_capabilities_service_factory.cc
+@@ -61,7 +61,8 @@
+   return instance.get();
+ }
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ // static
+ bool RegionalCapabilitiesServiceFactory::
+     IsInSearchEngineChoiceScreenRegionForSystemProfile(Profile* profile) {
+diff --git chrome/browser/regional_capabilities/regional_capabilities_service_factory.h chrome/browser/regional_capabilities/regional_capabilities_service_factory.h
+--- chrome/browser/regional_capabilities/regional_capabilities_service_factory.h
++++ chrome/browser/regional_capabilities/regional_capabilities_service_factory.h
+@@ -31,7 +31,8 @@
+ 
+   static RegionalCapabilitiesServiceFactory* GetInstance();
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+   // Returns whether the system profile is in a region where we can show a
+   // search engine choice screen. If the profile is not a system profile, this
+   // function crashes. Used for clients associated with system profiles (where
+diff --git components/regional_capabilities/regional_capabilities_service.cc components/regional_capabilities/regional_capabilities_service.cc
+--- components/regional_capabilities/regional_capabilities_service.cc
++++ components/regional_capabilities/regional_capabilities_service.cc
+@@ -413,7 +413,8 @@
+       .choice_screen_eligibility_config.has_value();
+ }
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ // static
+ bool RegionalCapabilitiesService::IsInSearchEngineChoiceScreenRegion(
+     Client& client) {
+@@ -421,7 +422,7 @@
+       GetCountryIdFromClient(client, Client::CountryIdCallback());
+   return IsInSearchEngineChoiceScreenRegion(country_id_result.country_id);
+ }
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ 
+ bool RegionalCapabilitiesService::
+     IsChoiceScreenCompatibleWithCurrentLocation() {
+diff --git components/regional_capabilities/regional_capabilities_service.h components/regional_capabilities/regional_capabilities_service.h
+--- components/regional_capabilities/regional_capabilities_service.h
++++ components/regional_capabilities/regional_capabilities_service.h
+@@ -117,7 +117,8 @@
+   static bool IsInSearchEngineChoiceScreenRegion(
+       const country_codes::CountryId& tested_country_id);
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+   // Returns whether the country obtained from the client is associated with
+   // a region in which we can show a search engine choice screen.
+   //
+@@ -126,7 +127,7 @@
+   // available). Most clients should use `IsInSearchEngineChoiceScreenRegion()`
+   // instead.
+   static bool IsInSearchEngineChoiceScreenRegion(Client& client);
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ 
+   // Returns true when the choice screen eligibility check against country
+   // association is not required, or if the current location is compatible with
+diff --git components/signin/public/base/signin_switches.cc components/signin/public/base/signin_switches.cc
+--- components/signin/public/base/signin_switches.cc
++++ components/signin/public/base/signin_switches.cc
+@@ -399,7 +399,8 @@
+         base::Hours(8)};
+ #endif
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ BASE_FEATURE(kFirstRunDesktopRefresh, base::FEATURE_DISABLED_BY_DEFAULT);
+ BASE_FEATURE(kFirstRunDesktopChoiceScreenRefresh,
+              base::FEATURE_DISABLED_BY_DEFAULT);
+@@ -423,7 +424,7 @@
+         &kFirstRunDesktopRefresh, "sign-in-promo-variation",
+         FirstRunDesktopSignInPromoVariation::kDefault,
+         &kFirstRunDesktopSignInPromoVariations};
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ 
+ #if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
+ BASE_FEATURE(kFirstRunDesktopRevamp, base::FEATURE_DISABLED_BY_DEFAULT);
+@@ -469,14 +470,15 @@
+ 
+ BASE_FEATURE(kNonDefaultGaiaOriginCheck, base::FEATURE_ENABLED_BY_DEFAULT);
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ BASE_FEATURE(kOpenAllProfilesFromProfilePickerExperiment,
+              base::FEATURE_DISABLED_BY_DEFAULT);
+ const base::FeatureParam<int>
+     kMaxProfilesCountToShowOpenAllButtonInProfilePicker{
+         &kOpenAllProfilesFromProfilePickerExperiment,
+         "max_profiles_count_to_show_open_all_button_in_profile_picker", 5};
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ 
+ #if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
+     BUILDFLAG(IS_QNX)
+diff --git components/signin/public/base/signin_switches.h components/signin/public/base/signin_switches.h
+--- components/signin/public/base/signin_switches.h
++++ components/signin/public/base/signin_switches.h
+@@ -315,7 +315,8 @@
+     kPolicyDisclaimerRegistrationRetryDelay;
+ #endif
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ // This feature controls running visually refreshed first run and profile
+ // creation flows for users outside of the search engine choice regions. To
+ // enable the refresh in search engine choice screen regions,
+@@ -356,7 +357,7 @@
+ COMPONENT_EXPORT(SIGNIN_SWITCHES)
+ extern const base::FeatureParam<FirstRunDesktopSignInPromoVariation>
+     kFirstRunDesktopSignInPromoVariation;
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ 
+ #if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
+ // It enables the first run revamp (introduce new UIs and additional effects).
+@@ -417,14 +418,15 @@
+ COMPONENT_EXPORT(SIGNIN_SWITCHES)
+ BASE_DECLARE_FEATURE(kNonDefaultGaiaOriginCheck);
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ // Experimenting with a button to all profiles from the profile picker.
+ COMPONENT_EXPORT(SIGNIN_SWITCHES)
+ BASE_DECLARE_FEATURE(kOpenAllProfilesFromProfilePickerExperiment);
+ COMPONENT_EXPORT(SIGNIN_SWITCHES)
+ extern const base::FeatureParam<int>
+     kMaxProfilesCountToShowOpenAllButtonInProfilePicker;
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ 
+ #if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
+     BUILDFLAG(IS_QNX)

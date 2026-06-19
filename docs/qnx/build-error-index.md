@@ -125,6 +125,7 @@ rg -n "GetDesktopName|GetAppDesktopShortcutFilename|DesktopActionInfo|shell_inte
 rg -n "ProfileCustomizationUI|ProfilePickerUI|updater_ui.mojom.h|chrome_browser_interface_binders_webui_parts_desktop" docs/qnx/history/build-errors
 rg -n "ShowFirstRunDialog|first_run_internal_posix|first_run_dialog" docs/qnx/history/build-errors
 rg -n "client_certificates|CertificateProvisioningServiceFactory|CertificateStoreFactory|chrome_browser_main_extra_parts_profiles" docs/qnx/history/build-errors
+rg -n "IsFirstRunDesktopRefreshEnabled|kOpenAllProfilesFromProfilePickerExperiment|IsInSearchEngineChoiceScreenRegionForSystemProfile|profile_picker_ui" docs/qnx/history/build-errors
 ```
 
 If the immediate search misses:
