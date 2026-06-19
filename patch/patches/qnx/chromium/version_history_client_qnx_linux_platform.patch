@@ -1,0 +1,13 @@
+diff --git chrome/browser/upgrade_detector/version_history_client.cc chrome/browser/upgrade_detector/version_history_client.cc
+index 309c0b3433dfce870dad81464e83004f27becf73..1db3f7972d1a00dd4d12d54b03d5723c58561d81 100644
+--- chrome/browser/upgrade_detector/version_history_client.cc
++++ chrome/browser/upgrade_detector/version_history_client.cc
+@@ -177,7 +177,7 @@ GURL GetVersionReleasesUrl(base::Version version) {
+ #define CURRENT_PLATFORM "win"
+ #endif
+ 
+-#elif BUILDFLAG(IS_LINUX)
++#elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ 
+ #define CURRENT_PLATFORM "linux"
+ 
