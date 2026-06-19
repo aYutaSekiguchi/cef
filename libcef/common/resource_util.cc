@@ -4,7 +4,7 @@
 
 #include "cef/libcef/common/resource_util.h"
 
-#if BUILDFLAG(IS_LINUX)
+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
 #include <dlfcn.h>
 #endif
 
@@ -16,7 +16,7 @@
 #include "chrome/common/chrome_paths.h"
 #include "chrome/common/chrome_switches.h"
 
-#if BUILDFLAG(IS_LINUX)
+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
 #include "base/environment.h"
 #include "base/nix/xdg_util.h"
 #endif
@@ -29,7 +29,7 @@ namespace resource_util {
 
 namespace {
 
-#if BUILDFLAG(IS_LINUX)
+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
 
 // Based on chrome/common/chrome_paths_linux.cc.
 // See http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html

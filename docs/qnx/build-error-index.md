@@ -128,6 +128,7 @@ rg -n "client_certificates|CertificateProvisioningServiceFactory|CertificateStor
 rg -n "IsFirstRunDesktopRefreshEnabled|kOpenAllProfilesFromProfilePickerExperiment|IsInSearchEngineChoiceScreenRegionForSystemProfile|profile_picker_ui" docs/qnx/history/build-errors
 rg -n "version_history_client|CURRENT_PLATFORM|VersionHistory|platforms/" docs/qnx/history/build-errors
 rg -n "print.mojom.h|kChromeUIPrintHost|browser_platform_delegate_create|CefBrowserPlatformDelegateOsr|ENABLE_PRINT_PREVIEW|ENABLE_PRINTING" docs/qnx/history/build-errors
+rg -n "GetDefaultUserDataDirectory|resource_util.cc|cef_user_data|XDGDirectory" docs/qnx/history/build-errors
 ```
 
 If the immediate search misses:
