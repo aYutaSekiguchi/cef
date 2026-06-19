@@ -130,6 +130,7 @@ rg -n "version_history_client|CURRENT_PLATFORM|VersionHistory|platforms/" docs/q
 rg -n "print.mojom.h|kChromeUIPrintHost|browser_platform_delegate_create|CefBrowserPlatformDelegateOsr|ENABLE_PRINT_PREVIEW|ENABLE_PRINTING" docs/qnx/history/build-errors
 rg -n "GetDefaultUserDataDirectory|resource_util.cc|cef_user_data|XDGDirectory" docs/qnx/history/build-errors
 rg -n "BitmapCursor|cursor_util_aura|FromPlatformCursor|IS_OZONE|SUPPORTS_OZONE_X11" docs/qnx/history/build-errors
+rg -n "icuuc_private_hidden_visibility|icui18n_hidden_visibility|icudt77_dat|UVector64|visibility_hidden|multiple definition" docs/qnx/history/build-errors
 ```
 
 If the immediate search misses:

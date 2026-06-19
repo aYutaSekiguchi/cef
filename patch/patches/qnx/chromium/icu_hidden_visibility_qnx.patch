@@ -1,0 +1,12 @@
+diff --git third_party/icu/BUILD.gn third_party/icu/BUILD.gn
+--- third_party/icu/BUILD.gn
++++ third_party/icu/BUILD.gn
+@@ -177,7 +177,7 @@ config("icu_code") {
+ # Config used to set default visibility to hidden.
+ config("visibility_hidden") {
+   cflags = []
+-  if (is_mac || is_linux || is_chromeos || is_android || is_fuchsia) {
++  if (is_mac || is_linux || is_chromeos || is_android || is_fuchsia || is_qnx) {
+     cflags += [ "-fvisibility=hidden" ]
+   }
+ }
