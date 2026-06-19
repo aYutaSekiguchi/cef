@@ -1,0 +1,22 @@
+diff --git chrome/browser/ui/webui/signin/BUILD.gn chrome/browser/ui/webui/signin/BUILD.gn
+index 8810009c0792b8482c8308ce82a0f55ae7730ea1..1ff6ac70abed7971cf17cfb169ebdaab162ffda1 100644
+--- chrome/browser/ui/webui/signin/BUILD.gn
++++ chrome/browser/ui/webui/signin/BUILD.gn
+@@ -130,7 +130,7 @@ source_set("signin") {
+     ]
+   }
+ 
+-  if (is_win || is_mac || is_linux) {
++  if (is_win || is_mac || is_linux || is_qnx) {
+     sources += [
+       "history_sync_optin/history_sync_optin_handler.h",
+       "history_sync_optin/history_sync_optin_ui.h",
+@@ -214,7 +214,7 @@ source_set("signin_impl") {
+     ]
+   }
+ 
+-  if (is_win || is_mac || is_linux) {
++  if (is_win || is_mac || is_linux || is_qnx) {
+     sources += [
+       "history_sync_optin/history_sync_optin_handler.cc",
+       "history_sync_optin/history_sync_optin_ui.cc",
