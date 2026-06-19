@@ -1,0 +1,18 @@
+diff --git chrome/browser/ui/task_manager/BUILD.gn chrome/browser/ui/task_manager/BUILD.gn
+index be336703aa9b770b1f5ccd551723a58a261aa27a..6ab20a60d8945c6af3f161861333e9700f425de7 100644
+--- chrome/browser/ui/task_manager/BUILD.gn
++++ chrome/browser/ui/task_manager/BUILD.gn
+@@ -27,9 +27,12 @@ if (!is_android) {
+       "//content/public/common",
+       "//content/public/common:result_codes",
+       "//third_party/icu:icui18n",
+-      "//third_party/icu:icui18n_hidden_visibility",
+       "//third_party/icu:icuuc_public",
+     ]
++
++    if (!is_qnx) {
++      deps += [ "//third_party/icu:icui18n_hidden_visibility" ]
++    }
+   }
+ 
+   source_set("unit_tests") {

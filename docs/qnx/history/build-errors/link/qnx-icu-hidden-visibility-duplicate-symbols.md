@@ -25,9 +25,20 @@ obj/third_party/icu/libicuuc_hidden_visibility.a
 
 ## Root cause
 
-This is not a generic upstream CEF Linux issue. Upstream CEF Linux can link the normal ICU archives and the hidden-visibility ICU archives in the same final link because the hidden variants are actually compiled with hidden symbol visibility.
+QNX's `libcef.so` shared-library link uses `-Wl,--whole-archive` for rspfile inputs so the QNX linker can resolve the large static/Rust archive graph. This differs from the behavior that lets upstream CEF Linux avoid pulling every archive member from both ICU variants.
 
-`third_party/icu/BUILD.gn` has an ICU-local `visibility_hidden` config. ICU first removes Chromium's default `//build/config:symbol_visibility_hidden` from ICU component targets, then applies this local config to the hidden variants. Before the QNX fix the local config was:
+`chrome/browser/ui/task_manager` depends on both normal ICU and `//third_party/icu:icui18n_hidden_visibility`. On QNX, whole-archive expansion causes both the normal ICU archives and hidden ICU archives to be included in the same `libcef.so` link:
+
+```text
+obj/third_party/icu/libicui18n.a
+obj/third_party/icu/libicuuc.a
+obj/third_party/icu/libicui18n_hidden_visibility.a
+obj/third_party/icu/libicuuc_hidden_visibility.a
+```
+
+Even when compiled with `-fvisibility=hidden`, the hidden ICU object symbols are still `GLOBAL HIDDEN` definitions inside the same link unit. QNX ld reports duplicate definitions when the same ICU implementation objects are pulled from both archives.
+
+There was also a secondary parity issue: `third_party/icu/BUILD.gn` has an ICU-local `visibility_hidden` config. ICU first removes Chromium's default `//build/config:symbol_visibility_hidden` from ICU component targets, then applies this local config to the hidden variants. Before the QNX fix the local config was:
 
 ```gn
 config("visibility_hidden") {
@@ -38,13 +49,16 @@ config("visibility_hidden") {
 }
 ```
 
-QNX was omitted, so `icuuc_private_hidden_visibility` and `icui18n_hidden_visibility` had hidden target names but were built without `-fvisibility=hidden`. Their symbols remained default-visible and collided with the normal ICU archives when linked into `libcef.so`.
+QNX was omitted, so `icuuc_private_hidden_visibility` and `icui18n_hidden_visibility` had hidden target names but were built without `-fvisibility=hidden`. Adding QNX here is correct for parity, but it is not sufficient to avoid QNX duplicate definitions while both ICU archive variants are whole-archive linked into `libcef.so`.
 
 ## Fix
 
-Patch: `cef/patch/patches/qnx/chromium/icu_hidden_visibility_qnx.patch`
+Patches:
 
-Change:
+- `cef/patch/patches/qnx/chromium/icu_hidden_visibility_qnx.patch`
+- `cef/patch/patches/qnx/chromium/task_manager_no_hidden_icu_qnx.patch`
+
+Changes:
 
 - Add `is_qnx` to ICU's local `visibility_hidden` config in `third_party/icu/BUILD.gn`:
 
@@ -67,6 +81,14 @@ Findings:
 
 No additional `build/config/compiler` patch is recommended for this specific duplicate-symbol issue.
 
+- Remove `//third_party/icu:icui18n_hidden_visibility` from `chrome/browser/ui/task_manager` on QNX only. The normal `//third_party/icu:icui18n` dependency remains, and `//third_party/icu:icuuc_public` is still present.
+
+```gn
+if (!is_qnx) {
+  deps += [ "//third_party/icu:icui18n_hidden_visibility" ]
+}
+```
+
 ## Verification
 
 ```text
@@ -83,6 +105,17 @@ ninja -C out/qnx_release -t commands obj/third_party/icu/icuuc_private_hidden_vi
 -fvisibility=hidden
 -fvisibility=hidden
 ```
+
+After the QNX task-manager dep guard, `libcef.so.rsp` no longer contains hidden ICU archives:
+
+```text
+hidden icui18n 0
+hidden icuuc 0
+normal icui18n 1
+normal icuuc 1
+```
+
+A direct `ninja -C out/qnx_release libcef.so` no longer reports ICU `UVector64` / `icudt77_dat` duplicate symbols; it progresses to the next unrelated duplicate-symbol group (`enterprise/watermark`, `enterprise/promotion`, etc.).
 
 ## Search hints
 
