@@ -1,0 +1,37 @@
+diff --git chrome/browser/first_run/first_run_dialog.h chrome/browser/first_run/first_run_dialog.h
+--- chrome/browser/first_run/first_run_dialog.h
++++ chrome/browser/first_run/first_run_dialog.h
+@@ -9,7 +9,7 @@
+ #include "build/build_config.h"
+ 
+ // Hide this function on platforms where the dialog does not exist.
+-#if BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ 
+ namespace first_run {
+ 
+@@ -30,6 +30,6 @@ base::OnceClosure& GetBeforeShowFirstRunDialogHookForTesting();
+ 
+ }  // namespace first_run
+ 
+-#endif  // BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ 
+ #endif  // CHROME_BROWSER_FIRST_RUN_FIRST_RUN_DIALOG_H_
+diff --git chrome/browser/ui/BUILD.gn chrome/browser/ui/BUILD.gn
+--- chrome/browser/ui/BUILD.gn
++++ chrome/browser/ui/BUILD.gn
+@@ -3478,6 +3478,13 @@ static_library("ui") {
+     }
+   }
+ 
++  if (is_qnx) {
++    sources += [
++      "views/first_run_dialog.cc",
++      "views/first_run_dialog.h",
++    ]
++  }
++
+   if (is_linux || is_mac) {
+     sources += [
+       "views/first_run_dialog.cc",  # Dialog shows only on Linux and macOS.
