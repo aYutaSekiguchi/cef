@@ -10,6 +10,7 @@ Targets:
 - `obj/cef/libcef_static/alloy_browser_host_impl.o`
 - `obj/cef/libcef_static/browser_platform_delegate_create.o`
 - `obj/cef/libcef_static/print_util.o`
+- `obj/cef/libcef_static/chrome_content_renderer_client_cef.o`
 
 Primary diagnostics:
 
@@ -19,6 +20,7 @@ Primary diagnostics:
 ../../cef/libcef/browser/browser_platform_delegate_create.cc:28:2: error: A delegate implementation is not available for your platform.
 ../../cef/libcef/browser/browser_platform_delegate_create.cc:48:17: error: unknown type name 'CefBrowserPlatformDelegateOsr'
 ../../components/printing/browser/print_manager.h:12:10: fatal error: 'components/printing/common/print.mojom.h' file not found
+../../components/printing/renderer/print_render_frame_helper.h:22:10: fatal error: 'components/printing/common/print.mojom.h' file not found
 ```
 
 A follow-up after guarding the printing includes was:
@@ -55,6 +57,9 @@ Direct CEF source/build changes:
 - `libcef/browser/printing/print_util.cc`
   - include `print_view_manager` / PDF print utility headers only when `ENABLE_PRINTING`
   - make `Print()` a no-op and report `PrintToPDF is disabled` via the callback when printing is disabled
+- `libcef/renderer/chrome/chrome_content_renderer_client_cef.cc`
+  - include `chrome_print_render_frame_helper_delegate.h` only when `ENABLE_PRINT_PREVIEW`
+  - call `ChromePrintRenderFrameHelperDelegate::SetNextPrintPreviewEnabled()` only when print preview is enabled
 - `libcef/browser/browser_platform_delegate_create.cc`
   - route QNX through the Linux native/OSR delegate classes
 - `BUILD.gn`
