@@ -14,14 +14,14 @@
 #include "ui/display/screen.h"
 #include "ui/wm/core/cursor_loader.h"
 
-#if BUILDFLAG(IS_LINUX)
+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
 #include "ui/base/ozone_buildflags.h"
 #if BUILDFLAG(SUPPORTS_OZONE_X11)
 #include "ui/base/x/x11_cursor.h"
 #elif BUILDFLAG(IS_OZONE)
 #include "ui/ozone/common/bitmap_cursor.h"
 #endif
-#endif  // BUILDFLAG(IS_LINUX)
+#endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
 
 #if BUILDFLAG(IS_WIN)
 #include "ui/base/win/win_cursor.h"
