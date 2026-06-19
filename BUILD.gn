@@ -1076,6 +1076,19 @@ source_set("libcef_static") {
     }
   }
 
+  if (is_qnx) {
+    sources += includes_linux + [
+      "libcef/browser/native/browser_platform_delegate_native_linux.cc",
+      "libcef/browser/native/browser_platform_delegate_native_linux.h",
+      "libcef/browser/osr/browser_platform_delegate_osr_linux.cc",
+      "libcef/browser/osr/browser_platform_delegate_osr_linux.h",
+      "libcef/common/util_linux.h",
+      "libcef/common/util_linux.cc",
+    ]
+
+    deps += [ "//third_party/angle:libEGL" ]
+  }
+
   if (is_mac) {
     sources += includes_mac + [
       "libcef/browser/chrome/chrome_content_browser_client_cef_mac.mm",

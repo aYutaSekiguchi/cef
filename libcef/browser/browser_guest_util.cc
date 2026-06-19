@@ -5,7 +5,10 @@
 #include "cef/libcef/browser/browser_guest_util.h"
 
 #include "chrome/browser/browser_process.h"
+#include "printing/buildflags/buildflags.h"
+#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
 #include "chrome/browser/printing/print_preview_dialog_controller.h"
+#endif
 #include "content/browser/browser_plugin/browser_plugin_guest.h"
 #include "content/browser/web_contents/web_contents_impl.h"
 
@@ -24,10 +27,14 @@ content::WebContents* GetOwnerForBrowserPluginGuest(
 
 content::WebContents* GetInitiatorForPrintPreviewDialog(
     const content::WebContents* guest) {
+#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
   auto print_preview_controller =
       g_browser_process->print_preview_dialog_controller();
   return print_preview_controller->GetInitiator(
       const_cast<content::WebContents*>(guest));
+#else
+  return nullptr;
+#endif
 }
 
 }  // namespace

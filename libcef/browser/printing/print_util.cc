@@ -6,14 +6,18 @@
 
 #include "base/files/file_util.h"
 #include "cef/libcef/browser/thread_util.h"
+#include "printing/buildflags/buildflags.h"
+#if BUILDFLAG(ENABLE_PRINTING)
 #include "chrome/browser/printing/print_view_manager.h"
 #include "chrome/browser/printing/print_view_manager_common.h"
 #include "components/printing/browser/print_to_pdf/pdf_print_utils.h"
+#endif
 
 namespace print_util {
 
 namespace {
 
+#if BUILDFLAG(ENABLE_PRINTING)
 // Write the PDF file to disk.
 void SavePdfFile(const CefString& path,
                  CefRefPtr<CefPdfPrintCallback> callback,
@@ -46,12 +50,16 @@ void OnPDFCreated(const CefString& path,
       base::BindOnce(&SavePdfFile, path, callback, std::move(data)));
 }
 
+#endif  // BUILDFLAG(ENABLE_PRINTING)
+
 }  // namespace
 
 void Print(content::WebContents* web_contents, bool print_preview_disabled) {
+#if BUILDFLAG(ENABLE_PRINTING)
   // Like chrome::Print() but specifying the WebContents.
   printing::StartPrint(web_contents, print_preview_disabled,
                        /*has_selection=*/false);
+#endif
 }
 
 // Implementation based on PageHandler::PrintToPDF.
@@ -59,6 +67,7 @@ void PrintToPDF(content::WebContents* web_contents,
                 const CefString& path,
                 const CefPdfPrintSettings& settings,
                 CefRefPtr<CefPdfPrintCallback> callback) {
+#if BUILDFLAG(ENABLE_PRINTING)
   const bool display_header_footer = !!settings.display_header_footer;
 
   // Defaults to no header/footer.
@@ -139,6 +148,12 @@ void PrintToPDF(content::WebContents* web_contents,
 
   LOG(ERROR) << "PrintToPDF was not handled.";
   callback->OnPdfPrintFinished(CefString(), false);
+#else
+  LOG(ERROR) << "PrintToPDF is disabled.";
+  if (callback) {
+    callback->OnPdfPrintFinished(CefString(), false);
+  }
+#endif
 }
 
 }  // namespace print_util

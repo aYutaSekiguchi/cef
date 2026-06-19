@@ -36,7 +36,10 @@
 #include "chrome/browser/picture_in_picture/picture_in_picture_window_manager.h"
 #include "chrome/common/webui_url_constants.h"
 #include "components/input/native_web_keyboard_event.h"
+#include "printing/buildflags/buildflags.h"
+#if BUILDFLAG(ENABLE_PRINTING)
 #include "components/printing/browser/print_composite_client.h"
+#endif
 #include "components/zoom/page_zoom.h"
 #include "content/browser/gpu/compositor_util.h"
 #include "content/public/browser/desktop_media_id.h"
@@ -77,7 +80,9 @@ const char* kAllowedWebUIHosts[] = {
     chrome::kChromeUINetInternalsHost,
     content::kChromeUINetworkErrorHost,
     content::kChromeUINetworkErrorsListingHost,
+#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
     chrome::kChromeUIPrintHost,
+#endif
     content::kChromeUIProcessInternalsHost,
     content::kChromeUIResourcesHost,
 #if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_LINUX)
@@ -832,10 +837,12 @@ void AlloyBrowserHostImpl::PrintCrossProcessSubframe(
     const gfx::Rect& rect,
     int document_cookie,
     content::RenderFrameHost* subframe_host) const {
+#if BUILDFLAG(ENABLE_PRINTING)
   auto* client = printing::PrintCompositeClient::FromWebContents(web_contents);
   if (client) {
     client->PrintCrossProcessSubframe(rect, document_cookie, subframe_host);
   }
+#endif
 }
 
 content::WebContents* AlloyBrowserHostImpl::OpenURLFromTab(

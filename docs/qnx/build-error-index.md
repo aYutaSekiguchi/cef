@@ -127,6 +127,7 @@ rg -n "ShowFirstRunDialog|first_run_internal_posix|first_run_dialog" docs/qnx/hi
 rg -n "client_certificates|CertificateProvisioningServiceFactory|CertificateStoreFactory|chrome_browser_main_extra_parts_profiles" docs/qnx/history/build-errors
 rg -n "IsFirstRunDesktopRefreshEnabled|kOpenAllProfilesFromProfilePickerExperiment|IsInSearchEngineChoiceScreenRegionForSystemProfile|profile_picker_ui" docs/qnx/history/build-errors
 rg -n "version_history_client|CURRENT_PLATFORM|VersionHistory|platforms/" docs/qnx/history/build-errors
+rg -n "print.mojom.h|kChromeUIPrintHost|browser_platform_delegate_create|CefBrowserPlatformDelegateOsr|ENABLE_PRINT_PREVIEW|ENABLE_PRINTING" docs/qnx/history/build-errors
 ```
 
 If the immediate search misses:
