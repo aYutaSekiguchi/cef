@@ -137,6 +137,7 @@ rg -n "jsimd_extbgrx_ycc_convert_sse2|jconst_fancy_upsample_sse2|libjpeg_turbo_e
 rg -n "kIPHDesktopCustomizeChromeAutoOpenFeature|kSplitViewCreated|feature_constants_qnx|event_constants_qnx|feature_engagement::events" docs/qnx/history/build-errors
 rg -n "HistorySyncOptinUI::kWebUIControllerType|AppendHistorySyncOptinQueryParams|history_sync_optin_webui_sources_qnx|history_sync_optin_ui.o" docs/qnx/history/build-errors
 rg -n "InactiveWindowMouseEventController|ScopedAcceptMouseEventsWhileWindowInactive|inactive_window_mouse_event_controller_qnx" docs/qnx/history/build-errors
+rg -n "TtsPlatformImpl::GetInstance|tts_qnx|content_tts_qnx|speech-dispatcher" docs/qnx/history/build-errors
 ```
 
 If the immediate search misses:

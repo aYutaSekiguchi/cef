@@ -1,0 +1,15 @@
+diff --git content/browser/BUILD.gn content/browser/BUILD.gn
+index 3913f68ccd32442c16b50b7a48a1876da3061f3b..b45c29a94a538f226d4e543d13ed6c59560f888a 100644
+--- content/browser/BUILD.gn
++++ content/browser/BUILD.gn
+@@ -2734,6 +2734,10 @@ source_set("browser") {
+     ]
+   }
+ 
++  if (is_qnx) {
++    sources += [ "speech/tts_qnx.cc" ]
++  }
++
+   # ChromeOS also defines linux but their memory-monitors conflict.
+   if (is_chromeos) {
+     sources += [
