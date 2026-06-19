@@ -1,0 +1,12 @@
+diff --git chrome/browser/ui/tabs/BUILD.gn chrome/browser/ui/tabs/BUILD.gn
+--- chrome/browser/ui/tabs/BUILD.gn
++++ chrome/browser/ui/tabs/BUILD.gn
+@@ -475,7 +475,7 @@ if (!is_android) {
+       "vertical_tab_strip_state_controller.cc",
+     ]
+ 
+-    if (is_win || is_mac || is_linux || is_chromeos) {
++    if (is_win || is_mac || is_linux || is_chromeos || is_qnx) {
+       sources += [ "inactive_window_mouse_event_controller.cc" ]
+     }
+ 
