@@ -1,3 +1,16 @@
+diff --git components/feature_engagement/public/event_constants.cc components/feature_engagement/public/event_constants.cc
+index 259593dc20cdbd95ab4b199863267222ffec79d7..599970776b61fcbfcef0e2debb435bde09e911ef 100644
+--- components/feature_engagement/public/event_constants.cc
++++ components/feature_engagement/public/event_constants.cc
+@@ -11,7 +11,7 @@ namespace feature_engagement {
+ namespace events {
+ 
+ #if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_LINUX) || \
+-    BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_FUCHSIA)
++    BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_FUCHSIA) || BUILDFLAG(IS_QNX)
+ const char kNewTabOpened[] = "new_tab_opened";
+ const char kSixthTabOpened[] = "sixth_tab_opened";
+ const char kReadingListItemAdded[] = "reading_list_item_added";
 diff --git components/feature_engagement/public/event_constants.h components/feature_engagement/public/event_constants.h
 index 21c8585e1197705228a1c601d1407818474186e7..a23a4c1dd49e8b4ef159e27ef559acfb9a0f5c3d 100644
 --- components/feature_engagement/public/event_constants.h

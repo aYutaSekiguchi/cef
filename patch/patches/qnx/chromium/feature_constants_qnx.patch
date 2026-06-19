@@ -1,6 +1,31 @@
+diff --git components/feature_engagement/public/feature_constants.cc components/feature_engagement/public/feature_constants.cc
+index b73f6b2c227f88cd98fb837411f1e997f0145f4c..5c8bfa02e56db76138ba73fe36a7d9f929bed103 100644
+--- components/feature_engagement/public/feature_constants.cc
++++ components/feature_engagement/public/feature_constants.cc
+@@ -32,7 +32,7 @@ bool IsOnDeviceStorageEnabled() {
+ }
+ 
+ #if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_LINUX) || \
+-    BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_FUCHSIA)
++    BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_FUCHSIA) || BUILDFLAG(IS_QNX)
+ #if BUILDFLAG(GOOGLE_CHROME_BRANDING)
+ BASE_FEATURE(kEsbDownloadRowPromoFeature,
+              "EsbDownloadRowPromo",
+@@ -896,7 +896,8 @@ BASE_FEATURE(kIPHiOSActiveDaysTrackingFeature,
+ #endif  // BUILDFLAG(IS_IOS)
+ 
+ #if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_LINUX) || \
+-    BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_FUCHSIA)
++    BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_FUCHSIA) || \
++    BUILDFLAG(IS_QNX)
+ BASE_FEATURE(kIPHAutofillBnplAffirmOrZipSuggestionFeature,
+              "IPH_AutofillBnplAffirmOrZipSuggestion",
+              base::FEATURE_ENABLED_BY_DEFAULT);
+diff --git components/feature_engagement/public/feature_constants.h components/feature_engagement/public/feature_constants.h
+index dfee7d28f581f9957e42c3af730e23eaa5b6edd8..3bcc0e5f0133225809146f805255b862fa3e5575 100644
 --- components/feature_engagement/public/feature_constants.h
 +++ components/feature_engagement/public/feature_constants.h
-@@ -31,7 +31,7 @@
+@@ -31,7 +31,7 @@ FEATURE_CONSTANTS_DECLARE_FEATURE(kIPHDemoMode);
  FEATURE_CONSTANTS_DECLARE_FEATURE(kIPHDummyFeature);
  
  #if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_LINUX) || \
@@ -9,7 +34,7 @@
  #if BUILDFLAG(GOOGLE_CHROME_BRANDING)
  FEATURE_CONSTANTS_DECLARE_FEATURE(kEsbDownloadRowPromoFeature);
  #endif
-@@ -408,7 +408,8 @@
+@@ -408,7 +408,8 @@ FEATURE_CONSTANTS_DECLARE_FEATURE(kIPHiOSActiveDaysTrackingFeature);
  #endif  // BUILDFLAG(IS_IOS)
  
  #if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_LINUX) || \
