@@ -122,6 +122,7 @@ rg -n "kAutofillAddressSurvey|kAutofillCardSurvey|kAutofillPasswordSurvey|survey
 rg -n "kPrintingEnabled|IsPrintPreviewEnabled|render_view_context_menu" docs/qnx/history/build-errors
 rg -n "IsExtensionUnsupportedDeprecatedApp|kChromeAppsDeprecation|app_home_page_handler" docs/qnx/history/build-errors
 rg -n "GetDesktopName|GetAppDesktopShortcutFilename|DesktopActionInfo|shell_integration_linux" docs/qnx/history/build-errors
+rg -n "ProfileCustomizationUI|ProfilePickerUI|updater_ui.mojom.h|chrome_browser_interface_binders_webui_parts_desktop" docs/qnx/history/build-errors
 ```
 
 If the immediate search misses:

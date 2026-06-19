@@ -1,0 +1,26 @@
+diff --git chrome/browser/BUILD.gn chrome/browser/BUILD.gn
+--- chrome/browser/BUILD.gn
++++ chrome/browser/BUILD.gn
+@@ -6908,5 +6908,9 @@ static_library("browser") {
+   }
+ 
++  if (is_qnx) {
++    deps += [ "//chrome/browser/ui/webui/updater:mojo_bindings" ]
++  }
++
+   if (is_linux || is_chromeos) {
+     sources += [
+       "chrome_browser_main_linux.cc",
+diff --git chrome/browser/chrome_browser_interface_binders_webui_parts_desktop.cc chrome/browser/chrome_browser_interface_binders_webui_parts_desktop.cc
+--- chrome/browser/chrome_browser_interface_binders_webui_parts_desktop.cc
++++ chrome/browser/chrome_browser_interface_binders_webui_parts_desktop.cc
+@@ -132,7 +132,8 @@
+ #include "ui/webui/resources/js/browser_command/browser_command.mojom.h"
+ #include "ui/webui/resources/js/tracked_element/tracked_element.mojom.h"  // nogncheck crbug.com/1125897
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ #include "chrome/browser/ui/webui/app_home/app_home.mojom.h"
+ #include "chrome/browser/ui/webui/app_home/app_home_ui.h"
+ #include "chrome/browser/ui/webui/app_settings/web_app_settings_ui.h"
