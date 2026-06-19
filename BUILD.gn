@@ -2689,6 +2689,13 @@ if (is_mac) {
         configs += [ "//build/config/gcc:rpath_for_built_shared_libraries" ]
       }
     }
+
+    if (is_qnx) {
+      sources += [
+        "tests/cefsimple/cefsimple_qnx.cc",
+        "tests/cefsimple/simple_handler_qnx.cc",
+      ]
+    }
   }
 
   if (is_win) {
@@ -2803,6 +2810,16 @@ if (is_mac) {
         # Set rpath to find our own libfreetype even in a non-component build.
         configs += [ "//build/config/gcc:rpath_for_built_shared_libraries" ]
       }
+
+      # Use C11 standard for C files.
+      cflags_c = [ "-std=c11" ]
+    }
+
+    if (is_qnx) {
+      sources += [
+        "tests/cefsimple_capi/cefsimple_qnx.c",
+        "tests/cefsimple_capi/simple_handler_qnx.c",
+      ]
 
       # Use C11 standard for C files.
       cflags_c = [ "-std=c11" ]
