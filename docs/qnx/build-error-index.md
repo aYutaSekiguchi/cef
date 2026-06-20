@@ -139,6 +139,7 @@ rg -n "HistorySyncOptinUI::kWebUIControllerType|AppendHistorySyncOptinQueryParam
 rg -n "InactiveWindowMouseEventController|ScopedAcceptMouseEventsWhileWindowInactive|inactive_window_mouse_event_controller_qnx" docs/qnx/history/build-errors
 rg -n "TtsPlatformImpl::GetInstance|tts_qnx|content_tts_qnx|speech-dispatcher" docs/qnx/history/build-errors
 rg -n "ChildProcessLauncherHelper::TerminateProcess|child_process_launcher_helper_qnx|LaunchProcessOnLauncherThread|GetTerminationInfo" docs/qnx/history/build-errors
+rg -n "FileHandlingIconsSupportedByOs|MaskIconOnOs|web_app_startup_utils_qnx|web_app_file_handler_qnx|web_app_icon_masker_qnx" docs/qnx/history/build-errors
 ```
 
 If the immediate search misses:

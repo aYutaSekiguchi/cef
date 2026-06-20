@@ -1,0 +1,21 @@
+diff --git chrome/browser/ui/startup/BUILD.gn chrome/browser/ui/startup/BUILD.gn
+--- chrome/browser/ui/startup/BUILD.gn
++++ chrome/browser/ui/startup/BUILD.gn
+@@ -69,7 +69,7 @@ source_set("startup") {
+     sources += [ "chrome_for_testing_infobar_delegate.h" ]
+   }
+ 
+-  if (is_win || is_mac || is_linux || is_chromeos) {
++  if (is_win || is_mac || is_linux || is_chromeos || is_qnx) {
+     sources += [ "web_app_startup_utils.h" ]
+     public_deps += [ "//components/services/app_service/public/cpp:app_types" ]
+   }
+@@ -294,7 +294,7 @@ source_set("impl") {
+     sources += [ "chrome_for_testing_infobar_delegate.cc" ]
+   }
+ 
+-  if (is_win || is_mac || is_linux || is_chromeos) {
++  if (is_win || is_mac || is_linux || is_chromeos || is_qnx) {
+     sources += [ "web_app_startup_utils.cc" ]
+     deps += [
+       "//chrome/browser/lifetime:termination_notification",

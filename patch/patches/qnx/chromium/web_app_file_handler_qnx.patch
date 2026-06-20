@@ -1,0 +1,12 @@
+diff --git chrome/browser/web_applications/BUILD.gn chrome/browser/web_applications/BUILD.gn
+--- chrome/browser/web_applications/BUILD.gn
++++ chrome/browser/web_applications/BUILD.gn
+@@ -472,6 +472,7 @@ source_set("web_applications") {
+   }
+ 
+   if (is_qnx) {
+     sources += [
++      "os_integration/web_app_file_handler_registration_qnx.cc",
+       "os_integration/web_app_shortcut_linux.cc",
+       "os_integration/web_app_shortcut_linux.h",
+     ]

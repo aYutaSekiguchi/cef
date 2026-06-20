@@ -1,0 +1,19 @@
+diff --git chrome/browser/web_applications/icons/icon_masker.cc chrome/browser/web_applications/icons/icon_masker.cc
+index 43955fc25677cd7a7c89f38301375cc4ec71bec5..89a8b4ed89e4e26bb5fcaf7ade2e79c1bc0b2599 100644
+--- chrome/browser/web_applications/icons/icon_masker.cc
++++ chrome/browser/web_applications/icons/icon_masker.cc
+@@ -12,12 +12,12 @@
+ 
+ namespace web_app {
+ 
+-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_WIN)
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_WIN) || BUILDFLAG(IS_QNX)
+ void MaskIconOnOs(SkBitmap input_bitmap, MaskedIconCallback masked_callback) {
+   base::SequencedTaskRunner::GetCurrentDefault()->PostTask(
+       FROM_HERE,
+       base::BindOnce(std::move(masked_callback), std::move(input_bitmap)));
+ }
+-#endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_WIN)
++#endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_WIN) || BUILDFLAG(IS_QNX)
+ 
+ }  // namespace web_app
