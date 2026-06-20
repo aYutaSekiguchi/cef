@@ -141,6 +141,7 @@ rg -n "TtsPlatformImpl::GetInstance|tts_qnx|content_tts_qnx|speech-dispatcher" d
 rg -n "ChildProcessLauncherHelper::TerminateProcess|child_process_launcher_helper_qnx|LaunchProcessOnLauncherThread|GetTerminationInfo" docs/qnx/history/build-errors
 rg -n "FileHandlingIconsSupportedByOs|MaskIconOnOs|web_app_startup_utils_qnx|web_app_file_handler_qnx|web_app_icon_masker_qnx" docs/qnx/history/build-errors
 rg -n "ProfilePicker::Shown|ProfilePicker::Params::~Params|profile_picker_profiles_sources_qnx|profile_picker.cc" docs/qnx/history/build-errors
+rg -n "ProfilePicker::Hide|IntroUI::IntroUI|settings::SystemHandler|chrome_browser_ui_views_desktop_sources_qnx" docs/qnx/history/build-errors
 ```
 
 If the immediate search misses:

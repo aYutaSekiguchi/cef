@@ -1,0 +1,65 @@
+diff --git chrome/browser/ui/BUILD.gn chrome/browser/ui/BUILD.gn
+--- chrome/browser/ui/BUILD.gn
++++ chrome/browser/ui/BUILD.gn
+@@ -3012,7 +3012,7 @@
+     ]
+   }
+ 
+-  if (is_win || is_mac || is_linux) {
++  if (is_win || is_mac || is_linux || is_qnx) {
+     sources += [
+       "views/media_preview/active_devices_media_coordinator.cc",
+       "views/media_preview/active_devices_media_coordinator.h",
+@@ -3090,10 +3090,6 @@
+       "webui/intro/intro_handler.h",
+       "webui/intro/intro_ui.cc",
+       "webui/intro/intro_ui.h",
+-      "webui/on_device_translation_internals/on_device_translation_internals_page_handler_impl.cc",
+-      "webui/on_device_translation_internals/on_device_translation_internals_page_handler_impl.h",
+-      "webui/on_device_translation_internals/on_device_translation_internals_ui.cc",
+-      "webui/on_device_translation_internals/on_device_translation_internals_ui.h",
+       "webui/profile_helper.cc",
+       "webui/profile_helper.h",
+       "webui/settings/on_device_ai_settings_handler.cc",
+@@ -3129,15 +3125,26 @@
+       "//chrome/browser/ui/webui/signin:profile_impl",
+       "//chrome/browser/ui/webui/updater:mojo_bindings",
+       "//chrome/browser/updater",
+-      "//chrome/enterprise_companion:constants_prod",
+-      "//chrome/enterprise_companion:installer_paths",
+-      "//chrome/updater:browser_sources",
+       "//components/capture_mode",
+       "//components/country_codes",
+-      "//components/on_device_translation",
+       "//services/audio/public/mojom",
+       "//services/video_capture/public/mojom",
+     ]
++
++    if (!is_qnx) {
++      sources += [
++        "webui/on_device_translation_internals/on_device_translation_internals_page_handler_impl.cc",
++        "webui/on_device_translation_internals/on_device_translation_internals_page_handler_impl.h",
++        "webui/on_device_translation_internals/on_device_translation_internals_ui.cc",
++        "webui/on_device_translation_internals/on_device_translation_internals_ui.h",
++      ]
++      deps += [
++        "//chrome/enterprise_companion:constants_prod",
++        "//chrome/enterprise_companion:installer_paths",
++        "//chrome/updater:browser_sources",
++        "//components/on_device_translation",
++      ]
++    }
+ 
+     # Any circular includes must depend on the target "//chrome/browser:browser_public_dependencies".
+     # Non-android and non-chromeos-ash circular deps.
+@@ -3181,10 +3188,6 @@
+   }
+ 
+   if (is_qnx) {
+-    sources += [
+-      "views/profiles/profile_customization_bubble_sync_controller.cc",
+-      "views/profiles/profile_customization_bubble_sync_controller.h",
+-    ]
+     deps += [
+       "//chrome/browser/search/background",
+       "//chrome/browser/themes",
