@@ -1,0 +1,13 @@
+diff --git chrome/browser/ui/profiles/BUILD.gn chrome/browser/ui/profiles/BUILD.gn
+index 758f80f7f878ac137c65dde279925e4dd2b34802..2ba22c086b12f3ca1e8f3f0ecfb5260ff4a6171d 100644
+--- chrome/browser/ui/profiles/BUILD.gn
++++ chrome/browser/ui/profiles/BUILD.gn
+@@ -89,7 +89,7 @@ source_set("impl") {
+     ]
+   }
+ 
+-  if (is_win || is_mac || is_linux) {
++  if (is_win || is_mac || is_linux || is_qnx) {
+     sources += [
+       "profile_customization_synced_theme_waiter.cc",
+       "profile_customization_util.cc",
