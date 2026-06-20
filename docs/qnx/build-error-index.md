@@ -138,6 +138,7 @@ rg -n "kIPHDesktopCustomizeChromeAutoOpenFeature|kSplitViewCreated|feature_const
 rg -n "HistorySyncOptinUI::kWebUIControllerType|AppendHistorySyncOptinQueryParams|history_sync_optin_webui_sources_qnx|history_sync_optin_ui.o" docs/qnx/history/build-errors
 rg -n "InactiveWindowMouseEventController|ScopedAcceptMouseEventsWhileWindowInactive|inactive_window_mouse_event_controller_qnx" docs/qnx/history/build-errors
 rg -n "TtsPlatformImpl::GetInstance|tts_qnx|content_tts_qnx|speech-dispatcher" docs/qnx/history/build-errors
+rg -n "ChildProcessLauncherHelper::TerminateProcess|child_process_launcher_helper_qnx|LaunchProcessOnLauncherThread|GetTerminationInfo" docs/qnx/history/build-errors
 ```
 
 If the immediate search misses:
