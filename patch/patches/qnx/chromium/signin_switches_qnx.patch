@@ -1,0 +1,339 @@
+diff --git components/signin/public/base/signin_switches.cc components/signin/public/base/signin_switches.cc
+index 149896508f51bd7e3acc7a1c07604c1a7561d350..3ce2ec69e16778e0b4867f2810394a55316fc612 100644
+--- components/signin/public/base/signin_switches.cc
++++ components/signin/public/base/signin_switches.cc
+@@ -80,10 +80,12 @@ base::TimeDelta GetAvatarSyncPromoFeatureMinimumCookeAgeParam() {
+ #endif
+ }
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ BASE_FEATURE(kBeforeFirstRunDesktopRefreshSurvey,
+              base::FEATURE_DISABLED_BY_DEFAULT);
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++        // BUILDFLAG(IS_QNX)
+ 
+ #if BUILDFLAG(ENABLE_BOUND_SESSION_CREDENTIALS)
+ // Allows to disable the bound session credentials code in case of emergency.
+@@ -115,7 +117,8 @@ BASE_FEATURE(kChromeAndroidIdentitySurveyBookmarkPromo,
+              base::FEATURE_DISABLED_BY_DEFAULT);
+ #endif  // BUILDFLAG(IS_ANDROID)
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ constexpr char kHatsSurveyProbabilityName[] = "probability";
+ constexpr double kMediumSurveyProbability = 0.08;
+ constexpr double kLowSurveyProbability = 0.008;
+@@ -206,9 +209,11 @@ BASE_FEATURE_PARAM(
+     &kChromeIdentitySurveySwitchProfileFromProfilePicker,
+     kHatsSurveyProbabilityName,
+     kMediumSurveyProbability);
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++        // BUILDFLAG(IS_QNX)
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ BASE_FEATURE(kChromeIdentitySurveyLaunchWithDelay,
+              base::FEATURE_ENABLED_BY_DEFAULT);
+ BASE_FEATURE_PARAM(base::TimeDelta,
+@@ -216,9 +221,11 @@ BASE_FEATURE_PARAM(base::TimeDelta,
+                    &kChromeIdentitySurveyLaunchWithDelay,
+                    "launch_delay_duration",
+                    base::Milliseconds(3000));
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++        // BUILDFLAG(IS_QNX)
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ BASE_FEATURE(kDisableU18FeedbackDesktop, base::FEATURE_DISABLED_BY_DEFAULT);
+ constexpr base::FeatureParam<U18FeedbackDesktopState>::Option
+     kDisableU18FeedbackDesktopStates[] = {
+@@ -229,7 +236,8 @@ constexpr base::FeatureParam<U18FeedbackDesktopState>
+     kDisableU18FeedbackDesktopState{&kDisableU18FeedbackDesktop, "state",
+                                     U18FeedbackDesktopState::kEnabled,
+                                     &kDisableU18FeedbackDesktopStates};
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++        // BUILDFLAG(IS_QNX)
+ 
+ #if BUILDFLAG(IS_ANDROID)
+ // Whether activityless sign-in should be used for all entry points.
+@@ -399,7 +407,8 @@ const base::FeatureParam<base::TimeDelta>
+         base::Hours(8)};
+ #endif
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ BASE_FEATURE(kFirstRunDesktopRefresh, base::FEATURE_DISABLED_BY_DEFAULT);
+ BASE_FEATURE(kFirstRunDesktopChoiceScreenRefresh,
+              base::FEATURE_DISABLED_BY_DEFAULT);
+@@ -423,11 +432,14 @@ constexpr base::FeatureParam<FirstRunDesktopSignInPromoVariation>
+         &kFirstRunDesktopRefresh, "sign-in-promo-variation",
+         FirstRunDesktopSignInPromoVariation::kDefault,
+         &kFirstRunDesktopSignInPromoVariations};
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++        // BUILDFLAG(IS_QNX)
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ BASE_FEATURE(kFirstRunDesktopRevamp, base::FEATURE_DISABLED_BY_DEFAULT);
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++        // BUILDFLAG(IS_QNX)
+ 
+ #if BUILDFLAG(IS_ANDROID)
+ BASE_FEATURE(kForceHistoryOptInScreen, base::FEATURE_DISABLED_BY_DEFAULT);
+@@ -469,16 +481,19 @@ BASE_FEATURE(kMigrateAccountManagerDelegate, base::FEATURE_DISABLED_BY_DEFAULT);
+ 
+ BASE_FEATURE(kNonDefaultGaiaOriginCheck, base::FEATURE_ENABLED_BY_DEFAULT);
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ BASE_FEATURE(kOpenAllProfilesFromProfilePickerExperiment,
+              base::FEATURE_DISABLED_BY_DEFAULT);
+ const base::FeatureParam<int>
+     kMaxProfilesCountToShowOpenAllButtonInProfilePicker{
+         &kOpenAllProfilesFromProfilePickerExperiment,
+         "max_profiles_count_to_show_open_all_button_in_profile_picker", 5};
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++        // BUILDFLAG(IS_QNX)
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ BASE_FEATURE(kPasswordUploadUiUpdate, base::FEATURE_DISABLED_BY_DEFAULT);
+ 
+ BASE_FEATURE(kProfileCreationDeclineSigninCTAExperiment,
+@@ -510,7 +525,8 @@ constexpr base::FeatureParam<ProfilePickerVariation>
+         &kProfilePickerTextVariations, "profile-picker-variation",
+         ProfilePickerVariation::kKeepWorkAndLifeSeparate,
+         &kProfilePickerVariations};
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++        // BUILDFLAG(IS_QNX)
+ 
+ BASE_FEATURE(kProfilesReordering, base::FEATURE_DISABLED_BY_DEFAULT);
+ 
+@@ -524,10 +540,12 @@ BASE_FEATURE(kRestrictDeviceManagementServiceOAuthScope,
+              base::FEATURE_ENABLED_BY_DEFAULT);
+ #endif  // !BUILDFLAG(IS_ANDROID)
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ BASE_FEATURE(kShowProfilePickerToAllUsersExperiment,
+              base::FEATURE_DISABLED_BY_DEFAULT);
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++        // BUILDFLAG(IS_QNX)
+ 
+ #if BUILDFLAG(IS_ANDROID)
+ BASE_FEATURE(kSigninLevelUpButton, base::FEATURE_DISABLED_BY_DEFAULT);
+@@ -545,9 +563,11 @@ const base::FeatureParam<int> kContextualSigninPromoDismissedThreshold(
+     "contextual_signin_promo_dismissed_threshold",
+     2);
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ BASE_FEATURE(kSignInPromoMaterialNextUI, base::FEATURE_ENABLED_BY_DEFAULT);
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++        // BUILDFLAG(IS_QNX)
+ 
+ #if BUILDFLAG(ENABLE_DICE_SUPPORT)
+ BASE_FEATURE(kSigninPromoOnAvatarPill, base::FEATURE_DISABLED_BY_DEFAULT);
+@@ -615,10 +635,12 @@ BASE_FEATURE(kStableDeviceId, base::FEATURE_DISABLED_BY_DEFAULT);
+ BASE_FEATURE(kSupportAddSessionEmailPrefill, base::FEATURE_ENABLED_BY_DEFAULT);
+ #endif
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ // Kill switch for displaying sign-in errors in the profile picker.
+ BASE_FEATURE(kSupportErrorsInProfilePicker, base::FEATURE_ENABLED_BY_DEFAULT);
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++        // BUILDFLAG(IS_QNX)
+ 
+ #if BUILDFLAG(IS_ANDROID)
+ BASE_FEATURE(kSupportForcedSigninPolicy, base::FEATURE_DISABLED_BY_DEFAULT);
+diff --git components/signin/public/base/signin_switches.h components/signin/public/base/signin_switches.h
+index f974f2ce6597ebb2eb2a49fecfec4417597eaf4a..e66922c9b87e8667af2196773f99b5b702dcfb7e 100644
+--- components/signin/public/base/signin_switches.h
++++ components/signin/public/base/signin_switches.h
+@@ -62,7 +62,8 @@ bool IsAvatarSyncPromoFeatureEnabled();
+ COMPONENT_EXPORT(SIGNIN_SWITCHES)
+ base::TimeDelta GetAvatarSyncPromoFeatureMinimumCookeAgeParam();
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ // A HaTS survey flag for the survey to gather user feedback before any changes
+ // to the FRE as part of Chrome Desktop FRE Refresh project.
+ //
+@@ -70,7 +71,8 @@ base::TimeDelta GetAvatarSyncPromoFeatureMinimumCookeAgeParam();
+ // survey.
+ COMPONENT_EXPORT(SIGNIN_SWITCHES)
+ BASE_DECLARE_FEATURE(kBeforeFirstRunDesktopRefreshSurvey);
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++        // BUILDFLAG(IS_QNX)
+ 
+ #if BUILDFLAG(ENABLE_BOUND_SESSION_CREDENTIALS)
+ COMPONENT_EXPORT(SIGNIN_SWITCHES)
+@@ -106,7 +108,8 @@ COMPONENT_EXPORT(SIGNIN_SWITCHES)
+ BASE_DECLARE_FEATURE(kChromeAndroidIdentitySurveyBookmarkPromo);
+ #endif  // BUILDFLAG(IS_ANDROID)
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ // Enables surveys to measure the effectiveness of the identity model.
+ // These surveys would be displayed after interactions such as signin, profile
+ // switching, etc. Please keep sorted alphabetically.
+@@ -181,18 +184,22 @@ BASE_DECLARE_FEATURE_PARAM(
+     double,
+     kChromeIdentitySurveySwitchProfileFromProfilePickerProbability);
+ // LINT.ThenChange(//chrome/browser/signin/signin_hats_util.cc)
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++        // BUILDFLAG(IS_QNX)
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ // Controls the duration for which the launch of an identity survey is delayed.
+ COMPONENT_EXPORT(SIGNIN_SWITCHES)
+ BASE_DECLARE_FEATURE(kChromeIdentitySurveyLaunchWithDelay);
+ COMPONENT_EXPORT(SIGNIN_SWITCHES)
+ BASE_DECLARE_FEATURE_PARAM(base::TimeDelta,
+                            kChromeIdentitySurveyLaunchWithDelayDuration);
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++        // BUILDFLAG(IS_QNX)
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ // If enabled, disables feedback for U18 users on desktop platforms.
+ // The iOS version is kDisableU18FeedbackIos flag.
+ COMPONENT_EXPORT(SIGNIN_SWITCHES)
+@@ -205,7 +212,8 @@ enum class U18FeedbackDesktopState {
+ COMPONENT_EXPORT(SIGNIN_SWITCHES)
+ extern const base::FeatureParam<U18FeedbackDesktopState>
+     kDisableU18FeedbackDesktopState;
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++        // BUILDFLAG(IS_QNX)
+ 
+ #if BUILDFLAG(IS_ANDROID)
+ // Whether activityless sign-in should be used for all entry points.
+@@ -315,7 +323,8 @@ extern const base::FeatureParam<base::TimeDelta>
+     kPolicyDisclaimerRegistrationRetryDelay;
+ #endif
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ // This feature controls running visually refreshed first run and profile
+ // creation flows for users outside of the search engine choice regions. To
+ // enable the refresh in search engine choice screen regions,
+@@ -356,14 +365,17 @@ enum class FirstRunDesktopSignInPromoVariation {
+ COMPONENT_EXPORT(SIGNIN_SWITCHES)
+ extern const base::FeatureParam<FirstRunDesktopSignInPromoVariation>
+     kFirstRunDesktopSignInPromoVariation;
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++        // BUILDFLAG(IS_QNX)
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ // It enables the first run revamp (introduce new UIs and additional effects).
+ // This feature is no-op if `kFirstRunDesktopRefresh` is disabled.
+ COMPONENT_EXPORT(SIGNIN_SWITCHES)
+ BASE_DECLARE_FEATURE(kFirstRunDesktopRevamp);
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++        // BUILDFLAG(IS_QNX)
+ 
+ #if BUILDFLAG(IS_ANDROID)
+ COMPONENT_EXPORT(SIGNIN_SWITCHES)
+@@ -417,16 +429,19 @@ BASE_DECLARE_FEATURE(kMigrateAccountManagerDelegate);
+ COMPONENT_EXPORT(SIGNIN_SWITCHES)
+ BASE_DECLARE_FEATURE(kNonDefaultGaiaOriginCheck);
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ // Experimenting with a button to all profiles from the profile picker.
+ COMPONENT_EXPORT(SIGNIN_SWITCHES)
+ BASE_DECLARE_FEATURE(kOpenAllProfilesFromProfilePickerExperiment);
+ COMPONENT_EXPORT(SIGNIN_SWITCHES)
+ extern const base::FeatureParam<int>
+     kMaxProfilesCountToShowOpenAllButtonInProfilePicker;
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++        // BUILDFLAG(IS_QNX)
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ // Add new entry points for uploading passwords to account storage and update
+ // existing ones.
+ COMPONENT_EXPORT(SIGNIN_SWITCHES)
+@@ -466,7 +481,8 @@ enum class ProfilePickerVariation {
+ COMPONENT_EXPORT(SIGNIN_SWITCHES)
+ extern const base::FeatureParam<ProfilePickerVariation>
+     kProfilePickerTextVariation;
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++        // BUILDFLAG(IS_QNX)
+ 
+ COMPONENT_EXPORT(SIGNIN_SWITCHES)
+ BASE_DECLARE_FEATURE(kProfilesReordering);
+@@ -512,11 +528,13 @@ extern const base::FeatureParam<int> kContextualSigninPromoShownThreshold;
+ COMPONENT_EXPORT(SIGNIN_SWITCHES)
+ extern const base::FeatureParam<int> kContextualSigninPromoDismissedThreshold;
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ // Uses the Material Next theme for the signin promo.
+ COMPONENT_EXPORT(SIGNIN_SWITCHES)
+ BASE_DECLARE_FEATURE(kSignInPromoMaterialNextUI);
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++        // BUILDFLAG(IS_QNX)
+ 
+ #if BUILDFLAG(ENABLE_DICE_SUPPORT)
+ // Feature to show a promo on the avatar pill on profile startup.
+@@ -567,11 +585,13 @@ COMPONENT_EXPORT(SIGNIN_SWITCHES)
+ BASE_DECLARE_FEATURE(kSupportAddSessionEmailPrefill);
+ #endif
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ // Kill switch for displaying sign-in errors in the profile picker.
+ COMPONENT_EXPORT(SIGNIN_SWITCHES)
+ BASE_DECLARE_FEATURE(kSupportErrorsInProfilePicker);
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++        // BUILDFLAG(IS_QNX)
+ 
+ #if BUILDFLAG(IS_ANDROID)
+ COMPONENT_EXPORT(SIGNIN_SWITCHES)
