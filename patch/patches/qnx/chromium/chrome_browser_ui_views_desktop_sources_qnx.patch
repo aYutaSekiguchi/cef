@@ -10,7 +10,13 @@ diff --git chrome/browser/ui/BUILD.gn chrome/browser/ui/BUILD.gn
      sources += [
        "views/media_preview/active_devices_media_coordinator.cc",
        "views/media_preview/active_devices_media_coordinator.h",
-@@ -3090,10 +3090,6 @@
+@@ -3084,16 +3084,10 @@
+       "views/web_apps/force_installed_deprecated_apps_dialog_view.h",
+       "views/web_apps/force_installed_preinstalled_deprecated_app_dialog_view.cc",
+       "views/web_apps/force_installed_preinstalled_deprecated_app_dialog_view.h",
+-      "webui/browser_switch/browser_switch_ui.cc",
+-      "webui/browser_switch/browser_switch_ui.h",
+       "webui/intro/intro_handler.cc",
        "webui/intro/intro_handler.h",
        "webui/intro/intro_ui.cc",
        "webui/intro/intro_ui.h",
@@ -21,7 +27,7 @@ diff --git chrome/browser/ui/BUILD.gn chrome/browser/ui/BUILD.gn
        "webui/profile_helper.cc",
        "webui/profile_helper.h",
        "webui/settings/on_device_ai_settings_handler.cc",
-@@ -3104,10 +3100,6 @@
+@@ -3104,15 +3098,10 @@
        "webui/settings/settings_manage_profile_handler.h",
        "webui/settings/system_handler.cc",
        "webui/settings/system_handler.h",
@@ -32,7 +38,12 @@ diff --git chrome/browser/ui/BUILD.gn chrome/browser/ui/BUILD.gn
      ]
  
      deps += [
-@@ -3127,17 +3119,34 @@
+       "//chrome/app:generated_resources",
+-      "//chrome/browser/browser_switcher",
+       "//chrome/browser/default_browser",
+       "//chrome/browser/profiles",
+       "//chrome/browser/shortcuts",
+@@ -3127,17 +3116,37 @@
        "//chrome/browser/ui/webui/app_settings:impl",
        "//chrome/browser/ui/webui/signin:profile",
        "//chrome/browser/ui/webui/signin:profile_impl",
@@ -56,6 +67,7 @@ diff --git chrome/browser/ui/BUILD.gn chrome/browser/ui/BUILD.gn
 +        "webui/on_device_translation_internals/on_device_translation_internals_ui.h",
 +      ]
 +      deps += [
++        "//chrome/browser/browser_switcher",
 +        "//chrome/browser/ui/webui/updater:mojo_bindings",
 +        "//chrome/browser/updater",
 +        "//chrome/enterprise_companion:constants_prod",
@@ -64,6 +76,8 @@ diff --git chrome/browser/ui/BUILD.gn chrome/browser/ui/BUILD.gn
 +        "//components/on_device_translation",
 +      ]
 +      sources += [
++        "webui/browser_switch/browser_switch_ui.cc",
++        "webui/browser_switch/browser_switch_ui.h",
 +        "webui/updater/updater_page_handler.cc",
 +        "webui/updater/updater_page_handler.h",
 +        "webui/updater/updater_ui.cc",
