@@ -137,6 +137,7 @@ rg -n "BitmapCursor|cursor_util_aura|FromPlatformCursor|IS_OZONE|SUPPORTS_OZONE_
 rg -n "icuuc_private_hidden_visibility|icui18n_hidden_visibility|icudt77_dat|UVector64|visibility_hidden|multiple definition" docs/qnx/history/build-errors
 rg -n "enterprise_watermark|watermark_view_lib|promotion_eligibility_checker|read_anything_prefs|window_frame_util|whole-archive|multiple definition" docs/qnx/history/build-errors
 rg -n "undefined reference to `main|cefsimple_linux|cefsimple_qnx|X11/Xlib.h|cefsimple_sources_linux|cefsimple_capi_sources_linux" docs/qnx/history/build-errors
+rg -n "NativeEventObserver::RegisterObserver|RendererMainPlatformDelegate|GetFontList_SlowBlocking|content_qnx_link_stubs" docs/qnx/history/build-errors
 rg -n "jsimd_extbgrx_ycc_convert_sse2|jconst_fancy_upsample_sse2|libjpeg_turbo_elf_qnx|simd_asm|NASM|ELF" docs/qnx/history/build-errors
 rg -n "kIPHDesktopCustomizeChromeAutoOpenFeature|kSplitViewCreated|feature_constants_qnx|event_constants_qnx|feature_engagement::events" docs/qnx/history/build-errors
 rg -n "HistorySyncOptinUI::kWebUIControllerType|AppendHistorySyncOptinQueryParams|history_sync_optin_webui_sources_qnx|history_sync_optin_ui.o" docs/qnx/history/build-errors
