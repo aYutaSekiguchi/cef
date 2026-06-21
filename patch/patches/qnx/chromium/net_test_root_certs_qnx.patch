@@ -1,0 +1,15 @@
+diff --git net/BUILD.gn net/BUILD.gn
+index 3b79182266f22c783b69b7dcfd9ffbb1c8a539cf..7239ae022e28ade50b7fd58b263fb2cbc6f7c8a7 100644
+--- net/BUILD.gn
++++ net/BUILD.gn
+@@ -1681,6 +1681,10 @@ component("net") {
+     ]
+   }
+ 
++  if (is_qnx) {
++    sources += [ "cert/test_root_certs_qnx.cc" ]
++  }
++
+   if (enable_unix_sockets) {
+     sources += [
+       "socket/unix_domain_client_socket_posix.cc",
