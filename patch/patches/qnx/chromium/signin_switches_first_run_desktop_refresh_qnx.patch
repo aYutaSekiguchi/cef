@@ -1,0 +1,48 @@
+diff --git components/signin/public/base/signin_switches.cc components/signin/public/base/signin_switches.cc
+index 149896508f51bd7e3acc7a1c07604c1a7561d350..3072cd1a99cca4c47abfcac6b144b0de0132e5ba 100644
+--- components/signin/public/base/signin_switches.cc
++++ components/signin/public/base/signin_switches.cc
+@@ -399,7 +399,8 @@ const base::FeatureParam<base::TimeDelta>
+         base::Hours(8)};
+ #endif
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ BASE_FEATURE(kFirstRunDesktopRefresh, base::FEATURE_DISABLED_BY_DEFAULT);
+ BASE_FEATURE(kFirstRunDesktopChoiceScreenRefresh,
+              base::FEATURE_DISABLED_BY_DEFAULT);
+@@ -423,7 +424,8 @@ constexpr base::FeatureParam<FirstRunDesktopSignInPromoVariation>
+         &kFirstRunDesktopRefresh, "sign-in-promo-variation",
+         FirstRunDesktopSignInPromoVariation::kDefault,
+         &kFirstRunDesktopSignInPromoVariations};
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++        // BUILDFLAG(IS_QNX)
+ 
+ #if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
+ BASE_FEATURE(kFirstRunDesktopRevamp, base::FEATURE_DISABLED_BY_DEFAULT);
+diff --git components/signin/public/base/signin_switches.h components/signin/public/base/signin_switches.h
+index f974f2ce6597ebb2eb2a49fecfec4417597eaf4a..96a5de55890381aa51e0ba32a061c94ffb0f6871 100644
+--- components/signin/public/base/signin_switches.h
++++ components/signin/public/base/signin_switches.h
+@@ -315,7 +315,8 @@ extern const base::FeatureParam<base::TimeDelta>
+     kPolicyDisclaimerRegistrationRetryDelay;
+ #endif
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ // This feature controls running visually refreshed first run and profile
+ // creation flows for users outside of the search engine choice regions. To
+ // enable the refresh in search engine choice screen regions,
+@@ -356,7 +357,8 @@ enum class FirstRunDesktopSignInPromoVariation {
+ COMPONENT_EXPORT(SIGNIN_SWITCHES)
+ extern const base::FeatureParam<FirstRunDesktopSignInPromoVariation>
+     kFirstRunDesktopSignInPromoVariation;
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++        // BUILDFLAG(IS_QNX)
+ 
+ #if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
+ // It enables the first run revamp (introduce new UIs and additional effects).
