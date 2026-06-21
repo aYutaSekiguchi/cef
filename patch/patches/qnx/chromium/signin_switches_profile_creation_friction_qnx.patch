@@ -1,0 +1,88 @@
+diff --git components/signin/public/base/signin_switches.cc components/signin/public/base/signin_switches.cc
+index 149896508f51bd7e3acc7a1c07604c1a7561d350..167f61940dce6919a7ad590eaf38a213ad1ba9c0 100644
+--- components/signin/public/base/signin_switches.cc
++++ components/signin/public/base/signin_switches.cc
+@@ -399,7 +399,8 @@ const base::FeatureParam<base::TimeDelta>
+         base::Hours(8)};
+ #endif
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ BASE_FEATURE(kFirstRunDesktopRefresh, base::FEATURE_DISABLED_BY_DEFAULT);
+ BASE_FEATURE(kFirstRunDesktopChoiceScreenRefresh,
+              base::FEATURE_DISABLED_BY_DEFAULT);
+@@ -423,7 +424,8 @@ constexpr base::FeatureParam<FirstRunDesktopSignInPromoVariation>
+         &kFirstRunDesktopRefresh, "sign-in-promo-variation",
+         FirstRunDesktopSignInPromoVariation::kDefault,
+         &kFirstRunDesktopSignInPromoVariations};
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++        // BUILDFLAG(IS_QNX)
+ 
+ #if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
+ BASE_FEATURE(kFirstRunDesktopRevamp, base::FEATURE_DISABLED_BY_DEFAULT);
+@@ -478,7 +480,8 @@ const base::FeatureParam<int>
+         "max_profiles_count_to_show_open_all_button_in_profile_picker", 5};
+ #endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ BASE_FEATURE(kPasswordUploadUiUpdate, base::FEATURE_DISABLED_BY_DEFAULT);
+ 
+ BASE_FEATURE(kProfileCreationDeclineSigninCTAExperiment,
+@@ -510,7 +513,8 @@ constexpr base::FeatureParam<ProfilePickerVariation>
+         &kProfilePickerTextVariations, "profile-picker-variation",
+         ProfilePickerVariation::kKeepWorkAndLifeSeparate,
+         &kProfilePickerVariations};
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++        // BUILDFLAG(IS_QNX)
+ 
+ BASE_FEATURE(kProfilesReordering, base::FEATURE_DISABLED_BY_DEFAULT);
+ 
+diff --git components/signin/public/base/signin_switches.h components/signin/public/base/signin_switches.h
+index f974f2ce6597ebb2eb2a49fecfec4417597eaf4a..85db225d1f93744b179a4c559cf066d28fe2d6ca 100644
+--- components/signin/public/base/signin_switches.h
++++ components/signin/public/base/signin_switches.h
+@@ -315,7 +315,8 @@ extern const base::FeatureParam<base::TimeDelta>
+     kPolicyDisclaimerRegistrationRetryDelay;
+ #endif
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ // This feature controls running visually refreshed first run and profile
+ // creation flows for users outside of the search engine choice regions. To
+ // enable the refresh in search engine choice screen regions,
+@@ -356,7 +357,8 @@ enum class FirstRunDesktopSignInPromoVariation {
+ COMPONENT_EXPORT(SIGNIN_SWITCHES)
+ extern const base::FeatureParam<FirstRunDesktopSignInPromoVariation>
+     kFirstRunDesktopSignInPromoVariation;
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++        // BUILDFLAG(IS_QNX)
+ 
+ #if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
+ // It enables the first run revamp (introduce new UIs and additional effects).
+@@ -426,7 +428,8 @@ extern const base::FeatureParam<int>
+     kMaxProfilesCountToShowOpenAllButtonInProfilePicker;
+ #endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ // Add new entry points for uploading passwords to account storage and update
+ // existing ones.
+ COMPONENT_EXPORT(SIGNIN_SWITCHES)
+@@ -466,7 +469,8 @@ enum class ProfilePickerVariation {
+ COMPONENT_EXPORT(SIGNIN_SWITCHES)
+ extern const base::FeatureParam<ProfilePickerVariation>
+     kProfilePickerTextVariation;
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++        // BUILDFLAG(IS_QNX)
+ 
+ COMPONENT_EXPORT(SIGNIN_SWITCHES)
+ BASE_DECLARE_FEATURE(kProfilesReordering);

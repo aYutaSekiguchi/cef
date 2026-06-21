@@ -124,6 +124,7 @@ rg -n "IsExtensionUnsupportedDeprecatedApp|kChromeAppsDeprecation|app_home_page_
 rg -n "kChromeAppsDeprecationLearnMoreURL|chrome_apps_deprecation_url_constants_qnx|force_installed_deprecated_apps_dialog_view" docs/qnx/history/build-errors
 rg -n "kSupportErrorsInProfilePicker|signin_switches_profile_picker_qnx|profile_picker_flow_controller" docs/qnx/history/build-errors
 rg -n "IsFirstRunDesktopRefreshEnabled|FirstRunDesktopSignInPromoVariation|signin_switches_first_run_desktop_refresh_qnx" docs/qnx/history/build-errors
+rg -n "kProfileCreationFrictionReductionExperimentPrefillNameRequirement|signin_switches_profile_creation_friction_qnx|profile_customization_ui" docs/qnx/history/build-errors
 rg -n "GetDesktopName|GetAppDesktopShortcutFilename|DesktopActionInfo|shell_integration_linux" docs/qnx/history/build-errors
 rg -n "ProfileCustomizationUI|ProfilePickerUI|updater_ui.mojom.h|chrome_browser_interface_binders_webui_parts_desktop" docs/qnx/history/build-errors
 rg -n "ShowFirstRunDialog|first_run_internal_posix|first_run_dialog" docs/qnx/history/build-errors
