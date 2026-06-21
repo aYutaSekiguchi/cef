@@ -21,10 +21,23 @@ diff --git chrome/browser/ui/BUILD.gn chrome/browser/ui/BUILD.gn
        "webui/profile_helper.cc",
        "webui/profile_helper.h",
        "webui/settings/on_device_ai_settings_handler.cc",
-@@ -3129,15 +3125,26 @@
+@@ -3104,10 +3100,6 @@
+       "webui/settings/settings_manage_profile_handler.h",
+       "webui/settings/system_handler.cc",
+       "webui/settings/system_handler.h",
+-      "webui/updater/updater_page_handler.cc",
+-      "webui/updater/updater_page_handler.h",
+-      "webui/updater/updater_ui.cc",
+-      "webui/updater/updater_ui.h",
+     ]
+ 
+     deps += [
+@@ -3127,17 +3119,34 @@
+       "//chrome/browser/ui/webui/app_settings:impl",
+       "//chrome/browser/ui/webui/signin:profile",
        "//chrome/browser/ui/webui/signin:profile_impl",
-       "//chrome/browser/ui/webui/updater:mojo_bindings",
-       "//chrome/browser/updater",
+-      "//chrome/browser/ui/webui/updater:mojo_bindings",
+-      "//chrome/browser/updater",
 -      "//chrome/enterprise_companion:constants_prod",
 -      "//chrome/enterprise_companion:installer_paths",
 -      "//chrome/updater:browser_sources",
@@ -43,16 +56,24 @@ diff --git chrome/browser/ui/BUILD.gn chrome/browser/ui/BUILD.gn
 +        "webui/on_device_translation_internals/on_device_translation_internals_ui.h",
 +      ]
 +      deps += [
++        "//chrome/browser/ui/webui/updater:mojo_bindings",
++        "//chrome/browser/updater",
 +        "//chrome/enterprise_companion:constants_prod",
 +        "//chrome/enterprise_companion:installer_paths",
 +        "//chrome/updater:browser_sources",
 +        "//components/on_device_translation",
 +      ]
++      sources += [
++        "webui/updater/updater_page_handler.cc",
++        "webui/updater/updater_page_handler.h",
++        "webui/updater/updater_ui.cc",
++        "webui/updater/updater_ui.h",
++      ]
 +    }
  
      # Any circular includes must depend on the target "//chrome/browser:browser_public_dependencies".
      # Non-android and non-chromeos-ash circular deps.
-@@ -3181,10 +3188,6 @@
+@@ -3181,10 +3190,6 @@
    }
  
    if (is_qnx) {

@@ -43,6 +43,7 @@ Changes:
   - `//chrome/updater:browser_sources`
   - `//components/on_device_translation`
 - Keep `webui/on_device_translation_internals/*` sources out of QNX because their mojom/generated headers are not produced when on-device translation is disabled.
+- Keep `webui/updater/*` sources and updater deps out of QNX because updater generated headers such as `chrome/updater/updater_version.h` are not produced.
 - Remove duplicate QNX-only `profile_customization_bubble_sync_controller` source entries; they are now included by the widened block.
 
 ## Verification
@@ -65,6 +66,8 @@ and does not contain:
 ```text
 on_device_translation_internals_page_handler_impl.o
 on_device_translation_internals_ui.o
+updater_page_handler.o
+updater_ui.o
 ```
 
 ## Search hints
