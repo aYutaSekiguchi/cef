@@ -1,0 +1,39 @@
+diff --git components/signin/public/base/signin_switches.cc components/signin/public/base/signin_switches.cc
+index 149896508f51bd7e3acc7a1c07604c1a7561d350..7fd64058f61b8a89e9af4b5d7af65c62176b5c64 100644
+--- components/signin/public/base/signin_switches.cc
++++ components/signin/public/base/signin_switches.cc
+@@ -615,10 +615,12 @@ BASE_FEATURE(kStableDeviceId, base::FEATURE_DISABLED_BY_DEFAULT);
+ BASE_FEATURE(kSupportAddSessionEmailPrefill, base::FEATURE_ENABLED_BY_DEFAULT);
+ #endif
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ // Kill switch for displaying sign-in errors in the profile picker.
+ BASE_FEATURE(kSupportErrorsInProfilePicker, base::FEATURE_ENABLED_BY_DEFAULT);
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++        // BUILDFLAG(IS_QNX)
+ 
+ #if BUILDFLAG(IS_ANDROID)
+ BASE_FEATURE(kSupportForcedSigninPolicy, base::FEATURE_DISABLED_BY_DEFAULT);
+diff --git components/signin/public/base/signin_switches.h components/signin/public/base/signin_switches.h
+index f974f2ce6597ebb2eb2a49fecfec4417597eaf4a..667b4dc031e27d1220d120cb8cc071e6f9c5b6c3 100644
+--- components/signin/public/base/signin_switches.h
++++ components/signin/public/base/signin_switches.h
+@@ -567,11 +567,13 @@ COMPONENT_EXPORT(SIGNIN_SWITCHES)
+ BASE_DECLARE_FEATURE(kSupportAddSessionEmailPrefill);
+ #endif
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++    BUILDFLAG(IS_QNX)
+ // Kill switch for displaying sign-in errors in the profile picker.
+ COMPONENT_EXPORT(SIGNIN_SWITCHES)
+ BASE_DECLARE_FEATURE(kSupportErrorsInProfilePicker);
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
++        // BUILDFLAG(IS_QNX)
+ 
+ #if BUILDFLAG(IS_ANDROID)
+ COMPONENT_EXPORT(SIGNIN_SWITCHES)
