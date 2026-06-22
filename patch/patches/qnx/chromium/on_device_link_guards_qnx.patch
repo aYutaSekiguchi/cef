@@ -1,0 +1,236 @@
+diff --git chrome/browser/ui/webui/chrome_web_ui_configs.cc chrome/browser/ui/webui/chrome_web_ui_configs.cc
+index 4684405ff2ee802a813c8aba2fa68a85e501941c..59298e4bf213fd3f590d769dc899bdfcf9da6527 100644
+--- chrome/browser/ui/webui/chrome_web_ui_configs.cc
++++ chrome/browser/ui/webui/chrome_web_ui_configs.cc
+@@ -108,7 +108,9 @@
+ #include "chrome/browser/ui/webui/new_tab_page_third_party/new_tab_page_third_party_ui.h"
+ #include "chrome/browser/ui/webui/ntp/new_tab_ui.h"
+ #include "chrome/browser/ui/webui/omnibox_popup/omnibox_popup_ui.h"
++#if !BUILDFLAG(IS_QNX)
+ #include "chrome/browser/ui/webui/on_device_internals/on_device_internals_ui.h"
++#endif
+ #include "chrome/browser/ui/webui/password_manager/password_manager_ui.h"
+ #include "chrome/browser/ui/webui/private_ai_internals/private_ai_internals_ui.h"
+ #include "chrome/browser/ui/webui/profile_internals/profile_internals_ui.h"
+@@ -352,8 +354,10 @@
+   map.AddWebUIConfig(std::make_unique<NewTabPageThirdPartyUIConfig>());
+   map.AddWebUIConfig(std::make_unique<NewTabUIConfig>());
+   map.AddWebUIConfig(std::make_unique<OmniboxPopupUIConfig>());
++#if !BUILDFLAG(IS_QNX)
+   map.AddWebUIConfig(
+       std::make_unique<on_device_internals::OnDeviceInternalsUIConfig>());
++#endif
+   map.AddWebUIConfig(std::make_unique<PasswordManagerUIConfig>());
+   map.AddWebUIConfig(
+       std::make_unique<private_ai::PrivateAiInternalsUIConfig>());
+diff --git content/utility/utility_main.cc content/utility/utility_main.cc
+index f0804f579e24d0d3c3235a9099eb09cf07d2cbc9..e2c14487a2e35fd1d3d6e76c905c69b0fb6174dd 100644
+--- content/utility/utility_main.cc
++++ content/utility/utility_main.cc
+@@ -29,13 +29,17 @@
+ #include "content/public/common/content_switches.h"
+ #include "content/public/common/main_function_params.h"
+ #include "content/public/utility/content_utility_client.h"
++#if !BUILDFLAG(IS_QNX)
+ #include "content/utility/on_device_model/on_device_model_sandbox_init.h"
++#endif
+ #include "content/utility/utility_thread_impl.h"
+ #include "printing/buildflags/buildflags.h"
+ #include "sandbox/policy/mojom/sandbox.mojom.h"
+ #include "sandbox/policy/sandbox.h"
+ #include "sandbox/policy/sandbox_type.h"
++#if !BUILDFLAG(IS_QNX)
+ #include "services/on_device_model/public/mojom/on_device_model_service.mojom.h"
++#endif
+ #include "services/tracing/public/cpp/trace_startup.h"
+
+ #if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
+@@ -272,9 +276,11 @@
+     }
+   }
+
++#if !BUILDFLAG(IS_QNX)
+   if (utility_sub_type == on_device_model::mojom::OnDeviceModelService::Name_) {
+     CHECK(on_device_model::PreSandboxInit());
+   }
++#endif
+
+ #if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
+
+@@ -316,8 +322,10 @@
+       pre_sandbox_hook = base::BindOnce(&audio::AudioPreSandboxHook);
+       break;
+     case sandbox::mojom::Sandbox::kOnDeviceModelExecution:
++#if !BUILDFLAG(IS_QNX)
+       on_device_model::AddSandboxLinuxOptions(sandbox_options);
+       pre_sandbox_hook = base::BindOnce(&on_device_model::PreSandboxHook);
++#endif
+       break;
+     case sandbox::mojom::Sandbox::kSpeechRecognition:
+       pre_sandbox_hook =
+@@ -485,9 +493,11 @@
+
+   run_loop.Run();
+
++#if !BUILDFLAG(IS_QNX)
+   if (utility_sub_type == on_device_model::mojom::OnDeviceModelService::Name_) {
+     CHECK(on_device_model::Shutdown());
+   }
++#endif
+
+ #if defined(LEAK_SANITIZER)
+   // Invoke LeakSanitizer before shutting down the utility thread, to avoid
+diff --git chrome/browser/chrome_browser_interface_binders_webui_parts_desktop.cc chrome/browser/chrome_browser_interface_binders_webui_parts_desktop.cc
+index dd95767a1ad23f398a5ffdc28ab988a47a79320b..8fd71976f5e81ceaef5538dabf699c3fbe0f8d99 100644
+--- chrome/browser/chrome_browser_interface_binders_webui_parts_desktop.cc
++++ chrome/browser/chrome_browser_interface_binders_webui_parts_desktop.cc
+@@ -57,7 +57,9 @@
+ #include "chrome/browser/ui/webui/omnibox/logging/logs.mojom.h"
+ #include "chrome/browser/ui/webui/omnibox/omnibox_ui.h"
+ #include "chrome/browser/ui/webui/omnibox_popup/omnibox_popup_ui.h"
++#if !BUILDFLAG(IS_QNX)
+ #include "chrome/browser/ui/webui/on_device_internals/on_device_internals_ui.h"
++#endif
+ #include "chrome/browser/ui/webui/password_manager/password_manager_ui.h"
+ #include "chrome/browser/ui/webui/privacy_sandbox/privacy_sandbox_internals_ui.h"
+ #include "chrome/browser/ui/webui/privacy_sandbox/private_state_tokens/private_state_tokens.mojom.h"
+@@ -525,12 +527,14 @@
+
+   RegisterWebUIControllerInterfaceBinder<::mojom::WebAppInternalsHandler,
+                                          WebAppInternalsUI>(map);
++#if !BUILDFLAG(IS_QNX)
+   if (base::FeatureList::IsEnabled(
+           optimization_guide::features::kOptimizationGuideOnDeviceModel)) {
+     RegisterWebUIControllerInterfaceBinder<
+         on_device_internals::mojom::PageHandlerFactory,
+         on_device_internals::OnDeviceInternalsUI>(map);
+   }
++#endif
+   if (base::FeatureList::IsEnabled(privacy_sandbox::kRelatedWebsiteSetsDevUI)) {
+     RegisterWebUIControllerInterfaceBinder<
+         related_website_sets::mojom::RelatedWebsiteSetsPageHandler,
+diff --git content/utility/services.cc content/utility/services.cc
+index a01428f67b3bed5b53f57ad411e02600f6afd1ec..278c38cd179a6fd8feac6dbacb2785dce68ed256 100644
+--- content/utility/services.cc
++++ content/utility/services.cc
+@@ -31,8 +31,10 @@
+ #include "services/audio/service_factory.h"
+ #include "services/data_decoder/data_decoder_service.h"
+ #include "services/network/network_service.h"
++#if !BUILDFLAG(IS_QNX)
+ #include "services/on_device_model/on_device_model_service.h"
+ #include "services/on_device_model/public/mojom/on_device_model_service.mojom.h"
++#endif
+ #include "services/tracing/public/mojom/tracing_service.mojom.h"
+ #include "services/tracing/tracing_service.h"
+ #include "services/video_capture/public/mojom/video_capture_service.mojom.h"
+@@ -331,11 +333,13 @@
+   return service;
+ }
+
++#if !BUILDFLAG(IS_QNX)
+ auto RunOnDeviceModel(
+     mojo::PendingReceiver<on_device_model::mojom::OnDeviceModelService>
+         receiver) {
+   return on_device_model::OnDeviceModelService::Create(std::move(receiver));
+ }
++#endif
+
+ #if BUILDFLAG(ENABLE_VR) && !BUILDFLAG(IS_ANDROID)
+ auto RunXrDeviceService(
+@@ -401,9 +405,11 @@
+   services.Add(RunOOPVideoDecoderFactoryProcessService);
+ #endif
+
++#if !BUILDFLAG(IS_QNX)
+   if (optimization_guide::features::CanLaunchOnDeviceModelService()) {
+     services.Add(RunOnDeviceModel);
+   }
++#endif
+
+ #if BUILDFLAG(IS_WIN) || (BUILDFLAG(GOOGLE_CHROME_BRANDING) && \
+                           (BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_LINUX)))
+diff --git chrome/browser/resources/BUILD.gn chrome/browser/resources/BUILD.gn
+index 3398d58835d95fbfb34f1e04b626c7baff623e63..3d1ec38381197e8e6700076a50d94413016f4eba 100644
+--- chrome/browser/resources/BUILD.gn
++++ chrome/browser/resources/BUILD.gn
+@@ -340,12 +340,15 @@
+       "color_pipeline_internals:resources",
+       "infobar_internals:resources",
+       "media_router/internals:resources",
+-      "on_device_internals:resources",
+       "user_education_internals:resources",
+       "webui_js_error:resources",
+     ]
+   }
+
++  if (!is_qnx && !is_android) {
++    public_deps += [ "on_device_internals:resources" ]
++  }
++
+   if (is_android || is_linux || is_chromeos || is_win) {
+     public_deps += [ "//chrome/browser/resources/sandbox_internals:resources" ]
+   }
+@@ -415,12 +418,15 @@
+       "$root_gen_dir/chrome/color_pipeline_internals_resources.pak",
+       "$root_gen_dir/chrome/infobar_internals_resources.pak",
+       "$root_gen_dir/chrome/media_router_internals_resources.pak",
+-      "$root_gen_dir/chrome/on_device_internals_resources.pak",
+       "$root_gen_dir/chrome/user_education_internals_resources.pak",
+       "$root_gen_dir/chrome/webui_js_error_resources.pak",
+     ]
+   }
+
++  if (!is_qnx && !is_android) {
++    sources += [ "$root_gen_dir/chrome/on_device_internals_resources.pak" ]
++  }
++
+   if (is_android || is_linux || is_chromeos || is_win) {
+     sources += [ "$root_gen_dir/chrome/sandbox_internals_resources.pak" ]
+   }
+diff --git chrome/browser/BUILD.gn chrome/browser/BUILD.gn
+index 1aef7b12817c3d29d7ea0a2468a85620de0670db..734c0a9e312242e7626f6968c15e700721a3f87a 100644
+--- chrome/browser/BUILD.gn
++++ chrome/browser/BUILD.gn
+@@ -2426,8 +2426,6 @@
+     "//services/network/public/cpp",
+     "//services/network/public/mojom",
+     "//services/network/public/proto",
+-    "//services/on_device_model/public/cpp",
+-    "//services/on_device_model/public/mojom",
+     "//services/preferences/public/cpp",
+     "//services/preferences/public/cpp/tracked",
+     "//services/preferences/public/mojom",
+@@ -2501,6 +2499,13 @@
+     "//chrome/browser/ui/webauthn:impl",
+   ]
+
++  if (!is_qnx) {
++    deps += [
++      "//services/on_device_model/public/cpp",
++      "//services/on_device_model/public/mojom",
++    ]
++  }
++
+   # Platforms that have a network diagnostics dialog. All others fall through
+   # to the stub which is not implemented.
+   if (is_chromeos) {
+@@ -8546,7 +8551,6 @@
+       "//chrome/browser/ui/webui/new_tab_page_third_party:mojo_bindings",
+       "//chrome/browser/ui/webui/ntp_microsoft_auth:shared",
+       "//chrome/browser/ui/webui/ntp_microsoft_auth:untrusted",
+-      "//chrome/browser/ui/webui/on_device_internals:mojom",
+       "//chrome/browser/ui/webui/privacy_sandbox/private_state_tokens:mojo_bindings",
+       "//chrome/browser/ui/webui/privacy_sandbox/related_website_sets:mojo_bindings",
+       "//chrome/browser/ui/webui/search_engine_choice:mojo_bindings",
+@@ -8564,7 +8568,9 @@
+       "//components/autofill/core/browser/ml_model/logging:mojo_bindings",
+       "//components/browser_apis/tab_strip:mojom",
+     ]
+-    public_deps += [ "//chrome/browser/ui/webui/on_device_internals:mojom" ]
++    if (!is_qnx) {
++      public_deps += [ "//chrome/browser/ui/webui/on_device_internals:mojom" ]
++    }
+     if (!is_official_build) {
+       public_deps +=
+           [ "//chrome/browser/ui/webui/new_tab_page/foo:mojo_bindings" ]
