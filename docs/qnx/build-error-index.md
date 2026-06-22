@@ -62,6 +62,7 @@ rg -n "OnDeviceInternalsUI|OnDeviceModelService::Create|PreSandboxInit|on_device
 rg -n "PlatformOpenVerifiedItem|ShowItemInFolder|OpenExternal|platform_util_qnx" docs/qnx/history/build-errors/link
 rg -n "GetBrowserBoundKeyStoreInstance|BrowserBoundKeyStore|payments_browser_bound_key" docs/qnx/history/build-errors/link
 rg -n "GetPersonalizableDeviceNameInternal|local_device_info_util_qnx|sync_device_info_qnx" docs/qnx/history/build-errors/link
+rg -n "crashpad::CrashpadClient|crashpad::CrashReportDatabase|crashpad::HTTPTransport|crashpad::Paths|crashpad_qnx" docs/qnx/history/build-errors/link
 rg -n "keycode_converter|SCREEN_PROPERTY_SCAN|sys/usbcodes|Unsupported platform|DOM_CODE" docs/qnx/history/build-errors
 rg -n "named_mojo_server_endpoint_connector|require_same_peer_user|SO_PEERCRED|ConnectionInfo::credentials" docs/qnx/history/build-errors
 rg -n "client_filterable_state|Study::PLATFORM|PLATFORM_QNX|Unknown platform" docs/qnx/history/build-errors
