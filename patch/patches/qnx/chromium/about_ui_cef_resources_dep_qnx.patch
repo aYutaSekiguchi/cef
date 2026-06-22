@@ -1,20 +1,22 @@
 diff --git chrome/browser/ui/webui/about/BUILD.gn chrome/browser/ui/webui/about/BUILD.gn
-index d9b5d4f2a35f781d1d01a2de5c310d91c466b4b2..d7bd31d52f65f8116f4f98cec58bb38b5f2e3dba 100644
+index e5d9b020062c4..d7bd31d52f65f 100644
 --- chrome/browser/ui/webui/about/BUILD.gn
 +++ chrome/browser/ui/webui/about/BUILD.gn
-@@ -2,6 +2,8 @@
+@@ -2,7 +2,9 @@
  # Use of this source code is governed by a BSD-style license that can be
  # found in the LICENSE file.
-
+ 
+-assert(is_win || is_mac || is_linux || is_chromeos || is_android)
 +import("//cef/libcef/features/features.gni")
 +
- assert(is_win || is_mac || is_linux || is_chromeos || is_android || is_qnx)
-
++assert(is_win || is_mac || is_linux || is_chromeos || is_android || is_qnx)
+ 
  source_set("about") {
+   sources = [ "about_ui.h" ]
 @@ -30,6 +32,10 @@ source_set("impl") {
      "//components/webui/about",
    ]
-
+ 
 +  if (enable_cef) {
 +    deps += [ "//cef:cef_resources" ]
 +  }
