@@ -1,0 +1,15 @@
+diff --git chrome/browser/BUILD.gn chrome/browser/BUILD.gn
+index 734c0a9e312242e7626f6968c15e700721a3f87a..5051926323021c74039811529a26c7af3107a629 100644
+--- chrome/browser/BUILD.gn
++++ chrome/browser/BUILD.gn
+@@ -2499,6 +2499,10 @@
+     "//chrome/browser/ui/webauthn:impl",
+   ]
+
++  if (is_qnx) {
++    sources += [ "platform_util_qnx.cc" ]
++  }
++
+   if (!is_qnx) {
+     deps += [
+       "//services/on_device_model/public/cpp",
