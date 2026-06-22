@@ -1,0 +1,28 @@
+diff --git pdf/BUILD.gn pdf/BUILD.gn
+index 996af3868c2fc2ececd4ff5c5bba2cb4dd5c00d7..9a5a24a314814789315eb1c090b5eab7b17b9896 100644
+--- pdf/BUILD.gn
++++ pdf/BUILD.gn
+@@ -172,7 +172,6 @@
+       "pdfium/pdfium_page.h",
+       "pdfium/pdfium_permissions.cc",
+       "pdfium/pdfium_permissions.h",
+-      "pdfium/pdfium_print.cc",
+       "pdfium/pdfium_print.h",
+       "pdfium/pdfium_range.cc",
+       "pdfium/pdfium_range.h",
+@@ -196,6 +195,15 @@
+       "ui/thumbnail.h",
+     ]
+
++    if (is_qnx) {
++      sources += [
++        "pdfium/pdfium_print_qnx.cc",
++        "pdfium/pdfium_printing_units_qnx.cc",
++      ]
++    } else {
++      sources += [ "pdfium/pdfium_print.cc" ]
++    }
++
+     public_configs = [ ":pdfium_includes" ]
+
+     configs += [ ":strict" ]
