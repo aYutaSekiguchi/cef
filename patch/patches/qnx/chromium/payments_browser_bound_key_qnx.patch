@@ -1,0 +1,13 @@
+diff --git components/payments/content/browser_binding/BUILD.gn components/payments/content/browser_binding/BUILD.gn
+index c2496aa75d5ed50fee86e33eef3ac04545bcee6a..54040f5e1c7a0e66a97400cc13fbb9a0c9924d89 100644
+--- components/payments/content/browser_binding/BUILD.gn
++++ components/payments/content/browser_binding/BUILD.gn
+@@ -2,7 +2,7 @@
+ # Use of this source code is governed by a BSD-style license that can be
+ # found in the LICENSE file.
+
+-is_desktop = is_mac || is_win || is_linux || is_chromeos || is_fuchsia
++is_desktop = is_mac || is_win || is_linux || is_chromeos || is_fuchsia || is_qnx
+
+ source_set("browser_binding") {
+   visibility = [
