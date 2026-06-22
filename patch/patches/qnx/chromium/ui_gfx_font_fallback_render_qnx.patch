@@ -1,0 +1,18 @@
+diff --git ui/gfx/BUILD.gn ui/gfx/BUILD.gn
+index ba4f7988df80d7bb4fabf4b2095a115c7a3f010a..37c844369b54cb34222940ecd09db6bd46d6c085 100644
+--- ui/gfx/BUILD.gn
++++ ui/gfx/BUILD.gn
+@@ -243,6 +243,13 @@ component("gfx") {
+     deps += [ "//third_party/fontconfig" ]
+   }
+ 
++  if (is_qnx) {
++    sources += [
++      "font_fallback_qnx.cc",
++      "font_render_params_qnx.cc",
++    ]
++  }
++
+   if (is_apple) {
+     sources += [ "font_render_params_mac.cc" ]
+     frameworks = [ "IOSurface.framework" ]
