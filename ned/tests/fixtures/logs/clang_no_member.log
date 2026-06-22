@@ -1,0 +1,14 @@
+# ninja build log excerpt (simplified)
+obj/foo/bar.o: command: ... failed.
+obj/foo/bar.o: clang++ -c foo.cc -o obj/foo/bar.o
+foo.cc:12:9: error: no member named 'DoThing' in 'FooService'
+foo.cc:12:9: note: candidate function:
+foo.cc:12:9: note:   void FooService::DoThing()
+foo.cc:12:9: note:   void FooService::DoThing(int)
+obj/foo/baz.o: command: ... failed.
+obj/foo/baz.o: clang++ -c baz.cc -o obj/foo/baz.o
+baz.cc:23:5: error: no member named 'RunTask' in 'FooService'
+baz.cc:23:5: note: candidate function:
+baz.cc:23:5: note:   void FooService::RunTask()
+FAILED: obj/foo/bar.o
+FAILED: obj/foo/baz.o

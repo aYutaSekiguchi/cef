@@ -1,0 +1,421 @@
+FAILED: obj/chrome/browser/tab_0.o
+obj/chrome/browser/tab_0.o: clang++ -c chrome/browser/tab_0.cc
+chrome/browser/tab_0.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_0.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_1.o
+obj/chrome/browser/tab_1.o: clang++ -c chrome/browser/tab_1.cc
+chrome/browser/tab_1.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_1.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_2.o
+obj/chrome/browser/tab_2.o: clang++ -c chrome/browser/tab_2.cc
+chrome/browser/tab_2.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_2.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_3.o
+obj/chrome/browser/tab_3.o: clang++ -c chrome/browser/tab_3.cc
+chrome/browser/tab_3.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_3.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_4.o
+obj/chrome/browser/tab_4.o: clang++ -c chrome/browser/tab_4.cc
+chrome/browser/tab_4.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_4.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_5.o
+obj/chrome/browser/tab_5.o: clang++ -c chrome/browser/tab_5.cc
+chrome/browser/tab_5.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_5.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_6.o
+obj/chrome/browser/tab_6.o: clang++ -c chrome/browser/tab_6.cc
+chrome/browser/tab_6.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_6.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_7.o
+obj/chrome/browser/tab_7.o: clang++ -c chrome/browser/tab_7.cc
+chrome/browser/tab_7.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_7.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_8.o
+obj/chrome/browser/tab_8.o: clang++ -c chrome/browser/tab_8.cc
+chrome/browser/tab_8.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_8.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_9.o
+obj/chrome/browser/tab_9.o: clang++ -c chrome/browser/tab_9.cc
+chrome/browser/tab_9.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_9.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_10.o
+obj/chrome/browser/tab_10.o: clang++ -c chrome/browser/tab_10.cc
+chrome/browser/tab_10.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_10.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_11.o
+obj/chrome/browser/tab_11.o: clang++ -c chrome/browser/tab_11.cc
+chrome/browser/tab_11.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_11.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_12.o
+obj/chrome/browser/tab_12.o: clang++ -c chrome/browser/tab_12.cc
+chrome/browser/tab_12.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_12.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_13.o
+obj/chrome/browser/tab_13.o: clang++ -c chrome/browser/tab_13.cc
+chrome/browser/tab_13.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_13.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_14.o
+obj/chrome/browser/tab_14.o: clang++ -c chrome/browser/tab_14.cc
+chrome/browser/tab_14.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_14.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_15.o
+obj/chrome/browser/tab_15.o: clang++ -c chrome/browser/tab_15.cc
+chrome/browser/tab_15.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_15.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_16.o
+obj/chrome/browser/tab_16.o: clang++ -c chrome/browser/tab_16.cc
+chrome/browser/tab_16.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_16.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_17.o
+obj/chrome/browser/tab_17.o: clang++ -c chrome/browser/tab_17.cc
+chrome/browser/tab_17.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_17.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_18.o
+obj/chrome/browser/tab_18.o: clang++ -c chrome/browser/tab_18.cc
+chrome/browser/tab_18.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_18.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_19.o
+obj/chrome/browser/tab_19.o: clang++ -c chrome/browser/tab_19.cc
+chrome/browser/tab_19.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_19.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_20.o
+obj/chrome/browser/tab_20.o: clang++ -c chrome/browser/tab_20.cc
+chrome/browser/tab_20.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_20.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_21.o
+obj/chrome/browser/tab_21.o: clang++ -c chrome/browser/tab_21.cc
+chrome/browser/tab_21.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_21.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_22.o
+obj/chrome/browser/tab_22.o: clang++ -c chrome/browser/tab_22.cc
+chrome/browser/tab_22.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_22.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_23.o
+obj/chrome/browser/tab_23.o: clang++ -c chrome/browser/tab_23.cc
+chrome/browser/tab_23.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_23.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_24.o
+obj/chrome/browser/tab_24.o: clang++ -c chrome/browser/tab_24.cc
+chrome/browser/tab_24.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_24.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_25.o
+obj/chrome/browser/tab_25.o: clang++ -c chrome/browser/tab_25.cc
+chrome/browser/tab_25.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_25.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_26.o
+obj/chrome/browser/tab_26.o: clang++ -c chrome/browser/tab_26.cc
+chrome/browser/tab_26.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_26.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_27.o
+obj/chrome/browser/tab_27.o: clang++ -c chrome/browser/tab_27.cc
+chrome/browser/tab_27.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_27.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_28.o
+obj/chrome/browser/tab_28.o: clang++ -c chrome/browser/tab_28.cc
+chrome/browser/tab_28.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_28.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_29.o
+obj/chrome/browser/tab_29.o: clang++ -c chrome/browser/tab_29.cc
+chrome/browser/tab_29.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_29.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_30.o
+obj/chrome/browser/tab_30.o: clang++ -c chrome/browser/tab_30.cc
+chrome/browser/tab_30.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_30.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_31.o
+obj/chrome/browser/tab_31.o: clang++ -c chrome/browser/tab_31.cc
+chrome/browser/tab_31.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_31.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_32.o
+obj/chrome/browser/tab_32.o: clang++ -c chrome/browser/tab_32.cc
+chrome/browser/tab_32.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_32.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_33.o
+obj/chrome/browser/tab_33.o: clang++ -c chrome/browser/tab_33.cc
+chrome/browser/tab_33.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_33.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_34.o
+obj/chrome/browser/tab_34.o: clang++ -c chrome/browser/tab_34.cc
+chrome/browser/tab_34.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_34.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_35.o
+obj/chrome/browser/tab_35.o: clang++ -c chrome/browser/tab_35.cc
+chrome/browser/tab_35.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_35.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_36.o
+obj/chrome/browser/tab_36.o: clang++ -c chrome/browser/tab_36.cc
+chrome/browser/tab_36.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_36.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_37.o
+obj/chrome/browser/tab_37.o: clang++ -c chrome/browser/tab_37.cc
+chrome/browser/tab_37.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_37.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_38.o
+obj/chrome/browser/tab_38.o: clang++ -c chrome/browser/tab_38.cc
+chrome/browser/tab_38.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_38.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_39.o
+obj/chrome/browser/tab_39.o: clang++ -c chrome/browser/tab_39.cc
+chrome/browser/tab_39.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_39.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_40.o
+obj/chrome/browser/tab_40.o: clang++ -c chrome/browser/tab_40.cc
+chrome/browser/tab_40.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_40.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_41.o
+obj/chrome/browser/tab_41.o: clang++ -c chrome/browser/tab_41.cc
+chrome/browser/tab_41.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_41.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_42.o
+obj/chrome/browser/tab_42.o: clang++ -c chrome/browser/tab_42.cc
+chrome/browser/tab_42.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_42.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_43.o
+obj/chrome/browser/tab_43.o: clang++ -c chrome/browser/tab_43.cc
+chrome/browser/tab_43.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_43.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_44.o
+obj/chrome/browser/tab_44.o: clang++ -c chrome/browser/tab_44.cc
+chrome/browser/tab_44.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_44.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_45.o
+obj/chrome/browser/tab_45.o: clang++ -c chrome/browser/tab_45.cc
+chrome/browser/tab_45.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_45.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_46.o
+obj/chrome/browser/tab_46.o: clang++ -c chrome/browser/tab_46.cc
+chrome/browser/tab_46.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_46.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_47.o
+obj/chrome/browser/tab_47.o: clang++ -c chrome/browser/tab_47.cc
+chrome/browser/tab_47.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_47.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_48.o
+obj/chrome/browser/tab_48.o: clang++ -c chrome/browser/tab_48.cc
+chrome/browser/tab_48.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_48.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_49.o
+obj/chrome/browser/tab_49.o: clang++ -c chrome/browser/tab_49.cc
+chrome/browser/tab_49.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_49.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_50.o
+obj/chrome/browser/tab_50.o: clang++ -c chrome/browser/tab_50.cc
+chrome/browser/tab_50.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_50.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_51.o
+obj/chrome/browser/tab_51.o: clang++ -c chrome/browser/tab_51.cc
+chrome/browser/tab_51.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_51.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_52.o
+obj/chrome/browser/tab_52.o: clang++ -c chrome/browser/tab_52.cc
+chrome/browser/tab_52.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_52.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_53.o
+obj/chrome/browser/tab_53.o: clang++ -c chrome/browser/tab_53.cc
+chrome/browser/tab_53.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_53.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_54.o
+obj/chrome/browser/tab_54.o: clang++ -c chrome/browser/tab_54.cc
+chrome/browser/tab_54.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_54.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_55.o
+obj/chrome/browser/tab_55.o: clang++ -c chrome/browser/tab_55.cc
+chrome/browser/tab_55.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_55.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_56.o
+obj/chrome/browser/tab_56.o: clang++ -c chrome/browser/tab_56.cc
+chrome/browser/tab_56.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_56.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_57.o
+obj/chrome/browser/tab_57.o: clang++ -c chrome/browser/tab_57.cc
+chrome/browser/tab_57.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_57.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_58.o
+obj/chrome/browser/tab_58.o: clang++ -c chrome/browser/tab_58.cc
+chrome/browser/tab_58.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_58.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_59.o
+obj/chrome/browser/tab_59.o: clang++ -c chrome/browser/tab_59.cc
+chrome/browser/tab_59.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_59.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_60.o
+obj/chrome/browser/tab_60.o: clang++ -c chrome/browser/tab_60.cc
+chrome/browser/tab_60.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_60.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_61.o
+obj/chrome/browser/tab_61.o: clang++ -c chrome/browser/tab_61.cc
+chrome/browser/tab_61.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_61.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_62.o
+obj/chrome/browser/tab_62.o: clang++ -c chrome/browser/tab_62.cc
+chrome/browser/tab_62.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_62.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_63.o
+obj/chrome/browser/tab_63.o: clang++ -c chrome/browser/tab_63.cc
+chrome/browser/tab_63.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_63.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_64.o
+obj/chrome/browser/tab_64.o: clang++ -c chrome/browser/tab_64.cc
+chrome/browser/tab_64.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_64.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_65.o
+obj/chrome/browser/tab_65.o: clang++ -c chrome/browser/tab_65.cc
+chrome/browser/tab_65.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_65.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_66.o
+obj/chrome/browser/tab_66.o: clang++ -c chrome/browser/tab_66.cc
+chrome/browser/tab_66.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_66.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_67.o
+obj/chrome/browser/tab_67.o: clang++ -c chrome/browser/tab_67.cc
+chrome/browser/tab_67.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_67.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_68.o
+obj/chrome/browser/tab_68.o: clang++ -c chrome/browser/tab_68.cc
+chrome/browser/tab_68.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_68.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_69.o
+obj/chrome/browser/tab_69.o: clang++ -c chrome/browser/tab_69.cc
+chrome/browser/tab_69.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_69.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_70.o
+obj/chrome/browser/tab_70.o: clang++ -c chrome/browser/tab_70.cc
+chrome/browser/tab_70.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_70.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_71.o
+obj/chrome/browser/tab_71.o: clang++ -c chrome/browser/tab_71.cc
+chrome/browser/tab_71.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_71.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_72.o
+obj/chrome/browser/tab_72.o: clang++ -c chrome/browser/tab_72.cc
+chrome/browser/tab_72.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_72.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_73.o
+obj/chrome/browser/tab_73.o: clang++ -c chrome/browser/tab_73.cc
+chrome/browser/tab_73.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_73.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_74.o
+obj/chrome/browser/tab_74.o: clang++ -c chrome/browser/tab_74.cc
+chrome/browser/tab_74.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_74.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_75.o
+obj/chrome/browser/tab_75.o: clang++ -c chrome/browser/tab_75.cc
+chrome/browser/tab_75.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_75.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_76.o
+obj/chrome/browser/tab_76.o: clang++ -c chrome/browser/tab_76.cc
+chrome/browser/tab_76.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_76.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_77.o
+obj/chrome/browser/tab_77.o: clang++ -c chrome/browser/tab_77.cc
+chrome/browser/tab_77.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_77.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_78.o
+obj/chrome/browser/tab_78.o: clang++ -c chrome/browser/tab_78.cc
+chrome/browser/tab_78.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_78.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_79.o
+obj/chrome/browser/tab_79.o: clang++ -c chrome/browser/tab_79.cc
+chrome/browser/tab_79.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_79.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_80.o
+obj/chrome/browser/tab_80.o: clang++ -c chrome/browser/tab_80.cc
+chrome/browser/tab_80.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_80.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_81.o
+obj/chrome/browser/tab_81.o: clang++ -c chrome/browser/tab_81.cc
+chrome/browser/tab_81.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_81.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_82.o
+obj/chrome/browser/tab_82.o: clang++ -c chrome/browser/tab_82.cc
+chrome/browser/tab_82.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_82.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_83.o
+obj/chrome/browser/tab_83.o: clang++ -c chrome/browser/tab_83.cc
+chrome/browser/tab_83.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_83.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_84.o
+obj/chrome/browser/tab_84.o: clang++ -c chrome/browser/tab_84.cc
+chrome/browser/tab_84.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_84.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_85.o
+obj/chrome/browser/tab_85.o: clang++ -c chrome/browser/tab_85.cc
+chrome/browser/tab_85.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_85.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_86.o
+obj/chrome/browser/tab_86.o: clang++ -c chrome/browser/tab_86.cc
+chrome/browser/tab_86.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_86.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_87.o
+obj/chrome/browser/tab_87.o: clang++ -c chrome/browser/tab_87.cc
+chrome/browser/tab_87.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_87.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_88.o
+obj/chrome/browser/tab_88.o: clang++ -c chrome/browser/tab_88.cc
+chrome/browser/tab_88.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_88.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_89.o
+obj/chrome/browser/tab_89.o: clang++ -c chrome/browser/tab_89.cc
+chrome/browser/tab_89.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_89.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_90.o
+obj/chrome/browser/tab_90.o: clang++ -c chrome/browser/tab_90.cc
+chrome/browser/tab_90.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_90.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_91.o
+obj/chrome/browser/tab_91.o: clang++ -c chrome/browser/tab_91.cc
+chrome/browser/tab_91.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_91.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_92.o
+obj/chrome/browser/tab_92.o: clang++ -c chrome/browser/tab_92.cc
+chrome/browser/tab_92.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_92.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_93.o
+obj/chrome/browser/tab_93.o: clang++ -c chrome/browser/tab_93.cc
+chrome/browser/tab_93.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_93.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_94.o
+obj/chrome/browser/tab_94.o: clang++ -c chrome/browser/tab_94.cc
+chrome/browser/tab_94.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_94.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_95.o
+obj/chrome/browser/tab_95.o: clang++ -c chrome/browser/tab_95.cc
+chrome/browser/tab_95.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_95.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_96.o
+obj/chrome/browser/tab_96.o: clang++ -c chrome/browser/tab_96.cc
+chrome/browser/tab_96.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_96.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_97.o
+obj/chrome/browser/tab_97.o: clang++ -c chrome/browser/tab_97.cc
+chrome/browser/tab_97.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_97.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_98.o
+obj/chrome/browser/tab_98.o: clang++ -c chrome/browser/tab_98.cc
+chrome/browser/tab_98.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_98.cc:42:9: note: candidate function:
+FAILED: obj/chrome/browser/tab_99.o
+obj/chrome/browser/tab_99.o: clang++ -c chrome/browser/tab_99.cc
+chrome/browser/tab_99.cc:42:9: error: no member named "DoThing" in "TabService"
+chrome/browser/tab_99.cc:42:9: note: candidate function:
+ld.lld: error: undefined symbol: chrome::util::Helper0()
+ld.lld: error: undefined symbol: chrome::util::Helper1()
+ld.lld: error: undefined symbol: chrome::util::Helper2()
+ld.lld: error: undefined symbol: chrome::util::Helper3()
+ld.lld: error: undefined symbol: chrome::util::Helper4()
+ld.lld: error: undefined symbol: chrome::util::Helper5()
+ld.lld: error: undefined symbol: chrome::util::Helper6()
+ld.lld: error: undefined symbol: chrome::util::Helper7()
+ld.lld: error: undefined symbol: chrome::util::Helper8()
+ld.lld: error: undefined symbol: chrome::util::Helper9()
+ld.lld: error: undefined symbol: chrome::util::Helper10()
+ld.lld: error: undefined symbol: chrome::util::Helper11()
+ld.lld: error: undefined symbol: chrome::util::Helper12()
+ld.lld: error: undefined symbol: chrome::util::Helper13()
+ld.lld: error: undefined symbol: chrome::util::Helper14()
+ld.lld: error: undefined symbol: chrome::util::Helper15()
+ld.lld: error: undefined symbol: chrome::util::Helper16()
+ld.lld: error: undefined symbol: chrome::util::Helper17()
+ld.lld: error: undefined symbol: chrome::util::Helper18()
+ld.lld: error: undefined symbol: chrome::util::Helper19()
+chrome/renderer/main.cc:1: fatal error: "chrome/renderer/missing.h" file not found

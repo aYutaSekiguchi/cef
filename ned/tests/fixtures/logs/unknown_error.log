@@ -1,0 +1,9 @@
+=== build log snippet ===
+Executing: python3 generate.py
+[error] failed to import module foo
+fatal: bad revision 'origin/master'
+make: *** [Makefile:42] Error 1
+WARNING: something weird happened
+error: corrupted object file
+something that looks like error but doesn't match pattern
+ERROR: unknown error

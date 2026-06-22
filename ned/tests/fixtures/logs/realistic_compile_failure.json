@@ -1,0 +1,155 @@
+{
+  "kind": "ninja_build_error_summary",
+  "status": "failed",
+  "returncode": 1,
+  "raw_log": {
+    "saved_to": null,
+    "bytes": 24982,
+    "lines": 421
+  },
+  "summary": {
+    "bytes": 2268,
+    "lines": 6,
+    "compression_ratio": 0.09078536546313346
+  },
+  "failed_edges": {
+    "count": 100,
+    "sample": [
+      "obj/chrome/browser/tab_0.o",
+      "obj/chrome/browser/tab_1.o",
+      "obj/chrome/browser/tab_2.o"
+    ]
+  },
+  "clusters": [
+    {
+      "id": "C003",
+      "kind": "cpp_compile_error",
+      "count": 100,
+      "score": 1050,
+      "normalized": "no member named <symbol> in <symbol>",
+      "representative": {
+        "file": "chrome/browser/tab_0.cc",
+        "line": 42,
+        "column": 9,
+        "message": "no member named <symbol> in <symbol>"
+      },
+      "examples": [
+        {
+          "file": "chrome/browser/tab_0.cc",
+          "line": 42
+        }
+      ],
+      "action": "Handle this cluster first. Read only the representative source location and nearby related declarations."
+    },
+    {
+      "id": "C004",
+      "kind": "cpp_compile_error",
+      "count": 100,
+      "score": 1050,
+      "normalized": "candidate function:",
+      "representative": {
+        "file": "chrome/browser/tab_0.cc",
+        "line": 42,
+        "column": 9,
+        "message": "candidate function:"
+      },
+      "examples": [
+        {
+          "file": "chrome/browser/tab_0.cc",
+          "line": 42
+        }
+      ],
+      "action": "Handle this cluster first. Read only the representative source location and nearby related declarations."
+    },
+    {
+      "id": "C001",
+      "kind": "failed_edge",
+      "count": 100,
+      "score": 1000,
+      "normalized": "FAILED: obj<path>",
+      "representative": {
+        "file": null,
+        "line": null,
+        "column": null,
+        "message": ""
+      },
+      "examples": [
+        {
+          "file": null,
+          "line": null
+        }
+      ],
+      "action": "Review the failed ninja edge and its command."
+    },
+    {
+      "id": "C002",
+      "kind": "unknown_error",
+      "count": 100,
+      "score": 1000,
+      "normalized": "obj<path>: clang++ -c chrome<path>",
+      "representative": {
+        "file": null,
+        "line": null,
+        "column": null,
+        "message": "obj<path>: clang++ -c chrome<path>"
+      },
+      "examples": [
+        {
+          "file": null,
+          "line": null
+        }
+      ],
+      "action": "Manually inspect the raw log line."
+    },
+    {
+      "id": "C005",
+      "kind": "link_undefined_symbol",
+      "count": 20,
+      "score": 230,
+      "normalized": "ld.lld: error: undefined symbol: chrome::util::Helper<num>()",
+      "representative": {
+        "file": null,
+        "line": null,
+        "column": null,
+        "message": "ld.lld: error: undefined symbol: chrome::util::Helper<num>()"
+      },
+      "examples": [
+        {
+          "file": null,
+          "line": null
+        }
+      ],
+      "action": "Inspect the symbol name, the referencing location, and ensure the definition exists in a linked library."
+    },
+    {
+      "id": "C006",
+      "kind": "unknown_error",
+      "count": 1,
+      "score": 10,
+      "normalized": "chrome<path>:<num>: fatal error: <symbol> file not found",
+      "representative": {
+        "file": null,
+        "line": null,
+        "column": null,
+        "message": "chrome<path>:<num>: fatal error: <symbol> file not found"
+      },
+      "examples": [
+        {
+          "file": null,
+          "line": null
+        }
+      ],
+      "action": "Manually inspect the raw log line."
+    }
+  ],
+  "unparsed": {
+    "error_like_lines": 0,
+    "sample": []
+  },
+  "metrics": {
+    "parse_time_ms": 3,
+    "estimated_raw_tokens": 6245,
+    "estimated_summary_tokens": 707,
+    "estimated_token_reduction_ratio": 0.11321056845476381
+  }
+}

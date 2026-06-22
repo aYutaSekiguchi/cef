@@ -1,0 +1,7 @@
+obj/test.o: command: ... failed.
+obj/test.o: gcc -c test.c -o obj/test.o
+test.c:42:3: error: 'NULL' macro is not defined
+  #include <stdio.h>
+test.c:42:3: note: replace with 0
+test.c:42:3: note: or define _GNU_C99 at the top of the file
+obj/test.o: error: command '/'usr/bin/gcc' failed with status 1

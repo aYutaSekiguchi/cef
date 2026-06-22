@@ -1,0 +1,5 @@
+obj/duplicate.o:ld.lld: error: duplicate symbol: foo::bar()
+  >>> referenced by src/a.cc:10
+  >>> referenced by src/b.cc:10
+collect2: error: ld returned 1 exit status
+FAILED: obj/duplicate.o

@@ -1,0 +1,6 @@
+obj/win/foo.obj: Microsoft (R) C/C++ Optimizing Compiler Version 19.29 for x64
+obj/win/foo.obj: foo.c
+obj/win/foo.c(123,9): error C2039: 'DoThing': is not a member of 'FooService'
+    obj/win/foo.c(123,9): note: look for declarations of this name
+    obj/win/foo.c(123,9): note:    int FooService::DoThing(); // perhaps 'int FooService::DoThing(int)'?
+obj/win/foo.obj: error: command "cl.exe" failed with status 1

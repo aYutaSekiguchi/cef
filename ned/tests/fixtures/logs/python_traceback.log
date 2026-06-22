@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "tools/generate.py", line 42, in <module>
+    result = json.loads(line)
+FileNotFoundError: [Errno 2] No such file or directory: 'config.json'
+The above exception was the context of the reported problem:
+  File "tools/generate.py", line 45, in <module>
+    raise RuntimeError("Generation failed")
+ERROR: Generation failed

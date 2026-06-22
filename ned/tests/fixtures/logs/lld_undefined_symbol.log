@@ -1,0 +1,8 @@
+obj/libexample.a:ld.lld: error: undefined symbol: Foo::Bar()
+  >>> referenced by bar.cc.obj/bar.o:(__cdecl Foo::Bar(void))
+  >>> referenced by baz.cc.obj/baz.o:(__cdecl Foo::Bar(void))
+  >>> referenced by bar.cc.obj/bar.o:(__cdecl Foo::Bar(int))
+/usr/local/lib/libfoo.a: in function `int Foo::Bar(int)':
+foo.cc:10: undefined reference to `Foo::Bar(int)'
+collect2: error: ld returned 1 exit status
+FAILED: obj/libexample.a

@@ -1,0 +1,11 @@
+obj/templ.o: command: ... failed.
+obj/templ.o: clang++ -c templ.cpp -o obj/templ.o
+templ.cpp:89:3: error: template instantiation required but is not allowed after explicit instantiation declaration
+  while instantiating struct std::vector<int>:
+  error: instantiation of undefined template 'std::vector<T>'
+templ.cpp:89:3: note: consider #include <vector>
+templ.cpp:89:3: note: /usr/include/c++/9/bits/vector.tcc:46: instantiated from static std::vector<int> templ.cpp::foo()
+obj/templ.o: note: /usr/include/c++/9/bits/vector_base.h:16:   static void std::_Destroy_aux<std::allocator<T> >(std::allocator<T>*, std::allocator<T>*)()
+  /usr/include/c++/9/bits/vector_base.h:12:   static void std::_Destroy_aux<std::allocator<T> >(std::allocator<T>*)
+  /usr/include/c++/9/bits/vector_base.h:12:   instantiate
+FAILED: obj/templ.o

@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ninja-error-digest"
+version = "0.1.0"
+description = "Tool to parse Ninja build logs and compress for AI consumption"
+readme = "ninja_error_digest/README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "Your Name", email = "you@example.com"}
+]
+keywords = ["ninja", "build", "logs", "compression", "ai"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+]
+dependencies = [
+    "typing-extensions; python_version < '3.8'",
+]
+
+[project.scripts]
+ned = "ninja_error_digest.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "."}
+packages = ["ninja_error_digest"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py38"
+select = ["E", "F", "I", "W"]
+ignore = []
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+addopts = "-v --tb=short"

@@ -1,0 +1,13 @@
+obj/main.o: command: ... failed.
+obj/main.o: gcc -c main.c -o obj/main.o
+main.c:10:1: error: 'NULL' is not pointer convertible
+main.c:10:1: note: use of deleted function std::nullptr_t std::operator==(std::nullptr_t, const char*)}
+obj/helper.o: command: ... failed.
+obj/helper.o: gcc -c helper.c -o obj/helper.o
+helper.c:5:10: fatal error: 'missing_header.h' file not found
+obj/driver.o:ld.lld: error: undefined symbol: myFunc
+/usr/local/lib/libfoo.a:myFunc: already defined in driver.o: myFunc
+collect2: error: ld returned 1 exit status
+FAILED: obj/main.o
+FAILED: obj/helper.o
+FAILED: obj/driver.o
