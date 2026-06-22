@@ -1,0 +1,22 @@
+diff --git components/regional_capabilities/regional_capabilities_service.h components/regional_capabilities/regional_capabilities_service.h
+index 16a1c386e076f..a903735f9a7f7 100644
+--- components/regional_capabilities/regional_capabilities_service.h
++++ components/regional_capabilities/regional_capabilities_service.h
+@@ -117,7 +117,7 @@ class RegionalCapabilitiesService : public KeyedService {
+   static bool IsInSearchEngineChoiceScreenRegion(
+       const country_codes::CountryId& tested_country_id);
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+   // Returns whether the country obtained from the client is associated with
+   // a region in which we can show a search engine choice screen.
+   //
+@@ -126,7 +126,7 @@ class RegionalCapabilitiesService : public KeyedService {
+   // available). Most clients should use `IsInSearchEngineChoiceScreenRegion()`
+   // instead.
+   static bool IsInSearchEngineChoiceScreenRegion(Client& client);
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ 
+   // Returns true when the choice screen eligibility check against country
+   // association is not required, or if the current location is compatible with

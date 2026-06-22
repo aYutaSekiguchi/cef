@@ -1,0 +1,13 @@
+diff --git chrome/browser/regional_capabilities/regional_capabilities_service_factory.cc chrome/browser/regional_capabilities/regional_capabilities_service_factory.cc
+index 1eac5e9389266..f0b00b859764b 100644
+--- chrome/browser/regional_capabilities/regional_capabilities_service_factory.cc
++++ chrome/browser/regional_capabilities/regional_capabilities_service_factory.cc
+@@ -61,7 +61,7 @@ RegionalCapabilitiesServiceFactory::GetInstance() {
+   return instance.get();
+ }
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ // static
+ bool RegionalCapabilitiesServiceFactory::
+     IsInSearchEngineChoiceScreenRegionForSystemProfile(Profile* profile) {

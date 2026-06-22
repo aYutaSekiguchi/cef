@@ -1,0 +1,22 @@
+diff --git components/regional_capabilities/regional_capabilities_service.cc components/regional_capabilities/regional_capabilities_service.cc
+index 445a16834fab5..eac7cd6bc955c 100644
+--- components/regional_capabilities/regional_capabilities_service.cc
++++ components/regional_capabilities/regional_capabilities_service.cc
+@@ -413,7 +413,7 @@ bool RegionalCapabilitiesService::IsInSearchEngineChoiceScreenRegion(
+       .choice_screen_eligibility_config.has_value();
+ }
+ 
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ // static
+ bool RegionalCapabilitiesService::IsInSearchEngineChoiceScreenRegion(
+     Client& client) {
+@@ -421,7 +421,7 @@ bool RegionalCapabilitiesService::IsInSearchEngineChoiceScreenRegion(
+       GetCountryIdFromClient(client, Client::CountryIdCallback());
+   return IsInSearchEngineChoiceScreenRegion(country_id_result.country_id);
+ }
+-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ 
+ bool RegionalCapabilitiesService::
+     IsChoiceScreenCompatibleWithCurrentLocation() {
