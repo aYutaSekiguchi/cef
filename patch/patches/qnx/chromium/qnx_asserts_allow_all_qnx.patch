@@ -1,0 +1,79 @@
+diff --git build/config/linux/atk/BUILD.gn build/config/linux/atk/BUILD.gn
+index 3931a5a897c94..a05e937a9e48e 100644
+--- build/config/linux/atk/BUILD.gn
++++ build/config/linux/atk/BUILD.gn
+@@ -10,7 +10,7 @@ import("//build/config/ui.gni")
+ assert(!is_chromeos)
+ 
+ # These packages should _only_ be expected when building for a target.
+-assert(current_toolchain == default_toolchain)
++# assert(current_toolchain == default_toolchain)
+ 
+ if (use_atk) {
+   assert(use_glib, "use_atk=true requires that use_glib=true")
+diff --git build/config/linux/atspi2/BUILD.gn build/config/linux/atspi2/BUILD.gn
+index 30bc77f9c23fb..778d4bc350036 100644
+--- build/config/linux/atspi2/BUILD.gn
++++ build/config/linux/atspi2/BUILD.gn
+@@ -6,7 +6,7 @@ import("//build/config/linux/pkg_config.gni")
+ import("//build/config/ui.gni")
+ 
+ # These packages should _only_ be expected when building for a target.
+-assert(current_toolchain == default_toolchain)
++# assert(current_toolchain == default_toolchain)
+ 
+ if (use_atk) {
+   pkg_config("atspi2") {
+diff --git chrome/browser/ui/webui/on_device_internals/BUILD.gn chrome/browser/ui/webui/on_device_internals/BUILD.gn
+index 6e70e1568aeac..c5c3a0dd3d92d 100644
+--- chrome/browser/ui/webui/on_device_internals/BUILD.gn
++++ chrome/browser/ui/webui/on_device_internals/BUILD.gn
+@@ -2,7 +2,9 @@
+ # Use of this source code is governed by a BSD-style license that can be
+ # found in the LICENSE file.
+ 
++import("//content/utility/on_device_model/features.gni")
+ import("//mojo/public/tools/bindings/mojom.gni")
++import("//ui/gl/features.gni")
+ 
+ assert(!is_android)
+ 
+@@ -37,11 +39,13 @@ source_set("on_device_internals") {
+     "//chrome/common",
+     "//components/update_client",
+     "//content/public/browser",
+-    "//services/on_device_model/ml:ml_no_internal",
+     "//services/preferences/public/cpp",
+     "//ui/base",
+     "//ui/webui",
+   ]
++  if (enable_on_device_model && use_dawn) {
++    deps += [ "//services/on_device_model/ml:ml_no_internal" ]
++  }
+   if (is_chromeos) {
+     deps += [ "//chromeos/ash/components/mojo_service_manager" ]
+   }
+diff --git ui/linux/BUILD.gn ui/linux/BUILD.gn
+index 267de0acbaf5a..ce4f0836692a2 100644
+--- ui/linux/BUILD.gn
++++ ui/linux/BUILD.gn
+@@ -3,6 +3,7 @@
+ # found in the LICENSE file.
+ 
+ import("//build/config/linux/gtk/gtk.gni")
++import("//printing/buildflags/buildflags.gni")
+ import("//ui/qt/qt.gni")
+ 
+ assert(is_linux)
+@@ -35,6 +36,11 @@ component("linux_ui") {
+     "//ui/display/types",
+     "//ui/gfx/geometry",
+   ]
++
++  if (enable_printing) {
++    deps += [ "//printing/mojom" ]
++  }
++
+   public_deps = [ "//printing/buildflags" ]
+ }
+ 

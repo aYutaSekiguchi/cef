@@ -1,5 +1,5 @@
 diff --git ui/base/unowned_user_data/BUILD.gn ui/base/unowned_user_data/BUILD.gn
-index a236ecd3ea335..381a7cc211f14 100644
+index a236ecd3ea33527ac39714088b4999fcea7f1f08..381a7cc211f1437385feeb9755e4c34861d3db35 100644
 --- ui/base/unowned_user_data/BUILD.gn
 +++ ui/base/unowned_user_data/BUILD.gn
 @@ -5,7 +5,7 @@
@@ -12,7 +12,7 @@ index a236ecd3ea335..381a7cc211f14 100644
  component("unowned_user_data") {
    defines = [ "IS_UNOWNED_USER_DATA_IMPL" ]
 diff --git ui/events/ozone/evdev/BUILD.gn ui/events/ozone/evdev/BUILD.gn
-index efd393486efbd..3918dd213a57b 100644
+index efd393486efbdd75e15a5b649f830d18a2f9a467..3918dd213a57b435eefb14c35c0ffbbf2dd6fde8 100644
 --- ui/events/ozone/evdev/BUILD.gn
 +++ ui/events/ozone/evdev/BUILD.gn
 @@ -6,7 +6,7 @@ import("//build/config/chromeos/args.gni")
@@ -25,7 +25,7 @@ index efd393486efbd..3918dd213a57b 100644
  visibility = [ ":*" ]
  
 diff --git ui/ozone/platform/x11/BUILD.gn ui/ozone/platform/x11/BUILD.gn
-index 75a94f4deaec7..ea9685dc23f16 100644
+index 75a94f4deaec7b71fc54911e7dec6c90e42670db..ea9685dc23f163f52a985b5299ccbd0efc19bf8e 100644
 --- ui/ozone/platform/x11/BUILD.gn
 +++ ui/ozone/platform/x11/BUILD.gn
 @@ -8,7 +8,7 @@ import("//ui/base/ui_features.gni")

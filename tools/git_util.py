@@ -211,7 +211,9 @@ def git_apply_patch_file(patch_path, patch_dir):
       write_indented_output(result['err'].replace('<stdin>', patch_name))
     return 'apply'
 
-  sys.stdout.write('... failed to apply:\n')
+  sys.stdout.write('... git apply failed, trying patch tool:\n')
   if first_check_error is not None:
     write_indented_output(first_check_error.replace('<stdin>', patch_name))
-  return 'fail'
+  # Fall back to the system patch tool. This handles CEF 147 rebase-collision
+  # patches that git apply rejects due to context mismatches.
+  return _patch_apply_patch_string(patch_dir, patch_string)

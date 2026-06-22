@@ -215,7 +215,6 @@ index 1aef7b12817c3d29d7ea0a2468a85620de0670db..734c0a9e312242e7626f6968c15e7007
    # Platforms that have a network diagnostics dialog. All others fall through
    # to the stub which is not implemented.
    if (is_chromeos) {
-@@ -8546,7 +8551,6 @@
        "//chrome/browser/ui/webui/new_tab_page_third_party:mojo_bindings",
        "//chrome/browser/ui/webui/ntp_microsoft_auth:shared",
        "//chrome/browser/ui/webui/ntp_microsoft_auth:untrusted",
@@ -223,7 +222,6 @@ index 1aef7b12817c3d29d7ea0a2468a85620de0670db..734c0a9e312242e7626f6968c15e7007
        "//chrome/browser/ui/webui/privacy_sandbox/private_state_tokens:mojo_bindings",
        "//chrome/browser/ui/webui/privacy_sandbox/related_website_sets:mojo_bindings",
        "//chrome/browser/ui/webui/search_engine_choice:mojo_bindings",
-@@ -8564,7 +8568,9 @@
        "//components/autofill/core/browser/ml_model/logging:mojo_bindings",
        "//components/browser_apis/tab_strip:mojom",
      ]

@@ -700,19 +700,6 @@ index e3bc99078f473..dbe5f49e08052 100644
  
  import("//chrome/common/features.gni")
  import("//extensions/buildflags/buildflags.gni")
-diff --git chrome/browser/ui/webui/about/BUILD.gn chrome/browser/ui/webui/about/BUILD.gn
-index e5d9b020062c4..d33bad85ff09c 100644
---- chrome/browser/ui/webui/about/BUILD.gn
-+++ chrome/browser/ui/webui/about/BUILD.gn
-@@ -2,7 +2,7 @@
- # Use of this source code is governed by a BSD-style license that can be
- # found in the LICENSE file.
- 
--assert(is_win || is_mac || is_linux || is_chromeos || is_android)
-+assert(is_win || is_mac || is_linux || is_chromeos || is_android || is_qnx)
- 
- source_set("about") {
-   sources = [ "about_ui.h" ]
 diff --git chrome/browser/ui/webui/accessibility/BUILD.gn chrome/browser/ui/webui/accessibility/BUILD.gn
 index 8ef85d23c153f..015ecbb20a649 100644
 --- chrome/browser/ui/webui/accessibility/BUILD.gn

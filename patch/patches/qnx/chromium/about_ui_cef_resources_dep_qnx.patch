@@ -1,24 +1,13 @@
 diff --git chrome/browser/ui/webui/about/BUILD.gn chrome/browser/ui/webui/about/BUILD.gn
-index d9b5d4f2a35f781d1d01a2de5c310d91c466b4b2..d7bd31d52f65f8116f4f98cec58bb38b5f2e3dba 100644
+index e5d9b020062c440096152249df0f9b1ecc7d3ec3..d33bad85ff09c735bb84da5da24dc0c243287837 100644
 --- chrome/browser/ui/webui/about/BUILD.gn
 +++ chrome/browser/ui/webui/about/BUILD.gn
-@@ -2,6 +2,8 @@
+@@ -2,7 +2,7 @@
  # Use of this source code is governed by a BSD-style license that can be
  # found in the LICENSE file.
  
-+import("//cef/libcef/features/features.gni")
-+
- assert(is_win || is_mac || is_linux || is_chromeos || is_android || is_qnx)
+-assert(is_win || is_mac || is_linux || is_chromeos || is_android)
++assert(is_win || is_mac || is_linux || is_chromeos || is_android || is_qnx)
  
  source_set("about") {
-@@ -30,6 +32,10 @@ source_set("impl") {
-     "//components/webui/about",
-   ]
- 
-+  if (enable_cef) {
-+    deps += [ "//cef:cef_resources" ]
-+  }
-+
-   if (is_chromeos) {
-     deps += [
-       "//chrome/browser/ash/borealis",
+   sources = [ "about_ui.h" ]
