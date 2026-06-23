@@ -1,0 +1,13 @@
+diff --git ui/base/BUILD.gn ui/base/BUILD.gn
+index 341216ac373f1..178a63603a186 100644
+--- ui/base/BUILD.gn
++++ ui/base/BUILD.gn
+@@ -398,7 +398,7 @@ component("base") {
+       ]
+     }
+ 
+-    if (is_linux || is_chromeos) {
++    if (is_linux || is_chromeos || is_qnx) {
+       sources += [
+         "accelerators/menu_label_accelerator_util_linux.cc",
+         "accelerators/menu_label_accelerator_util_linux.h",

@@ -1,0 +1,15 @@
+diff --git chrome/browser/media/router/discovery/BUILD.gn chrome/browser/media/router/discovery/BUILD.gn
+index 4d439e6a82b2c..f004763e83220 100644
+--- chrome/browser/media/router/discovery/BUILD.gn
++++ chrome/browser/media/router/discovery/BUILD.gn
+@@ -85,6 +85,10 @@ static_library("discovery") {
+     sources += [ "discovery_network_list_wifi_linux.cc" ]
+   }
+ 
++  if (is_qnx) {
++    sources += [ "discovery_network_list_wifi_qnx.cc" ]
++  }
++
+   if (is_chromeos) {
+     deps += [ "//chromeos/ash/components/network" ]
+   }

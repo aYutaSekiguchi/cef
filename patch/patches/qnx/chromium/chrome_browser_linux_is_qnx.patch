@@ -1,0 +1,79 @@
+diff --git chrome/browser/BUILD.gn chrome/browser/BUILD.gn
+index 969c2af4439e4..fbd1810b3f7ec 100644
+--- chrome/browser/BUILD.gn
++++ chrome/browser/BUILD.gn
+@@ -6926,13 +6926,34 @@ static_library("browser") {
+   }
+ 
+   if (is_linux) {
++    sources += [
++      "first_run/upgrade_util_linux.cc",
++      "first_run/upgrade_util_linux.h",
++    ]
++    deps += [
++      "//ui/linux:display_server_utils",
++    ]
++
++    if (rtc_use_pipewire) {
++      configs +=
++          [ "//third_party/webrtc/modules/desktop_capture:pipewire_config" ]
++    }
++
++    if (use_dbus) {
++      deps += [
++        "//chrome/common:chrome_features",
++        "//components/dbus",
++        "//components/os_crypt/async/browser:freedesktop_secret_key_provider",
++        "//components/os_crypt/async/browser:secret_portal_key_provider",
++      ]
++    }
++  }
++
++  if (is_linux || is_qnx) {
+     sources += [
+       "chrome_browser_main_extra_parts_linux.cc",
+       "chrome_browser_main_extra_parts_linux.h",
+       "download/download_status_updater_linux.cc",
+-      "first_run/first_run_internal_linux.cc",
+-      "first_run/upgrade_util_linux.cc",
+-      "first_run/upgrade_util_linux.h",
+       "fullscreen_linux.cc",
+       "icon_loader_auralinux.cc",
+       "metrics/pressure/pressure_metrics.cc",
+@@ -6944,14 +6965,8 @@ static_library("browser") {
+     ]
+     deps += [
+       "//chrome/app/theme:chrome_unscaled_resources_grit",
+-      "//ui/linux:display_server_utils",
+     ]
+ 
+-    if (rtc_use_pipewire) {
+-      configs +=
+-          [ "//third_party/webrtc/modules/desktop_capture:pipewire_config" ]
+-    }
+-
+     if (use_dbus) {
+       sources += [
+         "dbus_memory_pressure_evaluator_linux.cc",
+@@ -6960,15 +6975,15 @@ static_library("browser") {
+         "notifications/notification_platform_bridge_linux.h",
+         "platform_util_linux.cc",
+       ]
+-      deps += [
+-        "//chrome/common:chrome_features",
+-        "//components/dbus",
+-        "//components/os_crypt/async/browser:freedesktop_secret_key_provider",
+-        "//components/os_crypt/async/browser:secret_portal_key_provider",
+-      ]
+     }
+   }
+ 
++  if (is_qnx) {
++    sources += [
++      "first_run/upgrade_util_qnx.cc",
++    ]
++  }
++
+   if (is_posix) {
+     sources += [
+       "download/trusted_sources_manager_posix.cc",

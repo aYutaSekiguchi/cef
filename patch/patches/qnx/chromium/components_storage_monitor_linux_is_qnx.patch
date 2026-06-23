@@ -1,0 +1,13 @@
+diff --git components/storage_monitor/BUILD.gn components/storage_monitor/BUILD.gn
+index cf0dd936c6cbe..9b46732423b12 100644
+--- components/storage_monitor/BUILD.gn
++++ components/storage_monitor/BUILD.gn
+@@ -79,7 +79,7 @@ component("storage_monitor") {
+   }
+ 
+   if (use_udev) {
+-    if (is_linux || is_chromeos) {
++    if (is_linux || is_chromeos || is_qnx) {
+       sources += [
+         "udev_util_linux.cc",
+         "udev_util_linux.h",

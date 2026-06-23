@@ -1,0 +1,13 @@
+diff --git gpu/ipc/service/BUILD.gn gpu/ipc/service/BUILD.gn
+index 03a74b7d29f12..2d6aaf4afb6f9 100644
+--- gpu/ipc/service/BUILD.gn
++++ gpu/ipc/service/BUILD.gn
+@@ -134,7 +134,7 @@ component("service") {
+     sources += [ "image_transport_surface_android.cc" ]
+     libs += [ "android" ]
+   }
+-  if (is_linux || is_chromeos) {
++  if (is_linux || is_chromeos || is_qnx) {
+     sources += [ "image_transport_surface_linux.cc" ]
+   }
+   if (is_chromeos) {
