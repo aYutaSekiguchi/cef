@@ -1,0 +1,13 @@
+diff --git ui/base/idle/BUILD.gn ui/base/idle/BUILD.gn
+index 0eaf2b6e869a5..af41b8eac9d6c 100644
+--- ui/base/idle/BUILD.gn
++++ ui/base/idle/BUILD.gn
+@@ -65,7 +65,7 @@ component("idle") {
+     sources += [ "idle_fuchsia.cc" ]
+   }
+ 
+-  if (is_linux) {
++  if (is_linux || is_qnx) {
+     sources += [ "idle_linux.cc" ]
+     deps += [ "//ui/display" ]
+     if (use_dbus) {

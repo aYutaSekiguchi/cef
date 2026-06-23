@@ -1,0 +1,13 @@
+diff --git chrome/browser/BUILD.gn chrome/browser/BUILD.gn
+index 969c2af4439e4..820399c79761f 100644
+--- chrome/browser/BUILD.gn
++++ chrome/browser/BUILD.gn
+@@ -8213,7 +8213,7 @@ static_library("browser") {
+         "net/nss_temp_certs_cache_chromeos.h",
+       ]
+     }
+-    if (is_linux) {
++    if (is_linux || is_qnx) {
+       sources += [ "net/nss_service_linux.cc" ]
+     }
+     configs += [ "//build/config/linux/nss" ]

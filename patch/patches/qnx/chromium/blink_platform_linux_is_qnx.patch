@@ -1,0 +1,13 @@
+diff --git third_party/blink/renderer/platform/BUILD.gn third_party/blink/renderer/platform/BUILD.gn
+index eb2472737bd6e..e3e64e8cb6c9f 100644
+--- third_party/blink/renderer/platform/BUILD.gn
++++ third_party/blink/renderer/platform/BUILD.gn
+@@ -1726,7 +1726,7 @@ component("platform") {
+   if (is_ios) {
+     sources += [ "fonts/ios/font_cache_ios.mm" ]
+   }
+-  if (is_linux || is_chromeos) {
++  if (is_linux || is_chromeos || is_qnx) {
+     sources += [
+       "fonts/linux/font_cache_linux.cc",
+       "fonts/linux/font_unique_name_lookup_linux.cc",

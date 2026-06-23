@@ -1,0 +1,13 @@
+diff --git services/device/time_zone_monitor/BUILD.gn services/device/time_zone_monitor/BUILD.gn
+index 2009e857a5bfd..18e5bdd71d8b8 100644
+--- services/device/time_zone_monitor/BUILD.gn
++++ services/device/time_zone_monitor/BUILD.gn
+@@ -42,7 +42,7 @@ source_set("time_zone_monitor") {
+     deps += [ "//ui/gfx" ]
+   }
+ 
+-  if (is_linux) {
++  if (is_linux || is_qnx) {
+     sources += [ "time_zone_monitor_linux.cc" ]
+   }
+ 

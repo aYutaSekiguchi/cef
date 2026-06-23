@@ -1,0 +1,13 @@
+diff --git gpu/config/BUILD.gn gpu/config/BUILD.gn
+index 09bedb08fc54c..fac117127816d 100644
+--- gpu/config/BUILD.gn
++++ gpu/config/BUILD.gn
+@@ -197,7 +197,7 @@ component("config") {
+   if (is_ios) {
+     sources += [ "gpu_info_collector_ios.mm" ]
+   }
+-  if (is_linux || is_chromeos) {
++  if (is_linux || is_chromeos || is_qnx) {
+     sources += [ "gpu_info_collector_linux.cc" ]
+   }
+   if (is_linux || is_chromeos || is_apple || is_fuchsia || is_android) {

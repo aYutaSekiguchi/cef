@@ -1,0 +1,13 @@
+diff --git chrome/browser/extensions/BUILD.gn chrome/browser/extensions/BUILD.gn
+index c7c960abd7ec5..7187d598f10fb 100644
+--- chrome/browser/extensions/BUILD.gn
++++ chrome/browser/extensions/BUILD.gn
+@@ -1468,7 +1468,7 @@ source_set("extensions") {
+       ]
+     }
+ 
+-    if (is_linux) {
++    if (is_linux || is_qnx) {
+       sources +=
+           [ "api/image_writer_private/removable_storage_provider_linux.cc" ]
+     }
