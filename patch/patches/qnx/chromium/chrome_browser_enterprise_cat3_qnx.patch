@@ -1,0 +1,32 @@
+diff --git chrome/browser/BUILD.gn chrome/browser/BUILD.gn
+index 969c2af4439e4..aa734738f6ab1 100644
+--- chrome/browser/BUILD.gn
++++ chrome/browser/BUILD.gn
+@@ -6907,6 +6907,18 @@ static_library("browser") {
+     ]
+   }
+ 
++  if (is_qnx) {
++    sources += [
++      "enterprise/connectors/device_trust/device_trust_service_qnx.cc",
++      "enterprise/connectors/device_trust/device_trust_service_factory_qnx.cc",
++      "enterprise/connectors/device_trust/device_trust_connector_service_factory_qnx.cc",
++      "enterprise/idle/dialog_manager_qnx.cc",
++      "enterprise/signals/signals_aggregator_factory_qnx.cc",
++      "enterprise/signals/system_signals_service_host_factory_qnx.cc",
++      "enterprise/signals/user_permission_service_factory_qnx.cc",
++    ]
++  }
++
+   if (is_linux || is_chromeos) {
+     sources += [
+       "chrome_browser_main_linux.cc",
+@@ -8597,7 +8609,7 @@ static_library("browser_generated_files") {
+     arflags = [ "/llvmlibempty" ]
+     public_deps += [ "//chrome/browser/ui/startup:buildflags" ]
+   }
+-  if (is_win || is_mac || is_linux) {
++  if (is_win || is_mac || is_linux || is_qnx) {
+     public_deps += [
+       "//chrome/browser/enterprise/connectors/device_trust/attestation/common/proto:attestation_ca_proto",
+       "//chrome/browser/enterprise/connectors/device_trust/attestation/common/proto:google_key_proto",

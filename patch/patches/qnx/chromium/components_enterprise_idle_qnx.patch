@@ -1,0 +1,12 @@
+diff --git components/enterprise/idle/BUILD.gn components/enterprise/idle/BUILD.gn
+index ae0102a64dc92..aa37414c81232 100644
+--- components/enterprise/idle/BUILD.gn
++++ components/enterprise/idle/BUILD.gn
+@@ -10,6 +10,7 @@ source_set("idle") {
+     "idle_pref_names.h",
+     "idle_timeout_policy_handler.cc",
+     "idle_timeout_policy_handler.h",
++    "idle_timeout_policy_handler_qnx.cc",
+     "metrics.cc",
+     "metrics.h",
+   ]

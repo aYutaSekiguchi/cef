@@ -1,0 +1,18 @@
+diff --git chrome/browser/renderer_context_menu/render_view_context_menu.cc chrome/browser/renderer_context_menu/render_view_context_menu.cc
+index 69da6a650e452..92314f469fa82 100644
+--- chrome/browser/renderer_context_menu/render_view_context_menu.cc
++++ chrome/browser/renderer_context_menu/render_view_context_menu.cc
+@@ -1758,7 +1758,12 @@ void RenderViewContextMenu::AppendLinkItems() {
+     }
+ #endif  // BUILDFLAG(IS_CHROMEOS)
+ 
+-    const bool is_link_to_iwa = IsLinkToIsolatedWebApp();
++    const bool is_link_to_iwa =
++#if BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
++        IsLinkToIsolatedWebApp();
++#else
++        false;
++#endif
+     // Opening links to IWAs in Chrome windows is not supported - opening in
+     // new instance of app itself is already handled below, in
+     // `AppendOpenInWebAppLinkItems()`.

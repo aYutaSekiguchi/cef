@@ -1,0 +1,20 @@
+diff --git chrome/browser/policy/configuration_policy_handler_list_factory.cc chrome/browser/policy/configuration_policy_handler_list_factory.cc
+index 067304136c6d8..bbc772009aae2 100644
+--- chrome/browser/policy/configuration_policy_handler_list_factory.cc
++++ chrome/browser/policy/configuration_policy_handler_list_factory.cc
+@@ -2847,13 +2847,13 @@ std::unique_ptr<ConfigurationPolicyHandlerList> BuildHandlerList(
+       SimpleSchemaValidatingPolicyHandler::MANDATORY_ALLOWED));
+ #endif  // !BUILDFLAG(IS_ANDROID)
+ 
+-#if !BUILDFLAG(IS_CHROMEOS)
++#if !BUILDFLAG(IS_CHROMEOS) && !BUILDFLAG(IS_QNX)
+   handlers->AddHandler(
+       std::make_unique<enterprise_idle::IdleTimeoutPolicyHandler>());
+   handlers->AddHandler(
+       std::make_unique<enterprise_idle::IdleTimeoutActionsPolicyHandler>(
+           chrome_schema));
+-#endif  // !BUILDFLAG(IS_CHROMEOS)
++#endif  // !BUILDFLAG(IS_CHROMEOS) && !BUILDFLAG(IS_QNX)
+ 
+   handlers->AddHandler(
+       std::make_unique<content_settings::CookieSettingsPolicyHandler>());
