@@ -1,0 +1,48 @@
+diff --git chrome/browser/ui/BUILD.gn chrome/browser/ui/BUILD.gn
+index 00b9254990f24..924f205fa2b7f 100644
+--- chrome/browser/ui/BUILD.gn
++++ chrome/browser/ui/BUILD.gn
+@@ -2932,16 +2932,12 @@ static_library("ui") {
+       "incognito_clear_browsing_data_dialog_interface.h",
+       "views/autofill/payments/webauthn_dialog_view.cc",
+       "views/autofill/payments/webauthn_dialog_view.h",
+-      "views/close_bubble_on_tab_activation_helper.cc",
+-      "views/close_bubble_on_tab_activation_helper.h",
+       "views/external_protocol_dialog.cc",
+       "views/external_protocol_dialog.h",
+       "views/hats/hats_next_web_dialog.cc",
+       "views/hats/hats_next_web_dialog.h",
+       "views/profiles/incognito_menu_view.cc",
+       "views/profiles/incognito_menu_view.h",
+-      "views/profiles/profile_menu_coordinator.cc",
+-      "views/profiles/profile_menu_coordinator.h",
+       "views/profiles/profile_menu_view_base.cc",
+       "views/profiles/profile_menu_view_base.h",
+       "views/profiles/signin_view_controller_delegate_views.cc",
+@@ -3445,6 +3441,10 @@ static_library("ui") {
+     }
+   }
+ 
++  if (is_qnx) {
++    sources += [ "webui/help/version_updater_qnx.cc" ]
++  }
++
+   if (is_linux || is_mac) {
+     sources += [
+       "views/first_run_dialog.cc",  # Dialog shows only on Linux and macOS.
+@@ -5531,6 +5531,15 @@ static_library("ui") {
+     ]
+   }
+ 
++  if (is_qnx) {
++    sources += [
++      "views/autofill/payments/webauthn_dialog_qnx.cc",
++      "views/close_bubble_on_tab_activation_helper_qnx.cc",
++      "views/profiles/profile_menu_coordinator_qnx.cc",
++      "views/profiles/signin_view_controller_delegate_views_qnx.cc",
++    ]
++  }
++
+   if (enable_session_service) {
+     deps += [ "//chrome/browser/ui/webui/tab_strip_internals:impl" ]
+ 

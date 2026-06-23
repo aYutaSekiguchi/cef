@@ -1,0 +1,13 @@
+diff --git chrome/browser/ui/startup/BUILD.gn chrome/browser/ui/startup/BUILD.gn
+index 63784ff2206b7..6c05b2fe91a58 100644
+--- chrome/browser/ui/startup/BUILD.gn
++++ chrome/browser/ui/startup/BUILD.gn
+@@ -302,7 +302,7 @@ source_set("impl") {
+     ]
+   }
+ 
+-  if (is_win || is_mac || is_linux) {
++  if (is_win || is_mac || is_linux || is_qnx) {
+     sources += [
+       "first_run_service.cc",
+       "web_app_info_recorder_utils.cc",

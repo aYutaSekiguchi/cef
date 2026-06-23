@@ -1,0 +1,15 @@
+diff --git chrome/browser/ui/BUILD.gn chrome/browser/ui/BUILD.gn
+index 00b9254990f24..dbc155f545d75 100644
+--- chrome/browser/ui/BUILD.gn
++++ chrome/browser/ui/BUILD.gn
+@@ -3457,6 +3457,10 @@ static_library("ui") {
+     deps += [ "//components/os_crypt/async/common" ]
+   }
+ 
++  if (is_qnx) {
++    sources += [ "webui/settings/settings_utils_qnx.cc" ]
++  }
++
+   if (is_linux) {
+     sources += [
+       "views/apps/chrome_app_window_client_views_aura.cc",

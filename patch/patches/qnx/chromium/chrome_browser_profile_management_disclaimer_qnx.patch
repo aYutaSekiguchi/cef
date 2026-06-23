@@ -1,0 +1,35 @@
+diff --git chrome/browser/BUILD.gn chrome/browser/BUILD.gn
+index 969c2af4439e4..04979fd478981 100644
+--- chrome/browser/BUILD.gn
++++ chrome/browser/BUILD.gn
+@@ -459,6 +459,7 @@ static_library("browser") {
+     "external_protocol/constants.h",
+     "external_protocol/external_protocol_handler.cc",
+     "external_protocol/external_protocol_handler.h",
++    "external_protocol/external_protocol_handler_qnx.cc",
+     "external_protocol/external_protocol_observer.cc",
+     "external_protocol/external_protocol_observer.h",
+     "file_select_helper.cc",
+@@ -4653,6 +4654,8 @@ static_library("browser") {
+ 
+       if (is_chromeos) {
+         sources += [ "first_run/first_run_internal_chromeos.cc" ]
++      } else if (is_qnx) {
++        sources += [ "first_run/first_run_internal_qnx.cc" ]
+       } else {
+         sources += [ "first_run/first_run_internal_posix.cc" ]
+       }
+@@ -6689,6 +6692,13 @@ static_library("browser") {
+     deps += [ "//components/enterprise/idle" ]
+   }
+ 
++  if (is_qnx) {
++    sources += [
++      "enterprise/signin/profile_management_disclaimer_service_qnx.cc",
++      "enterprise/signin/profile_management_disclaimer_service_factory_qnx.cc",
++    ]
++  }
++
+   if (enterprise_cloud_content_analysis || is_android ||
+       safe_browsing_mode == 1) {
+     sources += [

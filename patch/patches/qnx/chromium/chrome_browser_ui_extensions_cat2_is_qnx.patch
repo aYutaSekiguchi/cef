@@ -1,0 +1,22 @@
+diff --git chrome/browser/ui/extensions/BUILD.gn chrome/browser/ui/extensions/BUILD.gn
+index 9ed94194bcab3..b929e27840d93 100644
+--- chrome/browser/ui/extensions/BUILD.gn
++++ chrome/browser/ui/extensions/BUILD.gn
+@@ -41,7 +41,7 @@ source_set("extensions") {
+       public_deps += [ "//components/messages/android" ]
+     }
+ 
+-    if (is_win || is_mac || is_linux || is_chromeos) {
++    if (is_win || is_mac || is_linux || is_chromeos || is_qnx) {
+       sources += [ "extension_install_ui_desktop.h" ]
+     }
+     public_deps += [
+@@ -166,7 +166,7 @@ source_set("impl") {
+       "//extensions/common",
+     ]
+ 
+-    if (is_win || is_mac || is_linux || is_chromeos) {
++    if (is_win || is_mac || is_linux || is_chromeos || is_qnx) {
+       sources += [ "extension_install_ui_desktop.cc" ]
+       deps += [
+         "//chrome/app:generated_resources",

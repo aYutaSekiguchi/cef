@@ -1,0 +1,13 @@
+diff --git third_party/content_analysis_sdk/BUILD.gn third_party/content_analysis_sdk/BUILD.gn
+index 0c3e6be893243..c53f86f63529f 100644
+--- third_party/content_analysis_sdk/BUILD.gn
++++ third_party/content_analysis_sdk/BUILD.gn
+@@ -22,7 +22,7 @@ source_set("liblcasdk") {
+     ]
+   }
+ 
+-  if (is_linux) {
++  if (is_linux || is_qnx) {
+     sources += [
+       "src/browser/src/client_posix.cc",
+       "src/browser/src/client_posix.h",

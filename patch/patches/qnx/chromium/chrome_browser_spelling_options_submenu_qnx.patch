@@ -1,0 +1,19 @@
+diff --git chrome/browser/BUILD.gn chrome/browser/BUILD.gn
+index 969c2af4439e4..df1db5a92f6d5 100644
+--- chrome/browser/BUILD.gn
++++ chrome/browser/BUILD.gn
+@@ -6988,8 +6988,12 @@ static_library("browser") {
+       "policy/messaging_layer/util/manual_test_heartbeat_event.h",
+       "policy/messaging_layer/util/manual_test_heartbeat_event_factory.cc",
+       "policy/messaging_layer/util/manual_test_heartbeat_event_factory.h",
+-      "renderer_context_menu/spelling_options_submenu_observer.cc",
+-      "renderer_context_menu/spelling_options_submenu_observer.h",
++    ]
++  }
++
++  if (is_qnx) {
++    sources += [
++      "renderer_context_menu/spelling_options_submenu_observer_qnx.cc",
+     ]
+   }
+ 

@@ -1,0 +1,35 @@
+diff --git chrome/utility/BUILD.gn chrome/utility/BUILD.gn
+index 09a55515091dc..13acc42ca60b0 100644
+--- chrome/utility/BUILD.gn
++++ chrome/utility/BUILD.gn
+@@ -102,21 +102,26 @@ static_library("utility") {
+       "importer/profile_import_impl.cc",
+       "importer/profile_import_impl.h",
+     ]
+-    if (!is_chromeos) {
++    if (!is_chromeos && !is_qnx) {
+       sources += [
+         "importer/firefox_importer.cc",
+         "importer/firefox_importer.h",
+       ]
+     }
++    if (is_qnx) {
++      sources += [
++        "importer/firefox_importer_qnx.cc",
++      ]
++    }
+     if (is_mac) {
+       sources += [
+         "importer/safari_importer.h",
+         "importer/safari_importer.mm",
+       ]
+     }
+-    if (!is_mac && !is_chromeos) {
+-      # NSS decryptor is not needed on ChromeOS. Additionally, it depends on
+-      # system NSS that is unavailable on MacOS/Fuchsia.
++    if (!is_mac && !is_chromeos && !is_qnx) {
++      # NSS decryptor is not needed on ChromeOS or QNX. Additionally, it depends
++      # on system NSS that is unavailable on MacOS/Fuchsia.
+       sources += [
+         "importer/nss_decryptor.cc",
+         "importer/nss_decryptor.h",
