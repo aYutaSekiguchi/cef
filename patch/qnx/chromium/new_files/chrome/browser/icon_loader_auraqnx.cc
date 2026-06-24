@@ -37,11 +37,16 @@ scoped_refptr<base::TaskRunner> IconLoader::GetReadIconTaskRunner() {
 }
 
 void IconLoader::ReadIcon() {
-  int size_pixels = 0;
+  // Mirror the linux switch so NOTREACHED fires on bad IconSize values,
+  // matching the linux build's behavior. The size_pixels value itself
+  // is currently unused on QNX because we return an empty image; once
+  // ozone/QnxUi integration lands, use it to ask the theme for the right
+  // bitmap size.
   switch (icon_size_) {
-    case IconLoader::SMALL: size_pixels = 16; break;
-    case IconLoader::NORMAL: size_pixels = 32; break;
-    case IconLoader::LARGE: size_pixels = 48; break;
+    case IconLoader::SMALL: break;
+    case IconLoader::NORMAL: break;
+    case IconLoader::LARGE: break;
+    case IconLoader::ALL: break;
     default: NOTREACHED();
   }
 

@@ -1,11 +1,18 @@
 diff --git base/BUILD.gn base/BUILD.gn
+index c9811ba7835ed8f96dbde412543e86dc3b5ab13b..8bb2af95ccea931420b0adc37363dd1973edff42 100644
 --- base/BUILD.gn
 +++ base/BUILD.gn
-@@ -2347,6 +2347,7 @@ static_library("base") {
-       sources += [
-         "nix/mime_util_xdg.cc",
-         "nix/mime_util_xdg.h",
-+        "nix/mime_util_xdg_qnx.cc",
-         "nix/scoped_xdg_activation_token_injector.cc",
-         "nix/scoped_xdg_activation_token_injector.h",
-         "nix/xdg_util.cc",
+@@ -2367,6 +2367,13 @@ component("base") {
+     }
+   }
+ 
++  # QNX: base::nix::GetFileMimeType stub. is_qnx is mutually exclusive
++  # with is_linux on the QNX port, so the stub cannot live in the
++  # if (is_linux || is_chromeos) block above.
++  if (is_qnx) {
++    sources += [ "nix/mime_util_xdg_qnx.cc" ]
++  }
++
+   if (use_blink) {
+     sources += [
+       "files/file_path_watcher.cc",
