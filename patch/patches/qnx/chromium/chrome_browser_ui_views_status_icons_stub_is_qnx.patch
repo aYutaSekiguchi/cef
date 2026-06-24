@@ -1,0 +1,15 @@
+diff --git chrome/browser/ui/BUILD.gn chrome/browser/ui/BUILD.gn
+--- chrome/browser/ui/BUILD.gn
++++ chrome/browser/ui/BUILD.gn
+@@ -5080,6 +5080,9 @@ static_library("browser") {
+ 
+     if (is_qnx) {
+       sources += [ "views/chrome_views_delegate_qnx.cc" ]
+     }
++    if (is_qnx) {
++      sources += [ "views/status_icons/status_tray_qnx.cc" ]
++    }
+ 
+     if (is_linux || is_chromeos) {
+       sources += [ "views/process_singleton_dialog_linux.cc" ]
+

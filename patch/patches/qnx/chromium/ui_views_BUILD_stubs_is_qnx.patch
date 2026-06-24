@@ -1,0 +1,14 @@
+diff --git ui/views/BUILD.gn ui/views/BUILD.gn
+--- ui/views/BUILD.gn
++++ ui/views/BUILD.gn
+@@ -660,6 +660,10 @@ component("views") {
+   if (is_linux || is_qnx) {
+     sources += [ "controls/menu/menu_config_linux.cc" ]
+   }
++
++  if (is_qnx) {
++    sources += [ "widget/desktop_aura/desktop_window_tree_host_linux_qnx.cc" ]
++  }
+ 
+   if (is_chromeos) {
+     public += [ "controls/views_text_services_context_menu_chromeos.h" ]

@@ -1,0 +1,15 @@
+diff --git chrome/browser/media/webrtc/BUILD.gn chrome/browser/media/webrtc/BUILD.gn
+--- chrome/browser/media/webrtc/BUILD.gn
++++ chrome/browser/media/webrtc/BUILD.gn
+@@ -250,6 +250,10 @@ static_library("browser") {
+   if (is_linux && use_ozone) {
+     sources += [ "window_icon_util_ozone.cc" ]
+     deps += [ "//ui/ozone" ]
+   }
++
++  if (is_qnx) {
++    sources += [ "window_icon_util_qnx.cc" ]
++  }
+ 
+   if (is_chromeos) {
+     sources += [

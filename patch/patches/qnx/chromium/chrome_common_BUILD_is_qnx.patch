@@ -1,0 +1,18 @@
+diff --git chrome/common/BUILD.gn chrome/common/BUILD.gn
+index e6ec5782e6634..a0a4f60a7d664 100644
+--- chrome/common/BUILD.gn
++++ chrome/common/BUILD.gn
+@@ -415,6 +415,13 @@ static_library("common_lib") {
+     deps += [ "//sandbox/linux:sandbox_services" ]
+   }
+ 
++  if (is_qnx) {
++    sources += [
++      "auto_start_linux.cc",
++      "auto_start_linux.h",
++    ]
++  }
++
+   if (enable_cdm_host_verification) {
+     sources += [
+       "media/cdm_host_file_path.cc",

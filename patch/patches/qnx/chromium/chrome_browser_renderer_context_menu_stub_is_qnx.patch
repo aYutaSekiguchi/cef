@@ -1,0 +1,15 @@
+diff --git chrome/browser/renderer_context_menu/BUILD.gn chrome/browser/renderer_context_menu/BUILD.gn
+new file mode 100644
+index 0000000..0000001
+--- /dev/null
++++ chrome/browser/renderer_context_menu/BUILD.gn
+@@ -0,0 +1,8 @@
++# Copyright 2024 The Chromium Authors
++# Use of this source code is governed by a BSD-style license that can be
++# found in the LICENSE file.
++
++source_set("renderer_context_menu") {
++  if (is_qnx) {
++    sources += [ "render_view_context_menu_qnx.cc" ]
++  }
++}

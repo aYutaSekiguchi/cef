@@ -1,0 +1,18 @@
+diff --git chrome/browser/ui/BUILD.gn chrome/browser/ui/BUILD.gn
+--- chrome/browser/ui/BUILD.gn
++++ chrome/browser/ui/BUILD.gn
+@@ -5075,6 +5075,13 @@ static_library("browser") {
+         "views/status_icons/status_tray_linux.cc",
+         "views/status_icons/status_tray_linux.h",
+       ]
+     }
++    if (is_qnx) {
++      sources += [
++        "views/chrome_views_delegate_qnx.cc",
++        "views/status_icons/status_tray_qnx.cc",
++      ]
++    }
+ 
+     if (is_linux || is_chromeos) {
+       sources += [ "views/process_singleton_dialog_linux.cc" ]
+

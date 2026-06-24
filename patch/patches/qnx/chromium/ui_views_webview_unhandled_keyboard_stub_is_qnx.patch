@@ -1,0 +1,14 @@
+diff --git ui/views/controls/webview/BUILD.gn ui/views/controls/webview/BUILD.gn
+index 665710e53332b..c7434e92d7019 100644
+--- ui/views/controls/webview/BUILD.gn
++++ ui/views/controls/webview/BUILD.gn
+@@ -64,6 +64,9 @@ component("webview") {
+       sources += [ "unhandled_keyboard_event_handler_default.cc" ]
+     }
+   }
++  if (is_qnx) {
++    sources += [ "unhandled_keyboard_event_handler_qnx.cc" ]
++  }
+ }
+ 
+ static_library("test_support") {

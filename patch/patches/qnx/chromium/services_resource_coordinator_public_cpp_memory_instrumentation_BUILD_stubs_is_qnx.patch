@@ -1,0 +1,15 @@
+diff --git services/resource_coordinator/public/cpp/memory_instrumentation/BUILD.gn services/resource_coordinator/public/cpp/memory_instrumentation/BUILD.gn
+index c1a52503b78c7..99db081f83960 100644
+--- services/resource_coordinator/public/cpp/memory_instrumentation/BUILD.gn
++++ services/resource_coordinator/public/cpp/memory_instrumentation/BUILD.gn
+@@ -31,6 +31,10 @@ component("memory_instrumentation") {
+     sources += [ "os_metrics_linux.cc" ]
+   }
+ 
++  if (is_qnx) {
++    sources += [ "os_metrics_linux_qnx.cc" ]
++  }
++
+   if (is_fuchsia) {
+     sources += [ "os_metrics_fuchsia.cc" ]
+   }

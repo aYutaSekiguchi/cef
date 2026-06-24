@@ -1,0 +1,12 @@
+diff --git chrome/browser/ui/tab_contents/BUILD.gn chrome/browser/ui/tab_contents/BUILD.gn
+--- chrome/browser/ui/tab_contents/BUILD.gn
++++ chrome/browser/ui/tab_contents/BUILD.gn
+@@ -10,6 +10,10 @@ static_library("tab_contents") {
+     "chrome_web_contents_view_handle_drop.cc",
+     "chrome_web_contents_view_handle_drop.h",
+   ]
++
++  if (is_qnx) {
++    sources += [ "chrome_web_contents_view_handle_drop_qnx.cc" ]
++  }
+ }

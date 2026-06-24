@@ -1,0 +1,15 @@
+diff --git media/audio/BUILD.gn media/audio/BUILD.gn
+index d3ceb8cfbfe1f..37ce5fe1028a3 100644
+--- media/audio/BUILD.gn
++++ media/audio/BUILD.gn
+@@ -352,6 +352,10 @@ source_set("audio") {
+     }
+   }
+ 
++  if (is_qnx) {
++    sources += [ "audio_manager_qnx.cc" ]
++  }
++
+   if (is_fuchsia) {
+     sources += [
+       "fuchsia/audio_input_stream_fuchsia.cc",

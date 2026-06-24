@@ -1,0 +1,15 @@
+diff --git ui/shell_dialogs/BUILD.gn ui/shell_dialogs/BUILD.gn
+index 819b8e5153436..6230e2738af8a 100644
+--- ui/shell_dialogs/BUILD.gn
++++ ui/shell_dialogs/BUILD.gn
+@@ -72,6 +72,10 @@ component("shell_dialogs") {
+     }
+   }
+ 
++  if (is_qnx) {
++    sources += [ "shell_dialog_linux_qnx.cc" ]
++  }
++
+   if (is_mac) {
+     sources += [
+       "select_file_dialog_mac.h",

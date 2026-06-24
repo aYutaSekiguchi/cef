@@ -1,0 +1,11 @@
+diff --git base/BUILD.gn base/BUILD.gn
+--- base/BUILD.gn
++++ base/BUILD.gn
+@@ -1031,6 +1031,7 @@ static_library("base") {
+       "process/internal_linux.h",
+       "process/memory_linux.cc",
+       "process/process_handle_linux.cc",
++      "process/process_handle_linux_qnx.cc",
+       "process/process_iterator_linux.cc",
+       "process/process_linux.cc",
+       "process/process_metrics_linux.cc",

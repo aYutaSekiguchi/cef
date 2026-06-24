@@ -1,0 +1,14 @@
+diff --git chrome/browser/download/BUILD.gn chrome/browser/download/BUILD.gn
+index f7b590a7439d8..50a3c56723063 100644
+--- chrome/browser/download/BUILD.gn
++++ chrome/browser/download/BUILD.gn
+@@ -57,6 +57,9 @@ source_set("download") {
+     deps +=
+         [ "//components/safe_browsing/content/browser/download:download_stats" ]
+   }
++  if (is_qnx) {
++    sources += [ "download_dir_util_qnx.cc" ]
++  }
+ }
+ 
+ source_set("status_text_builder_utils") {

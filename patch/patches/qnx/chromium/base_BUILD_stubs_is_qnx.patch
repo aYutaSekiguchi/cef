@@ -1,0 +1,26 @@
+diff --git base/BUILD.gn base/BUILD.gn
+index c9811ba7835ed..85ba245cc17eb 100644
+--- base/BUILD.gn
++++ base/BUILD.gn
+@@ -1040,6 +1040,10 @@ component("base") {
+     ]
+   }
+ 
++  if (is_qnx) {
++    sources += [ "platform_thread_linux_qnx.cc" ]
++  }
++
+   if (is_chromeos) {
+     sources += [
+       "process/process_priority_delegate.h",
+@@ -1692,6 +1696,10 @@ component("base") {
+     if (!is_apple) {
+       sources += [ "files/drive_info_posix.cc" ]
+     }
++
++    if (is_qnx) {
++      sources += [ "drive_info_posix_qnx.cc" ]
++    }
+   }
+ 
+   if ((is_posix && !is_ios) || is_fuchsia) {

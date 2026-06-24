@@ -1,0 +1,15 @@
+diff --git net/BUILD.gn net/BUILD.gn
+index 3b79182266f22..866a5dc102a70 100644
+--- net/BUILD.gn
++++ net/BUILD.gn
+@@ -1413,6 +1413,10 @@ component("net") {
+     ]
+   }
+ 
++  if (is_qnx) {
++    sources += [ "base/platform_mime_util_linux.cc" ]
++  }
++
+   if (is_linux) {
+     sources += [
+       "base/address_map_cache_linux.cc",

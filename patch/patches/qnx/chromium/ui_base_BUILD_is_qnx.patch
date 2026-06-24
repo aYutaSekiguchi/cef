@@ -1,0 +1,22 @@
+diff --git ui/base/BUILD.gn ui/base/BUILD.gn
+index 341216ac373f1..71af6537a8b57 100644
+--- ui/base/BUILD.gn
++++ ui/base/BUILD.gn
+@@ -557,7 +557,7 @@ component("base") {
+     deps += [ "//ui/events" ]
+   }
+ 
+-  if (use_aura && (is_linux || is_chromeos)) {
++  if (use_aura && (is_linux || is_chromeos || is_qnx)) {
+     sources += [ "resource/resource_bundle_auralinux.cc" ]
+   }
+ 
+@@ -569,7 +569,7 @@ component("base") {
+     public_deps += [ "//ui/base/glib" ]
+   }
+ 
+-  if (is_chromeos || (use_aura && is_linux) || is_fuchsia) {
++  if (is_chromeos || (use_aura && (is_linux || is_qnx)) || is_fuchsia) {
+     sources += [
+       "dragdrop/os_exchange_data_provider_non_backed.cc",
+       "dragdrop/os_exchange_data_provider_non_backed.h",

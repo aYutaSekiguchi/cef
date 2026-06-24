@@ -1,0 +1,15 @@
+diff --git third_party/blink/renderer/platform/BUILD.gn third_party/blink/renderer/platform/BUILD.gn
+index eb2472737bd6e..980741e8874f9 100644
+--- third_party/blink/renderer/platform/BUILD.gn
++++ third_party/blink/renderer/platform/BUILD.gn
+@@ -1734,6 +1734,10 @@ component("platform") {
+     ]
+   }
+ 
++  if (is_qnx) {
++    sources += [ "font_cache_linux_qnx.cc" ]
++  }
++
+   if (is_win) {
+     sources += [
+       "fonts/win/dwrite_font_format_support.cc",

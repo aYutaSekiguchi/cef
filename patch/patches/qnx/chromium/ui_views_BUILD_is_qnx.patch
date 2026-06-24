@@ -1,0 +1,14 @@
+diff --git ui/views/BUILD.gn ui/views/BUILD.gn
+index 5c0cad2640d84..d88ac814bb8ea 100644
+--- ui/views/BUILD.gn
++++ ui/views/BUILD.gn
+@@ -655,6 +655,9 @@ component("views") {
+   if (is_linux) {
+     public_deps += [ "//ui/linux:linux_ui" ]
+     deps += [ "//ui/base/ime/linux" ]
++  }
++
++  if (is_linux || is_qnx) {
+     sources += [ "controls/menu/menu_config_linux.cc" ]
+   }
+ 
