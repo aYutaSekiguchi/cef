@@ -1,0 +1,29 @@
+diff --git chrome/browser/ui/webui/on_device_internals/BUILD.gn chrome/browser/ui/webui/on_device_internals/BUILD.gn
+index 6e70e1568aeac..c5c3a0dd3d92d 100644
+--- chrome/browser/ui/webui/on_device_internals/BUILD.gn
++++ chrome/browser/ui/webui/on_device_internals/BUILD.gn
+@@ -2,7 +2,9 @@
+ # Use of this source code is governed by a BSD-style license that can be
+ # found in the LICENSE file.
+ 
++import("//content/utility/on_device_model/features.gni")
+ import("//mojo/public/tools/bindings/mojom.gni")
++import("//ui/gl/features.gni")
+ 
+ assert(!is_android)
+ 
+@@ -37,11 +39,13 @@ source_set("on_device_internals") {
+     "//chrome/common",
+     "//components/update_client",
+     "//content/public/browser",
+-    "//services/on_device_model/ml:ml_no_internal",
+     "//services/preferences/public/cpp",
+     "//ui/base",
+     "//ui/webui",
+   ]
++  if (enable_on_device_model && use_dawn) {
++    deps += [ "//services/on_device_model/ml:ml_no_internal" ]
++  }
+   if (is_chromeos) {
+     deps += [ "//chromeos/ash/components/mojo_service_manager" ]
+   }

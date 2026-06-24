@@ -1,0 +1,24 @@
+# Copyright 2026 The Chromium Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//build/config/ui.gni")
+
+assert(is_qnx)
+
+# QNX analogue of //ui/linux:linux_ui. Lives under //ui/qnx because QNX
+# cannot depend on //ui/linux (that target's BUILD.gn asserts is_linux) and
+# we want a clean separation between the two ABIs as QNX UI grows.
+#
+# On Linux desktop targets, //ui/linux:linux_ui remains the source of truth;
+# //ui/qnx:qnx_ui is intentionally is_qnx-only.
+component("qnx_ui") {
+  defines = [ "IS_QNX_UI_IMPL" ]
+  public = [ "qnx_ui.h" ]
+  sources = [
+    "qnx_ui.cc",
+  ]
+  deps = [
+    "//base",
+  ]
+}

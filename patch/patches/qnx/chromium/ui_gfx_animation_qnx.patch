@@ -1,0 +1,25 @@
+diff --git ui/gfx/animation/BUILD.gn ui/gfx/animation/BUILD.gn
+--- ui/gfx/animation/BUILD.gn
++++ ui/gfx/animation/BUILD.gn
+@@ -51,6 +51,10 @@ component("animation") {
+   if (is_linux) {
+     sources += [ "animation_linux.cc" ]
+   }
+ 
++  if (is_qnx) {
++    sources += [ "animation_qnx.cc" ]
++  }
++
+   if (!is_android) {
+     sources += [
+@@ -86,6 +90,10 @@ component("animation") {
+   if (is_linux) {
+     deps += [ "//ui/linux:linux_ui" ]
+   }
+ 
++  if (is_qnx) {
++    deps += [ "//ui/qnx:qnx_ui" ]
++  }
++
+   defines = [ "ANIMATION_IMPLEMENTATION" ]
+ }
