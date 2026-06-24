@@ -1,8 +1,8 @@
 diff --git chrome/browser/BUILD.gn chrome/browser/BUILD.gn
-index 969c2af4439e4..fbd1810b3f7ec 100644
+index 969c2af4439e4a534ad935dd09c0324a12e81829..850a3ff93430cda71a9fb826a712fa15826dcc28 100644
 --- chrome/browser/BUILD.gn
 +++ chrome/browser/BUILD.gn
-@@ -6926,13 +6926,34 @@ static_library("browser") {
+@@ -6926,15 +6926,36 @@ static_library("browser") {
    }
  
    if (is_linux) {
@@ -38,8 +38,11 @@ index 969c2af4439e4..fbd1810b3f7ec 100644
 -      "first_run/upgrade_util_linux.cc",
 -      "first_run/upgrade_util_linux.h",
        "fullscreen_linux.cc",
-       "icon_loader_auralinux.cc",
+-      "icon_loader_auralinux.cc",
++      "icon_loader_auraqnx.cc",
        "metrics/pressure/pressure_metrics.cc",
+       "metrics/pressure/pressure_metrics.h",
+       "metrics/pressure/pressure_metrics_reporter.cc",
 @@ -6944,14 +6965,8 @@ static_library("browser") {
      ]
      deps += [
