@@ -7,7 +7,7 @@ index c9811ba7835ed..85ba245cc17eb 100644
    }
  
 +  if (is_qnx) {
-+    sources += [ "platform_thread_linux_qnx.cc" ]
++    sources += [ "threading/platform_thread_linux_qnx.cc" ]
 +  }
 +
    if (is_chromeos) {
@@ -19,7 +19,7 @@ index c9811ba7835ed..85ba245cc17eb 100644
      }
 +
 +    if (is_qnx) {
-+      sources += [ "drive_info_posix_qnx.cc" ]
++      sources += [ "files/drive_info_posix_qnx.cc" ]
 +    }
    }
  

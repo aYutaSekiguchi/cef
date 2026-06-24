@@ -1,0 +1,31 @@
+diff --git chrome/browser/policy/BUILD.gn chrome/browser/policy/BUILD.gn
+--- chrome/browser/policy/BUILD.gn
++++ chrome/browser/policy/BUILD.gn
+@@ -13,6 +13,10 @@
+ 
+   if (is_chromeos || is_linux) {
+     sources += [ "policy_path_parser_linux.cc" ]
++  } else if (is_qnx) {
++    sources += [
++      "policy_path_parser_qnx.cc",
++    ]
+   } else if (is_mac) {
+     sources += [ "policy_path_parser_mac.mm" ]
+   } else if (is_win) {
+@@ -625,3 +629,15 @@
+     ]
+   }
+ }
++
++if (is_qnx) {
++  source_set("battery_saver_qnx") {
++    sources = [ "battery_saver_mode_policy_handler_qnx.cc" ]
++    deps = [
++      "//base",
++      "//chrome/common:constants",
++      "//components/policy:generated",
++      "//components/prefs",
++    ]
++  }
++}
+

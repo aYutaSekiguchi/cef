@@ -1,21 +1,3 @@
-diff --git chrome/browser/web_applications/BUILD.gn chrome/browser/web_applications/BUILD.gn
-index a4f806027a907175da55dad487e0765c1e033f87..800b31b99fdded681fc56b3a3a23dc818d10cd87 100644
---- chrome/browser/web_applications/BUILD.gn
-+++ chrome/browser/web_applications/BUILD.gn
-@@ -471,6 +471,13 @@ source_set("web_applications") {
-     ]
-   }
- 
-+  if (is_qnx) {
-+    sources += [
-+      "os_integration/web_app_shortcut_linux.cc",
-+      "os_integration/web_app_shortcut_linux.h",
-+    ]
-+  }
-+
-   if (is_linux) {
-     # Desktop linux, doesn't count ChromeOS.
-     sources += [
 diff --git chrome/browser/web_applications/os_integration/os_integration_test_override.h chrome/browser/web_applications/os_integration/os_integration_test_override.h
 index a13dd7012c424a48c5d2d48eceb6b94066c7d425..adc115db72d4f015b658feb7cc124a1eb6150a63 100644
 --- chrome/browser/web_applications/os_integration/os_integration_test_override.h

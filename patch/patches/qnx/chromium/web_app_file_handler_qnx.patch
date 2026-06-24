@@ -1,11 +1,18 @@
 diff --git chrome/browser/web_applications/BUILD.gn chrome/browser/web_applications/BUILD.gn
 --- chrome/browser/web_applications/BUILD.gn
 +++ chrome/browser/web_applications/BUILD.gn
-@@ -473,6 +473,7 @@ source_set("web_applications") {
-   if (is_qnx) {
-     sources += [
-+      "os_integration/web_app_file_handler_registration_qnx.cc",
-       "os_integration/web_app_shortcut_linux.cc",
-       "os_integration/web_app_shortcut_linux.h",
+@@ -471,6 +471,14 @@ source_set("web_applications") {
      ]
    }
+ 
++  if (is_qnx) {
++    sources += [
++      "os_integration/web_app_file_handler_registration_qnx.cc",
++      "os_integration/web_app_shortcut_linux.cc",
++      "os_integration/web_app_shortcut_linux.h",
++    ]
++  }
++
+   if (is_linux) {
+     # Desktop linux, doesn't count ChromeOS.
+     sources += [

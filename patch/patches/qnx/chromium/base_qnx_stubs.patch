@@ -1,0 +1,12 @@
+diff --git base/BUILD.gn base/BUILD.gn
+--- base/BUILD.gn
++++ base/BUILD.gn
+@@ -1747,6 +1747,7 @@
+       "profiler/stack_copier_signal.h",
+       "profiler/thread_delegate_posix.cc",
+       "profiler/thread_delegate_posix.h",
++      "profiler/thread_delegate_posix_qnx.cc",
+     ]
+   }
+ 
+

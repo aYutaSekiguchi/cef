@@ -7,7 +7,7 @@ index eb2472737bd6e..980741e8874f9 100644
    }
  
 +  if (is_qnx) {
-+    sources += [ "font_cache_linux_qnx.cc" ]
++    sources += [ "fonts/linux/font_cache_linux_qnx.cc" ]
 +  }
 +
    if (is_win) {
