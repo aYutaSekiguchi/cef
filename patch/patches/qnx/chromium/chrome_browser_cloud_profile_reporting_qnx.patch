@@ -1,0 +1,26 @@
+diff --git chrome/browser/enterprise/reporting/cloud_profile_reporting_service_factory.cc chrome/browser/enterprise/reporting/cloud_profile_reporting_service_factory.cc
+index d02765c1ae78bf459f7b015660f1d6ba8943e693..5bfa96cf650cea668ef756a370662f1740ac5b45 100644
+--- chrome/browser/enterprise/reporting/cloud_profile_reporting_service_factory.cc
++++ chrome/browser/enterprise/reporting/cloud_profile_reporting_service_factory.cc
+@@ -10,6 +10,7 @@
+ #include "components/enterprise/browser/reporting/report_scheduler.h"
+ #include "services/network/public/cpp/shared_url_loader_factory.h"
+ #include "chrome/browser/enterprise/signals/signals_aggregator_factory.h"
++#include "build/build_config.h"
+ 
+ namespace enterprise_reporting {
+ 
+@@ -44,10 +45,12 @@ CloudProfileReportingServiceFactory::CloudProfileReportingServiceFactory()
+     : ProfileKeyedServiceFactory("CloudProfileReporting",
+                                  ProfileSelections::BuildForRegularProfile()) {
+   DependsOn(enterprise::ProfileIdServiceFactory::GetInstance());
++#if !BUILDFLAG(IS_QNX)
+   // Depends on this service because
+   // `CloudProfileReportingService.profile_request_generator_` has a dependency
+-  // on it.
++  // on it. QNX builds use a stub SignalsAggregatorFactory with no singleton.
+   DependsOn(enterprise_signals::SignalsAggregatorFactory::GetInstance());
++#endif
+ }
+ 
+ CloudProfileReportingServiceFactory::~CloudProfileReportingServiceFactory() =
