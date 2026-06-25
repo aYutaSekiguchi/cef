@@ -48,7 +48,7 @@ const int kExpectedSelectRectWidthVariance = 0;
 #elif defined(OS_MAC)
 const CefRect kExpandedSelectRect(462, 42, 75, 408);
 const int kExpectedSelectRectWidthVariance = 4;
-#elif defined(OS_LINUX)
+#elif defined(OS_LINUX) || defined(OS_QNX)
 const CefRect kExpandedSelectRect(462, 42, 79, 408);
 const int kExpectedSelectRectWidthVariance = 0;
 #else
@@ -62,7 +62,7 @@ constexpr uint32_t kAllTouchHandleFlags =
     (CEF_THS_FLAG_ENABLED | CEF_THS_FLAG_ORIENTATION | CEF_THS_FLAG_ORIGIN |
      CEF_THS_FLAG_ALPHA);
 
-#if defined(OS_LINUX)
+#if defined(OS_LINUX) || defined(OS_QNX)
 
 // From ui/events/keycodes/keyboard_codes_posix.h
 #define VKEY_D 0x44
@@ -72,10 +72,15 @@ constexpr uint32_t kAllTouchHandleFlags =
 #define VKEY_ESCAPE 0x1B
 #define VKEY_TAB 0x09
 
+#if defined(OS_LINUX)
 const unsigned int kNativeKeyTestCodes[] = {XK_d, XK_o, XK_n, XK_e};
-
 const unsigned int kNativeKeyEscape = XK_Escape;
 const unsigned int kNativeKeyTab = XK_Tab;
+#else
+const unsigned int kNativeKeyTestCodes[] = {'d', 'o', 'n', 'e'};
+const unsigned int kNativeKeyEscape = 0xff1b;
+const unsigned int kNativeKeyTab = 0xff09;
+#endif
 
 #elif defined(OS_MAC)
 
@@ -95,7 +100,7 @@ const unsigned int kNativeKeyTab = kVK_Tab;
 
 #endif
 
-#if defined(OS_MAC) || defined(OS_LINUX)
+#if defined(OS_MAC) || defined(OS_LINUX) || defined(OS_QNX)
 
 const unsigned int kKeyTestCodes[] = {VKEY_D, VKEY_O, VKEY_N, VKEY_E};
 
@@ -523,7 +528,7 @@ class OSRTestHandler : public RoutingTestHandler,
                              base::BindOnce(&OSRTestHandler::SendKeyEvent, this,
                                             browser, VK_TAB),
                              50);
-#elif defined(OS_MAC) || defined(OS_LINUX)
+#elif defined(OS_MAC) || defined(OS_LINUX) || defined(OS_QNX)
           CefPostDelayedTask(TID_UI,
                              base::BindOnce(&OSRTestHandler::SendKeyEvent, this,
                                             browser, kNativeKeyTab, VKEY_TAB),
@@ -1099,7 +1104,7 @@ class OSRTestHandler : public RoutingTestHandler,
           sent_event_after_popup_paint_.yes();
 #if defined(OS_WIN)
           SendKeyEvent(browser, VK_ESCAPE);
-#elif defined(OS_MAC) || defined(OS_LINUX)
+#elif defined(OS_MAC) || defined(OS_LINUX) || defined(OS_QNX)
           SendKeyEvent(browser, kNativeKeyEscape, VKEY_ESCAPE);
 #else
 #error "Unsupported platform"
@@ -1571,7 +1576,7 @@ class OSRTestHandler : public RoutingTestHandler,
     } else {
       windowInfo.SetAsWindowless(kNullWindowHandle);
     }
-#elif defined(OS_LINUX)
+#elif defined(OS_LINUX) || defined(OS_QNX)
     windowInfo.SetAsWindowless(kNullWindowHandle);
 #else
 #error "Unsupported platform"
@@ -1655,7 +1660,7 @@ class OSRTestHandler : public RoutingTestHandler,
     for (size_t i = 0; i < word_length; ++i) {
 #if defined(OS_WIN)
       SendKeyEvent(browser, kKeyTestWord[i]);
-#elif defined(OS_MAC) || defined(OS_LINUX)
+#elif defined(OS_MAC) || defined(OS_LINUX) || defined(OS_QNX)
       SendKeyEvent(browser, kNativeKeyTestCodes[i], kKeyTestCodes[i]);
 #else
 #error "Unsupported platform"
@@ -1673,7 +1678,7 @@ class OSRTestHandler : public RoutingTestHandler,
     for (size_t i = 0; i < word_length; ++i) {
 #if defined(OS_WIN)
       SendKeyEvent(browser, kKeyTestWord[i]);
-#elif defined(OS_MAC) || defined(OS_LINUX)
+#elif defined(OS_MAC) || defined(OS_LINUX) || defined(OS_QNX)
       SendKeyEvent(browser, kNativeKeyTestCodes[i], kKeyTestCodes[i]);
 #else
 #error "Unsupported platform"
@@ -1696,7 +1701,7 @@ class OSRTestHandler : public RoutingTestHandler,
     for (size_t i = 0; i < word_length; ++i) {
 #if defined(OS_WIN)
       SendKeyEvent(browser, kKeyTestWord[i]);
-#elif defined(OS_MAC) || defined(OS_LINUX)
+#elif defined(OS_MAC) || defined(OS_LINUX) || defined(OS_QNX)
       SendKeyEvent(browser, kNativeKeyTestCodes[i], kKeyTestCodes[i]);
 #else
 #error "Unsupported platform"
@@ -1907,7 +1912,7 @@ class OSRTestHandler : public RoutingTestHandler,
   }
 
   void SendKeyEvent(CefRefPtr<CefBrowser> browser,
-#if defined(OS_LINUX) || defined(OS_MAC)
+#if defined(OS_LINUX) || defined(OS_QNX) || defined(OS_MAC)
                     unsigned int native_key_code,
 #endif
                     int key_code) {
@@ -1932,7 +1937,7 @@ class OSRTestHandler : public RoutingTestHandler,
     // case character and |event.unmodified_character| would be the lower-case
     // character (e.g. the character without the shift modifier applied).
     event.character = event.unmodified_character = key_code;
-#elif defined(OS_LINUX)
+#elif defined(OS_LINUX) || defined(OS_QNX)
     event.native_key_code = native_key_code;
     event.windows_key_code = key_code;
     event.character = event.unmodified_character = native_key_code;

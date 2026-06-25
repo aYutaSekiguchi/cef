@@ -759,5 +759,8 @@
     'ceftests_sources_linux': [
       'tests/ceftests/resource_util_linux.cc',
     ],
+    'ceftests_sources_qnx': [
+      'tests/ceftests/resource_util_qnx.cc',
+    ],
   },
 }

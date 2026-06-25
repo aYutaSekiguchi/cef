@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from qnx_tests.modules.angle import AngleModule
 from qnx_tests.modules.base import BaseModule
+from qnx_tests.modules.ceftests import CefTestsModule
 from qnx_tests.modules.v8 import V8Module
 from qnx_tests.modules.swiftshader import SwiftShaderModule
 from qnx_tests.modules.mojo import MojoModule
@@ -21,6 +22,7 @@ from qnx_tests.modules.mojo import MojoModule
 
 MODULES = {
     "base": BaseModule(),
+    "ceftests": CefTestsModule(),
     "v8": V8Module(),
     "swiftshader": SwiftShaderModule(),
     "angle": AngleModule(),
@@ -32,6 +34,7 @@ __all__ = [
     "MODULES",
     "AngleModule",
     "BaseModule",
+    "CefTestsModule",
     "V8Module",
     "SwiftShaderModule",
     "MojoModule",

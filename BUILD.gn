@@ -697,7 +697,9 @@ source_set("libcef_static") {
     "libcef/browser/process_util_impl.cc",
   ]
 
-  if (!is_qnx) {
+  if (is_qnx) {
+    sources += [ "libcef/browser/print_settings_impl_qnx.cc" ]
+  } else {
     sources += [
       "libcef/browser/print_settings_impl.cc",
       "libcef/browser/print_settings_impl.h",
@@ -2882,7 +2884,7 @@ if (is_mac) {
   # ceftests targets.
   #
 
-  if (is_linux) {
+  if (is_linux || is_qnx) {
     copy("copy_ceftests_files") {
       sources = gypi_paths2.shared_sources_resources
       outputs = [ "${root_out_dir}/ceftests_files/{{source_file_part}}" ]
@@ -2947,6 +2949,17 @@ if (is_mac) {
           configs += [ ":glib" ]
         }
       }
+
+      deps += [
+        ":copy_ceftests_files",
+      ]
+    }
+
+    if (is_qnx) {
+      sources += [
+                   "tests/shared/browser/main_message_loop_external_pump_qnx.cc",
+                   "tests/shared/browser/resource_util_posix.cc",
+                 ] + gypi_paths2.ceftests_sources_qnx
 
       deps += [
         ":copy_ceftests_files",

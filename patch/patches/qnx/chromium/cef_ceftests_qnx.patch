@@ -1,0 +1,231 @@
+diff --git BUILD.gn BUILD.gn
+index e6e426e2a9b33f02b9e21e16973cc62cf5945e96..445b34834d0068af149efb7aa849dd177527ea24 100644
+--- BUILD.gn
++++ BUILD.gn
+@@ -697,7 +697,9 @@ source_set("libcef_static") {
+     "libcef/browser/process_util_impl.cc",
+   ]
+ 
+-  if (!is_qnx) {
++  if (is_qnx) {
++    sources += [ "libcef/browser/print_settings_impl_qnx.cc" ]
++  } else {
+     sources += [
+       "libcef/browser/print_settings_impl.cc",
+       "libcef/browser/print_settings_impl.h",
+@@ -2882,7 +2884,7 @@ if (is_mac) {
+   # ceftests targets.
+   #
+ 
+-  if (is_linux) {
++  if (is_linux || is_qnx) {
+     copy("copy_ceftests_files") {
+       sources = gypi_paths2.shared_sources_resources
+       outputs = [ "${root_out_dir}/ceftests_files/{{source_file_part}}" ]
+@@ -2953,6 +2955,17 @@ if (is_mac) {
+       ]
+     }
+ 
++    if (is_qnx) {
++      sources += [
++                   "tests/shared/browser/main_message_loop_external_pump_qnx.cc",
++                   "tests/shared/browser/resource_util_posix.cc",
++                 ] + gypi_paths2.ceftests_sources_qnx
++
++      deps += [
++        ":copy_ceftests_files",
++      ]
++    }
++
+     if (is_linux && !is_component_build) {
+       # Set rpath to find our own libfreetype even in a non-component build.
+       configs += [ "//build/config/gcc:rpath_for_built_shared_libraries" ]
+diff --git cef_paths2.gypi cef_paths2.gypi
+index 4211cfcd273524b54ea3734f624bbd8b85f1a413..554758a3d68e830f6b3c3dd4b4252db94c0e9194 100644
+--- cef_paths2.gypi
++++ cef_paths2.gypi
+@@ -759,5 +759,8 @@
+     'ceftests_sources_linux': [
+       'tests/ceftests/resource_util_linux.cc',
+     ],
++    'ceftests_sources_qnx': [
++      'tests/ceftests/resource_util_qnx.cc',
++    ],
+   },
+ }
+diff --git tests/ceftests/os_rendering_unittest.cc tests/ceftests/os_rendering_unittest.cc
+index 587d311aeb7383df8c1a513f7fd17dbb25375c13..2d17d7ce4b26b3d260bc36081d8da8fd0c67a687 100644
+--- tests/ceftests/os_rendering_unittest.cc
++++ tests/ceftests/os_rendering_unittest.cc
+@@ -48,7 +48,7 @@ const int kExpectedSelectRectWidthVariance = 0;
+ #elif defined(OS_MAC)
+ const CefRect kExpandedSelectRect(462, 42, 75, 408);
+ const int kExpectedSelectRectWidthVariance = 4;
+-#elif defined(OS_LINUX)
++#elif defined(OS_LINUX) || defined(OS_QNX)
+ const CefRect kExpandedSelectRect(462, 42, 79, 408);
+ const int kExpectedSelectRectWidthVariance = 0;
+ #else
+@@ -62,7 +62,7 @@ constexpr uint32_t kAllTouchHandleFlags =
+     (CEF_THS_FLAG_ENABLED | CEF_THS_FLAG_ORIENTATION | CEF_THS_FLAG_ORIGIN |
+      CEF_THS_FLAG_ALPHA);
+ 
+-#if defined(OS_LINUX)
++#if defined(OS_LINUX) || defined(OS_QNX)
+ 
+ // From ui/events/keycodes/keyboard_codes_posix.h
+ #define VKEY_D 0x44
+@@ -72,10 +72,15 @@ constexpr uint32_t kAllTouchHandleFlags =
+ #define VKEY_ESCAPE 0x1B
+ #define VKEY_TAB 0x09
+ 
++#if defined(OS_LINUX)
+ const unsigned int kNativeKeyTestCodes[] = {XK_d, XK_o, XK_n, XK_e};
+-
+ const unsigned int kNativeKeyEscape = XK_Escape;
+ const unsigned int kNativeKeyTab = XK_Tab;
++#else
++const unsigned int kNativeKeyTestCodes[] = {'d', 'o', 'n', 'e'};
++const unsigned int kNativeKeyEscape = 0xff1b;
++const unsigned int kNativeKeyTab = 0xff09;
++#endif
+ 
+ #elif defined(OS_MAC)
+ 
+@@ -95,7 +100,7 @@ const unsigned int kNativeKeyTab = kVK_Tab;
+ 
+ #endif
+ 
+-#if defined(OS_MAC) || defined(OS_LINUX)
++#if defined(OS_MAC) || defined(OS_LINUX) || defined(OS_QNX)
+ 
+ const unsigned int kKeyTestCodes[] = {VKEY_D, VKEY_O, VKEY_N, VKEY_E};
+ 
+@@ -523,7 +528,7 @@ class OSRTestHandler : public RoutingTestHandler,
+                              base::BindOnce(&OSRTestHandler::SendKeyEvent, this,
+                                             browser, VK_TAB),
+                              50);
+-#elif defined(OS_MAC) || defined(OS_LINUX)
++#elif defined(OS_MAC) || defined(OS_LINUX) || defined(OS_QNX)
+           CefPostDelayedTask(TID_UI,
+                              base::BindOnce(&OSRTestHandler::SendKeyEvent, this,
+                                             browser, kNativeKeyTab, VKEY_TAB),
+@@ -1099,7 +1104,7 @@ class OSRTestHandler : public RoutingTestHandler,
+           sent_event_after_popup_paint_.yes();
+ #if defined(OS_WIN)
+           SendKeyEvent(browser, VK_ESCAPE);
+-#elif defined(OS_MAC) || defined(OS_LINUX)
++#elif defined(OS_MAC) || defined(OS_LINUX) || defined(OS_QNX)
+           SendKeyEvent(browser, kNativeKeyEscape, VKEY_ESCAPE);
+ #else
+ #error "Unsupported platform"
+@@ -1571,7 +1576,7 @@ class OSRTestHandler : public RoutingTestHandler,
+     } else {
+       windowInfo.SetAsWindowless(kNullWindowHandle);
+     }
+-#elif defined(OS_LINUX)
++#elif defined(OS_LINUX) || defined(OS_QNX)
+     windowInfo.SetAsWindowless(kNullWindowHandle);
+ #else
+ #error "Unsupported platform"
+@@ -1655,7 +1660,7 @@ class OSRTestHandler : public RoutingTestHandler,
+     for (size_t i = 0; i < word_length; ++i) {
+ #if defined(OS_WIN)
+       SendKeyEvent(browser, kKeyTestWord[i]);
+-#elif defined(OS_MAC) || defined(OS_LINUX)
++#elif defined(OS_MAC) || defined(OS_LINUX) || defined(OS_QNX)
+       SendKeyEvent(browser, kNativeKeyTestCodes[i], kKeyTestCodes[i]);
+ #else
+ #error "Unsupported platform"
+@@ -1673,7 +1678,7 @@ class OSRTestHandler : public RoutingTestHandler,
+     for (size_t i = 0; i < word_length; ++i) {
+ #if defined(OS_WIN)
+       SendKeyEvent(browser, kKeyTestWord[i]);
+-#elif defined(OS_MAC) || defined(OS_LINUX)
++#elif defined(OS_MAC) || defined(OS_LINUX) || defined(OS_QNX)
+       SendKeyEvent(browser, kNativeKeyTestCodes[i], kKeyTestCodes[i]);
+ #else
+ #error "Unsupported platform"
+@@ -1696,7 +1701,7 @@ class OSRTestHandler : public RoutingTestHandler,
+     for (size_t i = 0; i < word_length; ++i) {
+ #if defined(OS_WIN)
+       SendKeyEvent(browser, kKeyTestWord[i]);
+-#elif defined(OS_MAC) || defined(OS_LINUX)
++#elif defined(OS_MAC) || defined(OS_LINUX) || defined(OS_QNX)
+       SendKeyEvent(browser, kNativeKeyTestCodes[i], kKeyTestCodes[i]);
+ #else
+ #error "Unsupported platform"
+@@ -1907,7 +1912,7 @@ class OSRTestHandler : public RoutingTestHandler,
+   }
+ 
+   void SendKeyEvent(CefRefPtr<CefBrowser> browser,
+-#if defined(OS_LINUX) || defined(OS_MAC)
++#if defined(OS_LINUX) || defined(OS_QNX) || defined(OS_MAC)
+                     unsigned int native_key_code,
+ #endif
+                     int key_code) {
+@@ -1932,7 +1937,7 @@ class OSRTestHandler : public RoutingTestHandler,
+     // case character and |event.unmodified_character| would be the lower-case
+     // character (e.g. the character without the shift modifier applied).
+     event.character = event.unmodified_character = key_code;
+-#elif defined(OS_LINUX)
++#elif defined(OS_LINUX) || defined(OS_QNX)
+     event.native_key_code = native_key_code;
+     event.windows_key_code = key_code;
+     event.character = event.unmodified_character = native_key_code;
+diff --git tests/ceftests/osr_accessibility_unittest.cc tests/ceftests/osr_accessibility_unittest.cc
+index a08daf2e1ea11b1a1f7311d9e30cc8073f010a5e..5655f12877d1377084dbdaefce53e3d6e6c0a72a 100644
+--- tests/ceftests/osr_accessibility_unittest.cc
++++ tests/ceftests/osr_accessibility_unittest.cc
+@@ -219,7 +219,7 @@ class AccessibilityTestHandler : public TestHandler,
+     windowInfo.SetAsWindowless(GetDesktopWindow());
+ #elif defined(OS_MAC)
+     windowInfo.SetAsWindowless(kNullWindowHandle);
+-#elif defined(OS_LINUX)
++#elif defined(OS_LINUX) || defined(OS_QNX)
+     windowInfo.SetAsWindowless(kNullWindowHandle);
+ #else
+ #error "Unsupported platform"
+diff --git tools/qnx_run_test.sh tools/qnx_run_test.sh
+index 3a008eacb0d07f11259e3572dcdc9e474f5004ad..ef7e00f6e108bc2ac0c59dd61e7410fae36fec71 100755
+--- tools/qnx_run_test.sh
++++ tools/qnx_run_test.sh
+@@ -7,8 +7,8 @@
+ # package (one source of truth for serial I/O, login, and per-module
+ # knowledge).
+ #
+-# Recognised module flags: --base, --v8, --swiftshader, --angle,
+-# --all, --list.
++# Recognised module flags: --base, --ceftests, --v8, --swiftshader,
++# --angle, --all, --list.
+ # When no module flag is given, the default is --base (preserves the
+ # historical "run base_unittests" UX of the old qnx_run_test.sh).
+ #
+diff --git tools/qnx_tests/modules/__init__.py tools/qnx_tests/modules/__init__.py
+index d7513f4412e9dc1545d362bf126c2da1db3ff28c..dfaf820d3c5b6837e23719d3bf8bee1bc4ab18ec 100644
+--- tools/qnx_tests/modules/__init__.py
++++ tools/qnx_tests/modules/__init__.py
+@@ -14,6 +14,7 @@ from __future__ import annotations
+ 
+ from qnx_tests.modules.angle import AngleModule
+ from qnx_tests.modules.base import BaseModule
++from qnx_tests.modules.ceftests import CefTestsModule
+ from qnx_tests.modules.v8 import V8Module
+ from qnx_tests.modules.swiftshader import SwiftShaderModule
+ from qnx_tests.modules.mojo import MojoModule
+@@ -21,6 +22,7 @@ from qnx_tests.modules.mojo import MojoModule
+ 
+ MODULES = {
+     "base": BaseModule(),
++    "ceftests": CefTestsModule(),
+     "v8": V8Module(),
+     "swiftshader": SwiftShaderModule(),
+     "angle": AngleModule(),
+@@ -32,6 +34,7 @@ __all__ = [
+     "MODULES",
+     "AngleModule",
+     "BaseModule",
++    "CefTestsModule",
+     "V8Module",
+     "SwiftShaderModule",
+     "MojoModule",

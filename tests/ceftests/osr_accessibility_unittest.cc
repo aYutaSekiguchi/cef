@@ -219,7 +219,7 @@ class AccessibilityTestHandler : public TestHandler,
     windowInfo.SetAsWindowless(GetDesktopWindow());
 #elif defined(OS_MAC)
     windowInfo.SetAsWindowless(kNullWindowHandle);
-#elif defined(OS_LINUX)
+#elif defined(OS_LINUX) || defined(OS_QNX)
     windowInfo.SetAsWindowless(kNullWindowHandle);
 #else
 #error "Unsupported platform"
