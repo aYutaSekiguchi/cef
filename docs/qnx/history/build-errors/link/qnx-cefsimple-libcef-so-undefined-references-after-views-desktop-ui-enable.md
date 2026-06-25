@@ -75,9 +75,10 @@ Modified existing CEF-managed patches:
 New CEF-managed patches:
 
 - `media_capture_BUILD_stubs_is_qnx.patch`: added
-  `video_capture_gpu_channel_host_qnx.cc` inside the existing
-  `enable_gpu_channel_media_capture` block (with `//base` and `//gpu/ipc/common`
-  deps) so the stub inherits the mojom-forward dependency.
+  `video_capture_gpu_channel_host_qnx.cc` in a standalone `if (is_qnx)` block
+  (with `//base`, `//gpu/command_buffer/client`, and `//gpu/ipc/common` deps)
+  so the stub is always linked on QNX and the mojom-forward dependency is
+  available when compiling the header.
 - `chrome_browser_ui_views_frame_browser_view_qnx.patch`: wrapped the
   `HatsNextWebDialog` constructor call in `BrowserView::ShowHatsDialog`
   with `#if !BUILDFLAG(IS_QNX)`.
@@ -96,8 +97,10 @@ Updated QNX new files (tracked via `cef/patch/qnx/chromium/new_files/`):
   made empty (real implementation now compiled via the widened
   `is_qnx` block).
 - `media/capture/video/video_capture_gpu_channel_host_qnx.cc`: added
-  ctor/dtor/`OnContextLost`/`AddObserver`/`RemoveObserver` definitions so
-  the vtable is emitted in the stub translation unit.
+  `GetInstance`/`GetSharedImageInterface` plus ctor/dtor/`OnContextLost`/
+  `AddObserver`/`RemoveObserver` definitions so the remaining link symbols
+  and vtable are emitted in the stub translation unit. `GetInstance` uses
+  `base::NoDestructor` to avoid `-Wexit-time-destructors`.
 
 Also updated `VERSION.stamp` from `chromium-147.0.7727.138` to
 `chromium-147.0.7727.147` to match `CHROMIUM_BUILD_COMPATIBILITY.txt`.

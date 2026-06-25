@@ -14,8 +14,8 @@ VideoCaptureGpuChannelHost::VideoCaptureGpuChannelHost() = default;
 VideoCaptureGpuChannelHost::~VideoCaptureGpuChannelHost() = default;
 
 VideoCaptureGpuChannelHost& VideoCaptureGpuChannelHost::GetInstance() {
-  static VideoCaptureGpuChannelHost instance;
-  return instance;
+  static base::NoDestructor<VideoCaptureGpuChannelHost> instance;
+  return *instance;
 }
 
 scoped_refptr<gpu::SharedImageInterface>
