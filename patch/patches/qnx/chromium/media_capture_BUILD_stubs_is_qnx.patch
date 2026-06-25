@@ -1,0 +1,16 @@
+diff --git media/capture/BUILD.gn media/capture/BUILD.gn
+--- media/capture/BUILD.gn
++++ media/capture/BUILD.gn
+@@ -407,4 +407,12 @@ source_set("capture_gpu_channel") {
+       "//gpu/ipc/client",
+     ]
+   }
++
++  if (enable_gpu_channel_media_capture && is_qnx) {
++    sources += [ "video/video_capture_gpu_channel_host_qnx.cc" ]
++    deps += [
++      "//base",
++      "//gpu/ipc/common",
++    ]
++  }
+ }

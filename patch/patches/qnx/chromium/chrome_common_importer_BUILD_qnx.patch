@@ -1,0 +1,11 @@
+diff --git chrome/common/importer/BUILD.gn chrome/common/importer/BUILD.gn
+--- chrome/common/importer/BUILD.gn
++++ chrome/common/importer/BUILD.gn
+@@ -89,7 +89,7 @@ source_set("importer") {
+     "importer_bridge.h",
+     "pstore_declarations.h",
+   ]
+-  if (is_chromeos || is_linux) {
++  if (is_chromeos || is_linux || is_qnx) {
+     sources += [ "firefox_importer_utils_linux.cc" ]
+   } else if (is_mac) {

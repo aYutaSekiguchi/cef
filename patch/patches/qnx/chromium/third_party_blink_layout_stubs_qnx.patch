@@ -4,12 +4,10 @@ diff --git third_party/blink/renderer/core/layout/build.gni third_party/blink/re
 @@ -713,6 +713,10 @@
  }
  
- if (is_android) {
-+
 +if (is_qnx) {
 +  blink_core_sources_layout += [ "layout_theme_qnx.cc" ]
 +}
++
+ if (is_android) {
    blink_core_sources_layout += [
      "layout_theme_android.cc",
-     "layout_theme_android.h",
-

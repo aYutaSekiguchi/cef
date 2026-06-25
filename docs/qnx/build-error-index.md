@@ -143,6 +143,7 @@ rg -n "BitmapCursor|cursor_util_aura|FromPlatformCursor|IS_OZONE|SUPPORTS_OZONE_
 rg -n "icuuc_private_hidden_visibility|icui18n_hidden_visibility|icudt77_dat|UVector64|visibility_hidden|multiple definition" docs/qnx/history/build-errors
 rg -n "enterprise_watermark|watermark_view_lib|promotion_eligibility_checker|read_anything_prefs|window_frame_util|whole-archive|multiple definition" docs/qnx/history/build-errors
 rg -n "undefined reference to `main|cefsimple_linux|cefsimple_qnx|X11/Xlib.h|cefsimple_sources_linux|cefsimple_capi_sources_linux" docs/qnx/history/build-errors
+rg -n "undefined reference to `vtable for BrowserNativeWidgetFactory|base::GetProcessExecutablePath|HandleOnPerformingDrop|GetProfilesINI|storage_monitor::StorageMonitor::CreateInternal|AddContextMenuParamsPropertiesFromPreferences|media::VideoCaptureGpuChannelHost|blink::LayoutTheme::NativeTheme|HatsNextWebDialog" docs/qnx/history/build-errors/link
 rg -n "NativeEventObserver::RegisterObserver|RendererMainPlatformDelegate|GetFontList_SlowBlocking|content_qnx_link_stubs" docs/qnx/history/build-errors
 rg -n "TestRootCerts::ClearImpl|TestRootCerts::Init|TestRootCerts::AddImpl|net_test_root_certs_qnx" docs/qnx/history/build-errors
 rg -n "GetFallbackFont|GetFontRenderParams|ui_gfx_font_fallback_render_qnx" docs/qnx/history/build-errors

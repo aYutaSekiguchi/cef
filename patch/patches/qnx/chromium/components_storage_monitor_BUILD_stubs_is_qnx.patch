@@ -1,17 +1,22 @@
 diff --git components/storage_monitor/BUILD.gn components/storage_monitor/BUILD.gn
-index cf0dd936c6cbe..7b8ab47e41f5f 100644
 --- components/storage_monitor/BUILD.gn
 +++ components/storage_monitor/BUILD.gn
-@@ -76,10 +76,14 @@ component("storage_monitor") {
+@@ -70,15 +70,19 @@ component("storage_monitor") {
+       sources += [
+         "mtab_watcher_linux.cc",
+         "mtab_watcher_linux.h",
+         "storage_monitor_linux.cc",
+         "storage_monitor_linux.h",
+       ]
      } else {
        sources += [ "storage_monitor_dummy.cc" ]
      }
-+
-+    if (is_qnx) {
-+      sources += [ "storage_monitor_linux_qnx.cc" ]
-+    }
    }
- 
+
++  if (is_qnx) {
++    sources += [ "storage_monitor_linux_qnx.cc" ]
++  }
++
    if (use_udev) {
 -    if (is_linux || is_chromeos) {
 +    if (is_linux || is_chromeos || is_qnx) {

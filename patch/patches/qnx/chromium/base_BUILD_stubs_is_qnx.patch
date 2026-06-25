@@ -1,19 +1,19 @@
 diff --git base/BUILD.gn base/BUILD.gn
-index c9811ba7835ed..85ba245cc17eb 100644
 --- base/BUILD.gn
 +++ base/BUILD.gn
-@@ -1040,6 +1040,10 @@ component("base") {
+@@ -1040,6 +1040,11 @@ component("base") {
      ]
    }
  
 +  if (is_qnx) {
 +    sources += [ "threading/platform_thread_linux_qnx.cc" ]
++    sources += [ "process/process_handle_linux_qnx.cc" ]
 +  }
 +
    if (is_chromeos) {
      sources += [
        "process/process_priority_delegate.h",
-@@ -1692,6 +1696,10 @@ component("base") {
+@@ -1692,6 +1697,10 @@ component("base") {
      if (!is_apple) {
        sources += [ "files/drive_info_posix.cc" ]
      }
