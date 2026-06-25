@@ -4,12 +4,15 @@
 
 #include "media/audio/audio_manager.h"
 
+#include "media/audio/fake_audio_manager.h"
+
 namespace media {
 
 std::unique_ptr<AudioManager> CreateAudioManager(
     std::unique_ptr<AudioThread> audio_thread,
     AudioLogFactory* audio_log_factory) {
-  return nullptr;
+  return std::make_unique<FakeAudioManager>(std::move(audio_thread),
+                                            audio_log_factory);
 }
 
 }  // namespace media
