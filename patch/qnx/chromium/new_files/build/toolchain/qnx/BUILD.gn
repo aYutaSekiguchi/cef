@@ -54,9 +54,9 @@ template("qnx_clang_toolchain") {
     # relocations that QNX's linker rejects in shared objects. Keep the PIE
     # support flags in the toolchain, but place -fPIC last so shared objects
     # stay PIC-safe under the QNX linker.
-    extra_cflags = "${_target_flags} -include time.h -fPIE -fPIC -femulated-tls"
-    extra_cppflags = "${_target_flags} -include time.h -fPIE -fPIC -femulated-tls"
-    extra_cxxflags = "${_target_flags} -I${_qnx_shim_dir} -I${_qnx_target}/usr/include/c++/v1 -include time.h -include ${_qnx_macros} -include ${_qnx_std_polyfill} -fPIE -fPIC -femulated-tls"
+    extra_cflags = "${_target_flags} -include time.h -fPIE -fPIC -femulated-tls -mcmodel=medium"
+    extra_cppflags = "${_target_flags} -include time.h -fPIE -fPIC -femulated-tls -mcmodel=medium"
+    extra_cxxflags = "${_target_flags} -I${_qnx_shim_dir} -I${_qnx_target}/usr/include/c++/v1 -include time.h -include ${_qnx_macros} -include ${_qnx_std_polyfill} -fPIE -fPIC -femulated-tls -mcmodel=medium"
 
     ld = "${_qnx_host}/usr/bin/qcc"
 

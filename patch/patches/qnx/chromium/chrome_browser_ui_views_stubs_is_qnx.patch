@@ -1,9 +1,9 @@
 diff --git chrome/browser/ui/BUILD.gn chrome/browser/ui/BUILD.gn
 --- chrome/browser/ui/BUILD.gn
 +++ chrome/browser/ui/BUILD.gn
-@@ -5075,7 +5075,10 @@
+@@ -5075,7 +5075,11 @@
      }
- 
+
      if (is_qnx) {
 -      sources += [ "views/chrome_views_delegate_qnx.cc" ]
 +      sources += [
