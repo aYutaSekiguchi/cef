@@ -1,14 +1,45 @@
 diff --git ui/views/BUILD.gn ui/views/BUILD.gn
+index 5c0cad2640d84193e396ac1faff7d61230ab388c..a951a49a58d340df686f2fe431d681b2506204b5 100644
 --- ui/views/BUILD.gn
 +++ ui/views/BUILD.gn
-@@ -660,6 +660,10 @@ component("views") {
-   if (is_linux || is_qnx) {
+@@ -655,9 +655,13 @@ component("views") {
+   if (is_linux) {
+     public_deps += [ "//ui/linux:linux_ui" ]
+     deps += [ "//ui/base/ime/linux" ]
++  }
++
++  if (is_linux || is_qnx) {
      sources += [ "controls/menu/menu_config_linux.cc" ]
    }
-+
-+  if (is_qnx) {
-+    sources += [ "widget/desktop_aura/desktop_window_tree_host_linux_qnx.cc" ]
-+  }
  
++
    if (is_chromeos) {
      public += [ "controls/views_text_services_context_menu_chromeos.h" ]
+     sources += [
+@@ -919,7 +923,7 @@ component("views") {
+           "//ui/base:ozone_buildflags",
+         ]
+       }
+-      if (is_linux || is_fuchsia) {
++      if (is_linux || is_fuchsia || is_qnx) {
+         public += [
+           "widget/desktop_aura/desktop_window_tree_host_platform.h",
+           "widget/desktop_aura/window_move_client_platform.h",
+@@ -985,7 +989,7 @@ component("views") {
+   }
+ }
+ 
+-if (is_win || is_mac || is_linux || is_chromeos) {
++if ((is_win || is_mac || is_linux || is_chromeos) && !is_qnx) {
+   static_library("view_pixel_diff_test_support") {
+     testonly = true
+     sources = [
+@@ -1595,7 +1599,7 @@ test("views_unittests") {
+     ]
+   }
+ 
+-  if (is_win || is_mac || is_linux || is_chromeos) {
++  if ((is_win || is_mac || is_linux || is_chromeos) && !is_qnx) {
+     sources += [ "test/view_skia_gold_pixel_diff_unittest.cc" ]
+     deps += [ "//ui/views:view_pixel_diff_test_support" ]
+   }

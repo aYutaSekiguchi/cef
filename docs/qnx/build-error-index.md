@@ -137,7 +137,7 @@ rg -n "ShowFirstRunDialog|first_run_internal_posix|first_run_dialog" docs/qnx/hi
 rg -n "client_certificates|CertificateProvisioningServiceFactory|CertificateStoreFactory|chrome_browser_main_extra_parts_profiles" docs/qnx/history/build-errors
 rg -n "IsFirstRunDesktopRefreshEnabled|kOpenAllProfilesFromProfilePickerExperiment|IsInSearchEngineChoiceScreenRegionForSystemProfile|profile_picker_ui" docs/qnx/history/build-errors
 rg -n "version_history_client|CURRENT_PLATFORM|VersionHistory|platforms/" docs/qnx/history/build-errors
-rg -n "ceftests|AudioManager|CloudProfileReportingServiceFactory|NotificationPlatformBridge|gtest_list_tests" docs/qnx/history/build-errors/test
+rg -n "ceftests|AudioManager|CloudProfileReportingServiceFactory|NotificationPlatformBridge|BrowserNativeWidget|AxViewportCollapseTest|gtest_list_tests" docs/qnx/history/build-errors/test
 rg -n "print.mojom.h|kChromeUIPrintHost|browser_platform_delegate_create|CefBrowserPlatformDelegateOsr|ENABLE_PRINT_PREVIEW|ENABLE_PRINTING" docs/qnx/history/build-errors
 rg -n "GetDefaultUserDataDirectory|resource_util.cc|cef_user_data|XDGDirectory" docs/qnx/history/build-errors
 rg -n "BitmapCursor|cursor_util_aura|FromPlatformCursor|IS_OZONE|SUPPORTS_OZONE_X11" docs/qnx/history/build-errors
