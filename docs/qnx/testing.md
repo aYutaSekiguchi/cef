@@ -133,6 +133,203 @@ ls -1t out/qnx_release/qnx_run_*.log | head
 tail -n 40 "$(ls -1t out/qnx_release/qnx_run_*.log | head -n 1)"
 ```
 
+
+## Crash and GDB workflow
+
+Use the QNX guest `gdb` for the first-pass stack trace.  It sees the same
+runtime paths as the crashed process (`/mnt/nfs/out/qnx_release`, `/usr/lib`,
+etc.), which avoids host/target sysroot drift while triaging crashes.
+
+### Stable interactive session
+
+Boot QEMU, mount the Chromium tree, and keep the guest alive:
+
+```bash
+cd <CHROMIUM_SRC_ROOT>
+./cef/tools/qnx_run_test.sh --mount-only --kill-existing
+```
+
+The runner prints the serial attach command, for example:
+
+```bash
+socat -,raw,echo=0 TCP:127.0.0.1:10024
+```
+
+Run interactive `gdb` from this serial shell, not through `--cmd`.  The
+`--cmd` path is best for non-interactive/batch commands because it wraps the
+command and waits for an exit marker.
+
+### Capture a core for a crash
+
+From the QNX serial shell:
+
+```sh
+cd /mnt/nfs/out/qnx_release
+rm -f ceftests*.core base_unittests*.core *.core
+ulimit -c unlimited
+
+# Keep dumper running before reproducing the crash.  -I includes the pid in
+# the file name, -n avoids overwriting, and -v prints the selected path.
+dumper -d /mnt/nfs/out/qnx_release -I -n -v &
+echo $! >/tmp/qnx-dumper.pid
+
+./ceftests \
+  --ozone-platform=headless \
+  --disable-gpu \
+  --disable-gpu-compositing \
+  --gtest_filter=BrowserSettingsTest.JavaScriptDisabled
+
+echo exit=$?
+sleep 1
+ls -lt *.core | head
+kill $(cat /tmp/qnx-dumper.pid) 2>/dev/null || true
+```
+
+For a hang or timeout with no crash, dump the live process instead:
+
+```sh
+pidin ar | grep ceftests
+# Replace <pid> with the process to inspect, such as the browser or renderer.
+dumper -p <pid> -d /mnt/nfs/out/qnx_release -I -n -v
+ls -lt *.core | head
+```
+
+### Get a stack trace in guest gdb
+
+Use the crashed executable that matches the core.  CEF child processes normally
+use the same executable with `--type=renderer`, `--type=gpu-process`, etc., so
+`ceftests` is usually still the right executable for `ceftests-<pid>.*.core`.
+
+Interactive form:
+
+```sh
+cd /mnt/nfs/out/qnx_release
+gdb -q ./ceftests ceftests-<pid>.<seq>.core
+```
+
+Useful commands inside `gdb`:
+
+```gdb
+set pagination off
+set print thread-events off
+bt 60
+frame 0
+info args
+info locals
+quit
+```
+
+Do not run `info threads` followed by `thread apply all bt`.  `libcef.so`
+ships huge `.debug_ranges` (about 120 MB) and `.debug_frame` (about 50 MB)
+sections that the QNX guest `gdb` cannot fit in its address space; iterating
+over every thread also walks all of them, which exhausts guest `gdb`
+virtual memory and produces `virtual memory exhausted: can't allocate NNNN bytes`.
+Stick to a single-thread `bt` and use the host-side cross-`gdb` fallback
+when full multi-thread state is needed.
+
+Batch form, which is safer for logs and for `qnx_run_test.sh --cmd`:
+
+```sh
+cd /mnt/nfs/out/qnx_release
+core=$(ls -1t ceftests*.core *.core 2>/dev/null | head -1)
+gdb -q -batch -nx \
+  -ex 'set sysroot /home/yuta/qnx800/target/qnx/x86_64' \
+  -ex 'set solib-search-path /home/yuta/chromium/src/out/qnx_release:/home/yuta/qnx800/target/qnx/x86_64/usr/lib:/home/yuta/qnx800/target/qnx/x86_64/lib' \
+  -ex 'file ./ceftests' \
+  -ex "core-file $core" \
+  -ex 'set pagination off' \
+  -ex 'set print thread-events off' \
+  -ex 'bt 60' \
+  -ex 'frame 0' \
+  ./ceftests \
+  | tee /mnt/nfs/out/qnx_release/gdb-ceftests.txt
+```
+
+Notes:
+
+- `-nx` skips `.gdbinit` so guest `gdb` does not eagerly load `libcef.so`'s
+  full `.debug_ranges` section.  Without `-nx` the session runs out of
+  virtual memory before producing a backtrace.
+- `set sysroot` and `set solib-search-path` redirect shared-library lookup
+  to the SDP target tree and the local `out/qnx_release`, so symbol
+  resolution does not require loading `libcef.so`'s debug info at all.
+- `file ./ceftests` followed by `core-file $core` loads the executable and
+  core explicitly after the sysroot is in place.
+
+### One-shot command from the host
+
+For a quick non-interactive check without attaching serial:
+
+```bash
+cd <CHROMIUM_SRC_ROOT>
+./cef/tools/qnx_run_test.sh --cmd '
+cd /mnt/nfs/out/qnx_release &&
+core=$(ls -1t ceftests*.core *.core 2>/dev/null | head -1) &&
+gdb -q -batch -nx \
+  -ex "set sysroot /home/yuta/qnx800/target/qnx/x86_64" \
+  -ex "set solib-search-path /home/yuta/chromium/src/out/qnx_release:/home/yuta/qnx800/target/qnx/x86_64/usr/lib:/home/yuta/qnx800/target/qnx/x86_64/lib" \
+  -ex "file ./ceftests" \
+  -ex "core-file $core" \
+  -ex "set pagination off" \
+  -ex "set print thread-events off" \
+  -ex "bt 60" \
+  -ex "frame 0" \
+  ./ceftests
+' --timeout 300 --kill-existing
+```
+
+Do not run interactive `gdb` through `--cmd`; it will wait for input and can
+hit the runner timeout.  If a command may page output, disable pagination or
+pipe it through `head`/`cat` with care.
+
+The QNX guest `gdb` cannot read `libcef.so`'s full `.debug_ranges` section
+(it is too large for the guest's address space) and prints a BFD error
+similar to:
+
+```text
+BFD: error: libcef.so(.debug_ranges) is too large (0x723ae10 bytes)
+warning: Can't read data for section '.debug_ranges' in file 'libcef.so'
+utils.c:681: internal-error: virtual memory exhausted: can't allocate 4064 bytes
+A problem internal to GDB has been detected,
+further debugging may prove unreliable
+```
+
+When you see this, the backtrace output is empty and only the BFD/GDB error
+is printed.  The recommended fix is the sysroot-based invocation shown
+above (`-nx`, `set sysroot`, `set solib-search-path`, `file` then
+`core-file`) which avoids loading `libcef.so`'s debug info and resolves
+symbols from the SDP target tree and the local `out/qnx_release` build
+artifacts instead.
+
+The same issue can also be triggered by `thread apply all bt` even when
+single-thread `bt` works.
+
+### Host-side fallback
+
+If the guest is unavailable, the QNX host cross-gdb is available in the SDP:
+
+```bash
+/home/yuta/qnx800/host/linux/x86_64/usr/bin/x86_64-nto-qnx8.0.0-gdb-14.2 \
+  -q out/qnx_release/ceftests out/qnx_release/ceftests-<pid>.<seq>.core
+```
+
+Prefer guest `gdb` for initial triage.  If host gdb cannot find QNX shared
+libraries, set the target sysroot to the SDP target tree, for example:
+
+```gdb
+set sysroot /home/yuta/qnx800/target/qnx/x86_64
+set solib-search-path /home/yuta/chromium/src/out/qnx_release:/home/yuta/qnx800/target/qnx/x86_64/usr/lib:/home/yuta/qnx800/target/qnx/x86_64/lib
+```
+
+### Cleanup
+
+Core files and GDB transcripts are local investigation artifacts.  Remove them
+before reporting or committing:
+
+```bash
+rm -f out/qnx_release/*.core out/qnx_release/gdb-*.txt
+```
+
 ## Known testing caveats
 
 | Issue | Notes |
