@@ -103,7 +103,7 @@ route add default 10.0.2.1
 fs-nfs3 10.0.2.1:/export/chromium-src /mnt/nfs
 cd /mnt/nfs/out/qnx_release
 export LD_LIBRARY_PATH=/mnt/nfs/out/qnx_release
-export CHROME_EXE_PATH=/mnt/nfs/out/qnx_release/base_unittests
+unset CHROME_EXE_PATH  # normally resolved via QNX /proc/self/exefile
 export CR_SOURCE_ROOT=/mnt/nfs
 ```
 

@@ -223,8 +223,7 @@ def main(argv=None) -> int:
             serial.boot_and_login()
             # Pick a sensible primary binary for the initial env setup.
             # Multi-binary groups have an empty modules[0].binary, so we
-            # fall back to the first BinarySpec name. The TestModule.run()
-            # call later re-exports CHROME_EXE_PATH per binary.
+            # fall back to the first BinarySpec name.
             primary = (
                 modules[0].binary
                 or modules[0].effective_binaries()[0].name
@@ -251,8 +250,7 @@ def main(argv=None) -> int:
         serial.boot_and_login()
         # Pick a sensible primary binary for the initial env setup.
         # Multi-binary groups have an empty modules[0].binary, so we
-        # fall back to the first BinarySpec name. The TestModule.run()
-        # call later re-exports CHROME_EXE_PATH per binary.
+        # fall back to the first BinarySpec name.
         primary = (
             modules[0].binary
             or modules[0].effective_binaries()[0].name

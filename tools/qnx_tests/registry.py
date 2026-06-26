@@ -223,18 +223,15 @@ class TestModule:
         over each ``BinarySpec`` and aggregates the per-binary results.
         A failure in any binary fails the whole group.
 
-        CHROME_EXE_PATH is reset for every binary so that QNX
-        ``base_paths_posix.cc`` resolves ``icudtl.dat`` (and DIR_ASSETS)
-        to the right place; this is what makes
-        ``swiftshader_reactor_llvm_unittests`` etc. find the ICU data
-        file the first binary's path would not point to.
+        QNX executable-path lookup normally uses ``/proc/self/exefile`` now,
+        so the runner intentionally keeps ``CHROME_EXE_PATH`` unset instead
+        of rewriting it for each binary.
         """
         all_results: List[Tuple[str, int, float]] = []
         total_failures = 0
         for spec in self.effective_binaries():
             label = spec.description or spec.name
             print(f"\n=== {self.name}: running {label} ({spec.name}) ===")
-            self._set_chrome_exe_path(serial, guest_build_dir, spec.name)
             sub = self._resolve(spec)
             failed, results = sub._run_with_strategy(
                 cfg, serial, guest_build_dir, cli_filter
@@ -243,21 +240,6 @@ class TestModule:
             all_results.extend(results)
         return total_failures, all_results
 
-    @staticmethod
-    def _set_chrome_exe_path(
-        serial: QNXSerial, guest_build_dir: str, binary: str
-    ) -> None:
-        """Re-export ``CHROME_EXE_PATH`` on the guest for the next binary.
-
-        The initial ``setup_env()`` call in ``cli.py`` exports
-        ``CHROME_EXE_PATH`` for the first binary only; in a group that
-        is empty, which makes ``base::TestSuite::InitializeICUForTesting``
-        fail with ``Invalid file descriptor to ICU data received`` for
-        every subsequent binary.  Re-exporting here fixes the group
-        case without changing the single-binary happy path.
-        """
-        cmd = f"export CHROME_EXE_PATH={guest_build_dir}/{binary}"
-        serial.run_command(cmd, timeout=15)
 
     def _run_with_strategy(
         self,

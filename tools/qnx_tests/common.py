@@ -255,7 +255,7 @@ class QNXSerial:
         ]
         env_lines = [
             f"export LD_LIBRARY_PATH={guest_build_dir}",
-            f"export CHROME_EXE_PATH={guest_build_dir}/{main_binary}",
+            "unset CHROME_EXE_PATH",
             "export CR_SOURCE_ROOT=/mnt/nfs",
         ]
         for var in extra_env:

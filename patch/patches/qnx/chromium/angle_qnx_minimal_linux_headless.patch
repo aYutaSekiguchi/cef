@@ -92,9 +92,9 @@ index 97da0bee25c4adf11cf99bc45e7ef13df1361e65..266839ba8ae353e28482bfe27d715eb9
  std::string GetExecutablePath()
  {
 +#if defined(__QNX__)
-+    // Chromium's QNX test runner already exports CHROME_EXE_PATH for the active
-+    // test binary.  QNX does not provide Linux's /proc/self/exe symlink, so use
-+    // that environment override first.
++    // Honor CHROME_EXE_PATH as an explicit override, but normal QNX test runs
++    // resolve the executable path via /proc/self/exefile below. QNX does not
++    // provide Linux's /proc/self/exe symlink.
 +    const char *executablePath = getenv("CHROME_EXE_PATH");
 +    if (executablePath != nullptr && executablePath[0] != '\0')
 +    {
