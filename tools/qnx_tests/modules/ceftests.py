@@ -22,3 +22,10 @@ class CefTestsModule(TestModule):
     default_timeout: int = 600
     default_batch_timeout: int = 7200
     default_exclusions: List[str] = field(default_factory=list)
+    per_test_args: List[str] = field(
+        default_factory=lambda: [
+            "--ozone-platform=headless",
+            "--disable-gpu",
+            "--disable-gpu-compositing",
+        ]
+    )

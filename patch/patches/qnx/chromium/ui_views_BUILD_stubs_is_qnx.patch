@@ -10,21 +10,3 @@ diff --git ui/views/BUILD.gn ui/views/BUILD.gn
          public += [
            "widget/desktop_aura/desktop_window_tree_host_platform.h",
            "widget/desktop_aura/window_move_client_platform.h",
-@@ -985,7 +985,7 @@ component("views") {
-   }
- }
- 
--if (is_win || is_mac || is_linux || is_chromeos) {
-+if ((is_win || is_mac || is_linux || is_chromeos) && !is_qnx) {
-   static_library("view_pixel_diff_test_support") {
-     testonly = true
-     sources = [
-@@ -1595,7 +1595,7 @@ test("views_unittests") {
-     ]
-   }
- 
--  if (is_win || is_mac || is_linux || is_chromeos) {
-+  if ((is_win || is_mac || is_linux || is_chromeos) && !is_qnx) {
-     sources += [ "test/view_skia_gold_pixel_diff_unittest.cc" ]
-     deps += [ "//ui/views:view_pixel_diff_test_support" ]
-   }
