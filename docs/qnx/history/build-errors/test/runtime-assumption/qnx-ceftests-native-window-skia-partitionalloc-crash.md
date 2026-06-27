@@ -170,8 +170,9 @@ cef/tools/qnx_tests/modules/ceftests.py  (+ headless per_test_args)
 
 ### Static analysis (binary disassembly)
 
-All 16 references to `offsets_to_metadata_` in the built `ceftests` binary
-use 64-bit registers (`%rsi`, `%rcx`, `%rdx`, `%rbp`, `%rdi`). No `lea %edx`
+The current `ceftests` binary still shows the `-mcmodel=medium` effect: all 16
+references to `PartitionAddressSpace::offsets_to_metadata_[]` use 64-bit
+registers (`%rsi`, `%rcx`, `%rdx`, `%rbp`, `%rdi`). No `lea %edx`
 truncation is present.
 
 ```asm
@@ -183,14 +184,40 @@ truncation is present.
 
 ### Runtime (QNX QEMU)
 
-| Test | Before | After |
-|------|--------|-------|
-| `BrowserSettingsTest.JavaScriptDisabled` | exit 139 (SIGSEGV) | PASS (exit 0) |
-| `FrameTest.SingleNav` | exit 139 (SIGSEGV) | PASS (exit 0) |
-| `NavigationTest.LoadSameOriginLoadURL` | exit 1 (timeout) | PASS (exit 0) |
-| `VersionTest.*` | PASS | PASS |
-| `OSRTest.Paint` | PASS | PASS |
-| `OSRTest.AccessibilityEnable/Disable` | PASS | PASS |
+The fix removed the earlier browser-startup crashes for narrow tests such as
+`BrowserSettingsTest.JavaScriptDisabled` and `FrameTest.SingleNav`, but the
+`AxViewportCollapseTest.CollapseDefault` path still reproduces a SIGSEGV in the
+browser paint stack:
+
+```text
+#0  FromFirstSuperPage()
+#4  Free()
+#5  ~SkTDArray()
+#6  ~SkEdgeBuilder()
+#7  aaa_fill_path()
+#22 GetBitmap()
+#27 GetPaintImage()
+#29 OnPaint()
+#55 PaintFromPaintRoot()
+#62 DoPainting()
+#63 BeginMainFrame()
+```
+
+The crash now happens while painting browser chrome (`ImageView::OnPaint` →
+Skia AA path fill), before the accessibility callback completes. That means the
+remaining blocker is no longer the browser-widget startup path; it is a
+browser-paint allocator/free ownership failure that still lands in
+`PartitionAlloc::FreeInlineInUnknownRoot()` on QNX.
+
+| Test | Result |
+|------|--------|
+| `AxViewportCollapseTest.CollapseDefault` | exit 139 (SIGSEGV) |
+| `BrowserSettingsTest.JavaScriptDisabled` | PASS (exit 0) |
+| `FrameTest.SingleNav` | PASS (exit 0) |
+| `NavigationTest.LoadSameOriginLoadURL` | PASS (exit 0) |
+| `VersionTest.*` | PASS |
+| `OSRTest.Paint` | PASS |
+| `OSRTest.AccessibilityEnable/Disable` | PASS |
 
 ## Remaining issues
 
