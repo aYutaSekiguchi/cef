@@ -1,0 +1,29 @@
+diff --git skia/ext/SkMemory_new_handler.cpp skia/ext/SkMemory_new_handler.cpp
+index 5908703ca723a7f72489a433b55d15bf2a14e208..9ff02a66d93f8b72cfcb66ee1f79e6bcd4921ae0 100644
+--- skia/ext/SkMemory_new_handler.cpp
++++ skia/ext/SkMemory_new_handler.cpp
+@@ -17,6 +17,10 @@
+ #include "third_party/skia/include/core/SkTypes.h"
+ #include "third_party/skia/include/private/base/SkMalloc.h"
+ 
++#if BUILDFLAG(IS_QNX)
++#include "partition_alloc/shim/allocator_shim.h"  // nogncheck
++#endif
++
+ #if BUILDFLAG(IS_WIN)
+ #include <malloc.h>
+ #include <windows.h>
+@@ -78,6 +82,13 @@ void* sk_realloc_throw(void* addr, size_t size) {
+     sk_careful_memcpy(result, addr, std::min(size, old_size));
+     sk_free(addr);
+     return result;
++#elif BUILDFLAG(IS_QNX)
++    // QNX links Skia into both the main test executable and libcef.so. A
++    // default-visibility call to realloc() from libcef can be interposed by
++    // the executable's allocator shim, while sk_free() later calls libcef's
++    // base::UncheckedFree() directly. Keep realloc in the current image's shim
++    // so allocation and free use the same PartitionAlloc state.
++    return throw_on_failure(size, allocator_shim::UncheckedRealloc(addr, size));
+ #else
+     return throw_on_failure(size, realloc(addr, size));
+ #endif
