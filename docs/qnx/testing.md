@@ -55,6 +55,13 @@ ANGLE broad run:
 ./cef/tools/qnx_run_test.sh --angle --timeout 7200 --kill-existing
 ```
 
+CEF API test broad execution on QNX uses one gtest per process so failures do
+not stop the remaining suite from being invoked:
+
+```bash
+./cef/tools/qnx_run_test.sh --ceftests --timeout 60 --kill-existing
+```
+
 Arbitrary guest command:
 
 ```bash
@@ -115,6 +122,7 @@ export CR_SOURCE_ROOT=/mnt/nfs
 | run one test | `./cef/tools/qnx_run_test.sh --timeout 600 'ProcessTest.Create'` |
 | run list-tests | `./cef/tools/qnx_run_test.sh --cmd './base_unittests --gtest_list_tests'` |
 | run ANGLE group | `./cef/tools/qnx_run_test.sh --angle --timeout 7200 --kill-existing` |
+| run ceftests per-test suite | `./cef/tools/qnx_run_test.sh --ceftests --timeout 60 --kill-existing` |
 | inspect QEMU interactively | `tmux attach -t <session>` when running inside tmux |
 
 ## Logs and results

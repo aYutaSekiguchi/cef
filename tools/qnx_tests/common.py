@@ -300,6 +300,28 @@ class QNXSerial:
                     if m:
                         return int(m.group(1)), raw
             time.sleep(0.05)
+        # The command timed out. Send Ctrl-C to get the shell back before the
+        # caller attempts any cleanup or follow-up command in the same QEMU
+        # session.
+        try:
+            self.sock.sendall(b"\x03")
+        except OSError:
+            return -1, raw
+
+        interrupt_deadline = time.time() + 10
+        while time.time() < interrupt_deadline:
+            try:
+                data = self.sock.recv(65536)
+            except (BlockingIOError, socket.timeout):
+                data = b""
+            if data:
+                raw += data
+                self.serial_fp.write(data)
+                sys.stdout.buffer.write(data)
+                sys.stdout.buffer.flush()
+                if looks_like_shell_prompt(raw):
+                    break
+            time.sleep(0.05)
         return -1, raw
 
     def close(self) -> None:
