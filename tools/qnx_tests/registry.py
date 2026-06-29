@@ -60,8 +60,6 @@ class BinarySpec:
     per_test_args: List[str] = field(default_factory=list)
     #: Whether to use ``--gtest_filter=<single>`` for per_test mode.
     one_test_per_process: Optional[bool] = None
-    #: Optional TMPDIR base path; absolute or relative to the guest build dir.
-    temp_dir_relpath: str = ""
     #: Whether to parse the V8-style unittests.status file for [SKIP].
     parse_status_file: Optional[bool] = None
     #: Status file path relative to ``CHROMIUM_SRC`` (only when
@@ -113,16 +111,6 @@ class TestModule:
     #: only one test runs per binary invocation.  This is the only way
     #: to drive ``v8_unittests`` (see build-error-index.md and the structured notes).
     one_test_per_process: bool = False
-    #: Optional TMPDIR base path; absolute or relative to the guest build dir.
-    #: Useful for tests that need short, isolated temp paths in a long QEMU
-    #: session.
-    temp_dir_relpath: str = ""
-    #: Optional cap used by --max-tests for per_test runs.
-    max_tests: int = 0
-    #: Unique suffix for per-run temporary directories.
-    temp_run_id: str = field(default_factory=lambda: str(int(time.time())))
-    #: Counter used to keep per-test TMPDIR paths short and unique.
-    temp_counter: int = 0
 
     def __post_init__(self) -> None:
         if not self.binary and not self.binaries:
@@ -182,9 +170,6 @@ class TestModule:
                 if spec.one_test_per_process is not None
                 else self.one_test_per_process
             ),
-            temp_dir_relpath=spec.temp_dir_relpath or self.temp_dir_relpath,
-            max_tests=self.max_tests,
-            temp_run_id=self.temp_run_id,
         )
 
     # The following are filled in by ``run()`` and ``_run_*()``.
@@ -198,43 +183,13 @@ class TestModule:
         and parses the GTest output.  Modules that need a different
         enumeration step (e.g. cctest) can override this.
         """
-        extra = " ".join(self.per_test_args)
-        cmd = (
-            f"cd {guest_build_dir} && "
-            f"{self._env_prefix(guest_build_dir, clean=True, suffix='_list')}"
-            f"./{self.binary} {extra} --gtest_list_tests 2>&1"
-        )
+        cmd = f"cd {guest_build_dir} && ./{self.binary} --gtest_list_tests 2>&1"
         ec, raw = serial.run_command(cmd, timeout=timeout)
         if ec != 0:
             raise RuntimeError(
                 f"{self.binary} --gtest_list_tests failed with exit {ec}"
             )
         return _parse_gtest_list(raw)
-
-    def _temp_dir(self, guest_build_dir: str, suffix: str = "") -> str:
-        if not self.temp_dir_relpath:
-            return ""
-        base = (self.temp_dir_relpath if self.temp_dir_relpath.startswith("/")
-                else f"{guest_build_dir}/{self.temp_dir_relpath}")
-        temp_dir = f"{base}/{self.temp_run_id}"
-        if suffix:
-            temp_dir = f"{temp_dir}/{suffix}"
-        return temp_dir
-
-    def _temp_suffix(self, name: str) -> str:
-        self.temp_counter += 1
-        return f"t{self.temp_counter:04d}"
-
-    def _env_prefix(self,
-                    guest_build_dir: str,
-                    clean: bool = False,
-                    suffix: str = "") -> str:
-        temp_dir = self._temp_dir(guest_build_dir, suffix)
-        if not temp_dir:
-            return ""
-        if clean:
-            return f"rm -rf {q(temp_dir)} && mkdir -p {q(temp_dir)} && TMPDIR={q(temp_dir)} "
-        return f"mkdir -p {q(temp_dir)} && TMPDIR={q(temp_dir)} "
 
     def build_invocation(
         self,
@@ -250,7 +205,6 @@ class TestModule:
         extra = " ".join(self.per_test_args)
         return (
             f"cd {guest_build_dir} && "
-            f"{self._env_prefix(guest_build_dir, suffix=self._temp_suffix(test_filter))}"
             f"./{self.binary} {extra} --gtest_filter={q(test_filter)} 2>&1"
         )
 
@@ -348,14 +302,6 @@ class TestModule:
                 print(f"After unittests.status [SKIP]: {len(tests)} tests "
                       f"(removed {before - len(tests)})")
 
-        if self.max_tests:
-            before = len(tests)
-            tests = tests[: self.max_tests]
-            print(f"After --max-tests {self.max_tests}: {len(tests)} tests "
-                  f"(from {before})")
-
-        self._cleanup_after_invocation(serial, guest_build_dir)
-
         # 4. Run each test
         results: List[Tuple[str, int, float]] = []
         for idx, name in enumerate(tests, 1):
@@ -367,22 +313,9 @@ class TestModule:
             results.append((name, ec, elapsed))
             status = "PASS" if ec == 0 else f"FAIL (exit {ec})"
             print(f"  {status} ({elapsed:.1f}s)")
-            # CEF/browser tests can leave renderer/browser child processes
-            # behind even when the main gtest process exits. Kill the test
-            # binary after every per-test invocation so stale children cannot
-            # accumulate and poison later tests in the same QEMU session.
-            self._cleanup_after_invocation(serial, guest_build_dir)
 
         failed = sum(1 for _, ec, _ in results if ec != 0)
         return failed, results
-
-    def _cleanup_after_invocation(
-        self,
-        serial: QNXSerial,
-        guest_build_dir: str,
-    ) -> None:
-        cleanup = f"slay -f -9 {self.binary} >/dev/null 2>&1 || true"
-        serial.run_command(cleanup, timeout=15)
 
 
 # ---------------------------------------------------------------------------
@@ -434,8 +367,6 @@ def _parse_gtest_list(raw: bytes) -> List[str]:
         line = re.sub(r"\x1b\?[0-9;]*[a-zA-Z]", "", line)
         stripped = line.strip()
         if not stripped:
-            continue
-        if stripped.startswith("__PI_QNX_EXIT__:"):
             continue
         if stripped.endswith(".") and not stripped.startswith(" "):
             current = stripped.rstrip(".")

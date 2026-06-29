@@ -282,7 +282,11 @@ def main(argv=None) -> int:
 
             # --max-tests cap
             if args.max_tests and m.strategy == "per_test":
-                m.max_tests = args.max_tests
+                orig_run = m._run_per_test
+                def _capped(cfg_, serial_, g, f, _orig=orig_run, cap=args.max_tests):
+                    failed, results = _orig(cfg_, serial_, g, f)
+                    return failed, results[:cap]
+                m._run_per_test = _capped  # type: ignore[method-assign]
 
             # Run
             filter_arg = args.filter_kw or args.filter or ""
