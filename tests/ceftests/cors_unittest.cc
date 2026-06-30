@@ -175,6 +175,17 @@ struct Resource {
     response = CefResponse::Create();
     response->SetMimeType(mime_type);
     response->SetStatus(status);
+#if defined(OS_QNX)
+    // QNX can stall when the test server reuses the main-frame HTTP/1.1
+    // connection for a subframe request, leaving the request waiting for
+    // response headers until test timeout. Close server-backed CorsTest
+    // responses so each navigation uses a fresh connection.
+    if (handler == HandlerType::SERVER) {
+      CefResponse::HeaderMap header_map;
+      header_map.insert(std::make_pair("Connection", "close"));
+      response->SetHeaderMap(header_map);
+    }
+#endif
   }
 
   // Validate expected initial state.
