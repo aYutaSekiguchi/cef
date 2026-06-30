@@ -25,6 +25,7 @@ class CefBrowserPlatformDelegateChrome
   void WebContentsDestroyed(content::WebContents* web_contents) override;
   void BrowserCreated(CefBrowserHostBase* browser) override;
   void BrowserDestroyed(CefBrowserHostBase* browser) override;
+  void RenderViewReady() override;
   CefWindowHandle GetHostWindowHandle() const override;
   web_modal::WebContentsModalDialogHost* GetWebContentsModalDialogHost()
       const override;

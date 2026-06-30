@@ -42,7 +42,21 @@ blink::PhysicalRect ComputeViewportRect(blink::Document& document) {
 bool IsNodeInViewport(const blink::AXObject& ax_object,
                       const blink::PhysicalRect& viewport_rect) {
   blink::PhysicalRect bounds = ax_object.GetBoundsInFrameCoordinates();
-  return bounds.Intersects(viewport_rect);
+  if (bounds.Intersects(viewport_rect)) {
+    return true;
+  }
+
+  // Some headless/Ozone configurations can produce empty AX bounds for visible
+  // text/landmark nodes while still reporting a meaningful origin. Treat that
+  // origin as visible if it falls inside the viewport.
+  if (bounds.IsEmpty()) {
+    return bounds.X() >= viewport_rect.X() &&
+           bounds.X() < viewport_rect.Right() &&
+           bounds.Y() >= viewport_rect.Y() &&
+           bounds.Y() < viewport_rect.Bottom();
+  }
+
+  return false;
 }
 
 ViewportCollapseAction ClassifyOffScreenNode(ax::mojom::blink::Role role) {

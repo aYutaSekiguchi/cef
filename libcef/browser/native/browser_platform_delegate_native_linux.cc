@@ -12,6 +12,7 @@
 #include "components/input/native_web_keyboard_event.h"
 #include "content/browser/renderer_host/render_widget_host_impl.h"
 #include "content/public/browser/render_view_host.h"
+#include "content/public/browser/render_widget_host_view.h"
 #include "third_party/blink/public/mojom/renderer_preferences.mojom.h"
 #include "ui/events/keycodes/dom/dom_key.h"
 #include "ui/events/keycodes/dom/keycode_converter.h"
@@ -40,6 +41,18 @@ void CefBrowserPlatformDelegateNativeLinux::BrowserDestroyed(
     browser->Release();
   }
 }
+
+namespace {
+
+gfx::Size GetWindowInfoSize(const CefWindowInfo& window_info) {
+  const int width =
+      window_info.bounds.width == 0 ? 800 : window_info.bounds.width;
+  const int height =
+      window_info.bounds.height == 0 ? 600 : window_info.bounds.height;
+  return gfx::Size(width, height);
+}
+
+}  // namespace
 
 bool CefBrowserPlatformDelegateNativeLinux::CreateHostWindow() {
   DCHECK(!window_widget_);
@@ -112,6 +125,20 @@ bool CefBrowserPlatformDelegateNativeLinux::CreateHostWindow() {
   web_contents_->SyncRendererPrefs();
 
   return true;
+}
+
+void CefBrowserPlatformDelegateNativeLinux::RenderViewReady() {
+  CefBrowserPlatformDelegateNativeAura::RenderViewReady();
+
+#if BUILDFLAG(IS_QNX)
+  // QNX uses Ozone headless without an X11/aura host window. Provide the
+  // initial view size directly to the RenderWidgetHostView so pages do not load
+  // with a 0x0 viewport.
+  if (auto* view = web_contents_->GetRenderWidgetHostView()) {
+    view->SetSize(GetWindowInfoSize(window_info_));
+    WasResized();
+  }
+#endif
 }
 
 void CefBrowserPlatformDelegateNativeLinux::CloseHostWindow() {
@@ -191,6 +218,11 @@ void CefBrowserPlatformDelegateNativeLinux::SizeTo(int width, int height) {
   if (window_x11_) {
     window_x11_->SetBounds(
         gfx::Rect(window_x11_->bounds().origin(), gfx::Size(width, height)));
+  }
+#elif BUILDFLAG(IS_QNX)
+  if (auto* view = web_contents_->GetRenderWidgetHostView()) {
+    view->SetSize(gfx::Size(width, height));
+    WasResized();
   }
 #endif  // BUILDFLAG(SUPPORTS_OZONE_X11)
 }

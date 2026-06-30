@@ -5,6 +5,7 @@
 #include "cef/libcef/browser/chrome/browser_platform_delegate_chrome.h"
 
 #include "base/notimplemented.h"
+#include "build/build_config.h"
 #include "cef/libcef/browser/views/view_util.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/browser.h"
@@ -44,6 +45,13 @@ void CefBrowserPlatformDelegateChrome::BrowserDestroyed(
     CefBrowserHostBase* browser) {
   CefBrowserPlatformDelegate::BrowserDestroyed(browser);
   native_delegate_->BrowserDestroyed(browser);
+}
+
+void CefBrowserPlatformDelegateChrome::RenderViewReady() {
+  CefBrowserPlatformDelegate::RenderViewReady();
+#if BUILDFLAG(IS_QNX)
+  native_delegate_->RenderViewReady();
+#endif
 }
 
 CefWindowHandle CefBrowserPlatformDelegateChrome::GetHostWindowHandle() const {

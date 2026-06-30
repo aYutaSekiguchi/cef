@@ -23,6 +23,7 @@ class CefBrowserPlatformDelegateNativeLinux
   // CefBrowserPlatformDelegate methods:
   void BrowserDestroyed(CefBrowserHostBase* browser) override;
   bool CreateHostWindow() override;
+  void RenderViewReady() override;
   void CloseHostWindow() override;
   CefWindowHandle GetHostWindowHandle() const override;
   views::Widget* GetWindowWidget() const override;
