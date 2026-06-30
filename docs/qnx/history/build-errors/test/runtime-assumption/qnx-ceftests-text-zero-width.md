@@ -56,6 +56,12 @@ family lookup without falling through to a hard-coded empty string.
 - Do not weaken `DownloadTest.ClickedRCNone` or `DisplayTest.AutoResize` by
   changing click coordinates or text content; the next iteration must make
   the inline box height match the font ascent/descent.
+- Do not bypass the underlying hit-test failure in the shared
+  `SendJavaScriptClickEvent` test helper (selecting the first `<a>` and
+  calling `element.click()` instead of dispatching a `MouseEvent` at the
+  original coordinates). That drops button/modifier/client-coordinate
+  semantics for every caller of the helper and hides the real layout
+  bug; any fix for `DownloadTest.*` must be per-test.
 - This change does not wire Skia to fontconfig. If a future iteration wants
   name-based font matching, it should add `font_fallback_linux.cc` and link
   `//third_party/fontconfig` for the QNX toolchain.
