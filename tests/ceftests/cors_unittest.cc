@@ -389,7 +389,16 @@ class CorsTestHandler : public RoutingTestHandler {
   // Necessary to make the method public in order to destroy the test from
   // ClientSchemeHandlerType::ProcessRequest().
   void DestroyTest() override {
-    EXPECT_TRUE(shutting_down_);
+    if (!CefCurrentlyOn(TID_UI)) {
+      CefPostTask(TID_UI, base::BindOnce(&CorsTestHandler::DestroyTest, this));
+      return;
+    }
+
+    if (!shutting_down_) {
+      shutting_down_ = true;
+      StopServer();
+      return;
+    }
 
     if (setup_->NeedsServer()) {
       EXPECT_TRUE(got_stopped_server_);
@@ -732,6 +741,10 @@ struct CookieTestSetup : TestSetup {
     }
 
     EXPECT_EQ(1U, cookies.size());
+    if (cookies.size() != 1U) {
+      return false;
+    }
+
     const std::string& cookie = CefString(&cookies[0].name).ToString() + "=" +
                                 CefString(&cookies[0].value).ToString();
     EXPECT_STREQ(kDefaultCookie, cookie.c_str());
