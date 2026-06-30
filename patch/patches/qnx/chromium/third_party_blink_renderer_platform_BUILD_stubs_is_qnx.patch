@@ -5,7 +5,7 @@ index eb2472737bd6e..980741e8874f9 100644
 @@ -1734,6 +1734,10 @@ component("platform") {
      ]
    }
- 
+
 +  if (is_qnx) {
 +    sources += [ "fonts/linux/font_cache_linux_qnx.cc" ]
 +  }
@@ -13,3 +13,23 @@ index eb2472737bd6e..980741e8874f9 100644
    if (is_win) {
      sources += [
        "fonts/win/dwrite_font_format_support.cc",
+diff --git third_party/blink/renderer/platform/fonts/skia/font_cache_skia.cc third_party/blink/renderer/platform/fonts/skia/font_cache_skia.cc
+index eb2472737bd6e..980741e8874f9 100644
+--- third_party/blink/renderer/platform/fonts/skia/font_cache_skia.cc
++++ third_party/blink/renderer/platform/fonts/skia/font_cache_skia.cc
+@@ -260,6 +260,7 @@ const SimpleFontData* FontCache::GetLastResortFallbackFont(
+   return FontDataFromFontPlatformData(font_platform_data);
+ }
+
++#if !BUILDFLAG(IS_QNX)
+ sk_sp<SkTypeface> FontCache::CreateTypeface(
+     const FontDescription& font_description,
+     const FontFaceCreationParams& creation_params,
+@@ -304,6 +305,7 @@ sk_sp<SkTypeface> FontCache::CreateTypeface(
+       name.empty() ? nullptr : name.c_str(), font_description.SkiaFontStyle()));
+ }
+
++#endif  // !BUILDFLAG(IS_QNX)
+ #if !BUILDFLAG(IS_WIN)
+ const FontPlatformData* FontCache::CreateFontPlatformData(
+     const FontDescription& font_description,
