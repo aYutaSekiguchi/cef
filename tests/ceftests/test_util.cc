@@ -454,19 +454,6 @@ void SendJavaScriptClickEvent(CefRefPtr<CefBrowser> browser,
       "    console.error('No element found at coordinates');"
       "    return false;"
       "  }"
-#if defined(OS_QNX)
-      // QNX headless layout can position an inline <a> so its bounding rect
-      // does not contain the intended hit-test point even though the link
-      // visually contains it. Fall back to the first anchor in the document
-      // and use element.click() so the browser default action (navigation)
-      // fires even when the dispatched MouseEvent would not be considered a
-      // trusted user gesture on QNX headless.
-      "  if (!element.href) {"
-      "    var anchor = document.querySelector('a[href]');"
-      "    if (anchor) { element = anchor; }"
-      "  }"
-      "  if (element.click) { element.click(); return true; }"
-#endif
       "  var event = new MouseEvent('click', {"
       "    view: window,"
       "    bubbles: true,"
