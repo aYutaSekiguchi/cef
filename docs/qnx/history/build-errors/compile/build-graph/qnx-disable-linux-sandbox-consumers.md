@@ -67,7 +67,6 @@
 The patch updates the Linux sandbox consumer conditions in:
 
 - `sandbox/BUILD.gn`
-- `content/common/BUILD.gn`
 - `services/audio/BUILD.gn`
 - `services/network/BUILD.gn`
 - `chrome/common/BUILD.gn`
@@ -75,6 +74,13 @@ The patch updates the Linux sandbox consumer conditions in:
 - `content/utility/BUILD.gn`
 - `content/utility/speech/BUILD.gn`
 - `services/screen_ai/BUILD.gn`
+
+`content/common/BUILD.gn` uses the same `&& !is_qnx` sandbox-consumer
+condition, but that hunk is now carried by the earlier
+`content_common_font_list_fontconfig_qnx.patch` because the fontconfig wiring
+also updates the adjacent `content/common` Linux/ChromeOS branch. Keeping the
+same hunk in both patches made clean bootstrap fail with
+`content/common/BUILD.gn: patch does not apply`.
 
 Representative hunks:
 
@@ -101,8 +107,13 @@ Representative hunks:
 
 ## Verification
 
-- `git apply --check cef/patch/patches/qnx/chromium/sandbox_consumers_disable_linux_sandbox_qnx.patch` passed against the current bootstrap-applied tree.
-- A clean-tree bootstrap still succeeded after registering the patch in `patch.cfg` (`bootstrap exit: 0`).
+- 2026-07-01 refresh: removed the duplicate `content/common/BUILD.gn` hunk
+  now owned by `content_common_font_list_fontconfig_qnx.patch`; clean bootstrap
+  had failed with `content/common/BUILD.gn: patch does not apply` when this
+  later sandbox patch tried to re-apply the same condition change.
+- Clean-tree bootstrap patch phase succeeded after the refresh:
+  `431 patches total (364 applied, 67 skipped, 0 failed)`.
+- `gn gen` completed and `cef_create_projects_qnx.sh` exited successfully.
 - Re-running `./out/qnx_release/ninja_qnx.sh cefsimple` no longer produced any of the previous Linux sandbox residual signatures:
   - `sandbox/linux/sandbox_services` hits: `0`
   - `sys/syscall.h` hits: `0`

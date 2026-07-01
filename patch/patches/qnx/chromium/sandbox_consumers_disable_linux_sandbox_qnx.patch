@@ -11,19 +11,6 @@ index 0820bc89c5ba3..41d9e06bf7dd0 100644
      public_deps = [ "//sandbox/linux:sandbox" ]
    }
  }
-diff --git content/common/BUILD.gn content/common/BUILD.gn
-index 5487c3756c603..463f7160eb5e1 100644
---- content/common/BUILD.gn
-+++ content/common/BUILD.gn
-@@ -367,7 +367,7 @@ source_set("common") {
-     sources -= [ "cursors/webcursor_aura.cc" ]
-   }
- 
--  if (is_linux || is_chromeos) {
-+  if ((is_linux || is_chromeos) && !is_qnx) {
-     sources += [
-       "gpu_pre_sandbox_hook_linux.cc",
-       "gpu_pre_sandbox_hook_linux.h",
 diff --git services/audio/BUILD.gn services/audio/BUILD.gn
 index 735d0629d663e..006e49100108d 100644
 --- services/audio/BUILD.gn
