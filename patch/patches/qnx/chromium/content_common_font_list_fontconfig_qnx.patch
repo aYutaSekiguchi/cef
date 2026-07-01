@@ -1,12 +1,28 @@
 diff --git content/common/BUILD.gn content/common/BUILD.gn
+index 5487c3756c60389a3442c2e59a08c91890fb6f87..162f31230af9b796e87c42499c052d862ee5303c 100644
 --- content/common/BUILD.gn
 +++ content/common/BUILD.gn
-@@ -393,7 +393,7 @@ source_set("common") {
-     ]
+@@ -281,6 +281,14 @@ source_set("common") {
+     "//url/ipc:url_ipc",
+   ]
+ 
++  # On QNX, font_list_fontconfig.cc is compiled and uses the bundled
++  # fontconfig (system fontconfig is unavailable on QNX SDP 8). The
++  # fontconfig_config public_config exports its include_dirs, so the
++  # fontconfig headers are visible to this target.
++  if (is_qnx) {
++    deps += [ "//third_party/fontconfig" ]
++  }
++
+   defines = []
+   include_dirs = []
+   libs = []
+@@ -367,7 +375,7 @@ source_set("common") {
+     sources -= [ "cursors/webcursor_aura.cc" ]
    }
-
--  if (is_mac || is_win || is_android || is_fuchsia || is_ios) {
-+  if (is_mac || is_win || is_android || is_fuchsia || is_ios || is_qnx) {
-     sources -= [ "font_list_fontconfig.cc" ]
-   }
-
+ 
+-  if (is_linux || is_chromeos) {
++  if ((is_linux || is_chromeos) && !is_qnx) {
+     sources += [
+       "gpu_pre_sandbox_hook_linux.cc",
+       "gpu_pre_sandbox_hook_linux.h",

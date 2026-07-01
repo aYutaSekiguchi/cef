@@ -390,6 +390,10 @@ chrome_pgo_phase = 0
 
 # UI: Ozone only, no desktop Linux frameworks
 use_ozone = true
+# Build fontconfig in-tree because QNX SDP 8 has no usable system fontconfig
+# and ui/gfx uses it for system font matching on every platform that links
+# the Linux font sources.
+use_bundled_fontconfig = true
 use_qt = false
 use_qt5 = false
 use_qt6 = false

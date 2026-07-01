@@ -1,35 +1,40 @@
 diff --git third_party/blink/renderer/platform/BUILD.gn third_party/blink/renderer/platform/BUILD.gn
-index eb2472737bd6e..980741e8874f9 100644
+index eb2472737bd6e20a6bf9fdb311a412036d7dbff7..e3e64e8cb6c9f22c49a0aeb68f40019ffe98b6e1 100644
 --- third_party/blink/renderer/platform/BUILD.gn
 +++ third_party/blink/renderer/platform/BUILD.gn
-@@ -1734,6 +1734,10 @@ component("platform") {
-     ]
+@@ -1726,7 +1726,7 @@ component("platform") {
+   if (is_ios) {
+     sources += [ "fonts/ios/font_cache_ios.mm" ]
    }
-
-+  if (is_qnx) {
-+    sources += [ "fonts/linux/font_cache_linux_qnx.cc" ]
-+  }
-+
-   if (is_win) {
+-  if (is_linux || is_chromeos) {
++  if (is_linux || is_chromeos || is_qnx) {
      sources += [
-       "fonts/win/dwrite_font_format_support.cc",
-diff --git third_party/blink/renderer/platform/fonts/skia/font_cache_skia.cc third_party/blink/renderer/platform/fonts/skia/font_cache_skia.cc
-index eb2472737bd6e..980741e8874f9 100644
---- third_party/blink/renderer/platform/fonts/skia/font_cache_skia.cc
-+++ third_party/blink/renderer/platform/fonts/skia/font_cache_skia.cc
-@@ -260,6 +260,7 @@ const SimpleFontData* FontCache::GetLastResortFallbackFont(
-   return FontDataFromFontPlatformData(font_platform_data);
- }
-
-+#if !BUILDFLAG(IS_QNX)
- sk_sp<SkTypeface> FontCache::CreateTypeface(
-     const FontDescription& font_description,
-     const FontFaceCreationParams& creation_params,
-@@ -304,6 +305,7 @@ sk_sp<SkTypeface> FontCache::CreateTypeface(
-       name.empty() ? nullptr : name.c_str(), font_description.SkiaFontStyle()));
- }
-
-+#endif  // !BUILDFLAG(IS_QNX)
- #if !BUILDFLAG(IS_WIN)
- const FontPlatformData* FontCache::CreateFontPlatformData(
-     const FontDescription& font_description,
+       "fonts/linux/font_cache_linux.cc",
+       "fonts/linux/font_unique_name_lookup_linux.cc",
+diff --git third_party/blink/renderer/platform/fonts/font_cache.h third_party/blink/renderer/platform/fonts/font_cache.h
+index a68b577ba4d5bc069a94471edea438e878fc0e6e..e5417c0d5f679d0294d354a935fb2b5510a5abe2 100644
+--- third_party/blink/renderer/platform/fonts/font_cache.h
++++ third_party/blink/renderer/platform/fonts/font_cache.h
+@@ -53,7 +53,7 @@
+ #include "third_party/skia/include/core/SkFontMgr.h"
+ #include "third_party/skia/include/core/SkRefCnt.h"
+ 
+-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_QNX)
+ #include "ui/gfx/font_fallback_linux.h"
+ #endif
+ 
+@@ -226,11 +226,11 @@ class PLATFORM_EXPORT FontCache final {
+       const char* locale_family_name);
+ #endif  // BUILDFLAG(IS_ANDROID)
+ 
+-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_QNX)
+   static bool GetFontForCharacter(UChar32,
+                                   const char* preferred_locale,
+                                   gfx::FallbackFontData*);
+-#endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
++#endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_QNX)
+ 
+   const SimpleFontData* FontDataFromFontPlatformData(
+       const FontPlatformData*,

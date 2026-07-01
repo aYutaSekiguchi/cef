@@ -81,23 +81,6 @@ index 9c0226c82be4e8dd26301c3c45e568df25806e14..30e2ad1e85af6f221739ce91c910b501
    struct EventInfo {
      raw_ptr<const void> unique_id;
    };
-   std::vector<EventInfo> events_being_processed_;
-#endif
-diff --git content/common/BUILD.gn content/common/BUILD.gn
-index 463f7160eb5e100f93d9c98b2bb6cf2a07e72a76..5b8b4e7db812fb0ecad6fb6e488a19f6e1b9f4f1 100644
---- content/common/BUILD.gn
-+++ content/common/BUILD.gn
-@@ -396,6 +396,10 @@ source_set("common") {
-     sources -= [ "font_list_fontconfig.cc" ]
-   }
- 
-+  if (is_qnx) {
-+    sources += [ "font_list_qnx.cc" ]
-+  }
-+
-   if (is_mac) {
-     deps += [ "//media/gpu" ]
-   }
 diff --git content/renderer/BUILD.gn content/renderer/BUILD.gn
 index bbb6f87c5b824b6899b07de1a0e202903c2c983a..8f8ebad8ca7b7db95fc96d099f1bf8d7f1321f26 100644
 --- content/renderer/BUILD.gn

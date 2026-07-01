@@ -116,6 +116,15 @@ diff --git third_party/fontconfig/BUILD.gn third_party/fontconfig/BUILD.gn
 index 58e3e4e802edb..312c213f01f4c 100644
 --- third_party/fontconfig/BUILD.gn
 +++ third_party/fontconfig/BUILD.gn
+@@ -6,7 +6,7 @@ import("//build/rust/rust_bindgen.gni")
+ import("//build/rust/rust_static_library.gni")
+ import("//third_party/fontconfig/fontconfig.gni")
+ 
+-assert(is_linux || is_chromeos)
++assert(is_linux || is_chromeos || is_qnx)
+ 
+ if (use_bundled_fontconfig) {
+   rust_bindgen("fontconfig_h_bindgen") {
 @@ -77,13 +77,32 @@ if (use_bundled_fontconfig) {
    }
  
@@ -228,3 +237,18 @@ index 6d1e9b1dd35bf..18c12477d686e 100644
      # Include hardware performance counter support.
      defines += [ "HAVE_LIBPFM=1" ]
      deps = [ "//third_party/libpfm4" ]
+diff --git third_party/fontconfig/fontconfig.gni third_party/fontconfig/fontconfig.gni
+index 9688854d28af21f8a67ba57b01048d9be26ab547..378f08043fc700c2772eb538abbfef4354b09858 100644
+--- third_party/fontconfig/fontconfig.gni
++++ third_party/fontconfig/fontconfig.gni
+@@ -4,8 +4,8 @@
+ 
+ import("//build/config/chromeos/args.gni")
+ 
+-assert(is_linux || is_chromeos)
++assert(is_linux || is_chromeos || is_qnx)
+ 
+ declare_args() {
+-  use_bundled_fontconfig = (is_linux || is_chromeos) && !is_chromeos_device
++  use_bundled_fontconfig = (is_linux || is_chromeos || is_qnx) && !is_chromeos_device
+ }
