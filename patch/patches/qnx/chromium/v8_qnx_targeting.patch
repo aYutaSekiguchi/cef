@@ -168,3 +168,30 @@
      !V8_USE_ADDRESS_SANITIZER && !V8_USE_MEMORY_SANITIZER && defined(DEBUG) && \
      V8_COMPRESS_POINTERS && !defined(V8_GC_MOLE) && defined(_LIBCPP_VERSION)
  #define UPDATE_WHEN_CLASS_CHANGES(classname, size)                       \
+diff --git v8/src/common/globals.h v8/src/common/globals.h
+index 9419d7fedfeddfc870ad20170fa2af4c2f267ba8..ee032ffba30dd67e4aa7075140e689ed223548c8 100644
+--- v8/src/common/globals.h
++++ v8/src/common/globals.h
+@@ -503,9 +503,22 @@ constexpr size_t kMaximalCodeRangeSize =
+                                                              : 256 * MB;
+ constexpr size_t kMinExpectedOSPageSize = 4 * KB;  // OS page.
+ #elif V8_TARGET_ARCH_X64
++#if V8_OS_QNX
++// QNX SDP 8 runs under QEMU with -m 4G by default. The full 128MB (with
++// pointer compression) / 512MB (without) CodeRange reservation reliably
++// fails with `V8 process OOM (Failed to reserve virtual memory for
++// CodeRange)` for some cross-origin CorsTest and FrameHandlerTest
++// scenarios, manifesting as test-handler timeouts (10s default).
++// 64MB is enough to compile the JS V8 sees in ceftests, while keeping
++// the reservation well under the address space the QEMU process can
++// actually hand out. Production V8 on QNX (if ever shipped) would
++// have a different memory budget and this branch would be removed.
++constexpr size_t kMaximalCodeRangeSize = 64 * MB;
++#else
+ constexpr size_t kMaximalCodeRangeSize =
+     (COMPRESS_POINTERS_BOOL && !V8_EXTERNAL_CODE_SPACE_BOOL) ? 128 * MB
+                                                              : 512 * MB;
++#endif  // V8_OS_QNX
+ constexpr size_t kMinExpectedOSPageSize = 4 * KB;  // OS page.
+ #else
+ constexpr size_t kMaximalCodeRangeSize = 128 * MB;

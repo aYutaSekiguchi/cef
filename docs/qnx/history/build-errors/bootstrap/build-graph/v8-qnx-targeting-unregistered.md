@@ -120,14 +120,80 @@ shows the guard is in place after bootstrap, and
 `out/qnx_release/obj/v8/v8_libbase/platform-posix.o` is built (it was
 missing in the previous state).
 
+## Follow-up: V8 CodeRange reduction (2026-07-01)
+
+A second issue surfaces once the sys/syscall.h guard is in place and
+`ninja ceftests` reaches the link step on QEMU/QNX with `-m 4G`: some
+CorsTest and FrameHandlerTest sub-processes still die at
+
+```
+[ERROR:third_party/blink/renderer/bindings/core/v8/v8_initializer.cc:944]
+V8 process OOM (Failed to reserve virtual memory for CodeRange).
+```
+
+`v8/src/heap/heap.cc::InitCodeRange` calls
+`isolate_group()->EnsureCodeRange(kMaximalCodeRangeSize)`, which on
+x64 + pointer compression requests a 128MB `mmap`. On QEMU/QNX
+4GB the `mmap` for that region fails even though the address space
+should fit — the failure is reproducible on every clean bootstrap and
+manifests as test-handler timeouts (10s default) for the affected
+test (no successful `CefRequestHandler::On*` callback to count).
+
+**Fix.** Add a QNX-only override of `kMaximalCodeRangeSize` in
+`v8/src/common/globals.h` that drops the reservation to 64MB. This is
+below the threshold the QEMU process can hand out and is still large
+enough to compile the JS V8 sees in ceftests. The change is added as a
+new hunk in `v8_qnx_targeting.patch` (not a new patch), so the
+existing patch hygiene / registration story above continues to apply.
+A `git diff` of the patch shows the hunk at the end:
+
+```diff
++diff --git v8/src/common/globals.h v8/src/common/globals.h
++--- v8/src/common/globals.h
+++++ v8/src/common/globals.h
++@@ -503,9 +503,22 @@ constexpr size_t kMaximalCodeRangeSize =
++ constexpr size_t kMinExpectedOSPageSize = 4 * KB;  // OS page.
++ #elif V8_TARGET_ARCH_X64
+++#if V8_OS_QNX
+++// (QNX-specific comment: 64MB is enough for ceftests, see note)
+++constexpr size_t kMaximalCodeRangeSize = 64 * MB;
+++#else
++ constexpr size_t kMaximalCodeRangeSize =
++     (COMPRESS_POINTERS_BOOL && !V8_EXTERNAL_CODE_SPACE_BOOL) ? 128 * MB
++                                                              : 512 * MB;
+++#endif  // V8_OS_QNX
++ constexpr size_t kMinExpectedOSPageSize = 4 * KB;  // OS page.
+```
+
+**Verified.** After a clean-tree bootstrap + `ninja ceftests` with this
+patch applied:
+- `DownloadTest.*` still passes 31/31 (font fix regression check).
+- `FrameHandlerTest.OrderSubCrossOriginPeersNavCrossOrigin` (the
+  handoff-doc open item) now passes in 1.3s.
+- `CorsTest.IframeAllowScriptsAndSameOriginCustomUnregisteredSchemeToCustomUnregisteredScheme`
+  now passes.
+- 2 CorsTest cases (`XhrNoHeaderServerToHttpScheme` and
+  `XhrNoHeaderHttpSchemeToCustomStandardScheme`) still fail with
+  10s test-handler timeouts, but the failure mode is now `Test timed
+  out` (not V8 OOM) — a pre-existing CORS test-infrastructure issue
+  unrelated to either the sys/syscall.h guard or the CodeRange shrink.
+  Track separately under `docs/qnx/history/build-errors/test/runtime-assumption/`.
+
+**Not done.** `--jitless` (run-time alternative that drops CodeRange
+entirely) was tried and rejected: it fixes 3 of 4 V8-OOM cases but
+makes the XHR tests time out at 10s because V8 falls back to
+interpreter mode. The 64MB shrink keeps JIT enabled and avoids that
+regression.
+
 ## Cross-references
 
 - `cef/.agents/skills/qnx-cef-build/SKILL.md` describes the clean-tree
   recipe this note assumes.
 - `docs/qnx/build-error-index.md` adds the search terms
   `v8_qnx_targeting_unregistered|v8_qnx_targeting_registered|v8
-  platform-posix.cc sys/syscall.h|v8 BUILD.gn V8_TARGET_OS_QNX` to
-  surface this category of issue.
+  platform-posix.cc sys/syscall.h|v8 BUILD.gn V8_TARGET_OS_QNX|
+  v8_kMaximalCodeRangeSize_64MB_qnx|V8 process OOM CodeRange
+  QEMU 4G` to surface this category of issue.
 - `docs/qnx/history/build-errors/bootstrap/build-graph/cef-managed-patch-registration-and-clean-bootstrap.md`
   is the broader pattern: every patch under `patches/qnx/chromium/`
   must be registered in `patch.cfg`, and the clean-tree recipe is the
