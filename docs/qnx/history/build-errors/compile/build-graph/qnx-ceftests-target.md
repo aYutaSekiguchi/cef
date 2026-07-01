@@ -34,10 +34,13 @@ Files:
 - `cef/tests/ceftests/osr_accessibility_unittest.cc`
 - `cef/tools/qnx_run_test.sh`
 - `cef/tools/qnx_tests/modules/__init__.py`
+- `cef/tools/qnx_tests/modules/ceftests.py` (tracked in the CEF repo; do not
+  mirror it under `patch/qnx/chromium/new_files/cef/tools/...` because the
+  bootstrap Phase 1 copy would overwrite the tracked file and dirty the CEF
+  worktree)
 - `cef/patch/qnx/chromium/new_files/cef/tests/ceftests/resource_util_qnx.cc`
 - `cef/patch/qnx/chromium/new_files/cef/tests/shared/browser/main_message_loop_external_pump_qnx.cc`
 - `cef/patch/qnx/chromium/new_files/cef/libcef/browser/print_settings_impl_qnx.cc`
-- `cef/patch/qnx/chromium/new_files/cef/tools/qnx_tests/modules/ceftests.py`
 
 The QNX build now includes `ceftests`, copies `ceftests_files`, uses QNX resource lookup, and registers `tools/qnx_run_test.sh --ceftests`.
 
