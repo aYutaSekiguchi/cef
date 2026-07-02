@@ -17,6 +17,8 @@ CMD_TIMEOUT="${CMD_TIMEOUT:-1800}"
 KEEP_QEMU=0
 MOUNT_ONLY=0
 KILL_EXISTING=0
+QEMU_GRAPHICS="${QEMU_GRAPHICS:-headless}"
+QEMU_DISPLAY_BACKEND="${QEMU_DISPLAY_BACKEND:-gtk}"
 
 usage() {
   cat <<EOF
@@ -27,6 +29,7 @@ Examples:
   $0 -- ./base_unittests --gtest_filter=-*DeathTest*
   $0 --keep-qemu -- bash
   $0 --mount-only
+  $0 --qemu-graphics virgl -- egl-configs
 
 Behavior:
   - mounts /export/chromium-src at /mnt/nfs in the guest
@@ -40,6 +43,11 @@ Options:
   --keep-qemu          Leave QEMU running after the command finishes
   --mount-only         Boot QNX, mount NFS, and leave QEMU running
   --kill-existing      Kill any stale qemu-system-x86_64 first
+  --qemu-graphics MODE QEMU display mode: headless, window, or virgl
+                       (default: $QEMU_GRAPHICS)
+  --virgl              Alias for --qemu-graphics virgl
+  --qemu-display NAME  QEMU display backend for window/virgl modes
+                       (default: $QEMU_DISPLAY_BACKEND; e.g. gtk, sdl)
   --env NAME=VALUE     Extra guest environment variable (may repeat)
   -h, --help           Show help
 
@@ -82,6 +90,26 @@ while [[ $# -gt 0 ]]; do
       KILL_EXISTING=1
       shift
       ;;
+    --qemu-graphics)
+      QEMU_GRAPHICS="${2:?--qemu-graphics requires a mode}"
+      shift 2
+      ;;
+    --qemu-graphics=*)
+      QEMU_GRAPHICS="${1#*=}"
+      shift
+      ;;
+    --virgl)
+      QEMU_GRAPHICS="virgl"
+      shift
+      ;;
+    --qemu-display)
+      QEMU_DISPLAY_BACKEND="${2:?--qemu-display requires a backend name}"
+      shift 2
+      ;;
+    --qemu-display=*)
+      QEMU_DISPLAY_BACKEND="${1#*=}"
+      shift
+      ;;
     --env)
       EXTRA_ENV+=("${2:?--env requires NAME=VALUE}")
       shift 2
@@ -115,6 +143,16 @@ while [[ $# -gt 0 ]]; do
   POSITIONAL+=("$1")
   shift
 done
+
+case "$QEMU_GRAPHICS" in
+  headless|window|virgl)
+    ;;
+  *)
+    echo "ERROR: unsupported --qemu-graphics mode: $QEMU_GRAPHICS" >&2
+    echo "       Supported modes: headless, window, virgl" >&2
+    exit 2
+    ;;
+esac
 
 if [[ "$MOUNT_ONLY" == 1 ]]; then
   QNX_CMD="true"
@@ -211,6 +249,10 @@ echo "Disk:      $QNX_DISK"
 echo "Build dir: $BUILD_DIR"
 echo "Guest dir: $GUEST_BUILD_DIR"
 echo "Serial:    127.0.0.1:$SERIAL_PORT"
+echo "Graphics:  $QEMU_GRAPHICS"
+if [[ "$QEMU_GRAPHICS" != "headless" ]]; then
+  echo "Display:   $QEMU_DISPLAY_BACKEND"
+fi
 echo "Log:       $HOST_LOG"
 if [[ -n "$QNX_CMD" ]]; then
   echo "Command:   $QNX_CMD"
@@ -225,13 +267,25 @@ else
   QEMU_DISK_ARGS=(-drive "file=$QNX_DISK,if=ide,id=drv0")
 fi
 
+case "$QEMU_GRAPHICS" in
+  headless)
+    QEMU_GRAPHICS_ARGS=(-nographic)
+    ;;
+  window)
+    QEMU_GRAPHICS_ARGS=(-display "$QEMU_DISPLAY_BACKEND")
+    ;;
+  virgl)
+    QEMU_GRAPHICS_ARGS=(-vga none -device virtio-vga-gl -display "$QEMU_DISPLAY_BACKEND,gl=on")
+    ;;
+esac
+
 QEMU_ARGS=(
   --enable-kvm
   "${QEMU_DISK_ARGS[@]}"
   -netdev tap,id=net0,ifname=tap0,script=no,downscript=no
   -device virtio-net-pci,netdev=net0
   -kernel "$QEMU_DIR/output/ifs.bin"
-  -nographic
+  "${QEMU_GRAPHICS_ARGS[@]}"
   -monitor none
   -serial tcp:127.0.0.1:$SERIAL_PORT,server,nowait
   --cpu host,host-phys-bits-limit=40
