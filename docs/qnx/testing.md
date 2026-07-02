@@ -95,6 +95,58 @@ environment-specific failures:
 - `ImportantFileWriterTest.FailedWriteWithObserver`
 - `*AnyCriticalThreadHung*`
 
+## GUI / Screen EGL smoke test
+
+`cef/tools/qnx_run.sh` defaults to headless QEMU (`-nographic`) for normal unit
+and API test runs.  For Ozone, Screen, EGL, or GLES validation, opt in to a GUI
+QEMU launch with virtio/virgl enabled:
+
+```bash
+cd <CHROMIUM_SRC_ROOT>
+./cef/tools/qnx_run.sh --virgl --kill-existing -- egl-configs
+```
+
+Equivalent long form:
+
+```bash
+./cef/tools/qnx_run.sh --qemu-graphics virgl -- egl-configs
+```
+
+Expected `egl-configs` output includes a valid Mesa EGL display, for example:
+
+```text
+EGL_VENDOR = Mesa Project
+EGL_VERSION = 1.5
+EGL_CLIENT_APIS = OpenGL_ES
+```
+
+For an on-screen GLES smoke test, run `gles2-gears` briefly and capture a guest
+screenshot into the NFS-mounted build directory:
+
+```bash
+./cef/tools/qnx_run.sh --virgl --kill-existing --timeout 120 -- \
+  'gles2-gears >/tmp/gles2-gears.log 2>&1 & \
+   sleep 5; \
+   screenshot -file=/mnt/nfs/out/qnx_release/qnx-gles2-gears.bmp -verbose; \
+   slay gles2-gears 2>/dev/null || true; \
+   head -40 /tmp/gles2-gears.log 2>/dev/null || true'
+```
+
+The screenshot should appear on the host at:
+
+```text
+out/qnx_release/qnx-gles2-gears.bmp
+```
+
+Notes:
+
+- `--virgl` uses `-vga none -device virtio-vga-gl -display <backend>,gl=on`.
+- The default display backend is `gtk`; use `--qemu-display sdl` if SDL works
+  better on the host.
+- A host GUI session and QEMU OpenGL-capable display backend are required.
+- A plain GUI window without `virtio-vga-gl` is not enough for the current QEMU
+  image's Screen EGL path; `egl-configs` may fail with an invalid EGL display.
+
 ## Manual QEMU launch
 
 If needed, QEMU can also be started manually:
