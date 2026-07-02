@@ -3,17 +3,26 @@
 This note exists because repeated QNX bootstrap failures were caused by stale
 CEF-managed patches rather than by compiler or GN build errors.
 
-## Recent failure pattern
+## Recent failure patterns
 
-A bootstrap run failed while applying `qnx/chromium/libdrm_qnx_memstream_makedev`.
-The patch still contained hunks for `third_party/libdrm/src/xf86drm.c`, but that
-file no longer exists in the current Chromium/libdrm tree. The patch was stale:
-its original assumptions no longer matched the source being bootstrapped.
+Two recurring bootstrap hygiene failures are now known:
 
-The risky follow-up was to bypass the failed bootstrap by manually restoring or
-editing generated build state and continuing with a partially refreshed tree. That
-can hide the real problem: the durable source of truth is the patch stack, and a
-working local tree is not evidence that a clean bootstrap will work.
+1. **Stale patch contents.** A bootstrap run failed while applying
+   `qnx/chromium/libdrm_qnx_memstream_makedev`.  The patch still contained
+   hunks for `third_party/libdrm/src/xf86drm.c`, but that file no longer exists
+   in the current Chromium/libdrm tree.  The patch was stale: its original
+   assumptions no longer matched the source being bootstrapped.
+2. **Unregistered patch files.** Several validated V8 QNX patches existed under
+   `cef/patch/patches/qnx/chromium/`, but clean bootstrap did not apply them
+   because `cef/patch/patch.cfg` did not register them.  The local working tree
+   had the fix, while the durable bootstrap path silently missed it until a
+   fresh `ceftests` build hit QNX-missing `<sys/syscall.h>` in V8.
+
+The risky follow-up in both cases is to bypass bootstrap by manually restoring
+or editing generated build state and continuing with a partially refreshed tree.
+That can hide the real problem: the durable source of truth is the registered
+patch stack plus QNX new files, and a working local tree is not evidence that a
+clean bootstrap will work.
 
 ## Root-cause classification
 
@@ -41,6 +50,8 @@ insufficiently explicit no-bypass rule.
 4. Choose one durable fix:
    - regenerate the patch from the current source state;
    - split it if unrelated hunks now have different lifetimes;
+   - add the patch to `cef/patch/patch.cfg` if the file exists but bootstrap
+     should apply it;
    - remove the obsolete patch from both `cef/patch/patch.cfg` and
      `cef/patch/patches/...` when it is no longer needed, with a note explaining
      why.
@@ -60,6 +71,8 @@ Do not use these actions to get around a failed bootstrap patch phase:
 - manually applying individual patch files to the Chromium tree;
 - deleting failed hunks or patch files without updating `patch.cfg` and recording
   the rationale;
+- leaving a validated patch file under `cef/patch/patches/qnx/chromium/` without
+  registering it in `cef/patch/patch.cfg` when bootstrap must apply it;
 - hand-writing or restoring generated `out/qnx_release/args.gn` as a substitute
   for a successful bootstrap;
 - continuing with Ninja builds after `cef_create_projects_qnx.sh` reports failed
@@ -85,6 +98,9 @@ Before committing a new or edited QNX patch, confirm:
   `corrupt patch at line N` (where N is one past the last visible line).
 - `python3 cef/tools/qnx_validate_patch_format.py --root cef` reports no
   failures. This catches no-prefix violations and other format issues.
+- The patch is registered in `cef/patch/patch.cfg` if it is meant to replay
+  during bootstrap.  A well-formatted but unregistered patch is still not a
+  durable bootstrap fix.
 - `patch -p0 --batch --dry-run` against a clean source tree exits 0 with
   `checking file <path>` output and no `failed` lines.
 
@@ -93,5 +109,5 @@ If any check fails, regenerate the patch with
 correct patch root. Do not hand-edit hunks to satisfy these checks; the
 regenerate-from-tree path is faster and provably correct.
 
-See `docs/qnx/history/build-errors/bootstrap/build-graph/qnx-patch-hunk-missing-trailing-empty-line-breaks-patch-application.md`
+See `history/build-errors/bootstrap/build-graph/qnx-patch-hunk-missing-trailing-empty-line-breaks-patch-application.md`
 for a worked example of a corrupt-hunk failure and its durable fix.

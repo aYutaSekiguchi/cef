@@ -9,6 +9,11 @@
 
 ## Recommended flow
 
+`cef/tools/qnx_run_test.sh` is a module dispatcher.  Recognized module flags
+are `--base`, `--ceftests`, `--v8`, `--swiftshader`, `--angle`, `--all`, and
+`--list`.  If no module flag is provided, the runner defaults to `--base` for
+backward compatibility.
+
 ### 1. Prepare host networking and NFS
 
 ```bash
@@ -25,6 +30,13 @@ cd <CHROMIUM_SRC_ROOT>
 ./out/qnx_release/ninja_qnx.sh base_unittests
 ```
 
+CEF API tests:
+
+```bash
+cd <CHROMIUM_SRC_ROOT>
+./out/qnx_release/ninja_qnx.sh ceftests
+```
+
 ANGLE test group:
 
 ```bash
@@ -35,18 +47,25 @@ cd <CHROMIUM_SRC_ROOT>
 
 ### 3. Run the target on QNX
 
-Broad run:
+Base broad run:
 
 ```bash
 cd <CHROMIUM_SRC_ROOT>
-./cef/tools/qnx_run_test.sh --timeout 7200 --kill-existing "*"
+./cef/tools/qnx_run_test.sh --base --timeout 7200 --kill-existing "*"
 ```
 
-Focused run:
+Base focused run:
 
 ```bash
-./cef/tools/qnx_run_test.sh --timeout 600 --kill-existing \
+./cef/tools/qnx_run_test.sh --base --timeout 600 --kill-existing \
   "CommandLineTest.CommandLineConstructor"
+```
+
+CEF API focused run:
+
+```bash
+./cef/tools/qnx_run_test.sh --ceftests --timeout 600 --kill-existing \
+  "DownloadTest.*"
 ```
 
 ANGLE broad run:
@@ -55,15 +74,22 @@ ANGLE broad run:
 ./cef/tools/qnx_run_test.sh --angle --timeout 7200 --kill-existing
 ```
 
+List registered modules:
+
+```bash
+./cef/tools/qnx_run_test.sh --list
+```
+
 Arbitrary guest command:
 
 ```bash
 ./cef/tools/qnx_run_test.sh --cmd './base_unittests --gtest_list_tests'
 ```
 
-## Default broad-run exclusions
+## Default base broad-run exclusions
 
-`cef/tools/qnx_run_test.sh` automatically excludes the current environment-specific failures:
+The default `--base` module automatically excludes the current
+environment-specific failures:
 
 - `StackTraceDeathTest.StackDumpSignalHandlerIsMallocFree`
 - `ImportantFileWriterTest.FailedWriteWithObserver`
@@ -111,9 +137,12 @@ export CR_SOURCE_ROOT=/mnt/nfs
 
 | Purpose | Command |
 |---|---|
+| list registered modules | `./cef/tools/qnx_run_test.sh --list` |
 | boot + mount only | `./cef/tools/qnx_run_test.sh --mount-only --kill-existing` |
-| run one test | `./cef/tools/qnx_run_test.sh --timeout 600 'ProcessTest.Create'` |
+| run one base test | `./cef/tools/qnx_run_test.sh --base --timeout 600 'ProcessTest.Create'` |
+| run one CEF API group | `./cef/tools/qnx_run_test.sh --ceftests --timeout 600 'DownloadTest.*'` |
 | run list-tests | `./cef/tools/qnx_run_test.sh --cmd './base_unittests --gtest_list_tests'` |
+| run V8 per-test module | `./cef/tools/qnx_run_test.sh --v8 --timeout 7200 --kill-existing` |
 | run ANGLE group | `./cef/tools/qnx_run_test.sh --angle --timeout 7200 --kill-existing` |
 | inspect QEMU interactively | `tmux attach -t <session>` when running inside tmux |
 
@@ -336,6 +365,10 @@ rm -f out/qnx_release/*.core out/qnx_release/gdb-*.txt
 |---|---|
 | QNX `fork()` restrictions | use spawn-based paths; avoid assuming Linux death-test behavior |
 | QEMU environment noise | some timing and signal-handler tests remain environment-specific |
+| `base_unittests` exclusions | the three default exclusions in `status.md` are for the `--base` broad run, not a blanket policy for every module |
+| `ceftests` broad status | focused CEF API groups pass after the recent fontconfig/CORS/V8 fixes, but the whole suite is still a bring-up track |
+| `FrameHandlerTest` cross-origin ordering | cross-origin OOP renderer ordering remains an open QNX-specific follow-up; see the structured note before changing expectations |
+| ANGLE end-to-end | `angle_end2end_tests` needs a Vulkan-capable guest GPU/surface environment; unit tests are the useful current signal |
 | `tap0` missing | rerun `sudo ./cef/tools/qnx_setup_env.sh` |
 | stale QEMU instance | use `--kill-existing` |
 
@@ -343,8 +376,8 @@ rm -f out/qnx_release/*.core out/qnx_release/gdb-*.txt
 
 A practical validation loop is:
 
-1. bootstrap with `cef/tools/cef_create_projects_qnx.sh`
+1. bootstrap with `cef/tools/qnx_sync_sources.sh -f -R` followed by `cef/tools/cef_create_projects_qnx.sh`
 2. build with `./out/qnx_release/ninja_qnx.sh <target>`
-3. run focused QEMU tests for the changed area
-4. rerun broad `base_unittests`
-5. check `build-error-index.md` and `history/` for regressions or prior art
+3. run focused QEMU tests for the changed area (`--base`, `--ceftests`, `--v8`, `--angle`, etc.)
+4. rerun the stable broad `--base` baseline when the change could affect core behavior
+5. check `build-error-index.md` and `history/build-errors/` for regressions or prior art

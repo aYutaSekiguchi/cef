@@ -24,8 +24,15 @@ This directory contains the working documentation for the Chromium/CEF QNX port.
 - Chromium compatibility tag: `147.0.7727.147`
 - QNX SDP root: local SDK installation path (`<QNX_SDP_ROOT>`)
 - Default build directory: `out/qnx_release`
+- Source-sync helper: `cef/tools/qnx_sync_sources.sh -f -R`
 - Bootstrap entrypoint: `cef/tools/cef_create_projects_qnx.sh`
+- Build wrapper: `out/qnx_release/ninja_qnx.sh`
 - QEMU helpers: `cef/tools/qnx_setup_env.sh`, `cef/tools/qnx_run.sh`, `cef/tools/qnx_run_test.sh`
+- Stable baseline target: `base_unittests`
+- Active bring-up targets: `ceftests`, `cefsimple`, `cefsimple_capi`, `v8_unittests`, ANGLE
+
+See `status.md` for which targets are fully validated, partially validated,
+or blocked by test-environment limitations.
 
 ## Placeholders used in this documentation
 
