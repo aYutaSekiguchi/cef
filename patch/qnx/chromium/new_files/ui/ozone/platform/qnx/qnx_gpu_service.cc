@@ -1,0 +1,362 @@
+// Copyright 2026 The Chromium Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+// Phase 5: GPU-side QNX Mojo service scaffold.
+// Implements QnxGpuService and QnxGpuControl in the GPU process.
+// QnxGpuService receives the browser-owned QnxGpuHost remote.
+// QnxGpuControl receives AttachWidget/ResizeWidget/DetachWidget from the
+// browser and manages GPU-side QnxRenderProducer instances.
+// A metadata+export-only SubmitFrame exercise path is provided via
+// SubmitTestFrameForWidget().  No browser EGL import/display.
+
+#include "ui/ozone/platform/qnx/qnx_gpu_service.h"
+
+#include <memory>
+#include <string>
+#include <utility>
+
+#include "base/logging.h"
+#include "base/scoped_generic.h"
+#include "mojo/public/cpp/platform/platform_handle.h"
+#include "ui/ozone/platform/qnx/qnx_render_producer.h"
+
+namespace ui {
+namespace qnx = ui::ozone::qnx::mojom;
+
+QnxGpuService::QnxGpuService(QnxSurfaceFactoryOzone* surface_factory)
+    : surface_factory_(surface_factory),
+      producer_manager_(std::make_unique<QnxRenderProducerManager>(
+          surface_factory)) {
+  DLOG(INFO) << "QnxGpuService: constructed (GPU process) "
+                "surface_factory="
+             << static_cast<void*>(surface_factory_);
+}
+
+QnxGpuService::~QnxGpuService() {
+  DLOG(INFO) << "QnxGpuService: destroyed (GPU process)";
+  // Destroy all GPU-side producer resources before the GPU process exits.
+  // This removes all QnxRenderProducer instances managed by producer_manager_.
+  if (producer_manager_) {
+    producer_manager_->RemoveAllProducers();
+  }
+  // Reset the remote to ensure the message pipe is closed cleanly.
+  gpu_host_remote_.reset();
+}
+
+void QnxGpuService::Bind(
+    mojo::PendingReceiver<qnx::QnxGpuService> pending_receiver) {
+  DLOG(INFO) << "QnxGpuService::Bind: binding pending receiver";
+  receiver_.Bind(std::move(pending_receiver));
+}
+
+void QnxGpuService::BindQnxGpuControl(
+    mojo::PendingReceiver<qnx::QnxGpuControl> pending_receiver) {
+  DLOG(INFO) << "QnxGpuService::BindQnxGpuControl: binding pending receiver";
+  gpu_control_receiver_.Bind(std::move(pending_receiver));
+  DLOG(INFO) << "QnxGpuService::BindQnxGpuControl: gpu_control_receiver_ bound; "
+                "browser can now call AttachWidget/ResizeWidget/DetachWidget";
+}
+
+// ======================================================================
+// qnx::mojom::QnxGpuService implementation
+// ======================================================================
+
+void QnxGpuService::Initialize(
+    mojo::PendingRemote<qnx::QnxGpuHost> host_remote) {
+  if (!host_remote) {
+    DLOG(ERROR) << "QnxGpuService::Initialize: null host_remote";
+    return;
+  }
+
+  // Reset any previous connection before binding a new one.
+  gpu_host_remote_.reset();
+
+  // Bind the pending remote from the browser process. The GPU process
+  // now holds the client end and can call SubmitFrame / ReportProducerLost.
+  gpu_host_remote_.Bind(std::move(host_remote));
+
+  // Set a disconnect handler to log when the browser-owned QnxGpuHost
+  // pipe is closed (e.g., browser shutdown or GPU process crash).
+  gpu_host_remote_.set_disconnect_handler(base::BindOnce([]() {
+    DLOG(INFO) << "QnxGpuService: browser QnxGpuHost pipe disconnected";
+  }));
+
+  // Note: QnxGpuControl receiver (gpu_control_receiver_) is bound separately
+  // in OnGpuServiceLaunched via the binder before Initialize() is called.
+  // The browser passes the QnxGpuControl pipe through the binder, which
+  // arrives at the GPU-side QnxGpuService::Initialize() via the
+  // browser's gpu_control_remote_.Pipe().get() handle.
+
+  DLOG(INFO) << "QnxGpuService::Initialize: gpu_host_remote bound; "
+                "GPU can now call SubmitFrame / ReportProducerLost; "
+                "QnxGpuControl receiver bound via binder in AddInterfaces";
+}
+
+// ======================================================================
+// qnx::mojom::QnxGpuControl implementation (GPU-side handlers)
+// ======================================================================
+
+void QnxGpuService::AttachWidget(gfx::AcceleratedWidget widget,
+                                 uint32_t generation,
+                                 const gfx::Size& size) {
+  DLOG(INFO) << "QnxGpuService::AttachWidget: widget=" << widget
+             << " generation=" << generation
+             << " size=" << size.width() << "x" << size.height();
+
+  if (!producer_manager_) {
+    DLOG(ERROR) << "QnxGpuService::AttachWidget: producer_manager_ is null; "
+                   "skipping (should not happen)";
+    return;
+  }
+
+  // Look up or create the producer for this widget+generation.
+  // If one already exists (e.g. from a previous AttachWidget for the same
+  // generation), GetOrCreateProducer returns the existing one.
+  QnxRenderProducer* producer = producer_manager_->GetOrCreateProducer(
+      widget, generation, size);
+  if (!producer) {
+    DLOG(ERROR) << "QnxGpuService::AttachWidget: GetOrCreateProducer "
+                   "returned null for widget=" << widget
+                << " generation=" << generation;
+    return;
+  }
+
+  // Initialize the producer if it has not been initialized yet.
+  // QnxRenderProducer::Initialize() probes EGL extensions and resolves
+  // DMAbuf export function pointers.
+  if (!producer->is_valid()) {
+    std::string init_result =
+        producer->Initialize() ? "success" : "failed: " + producer->init_error();
+    DLOG(INFO) << "QnxGpuService::AttachWidget: producer->Initialize() "
+                  "result for widget="
+               << widget << ": " << init_result;
+  }
+
+  DLOG(INFO) << "QnxGpuService::AttachWidget: widget=" << widget
+             << " generation=" << generation
+             << " producer=" << static_cast<void*>(producer)
+             << " valid=" << producer->is_valid()
+             << " init_error="
+             << (producer->init_error().empty()
+                     ? "(none)"
+                     : producer->init_error());
+
+  // ---- Phase 5: bounded SubmitFrame trigger ----
+  // After producer is created and (re-)initialized, exercise the GPU->Browser
+  // Mojo SubmitFrame path with a test frame.  This validates the fd
+  // ownership/move semantics in SubmitTestFrameForWidget at compile time
+  // and provides diagnostic output at runtime without requiring full app smoke.
+  // Guard: only fire if the browser host remote is bound (AttachExistingWidgets
+  // ensures Initialize() was called first) and the producer is valid.
+  if (enable_attach_test_frame_ && gpu_host_remote_ && producer->is_valid()) {
+    DLOG(INFO) << "QnxGpuService::AttachWidget: trigger: calling "
+                  "SubmitTestFrameForWidget(widget="
+               << widget << ", generation=" << generation << ")";
+    SubmitTestFrameForWidget(widget, generation);
+  } else if (enable_attach_test_frame_ && !gpu_host_remote_) {
+    DLOG(WARNING) << "QnxGpuService::AttachWidget: enable_attach_test_frame_ "
+                     "is true but gpu_host_remote_ is null; skipping "
+                     "SubmitTestFrameForWidget (GPU service may not be "
+                     "initialized yet)";
+  } else if (enable_attach_test_frame_ && !producer->is_valid()) {
+    DLOG(WARNING) << "QnxGpuService::AttachWidget: enable_attach_test_frame_ "
+                     "is true but producer is not valid; skipping "
+                     "SubmitTestFrameForWidget";
+  }
+}
+
+void QnxGpuService::ResizeWidget(gfx::AcceleratedWidget widget,
+                                 uint32_t generation,
+                                 const gfx::Size& size) {
+  DLOG(INFO) << "QnxGpuService::ResizeWidget: widget=" << widget
+             << " generation=" << generation
+             << " size=" << size.width() << "x" << size.height();
+
+  if (!producer_manager_) {
+    DLOG(ERROR) << "QnxGpuService::ResizeWidget: producer_manager_ is null; "
+                   "skipping";
+    return;
+  }
+
+  // Resize is implemented as a remove + recreate for the same generation.
+  // This ensures the producer's DRM EGLImage is re-created at the new size.
+  // If the producer is absent (e.g. race where resize arrives before attach),
+  // GetOrCreateProducer creates a new one.
+  producer_manager_->RemoveProducer(widget, generation);
+  QnxRenderProducer* producer = producer_manager_->GetOrCreateProducer(
+      widget, generation, size);
+  if (!producer) {
+    DLOG(ERROR) << "QnxGpuService::ResizeWidget: GetOrCreateProducer "
+                   "returned null for widget=" << widget
+                << " generation=" << generation;
+    return;
+  }
+
+  if (!producer->is_valid()) {
+    std::string init_result =
+        producer->Initialize() ? "success" : "failed: " + producer->init_error();
+    DLOG(INFO) << "QnxGpuService::ResizeWidget: producer->Initialize() "
+                  "result for widget="
+               << widget << ": " << init_result;
+  }
+
+  DLOG(INFO) << "QnxGpuService::ResizeWidget: widget=" << widget
+             << " generation=" << generation
+             << " resized to " << size.width() << "x" << size.height();
+
+  // ---- Phase 5: bounded SubmitFrame trigger on ResizeWidget ----
+  // After the producer is re-created at the new size, submit a test frame
+  // to validate the resized export path.  Same guard as AttachWidget.
+  if (enable_attach_test_frame_ && gpu_host_remote_ && producer->is_valid()) {
+    DLOG(INFO) << "QnxGpuService::ResizeWidget: trigger: calling "
+                  "SubmitTestFrameForWidget(widget="
+               << widget << ", generation=" << generation << ")";
+    SubmitTestFrameForWidget(widget, generation);
+  } else if (enable_attach_test_frame_ && !gpu_host_remote_) {
+    DLOG(WARNING) << "QnxGpuService::ResizeWidget: enable_attach_test_frame_ "
+                     "is true but gpu_host_remote_ is null; skipping";
+  } else if (enable_attach_test_frame_ && !producer->is_valid()) {
+    DLOG(WARNING) << "QnxGpuService::ResizeWidget: enable_attach_test_frame_ "
+                     "is true but producer is not valid; skipping";
+  }
+}
+
+void QnxGpuService::DetachWidget(gfx::AcceleratedWidget widget,
+                                  uint32_t generation) {
+  DLOG(INFO) << "QnxGpuService::DetachWidget: widget=" << widget
+             << " generation=" << generation;
+
+  if (!producer_manager_) {
+    DLOG(WARNING) << "QnxGpuService::DetachWidget: producer_manager_ is null; "
+                     "nothing to detach";
+    return;
+  }
+
+  producer_manager_->RemoveProducer(widget, generation);
+  DLOG(INFO) << "QnxGpuService::DetachWidget: widget=" << widget
+             << " generation=" << generation << " producer removed";
+}
+
+// ======================================================================
+// SubmitFrame exercise path (export-only)
+// ======================================================================
+
+// static
+qnx::QnxDmaBufFramePtr QnxGpuService::NativeFrameToMojomFrame(
+    const ::ui::QnxDmaBufFrame& frame) {
+  // Build the mojom frame.  Each plane's base::ScopedFD is converted to
+  // a mojo::PlatformHandle for Mojo handle<platform> serialization.
+  qnx::QnxDmaBufFramePtr mojom_frame = qnx::QnxDmaBufFrame::New();
+  mojom_frame->widget = frame.widget;
+  mojom_frame->generation = frame.generation;
+  mojom_frame->width = frame.width;
+  mojom_frame->height = frame.height;
+  mojom_frame->fourcc = frame.fourcc;
+  mojom_frame->modifier = frame.modifier;
+
+  // Convert planes: base::ScopedFD → mojo::PlatformHandle.
+  // Mojo serialization uses SCM_RIGHTS fd passing; the PlatformHandle
+  // is serialized as a Mojo handle, and Mojo IPC internally calls dup(2)
+  // when passing to the remote process, so the local ScopedFD receives a dup
+  // and is safely closed when it goes out of scope at function return.
+  //
+  // QnxDmaBufPlane has a constructor (fd, stride, offset, size).
+  // StructPtr<S> has constructor (std::in_place_t, Args&&... args) that
+  // forwards to the underlying S constructor.
+  for (size_t i = 0; i < frame.planes.size(); ++i) {
+    const QnxDmaBufPlane& native_plane = frame.planes[i];
+
+    // Extract the raw fd value and construct a new ScopedFD for the
+    // PlatformHandle to take ownership of.  The ScopedFD destructor
+    // closes the dup at end of block; the PlatformHandle owns the
+    // original fd for Mojo serialization.
+    mojo::PlatformHandle handle;
+    if (native_plane.fd.is_valid()) {
+      base::ScopedFD tmp_fd(native_plane.fd.get());
+      handle = mojo::PlatformHandle(std::move(tmp_fd));
+    }
+
+    qnx::QnxDmaBufPlanePtr mojom_plane(
+        std::in_place,
+        std::move(handle),
+        native_plane.stride,
+        native_plane.offset,
+        native_plane.size);
+    mojom_frame->planes.push_back(std::move(mojom_plane));
+  }
+
+  return mojom_frame;
+}
+
+void QnxGpuService::SubmitTestFrameForWidget(gfx::AcceleratedWidget widget,
+                                             uint32_t generation) {
+  if (!producer_manager_) {
+    DLOG(ERROR) << "QnxGpuService::SubmitTestFrameForWidget: "
+                   "producer_manager_ is null";
+    return;
+  }
+
+  if (!gpu_host_remote_) {
+    DLOG(WARNING) << "QnxGpuService::SubmitTestFrameForWidget: "
+                     "gpu_host_remote_ is null; browser host not connected; "
+                     "skipping (AttachWidget may not have been called yet)";
+    return;
+  }
+
+  QnxRenderProducer* producer = producer_manager_->GetProducer(widget, generation);
+  if (!producer) {
+    DLOG(WARNING) << "QnxGpuService::SubmitTestFrameForWidget: no producer "
+                     "for widget="
+                  << widget << " generation=" << generation
+                  << "; skipping (AttachWidget may not have been called)";
+    return;
+  }
+
+  if (!producer->is_valid()) {
+    DLOG(WARNING) << "QnxGpuService::SubmitTestFrameForWidget: producer "
+                     "is not valid for widget="
+                  << widget << "; skipping";
+    return;
+  }
+
+  // Call CreateExportFrame() to exercise the GPU-side DMAbuf export pipeline.
+  auto [frame, error] = producer->CreateExportFrame();
+  if (!error.empty()) {
+    DLOG(ERROR) << "QnxGpuService::SubmitTestFrameForWidget: "
+                   "CreateExportFrame failed for widget="
+                << widget << ": " << error;
+    return;
+  }
+
+  if (frame.planes.empty()) {
+    DLOG(WARNING) << "QnxGpuService::SubmitTestFrameForWidget: "
+                     "CreateExportFrame returned no planes for widget="
+                  << widget << "; skipping SubmitFrame";
+    return;
+  }
+
+  DLOG(INFO) << "QnxGpuService::SubmitTestFrameForWidget: widget=" << widget
+             << " generation=" << generation
+             << " frame has " << frame.planes.size() << " plane(s)"
+             << " size=" << frame.width << "x" << frame.height
+             << "; submitting to QnxGpuHost";
+
+  // Convert the native frame to mojom and submit.
+  qnx::QnxDmaBufFramePtr mojom_frame = NativeFrameToMojomFrame(frame);
+
+  gpu_host_remote_->SubmitFrame(
+      std::move(mojom_frame),
+      base::BindOnce(
+          [](gfx::AcceleratedWidget widget, uint32_t generation,
+             bool accepted, const std::string& diagnostic) {
+            DLOG(INFO) << "QnxGpuService::SubmitTestFrameForWidget: "
+                          "widget="
+                       << widget << " generation=" << generation
+                       << " accepted=" << accepted
+                       << " diagnostic=" << diagnostic;
+          },
+          widget, generation));
+}
+
+}  // namespace ui

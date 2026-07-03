@@ -1,0 +1,124 @@
+// Copyright 2026 The Chromium Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+// Phase 5: QNX-local Mojo interfaces for Browser<->GPU DMAbuf frame transport.
+// These interfaces are QNX-platform-local only. DMAbuf fds travel as
+// Mojo handle<platform> values. GPU producer runtime and DMAbuf export/import
+// logic are deferred to subsequent Phase 5 substeps.
+
+module ui.ozone.qnx.mojom;
+
+// import shortcuts
+import "ui/gfx/geometry/mojom/geometry.mojom";
+import "ui/gfx/mojom/accelerated_widget.mojom";
+
+// DMAbuf plane metadata carried alongside a Mojo handle<platform> DMAbuf fd.
+// This is intentionally simpler than gfx.mojom.NativePixmapPlane to avoid
+// introducing a gfx::NativePixmapHandle dependency at this early stage.
+struct QnxDmaBufPlane {
+  // Platform fd handle — a Mojo handle wrapping a DMAbuf file descriptor.
+  // On POSIX systems, Mojo serializes this as a dup(2) of the fd via the
+  // platform handle transport (underlying mechanism is SCM_RIGHTS).
+  handle<platform> fd;
+
+  // Bytes per scan line for this plane.
+  uint32 stride;
+
+  // Byte offset from the start of the DMAbuf where this plane begins.
+  uint64 offset;
+
+  // Total size of this plane in bytes.
+  uint64 size;
+};
+
+// Complete DMAbuf frame metadata sent from the GPU process to the Browser.
+// This struct carries everything the Browser needs to import each plane via
+// eglCreateImageKHR(EGL_LINUX_DMA_BUF_EXT, ...) and display the frame.
+struct QnxDmaBufFrame {
+  // The stable widget ID this frame targets. Matches the AcceleratedWidget
+  // allocated by QnxWindowManager when the Browser created the Screen window.
+  gfx.mojom.AcceleratedWidget widget;
+
+  // Generation counter for the GPU->Browser connection.
+  // Incremented by the Browser each time the GPU process restarts.
+  // Frames arriving with a stale generation are discarded.
+  uint32 generation;
+
+  // Frame pixel dimensions.
+  uint32 width;
+  uint32 height;
+
+  // FourCC code identifying the pixel format, e.g. 0x34325241 for AR24.
+  // Set by eglExportDMABUFImageQueryMESA when exporting from the GPU.
+  uint32 fourcc;
+
+  // DRM modifier describing the buffer layout.
+  // 0 = linear (no tiling/compression).
+  uint64 modifier;
+
+  // One entry per DMAbuf plane. Plane count and layout must match |fourcc|.
+  array<QnxDmaBufPlane> planes;
+};
+
+// Browser-side host interface. The GPU process holds the client end of this
+// interface and calls SubmitFrame to deliver rendered DMAbuf frames.
+interface QnxGpuHost {
+  // Submit a rendered DMAbuf frame for display on the given widget.
+  // The browser imports each plane's fd via eglCreateImageKHR, renders
+  // the texture to the Screen window surface, and calls eglSwapBuffers.
+  //
+  // Arguments:
+  //   frame  — DMAbuf metadata + Mojo platform handles for each plane fd.
+  //
+  // Returns:
+  //   accepted  — true if the frame was imported and displayed.
+  //   diagnostic — human-readable string for logging; may be empty.
+  SubmitFrame(QnxDmaBufFrame frame) => (bool accepted, string diagnostic);
+
+  // Notify the browser that the GPU producer for this widget has been lost.
+  // The browser marks the widget as GPU-detached and increments generation.
+  ReportProducerLost(gfx.mojom.AcceleratedWidget widget, uint32 generation);
+};
+
+// GPU-service interface. Implemented by the GPU process and used by
+// the Browser process during GPU service launch.  The Browser passes its
+// QnxGpuHost remote here so the GPU process can call SubmitFrame and
+// ReportProducerLost.
+//
+// This is the QNX-local equivalent of WaylandBufferManagerGpu.Initialize():
+// the GPU-side startup interface receives a PendingRemote owned by the browser.
+// The QnxGpuControl receiver is bound separately via the GPU host binder
+// in OnGpuServiceLaunched (not through this interface).
+interface QnxGpuService {
+  // Initialize the GPU-side service with the browser-owned QnxGpuHost.
+  //
+  // After this call the GPU process can call SubmitFrame on |host_remote|
+  // and ReportProducerLost when the GPU process exits unexpectedly.
+  //
+  // |host_remote| is a PendingRemote<QnxGpuHost> owned by the Browser.
+  // The GPU process receives only the client end and stores it as a
+  // mojo::Remote<QnxGpuHost>.
+  Initialize(pending_remote<QnxGpuHost> host_remote);
+};
+
+// GPU-control interface. The Browser process holds the client end and uses
+// it to manage widget lifecycle (attach/resize/detach) for each GPU process
+// connection. Each GPU process restart creates a fresh Mojo connection.
+interface QnxGpuControl {
+  // Attach a GPU render producer to the given widget. Called when a GPU
+  // process starts or restarts. The Browser validates the generation before
+  // accepting any frames.
+  AttachWidget(gfx.mojom.AcceleratedWidget widget,
+               uint32 generation,
+               gfx.mojom.Size size);
+
+  // Notify the GPU of a resize for the given widget.
+  ResizeWidget(gfx.mojom.AcceleratedWidget widget,
+               uint32 generation,
+               gfx.mojom.Size size);
+
+  // Detach the GPU producer for this widget. Called when the Browser is
+  // closing the widget or shutting down.
+  DetachWidget(gfx.mojom.AcceleratedWidget widget, uint32 generation);
+};

@@ -1,0 +1,23 @@
+diff --git build/config/ozone.gni build/config/ozone.gni
+index a1b2c3d4e5f67890..1234567890abcdef 100644
+--- build/config/ozone.gni
++++ build/config/ozone.gni
+@@ -53,6 +53,9 @@ declare_args() {
+   # Compile the 'wayland' platform.
+   ozone_platform_wayland = false
+
++  # Compile the 'qnx' platform.
++  ozone_platform_qnx = false
++
+   if (ozone_auto_platforms) {
+     # Use headless as the default platform unless modified below.
+     ozone_platform = "headless"
+@@ -108,6 +111,6 @@ if (is_a_target_toolchain) {
+   assert(
+       use_ozone || !(ozone_platform_cast || ozone_platform_drm ||
+-                         ozone_platform_flatland || ozone_platform_headless ||
+-                         ozone_platform_x11 || ozone_platform_wayland),
++                         ozone_platform_flatland || ozone_platform_headless ||
++                         ozone_platform_qnx || ozone_platform_x11 || ozone_platform_wayland),
+       "Must set use_ozone to select ozone platforms")
+ }

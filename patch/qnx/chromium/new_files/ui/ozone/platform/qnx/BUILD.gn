@@ -1,0 +1,88 @@
+# Copyright 2026 The Chromium Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/public/tools/bindings/mojom.gni")
+
+# QNX Ozone platform build target.
+# Phase 4: Browser/UI-side QNX Screen skeleton — Screen context, window
+# manager, window creation/destruction, minimal screen.
+# Phase 5: QNX-local Mojo interfaces for Browser<->GPU DMAbuf frame transport.
+# GPU producer runtime and DMAbuf export/import logic deferred to later substeps.
+#
+# This target is added to ui/ozone BUILD.gn via the CEF-managed patch
+# ozone_build_qnx_platform.gni.patch, gated on ozone_platform_qnx=true.
+
+visibility = [ "//ui/ozone/*" ]
+
+source_set("qnx") {
+  sources = [
+    # Phase 3 files (kept):
+    "client_native_pixmap_factory_qnx.cc",
+    "client_native_pixmap_factory_qnx.h",
+    "ozone_platform_qnx.cc",
+    "ozone_platform_qnx.h",
+
+    # Phase 4: Screen skeleton
+    "qnx_screen_context.cc",
+    "qnx_screen_context.h",
+    "qnx_window_manager.cc",
+    "qnx_window_manager.h",
+    "qnx_window.cc",
+    "qnx_window.h",
+    "qnx_screen.cc",
+    "qnx_screen.h",
+
+    # Phase 4 second substep: Screen event source
+    "qnx_platform_event_source.cc",
+    "qnx_platform_event_source.h",
+
+    # Phase 5: GPU-side QNX render producer scaffold
+    "qnx_surface_factory.cc",
+    "qnx_surface_factory.h",
+    "qnx_surface_ozone_canvas.cc",
+    "qnx_surface_ozone_canvas.h",
+    "qnx_gl_ozone_egl.cc",
+    "qnx_gl_ozone_egl.h",
+    "qnx_render_producer.cc",
+    "qnx_render_producer.h",
+
+    # Phase 5 third substep: Browser-side QNX Mojo host binding scaffold
+    "qnx_gpu_host.cc",
+    "qnx_gpu_host.h",
+
+    # Phase 5 fifth substep: Browser-side EGL/Screen DMAbuf import/display
+    "qnx_frame_importer.cc",
+    "qnx_frame_importer.h",
+
+    # Phase 5 fourth substep: GPU-side QnxGpuService (startup interface)
+    "qnx_gpu_service.cc",
+    "qnx_gpu_service.h",
+
+    # Phase 5 fourth substep: Browser-side GpuPlatformSupportHost bridge
+    "qnx_gpu_platform_support_host.cc",
+    "qnx_gpu_platform_support_host.h",
+  ]
+
+  defines = [ "OZONE_IMPLEMENTATION" ]
+
+  deps = [
+    "//base",
+    "//ui/base",
+    "//ui/base/cursor",
+    "//ui/base/ime",
+    "//ui/display",
+    "//ui/events",
+    "//ui/gfx",
+    "//ui/gfx/geometry",
+    "//ui/ozone:ozone_base",
+    "//ui/ozone/common",
+    "//ui/platform_window",
+    # Phase 5: QNX-local mojom interfaces for Browser<->GPU DMAbuf transport.
+    "//ui/ozone/platform/qnx/mojom",
+  ]
+
+  # Phase 4: QNX Screen, EGL, and GLES2 are required for the Screen skeleton.
+  # QnxWindow uses SCREEN_USAGE_OPENGL_ES2 and creates window buffers.
+  libs = [ "screen", "EGL", "GLESv2" ]
+}
