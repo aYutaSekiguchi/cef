@@ -1055,7 +1055,7 @@ source_set("libcef_static") {
     ]
   }
 
-  if (is_linux) {
+  if (is_linux && !is_qnx) {
     sources += includes_linux + [
       "libcef/browser/native/browser_platform_delegate_native_linux.cc",
       "libcef/browser/native/browser_platform_delegate_native_linux.h",
@@ -2806,7 +2806,7 @@ if (is_mac) {
       cflags_c = [ "/std:c11" ]
     }
 
-    if (is_linux) {
+    if (is_linux && !is_qnx) {
       sources += includes_linux_capi +
                  gypi_paths2.cefsimple_capi_sources_linux
 
@@ -2936,7 +2936,7 @@ if (is_mac) {
       ]
     }
 
-    if (is_linux) {
+    if (is_linux && !is_qnx) {
       sources += gypi_paths2.shared_sources_linux +
                  gypi_paths2.ceftests_sources_linux
 

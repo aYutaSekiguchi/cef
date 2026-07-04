@@ -1,0 +1,21 @@
+diff --git ui/views/BUILD.gn ui/views/BUILD.gn
+--- ui/views/BUILD.gn
++++ ui/views/BUILD.gn
+@@ -909,7 +909,7 @@ component("views") {
+         public += [ "widget/desktop_aura/desktop_screen_ozone.h" ]
+         sources += [ "widget/desktop_aura/desktop_screen_ozone.cc" ]
+       }
+-      if (is_linux) {
++      if (is_linux && !is_qnx) {
+         public += [ "widget/desktop_aura/desktop_window_tree_host_linux.h" ]
+         sources += [
+           "widget/desktop_aura/desktop_window_tree_host_linux.cc",
+@@ -935,7 +935,7 @@ component("views") {
+         ]
+         public_deps += [ "//ui/base/dragdrop/mojom:mojom_shared" ]
+       }
+-      if (is_linux) {
++      if (is_linux && !is_qnx) {
+         sources += [
+           "widget/desktop_aura/desktop_drag_drop_client_ozone_linux.cc",
+           "widget/desktop_aura/desktop_drag_drop_client_ozone_linux.h",

@@ -5,7 +5,7 @@ diff --git chrome/browser/BUILD.gn chrome/browser/BUILD.gn
      ]
    }
  
-+  if (is_qnx) {
++  if (is_qnx && !is_linux) {
 +    sources += [
 +      "policy/browser_dm_token_storage_linux.cc",
 +      "policy/browser_dm_token_storage_linux.h",

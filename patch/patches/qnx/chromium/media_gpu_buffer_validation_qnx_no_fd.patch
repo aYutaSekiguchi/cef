@@ -1,0 +1,25 @@
+diff --git media/gpu/buffer_validation.cc media/gpu/buffer_validation.cc
+--- media/gpu/buffer_validation.cc
++++ media/gpu/buffer_validation.cc
+@@ -94,10 +94,21 @@ bool VerifyGpuMemoryBufferHandle(
+ 
+     size_t file_size_in_bytes;
+     if (file_size_cb_for_testing) {
+       file_size_in_bytes = file_size_cb_for_testing.Run();
++#if BUILDFLAG(IS_QNX)
++    } else {
++      base::CheckedNumeric<uint64_t> qnx_plane_end =
++          base::CheckAdd(plane.offset, plane.size);
++      if (!qnx_plane_end.IsValid() ||
++          !base::IsValueInRangeForNumericType<size_t>(qnx_plane_end.ValueOrDie())) {
++        return false;
++      }
++      file_size_in_bytes = base::strict_cast<size_t>(qnx_plane_end.ValueOrDie());
++#else
+     } else if (!plane.fd.is_valid() ||
+                !GetFileSize(plane.fd.get(), &file_size_in_bytes)) {
+       return false;
++#endif
+     }
+     const size_t plane_height =
+         media::VideoFrame::Rows(i, pixel_format, coded_size.height());

@@ -1,0 +1,12 @@
+diff --git gpu/vulkan/BUILD.gn gpu/vulkan/BUILD.gn
+--- gpu/vulkan/BUILD.gn
++++ gpu/vulkan/BUILD.gn
+@@ -149,7 +149,7 @@ component("vulkan") {
+         sources += [ "vulkan_image_android.cc" ]
+       }
+ 
+-      if (is_linux || is_chromeos) {
++      if ((is_linux || is_chromeos) && !is_qnx) {
+         sources += [ "vulkan_image_linux.cc" ]
+       }
+ 

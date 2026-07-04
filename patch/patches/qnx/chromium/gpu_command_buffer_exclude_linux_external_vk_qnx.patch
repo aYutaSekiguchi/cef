@@ -1,0 +1,21 @@
+diff --git gpu/command_buffer/service/BUILD.gn gpu/command_buffer/service/BUILD.gn
+--- gpu/command_buffer/service/BUILD.gn
++++ gpu/command_buffer/service/BUILD.gn
+@@ -449,7 +449,7 @@ component("service") {
+       "shared_image/texture_holder_vk.h",
+     ]
+ 
+-    if (is_linux || is_fuchsia || is_win) {
++    if ((is_linux && !is_qnx) || is_fuchsia || is_win) {
+       sources += [
+         "external_semaphore.cc",
+         "external_semaphore.h",
+@@ -485,7 +485,7 @@ component("service") {
+       }
+     }
+ 
+-    if (is_linux && use_dawn) {
++    if ((is_linux && !is_qnx) && use_dawn) {
+       sources += [
+         "shared_image/external_vk_image_dawn_representation.cc",
+         "shared_image/external_vk_image_dawn_representation.h",

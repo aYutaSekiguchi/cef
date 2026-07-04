@@ -1,0 +1,38 @@
+diff --git net/BUILD.gn net/BUILD.gn
+--- net/BUILD.gn
++++ net/BUILD.gn
+@@ -2355,7 +2355,7 @@ source_set("test_support") {
+     ]
+   }
+ 
+-  if (is_linux || is_chromeos || is_android) {
++  if ((is_linux || is_chromeos || is_android) && !is_qnx) {
+     sources += [
+       "base/address_tracker_linux_test_util.cc",
+       "base/address_tracker_linux_test_util.h",
+@@ -3185,14 +3185,14 @@ test("net_unittests") {
+     data += [ "cert/test_root_certs/nist-pkits/" ]
+   }
+ 
+-  if (is_linux) {
++  if (is_linux && !is_qnx) {
+     sources += [
+       "base/network_change_notifier_linux_unittest.cc",
+       "tools/quic/quic_simple_server_test.cc",
+     ]
+   }
+ 
+-  if (is_linux || is_chromeos) {
++  if ((is_linux || is_chromeos) && !is_qnx) {
+     sources += [
+       "base/address_tracker_linux_unittest.cc",
+       "base/network_interfaces_linux_unittest.cc",
+@@ -4373,7 +4373,7 @@ if (is_linux || is_chromeos) {
+   }
+ }
+ 
+-if (is_linux || is_chromeos) {
++if ((is_linux || is_chromeos) && !is_qnx) {
+   fuzzer_test("net_base_address_tracker_linux_fuzzer") {
+     sources = [ "base/address_tracker_linux_fuzzer.cc" ]
+     seed_corpus = "base/address_tracker_linux_fuzzer_corpus"

@@ -1,0 +1,47 @@
+diff --git content/browser/BUILD.gn content/browser/BUILD.gn
+--- content/browser/BUILD.gn
++++ content/browser/BUILD.gn
+@@ -2665,6 +2665,24 @@ source_set("browser") {
+       "zygote_host/zygote_host_impl_linux.cc",
+       "zygote_host/zygote_host_impl_linux.h",
+     ]
++    if (is_qnx) {
++      sources -= [
++        "child_process_launcher_helper_linux.cc",
++        "child_thread_type_switcher_linux.cc",
++        "child_thread_type_switcher_linux.h",
++        "file_system_access/file_path_watcher/file_path_watcher_inotify.cc",
++        "file_system_access/file_path_watcher/file_path_watcher_inotify.h",
++        "memory/swap_metrics_driver_impl_linux.cc",
++        "memory/swap_metrics_driver_impl_linux.h",
++        "sandbox_host_linux.cc",
++        "sandbox_host_linux.h",
++        "sandbox_ipc_linux.cc",
++        "sandbox_ipc_linux.h",
++        "zygote_host/zygote_host_impl_linux.cc",
++        "zygote_host/zygote_host_impl_linux.h",
++      ]
++      sources +=
++          [ "file_system_access/file_path_watcher/file_path_watcher_stub.cc" ]
++    }
+     if (use_linux_video_acceleration) {
+       sources += [
+         "media/video_encode_accelerator_provider_launcher.cc",
+@@ -2747,7 +2765,7 @@ source_set("browser") {
+     ]
+   }
+ 
+-  if (is_linux) {
++  if (is_linux && !is_qnx) {
+     sources += [ "speech/tts_linux.cc" ]
+     deps += [
+       "//third_party/speech-dispatcher",
+@@ -3033,7 +3051,7 @@ source_set("browser") {
+     deps += [ "//sandbox" ]
+   }
+ 
+-  if (is_linux) {
++  if (is_linux && !is_qnx) {
+     sources += [ "accessibility/browser_accessibility_state_impl_auralinux.cc" ]
+   }
+ 

@@ -1,0 +1,29 @@
+diff --git content/renderer/renderer_main_platform_delegate_linux.cc content/renderer/renderer_main_platform_delegate_linux.cc
+--- content/renderer/renderer_main_platform_delegate_linux.cc
++++ content/renderer/renderer_main_platform_delegate_linux.cc
+@@ -10,6 +10,7 @@
+ #include "base/check_op.h"
+ #include "base/command_line.h"
+ #include "base/files/file_util.h"
++#include "build/build_config.h"
+ #include "content/public/common/content_features.h"
+ #include "content/public/common/content_switches.h"
+ #include "sandbox/policy/sandbox.h"
+@@ -29,6 +30,9 @@ void RendererMainPlatformDelegate::PlatformUninitialize() {
+ }
+ 
+ bool RendererMainPlatformDelegate::EnableSandbox() {
++#if BUILDFLAG(IS_QNX)
++  return false;
++#else
+   // The setuid sandbox is started in the zygote process: zygote_main_linux.cc
+   // https://chromium.googlesource.com/chromium/src/+/main/docs/linux/suid_sandbox.md
+   //
+@@ -67,6 +71,7 @@ bool RendererMainPlatformDelegate::EnableSandbox() {
+ #endif  // __x86_64__
+ 
+   return true;
++#endif  // BUILDFLAG(IS_QNX)
+ }
+ 
+ }  // namespace content

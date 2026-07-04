@@ -1,0 +1,12 @@
+diff --git mojo/core/BUILD.gn mojo/core/BUILD.gn
+--- mojo/core/BUILD.gn
++++ mojo/core/BUILD.gn
+@@ -163,7 +163,7 @@ component("impl_for_embedder") {
+       "channel_posix.h",
+     ]
+ 
+-    if (is_linux || is_chromeos || is_android) {
++    if ((is_linux && !is_qnx) || is_chromeos || is_android) {
+       sources += [
+         "channel_linux.cc",
+         "channel_linux.h",

@@ -1,0 +1,21 @@
+diff --git build/config/compiler/BUILD.gn build/config/compiler/BUILD.gn
+--- build/config/compiler/BUILD.gn
++++ build/config/compiler/BUILD.gn
+@@ -1063,8 +1063,14 @@ config("compiler") {
+       # QNX SDP startup objects (for example crtn.o) do not carry
+       # .note.GNU-stack, which makes GNU ld warn about an implied executable
+       # stack. Keep fatal linker warnings enabled, but suppress only this
+-      # compatibility warning from the QNX-provided startup objects.
+-      ldflags += [ "-Wl,--no-warn-execstack" ]
++      # compatibility warning from the QNX-provided startup objects. Use SysV
++      # ELF hash tables and non-PIE executable links because the QNX 8 x86_64
++      # runtime loader can fault before main while loading very large Chromium
++      # PIE executables.
++      ldflags += [
++        "-Wl,--no-warn-execstack",
++        "-Wl,--hash-style=sysv",
++        "-no-pie",
++      ]
+     }
+     if (fatal_linker_warnings && is_apple) {
+       ldflags += [ "-Wl,-fatal_warnings" ]

@@ -2,14 +2,18 @@ diff --git components/sync_device_info/BUILD.gn components/sync_device_info/BUIL
 index d2059cb12f6624702ede57f25f57df91a9a7b7ad..6ed8a0f1e068ff36209aeba6c32fc3d5404b1eac 100644
 --- components/sync_device_info/BUILD.gn
 +++ components/sync_device_info/BUILD.gn
-@@ -77,6 +77,10 @@
+@@ -73,9 +73,13 @@ source_set("sync_device_info") {
+     sources += [ "local_device_info_util_mac.mm" ]
+   }
+ 
+-  if (is_linux) {
++  if (is_linux && !is_qnx) {
      sources += [ "local_device_info_util_linux.cc" ]
    }
-
++
 +  if (is_qnx) {
 +    sources += [ "local_device_info_util_qnx.cc" ]
 +  }
-+
+ 
    if (is_fuchsia) {
      sources += [ "local_device_info_util_fuchsia.cc" ]
-   }

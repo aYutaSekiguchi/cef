@@ -1,0 +1,19 @@
+diff --git content/child/BUILD.gn content/child/BUILD.gn
+--- content/child/BUILD.gn
++++ content/child/BUILD.gn
+@@ -125,10 +125,14 @@ target(link_target_type, "child") {
+     sources += [
+       "child_process_sandbox_support_impl_linux.cc",
+       "child_process_sandbox_support_impl_linux.h",
+-      "sandboxed_process_thread_type_handler.cc",
+-      "sandboxed_process_thread_type_handler.h",
+     ]
++    if (!is_qnx) {
++      sources += [
++        "sandboxed_process_thread_type_handler.cc",
++        "sandboxed_process_thread_type_handler.h",
++      ]
++    }
+     deps += [
+       "//components/services/font/public/cpp",
+       "//components/services/font/public/mojom",

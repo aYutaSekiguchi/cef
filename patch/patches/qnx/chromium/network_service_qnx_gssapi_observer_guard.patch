@@ -1,0 +1,71 @@
+diff --git services/network/network_service.h services/network/network_service.h
+--- services/network/network_service.h
++++ services/network/network_service.h
+@@ -237,11 +237,11 @@ class COMPONENT_EXPORT(NETWORK_SERVICE) NetworkService
+       const std::vector<ContentSettingPatternSource>& settings) override;
+ 
+   void SetExplicitlyAllowedPorts(const std::vector<uint16_t>& ports) override;
+-#if BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+   void SetGssapiLibraryLoadObserver(
+       mojo::PendingRemote<mojom::GssapiLibraryLoadObserver>
+           gssapi_library_load_observer) override;
+-#endif  // BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+@@ -300,9 +300,9 @@ class COMPONENT_EXPORT(NETWORK_SERVICE) NetworkService
+   std::unique_ptr<net::HttpAuthHandlerFactory> CreateHttpAuthHandlerFactory(
+       NetworkContext* network_context);
+ 
+-#if BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+   // This is called just before a GSSAPI library may be loaded.
+   void OnBeforeGssapiLibraryLoad();
+-#endif  // BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+@@ -575,9 +575,9 @@ class COMPONENT_EXPORT(NETWORK_SERVICE) NetworkService
+   mojo::Remote<mojom::NetworkAnnotationMonitor> network_annotation_monitor_;
+   mojo::Receiver<mojom::NetworkService> receiver_{this};
+ 
+-#if BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+   mojo::Remote<mojom::GssapiLibraryLoadObserver> gssapi_library_load_observer_;
+-#endif  // BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ 
+   mojo::Remote<mojom::HttpAuthStaticParamsObserver>
+       http_auth_static_params_observer_;
+diff --git services/network/network_service.cc services/network/network_service.cc
+--- services/network/network_service.cc
++++ services/network/network_service.cc
+@@ -1028,14 +1028,14 @@ void NetworkService::SetExplicitlyAllowedPorts(
+   net::SetExplicitlyAllowedPorts(ports);
+ }
+ 
+-#if BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ void NetworkService::SetGssapiLibraryLoadObserver(
+     mojo::PendingRemote<mojom::GssapiLibraryLoadObserver>
+         gssapi_library_load_observer) {
+   DCHECK(!gssapi_library_load_observer_.is_bound());
+   gssapi_library_load_observer_.Bind(std::move(gssapi_library_load_observer));
+ }
+-#endif  // BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+@@ -1168,7 +1168,7 @@ HttpAuthPreferences* NetworkService::GetHttpAuthPreferences(
+   );
+ }
+ 
+-#if BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ void NetworkService::OnBeforeGssapiLibraryLoad() {
+   if (gssapi_library_load_observer_.is_bound()) {
+     gssapi_library_load_observer_->OnBeforeGssapiLibraryLoad();
+@@ -1176,7 +1176,7 @@ void NetworkService::OnBeforeGssapiLibraryLoad() {
+     gssapi_library_load_observer_.reset();
+   }
+ }
+-#endif  // BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ 
+ void NetworkService::InitMockNetworkChangeNotifierForTesting() {
+   mock_network_change_notifier_ =

@@ -11,12 +11,29 @@
 
 #include <string>
 
+#include "base/command_line.h"
 #include "base/logging.h"
 #include "ui/ozone/platform/qnx/qnx_frame_importer.h"
 #include "ui/ozone/platform/qnx/qnx_window_manager.h"
 
 namespace ui {
 namespace qnx = ui::ozone::qnx::mojom;
+
+namespace {
+
+// Diagnostic command-line switch for QNX Ozone GPU trace output.
+// When present, emits grep-stable LOG(INFO) lines prefixed with "QNX_OZONE_GPU_TRACE"
+// at key browser-side SubmitFrame boundaries to confirm that the
+// GPU-produced DMAbuf frames reach the browser host and that the
+// import/display scaffold is reached.
+constexpr char kOzoneQnxGpuTraceSwitch[] = "ozone-qnx-gpu-trace";
+
+bool IsQnxGpuTraceEnabled() {
+  return base::CommandLine::ForCurrentProcess()->HasSwitch(
+      kOzoneQnxGpuTraceSwitch);
+}
+
+}  // namespace
 
 QnxGpuHost::QnxGpuHost(QnxWindowManager* window_manager)
     : window_manager_(window_manager) {
@@ -141,6 +158,9 @@ std::pair<bool, std::string> QnxGpuHost::ValidateFrameMetadata(
 
 void QnxGpuHost::SubmitFrame(qnx::QnxDmaBufFramePtr frame,
                              SubmitFrameCallback callback) {
+  if (IsQnxGpuTraceEnabled()) {
+    LOG(INFO) << "QNX_OZONE_GPU_TRACE QnxGpuHost::SubmitFrame: ENTERED";
+  }
   if (!frame) {
     DLOG(ERROR) << "QnxGpuHost::SubmitFrame: null frame pointer";
     std::move(callback).Run(false, "ERROR_NULL_FRAME: frame pointer is null");
@@ -215,6 +235,12 @@ void QnxGpuHost::SubmitFrame(qnx::QnxDmaBufFramePtr frame,
   // ---- Validation passed ----
   // Metadata is valid, widget exists, generation matches, GPU is attached.
   // Attempt EGL/Screen import and display via QnxFrameImporter.
+  if (IsQnxGpuTraceEnabled()) {
+    LOG(INFO) << "QNX_OZONE_GPU_TRACE QnxGpuHost::SubmitFrame: VALIDATION_PASSED"
+                 " widget=" << frame->widget
+              << " generation=" << frame->generation
+              << "; proceeding to EGL/Screen import";
+  }
 
   // ---- Step 6: Lazy-initialize frame importer ----
   if (!frame_importer_) {
@@ -237,12 +263,24 @@ void QnxGpuHost::SubmitFrame(qnx::QnxDmaBufFramePtr frame,
       frame_importer_->ImportAndDisplayFrame(frame->widget, *frame);
 
   if (display_ok) {
+    if (IsQnxGpuTraceEnabled()) {
+      LOG(INFO) << "QNX_OZONE_GPU_TRACE QnxGpuHost::SubmitFrame: "
+                   "FINAL widget=" << frame->widget
+                << " generation=" << frame->generation
+                << " accepted=true display_ok=true; eglSwapBuffers reached";
+    }
     DLOG(INFO) << "QnxGpuHost::SubmitFrame: widget=" << frame->widget
                << " generation=" << frame->generation
                << " import/display scaffold reached eglSwapBuffers; "
                   "display confirmed";
     std::move(callback).Run(true, std::string());
   } else {
+    if (IsQnxGpuTraceEnabled()) {
+      LOG(INFO) << "QNX_OZONE_GPU_TRACE QnxGpuHost::SubmitFrame: "
+                   "FINAL widget=" << frame->widget
+                << " generation=" << frame->generation
+                << " accepted=false deferred=" << display_diagnostic;
+    }
     DLOG(WARNING) << "QnxGpuHost::SubmitFrame: widget=" << frame->widget
                   << " import/display deferred: " << display_diagnostic;
     std::move(callback).Run(false, display_diagnostic);

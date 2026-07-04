@@ -1,0 +1,31 @@
+diff --git ui/gfx/mojom/native_handle_types_mojom_traits.h ui/gfx/mojom/native_handle_types_mojom_traits.h
+--- ui/gfx/mojom/native_handle_types_mojom_traits.h
++++ ui/gfx/mojom/native_handle_types_mojom_traits.h
+@@ -77,13 +77,13 @@ struct COMPONENT_EXPORT(GFX_NATIVE_HANDLE_TYPES_SHARED_MOJOM_TRAITS)
+     return pixmap_handle.planes;
+   }
+ 
+-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_QNX)
+   static uint64_t modifier(const gfx::NativePixmapHandle& pixmap_handle) {
+     return pixmap_handle.modifier;
+   }
+ #endif
+ 
+-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_QNX)
+   static bool supports_zero_copy_webgpu_import(
+       const gfx::NativePixmapHandle& pixmap_handle) {
+     return pixmap_handle.supports_zero_copy_webgpu_import;
+diff --git ui/gfx/mojom/native_handle_types_mojom_traits.cc ui/gfx/mojom/native_handle_types_mojom_traits.cc
+--- ui/gfx/mojom/native_handle_types_mojom_traits.cc
++++ ui/gfx/mojom/native_handle_types_mojom_traits.cc
+@@ -126,7 +126,7 @@ bool StructTraits<
+     gfx::mojom::NativePixmapHandleDataView,
+     gfx::NativePixmapHandle>::Read(gfx::mojom::NativePixmapHandleDataView data,
+                                    gfx::NativePixmapHandle* out) {
+-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_QNX)
+   out->modifier = data.modifier();
+   out->supports_zero_copy_webgpu_import =
+       data.supports_zero_copy_webgpu_import();

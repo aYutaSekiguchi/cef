@@ -1,0 +1,47 @@
+diff --git content/common/BUILD.gn content/common/BUILD.gn
+--- content/common/BUILD.gn
++++ content/common/BUILD.gn
+@@ -36,24 +36,26 @@ if (is_linux || is_chromeos) {
+       "zygote/zygote_communication_linux.h",
+     ]
+ 
+-    sources = [
+-      "zygote/sandbox_support_linux.cc",
+-      "zygote/send_zygote_child_ping_linux.cc",
+-      "zygote/zygote_communication_linux.cc",
+-    ]
+-
+-    deps = [
+-      "//base",
+-      "//base:i18n",
+-      "//content/public/common:content_descriptors",
+-      "//content/public/common:result_codes",
+-      "//content/public/common:sandbox_support_linux",
+-      "//content/public/common:switches",
+-      "//sandbox/policy",
+-      "//third_party/icu",
+-    ]
+-
+-    configs += [ "//content:content_implementation" ]
++    if (!is_qnx) {
++      sources = [
++        "zygote/sandbox_support_linux.cc",
++        "zygote/send_zygote_child_ping_linux.cc",
++        "zygote/zygote_communication_linux.cc",
++      ]
++
++      deps = [
++        "//base",
++        "//base:i18n",
++        "//content/public/common:content_descriptors",
++        "//content/public/common:result_codes",
++        "//content/public/common:sandbox_support_linux",
++        "//content/public/common:switches",
++        "//sandbox/policy",
++        "//third_party/icu",
++      ]
++
++      configs += [ "//content:content_implementation" ]
++    }
+   }
+ }

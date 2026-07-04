@@ -1,0 +1,19 @@
+diff --git content/common/pseudonymization_salt.cc content/common/pseudonymization_salt.cc
+--- content/common/pseudonymization_salt.cc
++++ content/common/pseudonymization_salt.cc
+@@ -12,6 +12,7 @@
+ #include "base/memory/shared_memory_switch.h"
+ #include "base/no_destructor.h"
+ #include "build/blink_buildflags.h"
++#include "build/build_config.h"
+ #include "content/public/common/content_switches.h"
+@@ -117,6 +118,9 @@ bool InitializeSaltFromSharedMemory(
+ 
+ void MaybeInitializePseudonymizationSaltFromSharedMemory(
+     const base::CommandLine& command_line) {
++#if BUILDFLAG(IS_QNX)
++  return;
++#endif
+   if (!command_line.HasSwitch(switches::kPseudonymizationSaltHandle)) {
+     return;
+   }

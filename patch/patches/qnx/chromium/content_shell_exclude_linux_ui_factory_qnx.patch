@@ -1,0 +1,12 @@
+diff --git content/shell/BUILD.gn content/shell/BUILD.gn
+--- content/shell/BUILD.gn
++++ content/shell/BUILD.gn
+@@ -415,7 +415,7 @@ group("content_shell_crash_test") {
+     deps += [ "//gin" ]
+   }
+ 
+-  if (is_linux) {
++  if (is_linux && !is_qnx) {
+     deps += [ "//ui/linux:linux_ui_factory" ]
+   }
+ 

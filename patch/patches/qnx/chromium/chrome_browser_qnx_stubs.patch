@@ -22,7 +22,7 @@ diff --git chrome/browser/BUILD.gn chrome/browser/BUILD.gn
 +    ]
 +  }
 +
-+  if (is_qnx) {
++  if (is_qnx && !is_linux) {
 +    sources += [
 +      "memory_details_linux.cc",
      ]

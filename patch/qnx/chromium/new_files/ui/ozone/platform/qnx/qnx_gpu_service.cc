@@ -16,6 +16,7 @@
 #include <string>
 #include <utility>
 
+#include "base/command_line.h"
 #include "base/logging.h"
 #include "base/scoped_generic.h"
 #include "mojo/public/cpp/platform/platform_handle.h"
@@ -23,6 +24,23 @@
 
 namespace ui {
 namespace qnx = ui::ozone::qnx::mojom;
+
+namespace {
+
+// Diagnostic command-line switch for QNX Ozone GPU trace output.
+// When present, emits grep-stable LOG(INFO) lines prefixed with "QNX_OZONE_GPU_TRACE"
+// at key GPU-service and GPU-host Mojo IPC boundaries to confirm that the
+// out-of-process SubmitFrame path is reached at runtime without requiring
+// a visual smoke test.
+// Usage: --ozone-qnx-gpu-trace
+constexpr char kOzoneQnxGpuTraceSwitch[] = "ozone-qnx-gpu-trace";
+
+bool IsQnxGpuTraceEnabled() {
+  return base::CommandLine::ForCurrentProcess()->HasSwitch(
+      kOzoneQnxGpuTraceSwitch);
+}
+
+}  // namespace
 
 QnxGpuService::QnxGpuService(QnxSurfaceFactoryOzone* surface_factory)
     : surface_factory_(surface_factory),
@@ -91,6 +109,10 @@ void QnxGpuService::Initialize(
   DLOG(INFO) << "QnxGpuService::Initialize: gpu_host_remote bound; "
                 "GPU can now call SubmitFrame / ReportProducerLost; "
                 "QnxGpuControl receiver bound via binder in AddInterfaces";
+  if (IsQnxGpuTraceEnabled()) {
+    LOG(INFO) << "QNX_OZONE_GPU_TRACE QnxGpuService::Initialize: gpu_host_remote"
+                 " bound; GPU process is ready to call SubmitFrame";
+  }
 }
 
 // ======================================================================
@@ -103,6 +125,11 @@ void QnxGpuService::AttachWidget(gfx::AcceleratedWidget widget,
   DLOG(INFO) << "QnxGpuService::AttachWidget: widget=" << widget
              << " generation=" << generation
              << " size=" << size.width() << "x" << size.height();
+  if (IsQnxGpuTraceEnabled()) {
+    LOG(INFO) << "QNX_OZONE_GPU_TRACE QnxGpuService::AttachWidget: widget=" << widget
+              << " generation=" << generation
+              << " size=" << size.width() << "x" << size.height();
+  }
 
   if (!producer_manager_) {
     DLOG(ERROR) << "QnxGpuService::AttachWidget: producer_manager_ is null; "
@@ -150,16 +177,32 @@ void QnxGpuService::AttachWidget(gfx::AcceleratedWidget widget,
   // Guard: only fire if the browser host remote is bound (AttachExistingWidgets
   // ensures Initialize() was called first) and the producer is valid.
   if (enable_attach_test_frame_ && gpu_host_remote_ && producer->is_valid()) {
+    if (IsQnxGpuTraceEnabled()) {
+      LOG(INFO) << "QNX_OZONE_GPU_TRACE QnxGpuService::AttachWidget: "
+                   "widget=" << widget << " generation=" << generation
+                << " TRIGGER SubmitTestFrameForWidget (remote_bound=true "
+                   "producer_valid=true)";
+    }
     DLOG(INFO) << "QnxGpuService::AttachWidget: trigger: calling "
                   "SubmitTestFrameForWidget(widget="
                << widget << ", generation=" << generation << ")";
     SubmitTestFrameForWidget(widget, generation);
   } else if (enable_attach_test_frame_ && !gpu_host_remote_) {
+    if (IsQnxGpuTraceEnabled()) {
+      LOG(INFO) << "QNX_OZONE_GPU_TRACE QnxGpuService::AttachWidget: "
+                   "widget=" << widget << " generation=" << generation
+                << " SKIP SubmitTestFrameForWidget (remote_bound=false)";
+    }
     DLOG(WARNING) << "QnxGpuService::AttachWidget: enable_attach_test_frame_ "
                      "is true but gpu_host_remote_ is null; skipping "
                      "SubmitTestFrameForWidget (GPU service may not be "
                      "initialized yet)";
   } else if (enable_attach_test_frame_ && !producer->is_valid()) {
+    if (IsQnxGpuTraceEnabled()) {
+      LOG(INFO) << "QNX_OZONE_GPU_TRACE QnxGpuService::AttachWidget: "
+                   "widget=" << widget << " generation=" << generation
+                << " SKIP SubmitTestFrameForWidget (producer_valid=false)";
+    }
     DLOG(WARNING) << "QnxGpuService::AttachWidget: enable_attach_test_frame_ "
                      "is true but producer is not valid; skipping "
                      "SubmitTestFrameForWidget";
@@ -209,14 +252,30 @@ void QnxGpuService::ResizeWidget(gfx::AcceleratedWidget widget,
   // After the producer is re-created at the new size, submit a test frame
   // to validate the resized export path.  Same guard as AttachWidget.
   if (enable_attach_test_frame_ && gpu_host_remote_ && producer->is_valid()) {
+    if (IsQnxGpuTraceEnabled()) {
+      LOG(INFO) << "QNX_OZONE_GPU_TRACE QnxGpuService::ResizeWidget: "
+                   "widget=" << widget << " generation=" << generation
+                << " TRIGGER SubmitTestFrameForWidget (remote_bound=true "
+                   "producer_valid=true)";
+    }
     DLOG(INFO) << "QnxGpuService::ResizeWidget: trigger: calling "
                   "SubmitTestFrameForWidget(widget="
                << widget << ", generation=" << generation << ")";
     SubmitTestFrameForWidget(widget, generation);
   } else if (enable_attach_test_frame_ && !gpu_host_remote_) {
+    if (IsQnxGpuTraceEnabled()) {
+      LOG(INFO) << "QNX_OZONE_GPU_TRACE QnxGpuService::ResizeWidget: "
+                   "widget=" << widget << " generation=" << generation
+                << " SKIP SubmitTestFrameForWidget (remote_bound=false)";
+    }
     DLOG(WARNING) << "QnxGpuService::ResizeWidget: enable_attach_test_frame_ "
                      "is true but gpu_host_remote_ is null; skipping";
   } else if (enable_attach_test_frame_ && !producer->is_valid()) {
+    if (IsQnxGpuTraceEnabled()) {
+      LOG(INFO) << "QNX_OZONE_GPU_TRACE QnxGpuService::ResizeWidget: "
+                   "widget=" << widget << " generation=" << generation
+                << " SKIP SubmitTestFrameForWidget (producer_valid=false)";
+    }
     DLOG(WARNING) << "QnxGpuService::ResizeWidget: enable_attach_test_frame_ "
                      "is true but producer is not valid; skipping";
   }
@@ -336,6 +395,13 @@ void QnxGpuService::SubmitTestFrameForWidget(gfx::AcceleratedWidget widget,
     return;
   }
 
+  if (IsQnxGpuTraceEnabled()) {
+    LOG(INFO) << "QNX_OZONE_GPU_TRACE QnxGpuService::SubmitTestFrameForWidget: "
+                 "widget=" << widget << " generation=" << generation
+              << " planes=" << frame.planes.size()
+              << " size=" << frame.width << "x" << frame.height
+              << "; calling gpu_host_remote_->SubmitFrame";
+  }
   DLOG(INFO) << "QnxGpuService::SubmitTestFrameForWidget: widget=" << widget
              << " generation=" << generation
              << " frame has " << frame.planes.size() << " plane(s)"
@@ -350,6 +416,13 @@ void QnxGpuService::SubmitTestFrameForWidget(gfx::AcceleratedWidget widget,
       base::BindOnce(
           [](gfx::AcceleratedWidget widget, uint32_t generation,
              bool accepted, const std::string& diagnostic) {
+            if (IsQnxGpuTraceEnabled()) {
+              LOG(INFO) << "QNX_OZONE_GPU_TRACE QnxGpuService::"
+                           "SubmitTestFrameForWidget callback: widget="
+                        << widget << " generation=" << generation
+                        << " accepted=" << accepted
+                        << " diagnostic=" << diagnostic;
+            }
             DLOG(INFO) << "QnxGpuService::SubmitTestFrameForWidget: "
                           "widget="
                        << widget << " generation=" << generation

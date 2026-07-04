@@ -1,0 +1,20 @@
+diff --git net/BUILD.gn net/BUILD.gn
+--- net/BUILD.gn
++++ net/BUILD.gn
+@@ -126,7 +126,7 @@ net_configs = [
+   "//build/config/compiler:wexit_time_destructors",
+ ]
+ 
+-if (is_linux || is_chromeos) {
++if ((is_linux || is_chromeos) && !is_qnx) {
+   net_configs += [ "//build/config/linux:libresolv" ]
+ }
+@@ -1597,7 +1597,7 @@ component("net") {
+   }
+ 
+   # Use getifaddrs() on POSIX platforms, except Linux.
+-  if (is_posix && !is_linux && !is_chromeos) {
++  if ((is_posix && !is_linux && !is_chromeos) || is_qnx) {
+     sources += [
+       "base/network_interfaces_getifaddrs.cc",
+       "base/network_interfaces_getifaddrs.h",

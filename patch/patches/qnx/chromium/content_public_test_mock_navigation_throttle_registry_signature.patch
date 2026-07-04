@@ -1,0 +1,25 @@
+diff --git content/public/test/mock_navigation_throttle_registry.h content/public/test/mock_navigation_throttle_registry.h
+--- content/public/test/mock_navigation_throttle_registry.h
++++ content/public/test/mock_navigation_throttle_registry.h
+@@ -49,7 +49,8 @@ class MockNavigationThrottleRegistry : public NavigationThrottleRegistry {
+ 
+   // Implements NavigationThrottleRegistry:
+   NavigationHandle& GetNavigationHandle() override;
+-  void AddThrottle(std::unique_ptr<NavigationThrottle> throttle) override;
++  void AddThrottle(std::unique_ptr<NavigationThrottle> throttle,
++                   bool first = false) override;
+   bool IsHTTPOrHTTPS() override;
+   // Following methods are not supported in this mock, and returns false always.
+diff --git content/public/test/mock_navigation_throttle_registry.cc content/public/test/mock_navigation_throttle_registry.cc
+--- content/public/test/mock_navigation_throttle_registry.cc
++++ content/public/test/mock_navigation_throttle_registry.cc
+@@ -27,7 +27,8 @@ NavigationHandle& MockNavigationThrottleRegistry::GetNavigationHandle() {
+ }
+ 
+ void MockNavigationThrottleRegistry::AddThrottle(
+-    std::unique_ptr<NavigationThrottle> throttle) {
++    std::unique_ptr<NavigationThrottle> throttle,
++    bool first) {
+   CHECK(throttle);
+   switch (registration_mode_) {
+     case RegistrationMode::kAutoRegistrationForTesting:

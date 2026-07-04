@@ -37,6 +37,7 @@ QnxSurfaceFactoryOzone::~QnxSurfaceFactoryOzone() = default;
 std::vector<gl::GLImplementationParts>
 QnxSurfaceFactoryOzone::GetAllowedGLImplementations() {
   return std::vector<gl::GLImplementationParts>{
+      gl::GLImplementationParts(gl::kGLImplementationEGLGLES2),
       gl::GLImplementationParts(gl::kGLImplementationEGLANGLE),
   };
 }

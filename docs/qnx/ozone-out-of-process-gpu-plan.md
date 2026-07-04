@@ -1,22 +1,24 @@
 # QNX Ozone out-of-process GPU implementation plan
 
 > Created: 2026-07-02
-> Status: Active implementation / paused after Phase 5 bounded demo smoke
+> Status: Phase 5 content_shell now builds; QNX runtime reaches browser startup with native qnx Ozone selected, but OOP GPU smoke is still blocked by GPU-process connection/crash before QNX GPU trace handoff (2026-07-04).
 > Scope: Native QNX Screen/EGL Ozone backend for Chromium/CEF, targeting x86_64 QEMU first and aarch64 boards later.
 
 ## Operating rule
 
 This file is the durable source of truth for this work. Before starting any new phase or newly discovered task, update this document first. After each phase completes, mark its checklist item complete and record evidence. Do not rely on conversation context for the plan.
 
-## Current pause / machine-safety note
+## Current runtime / machine-safety note
 
-As of 2026-07-04, work is paused after the bounded `ozone_demo` software-canvas smoke because the next exploratory out-of-process target build (`content/shell:content_shell`) was broad and coincided with local machine instability. Do not resume by launching another broad Chromium build automatically. First do read-only target/entrypoint analysis, then ask for approval before any large build; if approved, use constrained parallelism (for example `ninja -j2`) and keep logs summarized.
+As of 2026-07-04, `content/shell:content_shell` builds successfully for QNX with `-j10`; latest successful build log: `out/qnx_release/content_shell_recovery_build51_pseudosalt.log`. The binary needed two runtime-loader mitigations on QNX x86_64: SysV ELF hash tables and non-PIE executable links. With `ozone_platform_qnx = true`, `content_shell --ozone-platform=qnx --use-gl=egl --no-sandbox about:blank` now reaches browser startup and opens DevTools, but the GPU process still restarts/exits before the expected `QNX_OZONE_GPU_TRACE` handoff lines (`QnxGpuPlatformSupportHost::OnGpuServiceLaunched`, `QnxGpuService::Initialize`, `QnxGpuHost::SubmitFrame`). Latest smoke log: `out/qnx_release/content_shell_qnx_virgl_smoke7_pseudosalt.log`.
 
-Current safety state recorded in `docs/qnx/history/research/qnx-ozone-phase5-current-status-pause-2026-07-04.md`:
+Current next blocker:
 
-- no active `ninja`/`clang`/`ld.lld`/`qemu-system` process was observed at pause time;
-- temporary root Chromium QNX source state was cleaned (`build/config/ozone.gni`, `ui/ozone/BUILD.gn`, `ui/ozone/public/ozone_platform.cc`, and `ui/ozone/platform/qnx`);
-- durable QNX source remains under `patch/qnx/chromium/new_files/` and docs under `docs/qnx/`.
+- Browser process starts with native qnx Ozone and receives QNX Screen events.
+- GPU process is launched out-of-process, but command-buffer creation fails and the GPU process exits/restarts (`GPU process exited unexpectedly: exit_code=133` without gdb; under `--gpu-launcher=/usr/bin/gdb ...`, the GPU child exits normally after 15 seconds with no browser connection).
+- Next work should debug the GPU-process Mojo/child connection and make QNX GPU trace logging visible at browser/GPU service handoff before continuing frame-submission work.
+
+Safety note: large broad builds are now user-approved at `-j10`, but continue to capture logs to `out/qnx_release/*.log` and summarize them; do not read raw logs directly.
 
 ## User-approved direction
 
@@ -375,7 +377,7 @@ Acceptance evidence:
 
 ### Phase 5 — GPU-side QNX render producer
 
-Status: active but paused for safety. QNX-local Mojo interface, GPU-side producer/export scaffold, browser/GPU Mojo service binding, attach/generation lifecycle, GPU-side render-producer lifecycle, browser-side EGL/Screen import/display scaffold, attach-time SubmitFrame trigger, and bounded `ozone_demo` software-canvas smoke compile/run after validation. The accepted binding architecture uses the Ozone `GpuPlatformSupportHost` launch bridge: browser owns `QnxGpuHost`, GPU exposes startup `QnxGpuService`, and browser passes a `pending_remote<QnxGpuHost>` to the GPU service after launch. Next substep remains out-of-process runtime smoke, but the exploratory `content_shell` build was too broad and stopped at a non-QNX-Ozone test-support compile error; find a smaller/safer target before resuming heavy builds.
+Status: active but paused for safety. QNX-local Mojo interface, GPU-side producer/export scaffold, browser/GPU Mojo service binding, attach/generation lifecycle, GPU-side render-producer lifecycle, browser-side EGL/Screen import/display scaffold, attach-time SubmitFrame trigger, and bounded `ozone_demo` software-canvas smoke compile/run after validation. The accepted binding architecture uses the Ozone `GpuPlatformSupportHost` launch bridge: browser owns `QnxGpuHost`, GPU exposes startup `QnxGpuService`, and browser passes a `pending_remote<QnxGpuHost>` to the GPU service after launch. OOP smoke target audit completed; `content_shell` is the smallest viable OOP candidate but is large/heavy; no broad build without explicit approval. `--ozone-qnx-gpu-trace` diagnostic switch implemented. Next: narrow compile validation of the trace logging changes at `-j10`; broad `content_shell` build/run with `--ozone-qnx-gpu-trace` requires explicit approval.
 
 Planned files, subject to Phase 2 design confirmation:
 
@@ -409,7 +411,8 @@ Acceptance evidence:
 - [x] QNX Ozone `ozone_demo --ozone-platform=qnx` starts without the earlier keyboard-layout-engine segfault.
 - [x] QEMU virgl `ozone_demo --ozone-platform=qnx` software-canvas smoke runs without startup crash or software-surface failure and captures a screenshot artifact.
 - [ ] QEMU virgl runtime smoke demonstrates at least one out-of-process `SubmitFrame` attempt and records log/screenshot evidence.
-- [ ] Identify a smaller/safer out-of-process GPU smoke target than full `content_shell` or `cefsimple`, or get explicit approval before retrying a broad build with constrained parallelism.
+- [x] Identify smallest viable out-of-process GPU smoke target: `content_shell` is the only candidate found; `ozone_demo` uses `single_process=true` so it never exercises OOP GPU path.
+- [x] Add `--ozone-qnx-gpu-trace` diagnostic command-line switch that emits grep-stable `QNX_OZONE_GPU_TRACE` prefix logs at key Mojo IPC boundaries in `QnxGpuService::Initialize`, `AttachWidget`, `SubmitTestFrameForWidget`, and `QnxGpuHost::SubmitFrame`. Existing behavior is unchanged when the switch is absent.
 - No final acceptance depends on `--in-process-gpu`.
 
 ### Phase 6 — Browser/GPU reconnect and crash recovery
@@ -499,4 +502,7 @@ Acceptance evidence:
 - 2026-07-03: First runtime smoke attempt recorded in `docs/qnx/history/research/qnx-ozone-phase5-runtime-smoke-attempt-2026-07-03.md`. `ui/ozone/demo:ozone_demo` built (`6667/6667`), `ozone_demo --help` exits 0 under QNX, and `--ozone-platform=headless` times out without segfault, but `--ozone-platform=qnx` under QEMU virgl exits 139 in libc++ `std::__pad_and_output`. Full `cef:cefsimple` build was started but stopped around `9731/78833` because it was too broad for this smoke turn.
 - 2026-07-03: Startup crash fixed in `docs/qnx/history/research/qnx-ozone-phase5-runtime-startup-crash-fix-2026-07-03.md` and cataloged in `docs/qnx/history/build-errors/test/runtime-assumption/qnx-ozone-demo-keyboard-layout-engine.md`. Root cause: QNX Ozone did not install a `KeyboardLayoutEngine`; `ozone_demo` dereferenced it after `InitializeForUI()`. Runtime then reached the next blocker: GL display initialization fails, demo falls back to software rendering, and `SoftwareRenderer` fails because QNX `CreateCanvasForWidget()` is missing.
 - 2026-07-03: Bounded demo render surface completed in `docs/qnx/history/research/qnx-ozone-phase5-demo-render-surface-2026-07-03.md`. `QnxSurfaceOzoneCanvas` provides `CreateCanvasForWidget()` and posts Skia raster pixels to QNX Screen. `ozone_demo --ozone-platform=qnx` under QEMU virgl no longer reports `Failed to create software surface`; screenshot capture succeeded at `out/qnx_phase5_runtime_fix/qnx-ozone-demo.bmp`.
-- 2026-07-04: Current status / safety pause recorded in `docs/qnx/history/research/qnx-ozone-phase5-current-status-pause-2026-07-04.md`. Exploratory `content/shell:content_shell` build in `out/qnx_phase5_oop_smoke` did not produce `content_shell`; latest observed blocker was `content/public/test/mock_navigation_throttle_registry.h` signature drift (`AddThrottle` override has 1 parameter while base has 2). This is not accepted OOP validation. Temporary root Chromium patch state was cleaned. Next: read-only target/entrypoint audit for a smaller out-of-process GPU smoke target, or ask before any broad build retry.
+- 2026-07-04: Current status / safety pause recorded in `docs/qnx/history/research/qnx-ozone-phase5-current-status-pause-2026-07-04.md`. Exploratory `content/shell:content_shell` build in `out/qnx_phase5_oop_smoke` did not produce `content_shell`; latest observed blocker was `content/public/test/mock_navigation_throttle_registry.h` signature drift (`AddThrottle` override has 1 parameter while base has 2). This is not accepted OOP validation. Temporary root Chromium patch state was cleaned.
+- 2026-07-04: OOP smoke target audit completed in `docs/qnx/history/research/qnx-ozone-phase5-oop-smoke-target-audit-2026-07-04.md`. Key finding: `ozone_demo` uses `single_process=true` so it never calls `OnGpuServiceLaunched`; `content_shell` is the only viable OOP smoke target found. Commands corrected to use `./tools/...` paths and note that `out/qnx_release` must be regenerated via `cef_create_projects_qnx.sh` to include newly committed Phase 5 files.
+- 2026-07-04: `--ozone-qnx-gpu-trace` diagnostic switch implemented in `qnx_gpu_service.cc` and `qnx_gpu_host.cc`. Report in `docs/qnx/history/research/qnx-ozone-phase5-gpu-trace-logging-2026-07-04.md`. Narrow compile validation at `-j10` succeeded: `ui/ozone/platform/qnx/mojom:mojom` + `ui/ozone/platform/qnx:qnx` built 10120/10120 steps with RC: 0. Report in `docs/qnx/history/research/qnx-ozone-phase5-gpu-trace-compile-2026-07-04.md`.
+- 2026-07-04: User-approved `content/shell:content_shell` attempt at `-j10` with `--ozone-qnx-gpu-trace` was stopped. Bootstrap reported 10 patches failed (`base_posix_elf_reader_qnx`, `chrome_browser_linux_is_qnx`, `first_run_dialog_qnx`, and 7 others). The tree is dirty; the result is not accepted. Build then failed on the dirty tree with the wrong GN label `content_shell:content_shell`, restarted with correct label, and progressed to only ~[140/44295] before subagent timeout. First blockers visible in the log: `os_crypt_linux.cc` (unknown identifiers / atomic_ref), `update_query_params.cc` (`#error unknown os`), `policy_constants.cc` (zero-length array to span), `sandbox/linux/proc_util.cc` (`d_type`/`DT_LNK`), `sandbox/linux/syscall_wrappers.cc` and `scoped_process.cc` (`sys/syscall.h` missing). Crashpad/farmhash/libsync blockers reported by timed-out worker were not confirmed in the visible log. Next required step is QNX bootstrap recovery (clean tree, fix or revert the 10 failing patches) before another `content/shell:content_shell` attempt. Report in `docs/qnx/history/research/qnx-ozone-phase5-content-shell-trace-run-2026-07-04.md`.

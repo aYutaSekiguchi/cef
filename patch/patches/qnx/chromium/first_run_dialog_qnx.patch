@@ -25,7 +25,7 @@ diff --git chrome/browser/ui/BUILD.gn chrome/browser/ui/BUILD.gn
      }
    }
  
-+  if (is_qnx) {
++  if (is_qnx && !is_linux) {
 +    sources += [
 +      "views/first_run_dialog.cc",
 +      "views/first_run_dialog.h",

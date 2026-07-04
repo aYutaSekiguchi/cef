@@ -1,0 +1,56 @@
+diff --git services/network/public/mojom/BUILD.gn services/network/public/mojom/BUILD.gn
+--- services/network/public/mojom/BUILD.gn
++++ services/network/public/mojom/BUILD.gn
+@@ -720,11 +720,11 @@ mojom("url_loader_base") {
+   ]
+ 
+   enabled_features = []
+-  if (is_android || is_chromeos || is_linux) {
++  if (is_android || is_chromeos || (is_linux && !is_qnx)) {
+     enabled_features += [ "network_change_notifier_in_browser" ]
+   }
+ 
+-  if (is_linux) {
++  if (is_linux && !is_qnx) {
+     # TODO(crbug.com/40263697): Remove this once is_linux in the mojom IDL does
+     # not include lacros.
+     enabled_features += [ "use_network_interface_change_listener" ]
+@@ -1109,7 +1109,7 @@ mojom("network_service") {
+     },
+   ]
+ 
+-  if (is_linux) {
++  if (is_linux && !is_qnx) {
+     cpp_typemaps += [
+       {
+         types = [
+@@ -1898,7 +1898,7 @@ mojom("network_service_blink") {
+     }
+   }
+ 
+-  if (is_linux) {
++  if (is_linux && !is_qnx) {
+     # TODO(crbug.com/40263697): Remove this once is_linux in the mojom IDL does
+     # not include lacros.
+     enabled_features += [ "use_network_interface_change_listener" ]
+diff --git services/network/public/cpp/BUILD.gn services/network/public/cpp/BUILD.gn
+--- services/network/public/cpp/BUILD.gn
++++ services/network/public/cpp/BUILD.gn
+@@ -725,7 +725,7 @@ component("cpp_base") {
+     sources += [ "transferable_directory_fuchsia.cc" ]
+   }
+ 
+-  if (is_linux) {
++  if (is_linux && !is_qnx) {
+     sources += [
+       "network_interface_change_listener_mojom_traits.cc",
+       "network_interface_change_listener_mojom_traits.h",
+@@ -882,7 +882,7 @@ source_set("test_support") {
+     sources += [ "network_shared_dictionary_test_utils.cc" ]
+   }
+ 
+-  if (is_linux) {
++  if (is_linux && !is_qnx) {
+     sources += [ "network_interface_change_listener_mojom_traits_unittest.cc" ]
+   }
+ 

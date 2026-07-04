@@ -416,6 +416,7 @@ use_system_libffi = false
 ozone_platform_wayland = false
 ozone_platform_x11 = false
 ozone_platform_drm = false
+ozone_platform_qnx = true
 rtc_use_pipewire = false
 use_vaapi = false
 

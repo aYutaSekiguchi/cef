@@ -1,12 +1,11 @@
 diff --git ui/ozone/BUILD.gn ui/ozone/BUILD.gn
-index a1b2c3d4e5f67890..1234567890abcdef 100644
 --- ui/ozone/BUILD.gn
 +++ ui/ozone/BUILD.gn
-@@ -68,6 +68,11 @@ if (ozone_platform_flatland) {
+@@ -71,6 +71,11 @@ if (ozone_platform_flatland) {
    ozone_platform_test_deps += [ "platform/flatland:flatland_unittests" ]
  }
-
-+if (ozone_platform_qnx) {
+ 
++if (ozone_platform_qnx && is_qnx) {
 +  ozone_platforms += [ "qnx" ]
 +  ozone_platform_deps += [ "platform/qnx" ]
 +}

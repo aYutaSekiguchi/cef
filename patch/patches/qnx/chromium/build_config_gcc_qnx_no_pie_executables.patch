@@ -1,0 +1,14 @@
+diff --git build/config/gcc/BUILD.gn build/config/gcc/BUILD.gn
+--- build/config/gcc/BUILD.gn
++++ build/config/gcc/BUILD.gn
+@@ -93,7 +93,10 @@ if (is_component_build && !is_android) {
+ config("executable_config") {
+   configs = executable_and_shared_library_configs_
+-  ldflags = [ "-pie" ]
++  ldflags = []
++  if (!is_qnx) {
++    ldflags += [ "-pie" ]
++  }
+   if (is_android) {
+     ldflags += [
+       "-Bdynamic",
