@@ -1,0 +1,30 @@
+diff --git components/viz/service/display/skia_renderer.cc components/viz/service/display/skia_renderer.cc
+--- components/viz/service/display/skia_renderer.cc
++++ components/viz/service/display/skia_renderer.cc
+@@ -1231,7 +1231,13 @@ void SkiaRenderer::SwapBuffersComplete(
+ }
+ 
+ void SkiaRenderer::BuffersPresented() {
++#if BUILDFLAG(IS_QNX)
++  // QNX OOP GPU: the pbuffer offscreen path may call BuffersPresented
++  // after a no-op SwapBuffers without any pending overlay locks.
++  return;
++#else
+   read_lock_release_fence_overlay_locks_.pop_front();
++#endif
+ }
+ 
+ void SkiaRenderer::DidReceiveReleasedOverlays(
+@@ -1249,6 +1255,12 @@ void SkiaRenderer::DidReceiveReleasedOverlays(
+     }
+     awaiting_release_overlay_locks_.erase(iter);
+   }
++#elif BUILDFLAG(IS_QNX)
++  // QNX OOP GPU: the pbuffer-backed offscreen surface doesn't use native
++  // overlays. DidReceiveReleasedOverlays is called by swap completion but
++  // should be a no-op on QNX. (On other non-Apple platforms it's NOTREACHED
++  // because overlays are handled via a different mechanism that shouldn't
++  // invoke this callback.)
+ #else
+   // Only macOS has the requirement of polling the OS compositor to check if the
+   // overlay images have been released.

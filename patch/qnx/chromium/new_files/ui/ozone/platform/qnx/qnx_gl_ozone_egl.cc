@@ -41,14 +41,23 @@ bool QnxGLOzoneEGL::LoadGLES2Bindings(
 scoped_refptr<gl::GLSurface> QnxGLOzoneEGL::CreateViewGLSurface(
     gl::GLDisplay* display,
     gfx::AcceleratedWidget widget) {
-  // GPU process does not have access to browser-owned screen_window_t.
-  // Use an offscreen pbuffer surface for GPU-side rendering instead.
-  // The actual DMAbuf export uses eglCreateDRMImageMESA which does not
-  // require a window surface.
-  NOTREACHED()
-      << "QnxGLOzoneEGL: GPU process cannot create a window surface; "
-         "use CreateOffscreenGLSurface";
-  return nullptr;
+  // The GPU process does not have access to browser-owned screen_window_t.
+  // QNX OOP GPU architecture requires an offscreen surface for GPU-side
+  // rendering. Some Chromium code paths (e.g. image_transport_surface_linux.cc
+  // for non-Presenter paths, or sandboxed renderer GL init) still request
+  // a view surface from the GPU process; on QNX this is not possible because
+  // the screen_window_t pointer is never valid in the GPU process.
+  //
+  // Fall back to a small offscreen pbuffer so the call does not crash.
+  // The real GPU work should be using CreateOffscreenGLSurface explicitly.
+  DLOG(WARNING) << "QnxGLOzoneEGL: CreateViewGLSurface called in OOP GPU; "
+                  "falling back to offscreen pbuffer";
+  if (!initialized_) {
+    LOG(ERROR) << "QnxGLOzoneEGL::CreateViewGLSurface: GL bindings "
+                  "not initialized";
+    return nullptr;
+  }
+  return CreateOffscreenGLSurface(display, gfx::Size(1, 1));
 }
 
 scoped_refptr<gl::GLSurface> QnxGLOzoneEGL::CreateOffscreenGLSurface(

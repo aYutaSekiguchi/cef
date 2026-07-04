@@ -1,7 +1,7 @@
 # QNX Ozone out-of-process GPU implementation plan
 
 > Created: 2026-07-02
-> Status: Phase 5 content_shell now builds; QNX runtime reaches browser startup with native qnx Ozone selected, but OOP GPU smoke is still blocked by GPU-process connection/crash before QNX GPU trace handoff (2026-07-04).
+> Status: Phase 5 content_shell now builds; QNX runtime reaches browser startup, renderer init, and GPU process stays alive (no crash/restart loop) with QNX Ozone + OOP GPU selected. GPU Mojo/Viz init chain confirmed through OnGpuServiceConnection. Next: verify QNX GPU trace handoff (QnxGpuPlatformSupportHost::OnGpuServiceLaunched) and SubmitFrame smoke. (2026-07-04).
 > Scope: Native QNX Screen/EGL Ozone backend for Chromium/CEF, targeting x86_64 QEMU first and aarch64 boards later.
 
 ## Operating rule
@@ -10,13 +10,22 @@ This file is the durable source of truth for this work. Before starting any new 
 
 ## Current runtime / machine-safety note
 
-As of 2026-07-04, `content/shell:content_shell` builds successfully for QNX with `-j10`; latest successful build log: `out/qnx_release/content_shell_recovery_build51_pseudosalt.log`. The binary needed two runtime-loader mitigations on QNX x86_64: SysV ELF hash tables and non-PIE executable links. With `ozone_platform_qnx = true`, `content_shell --ozone-platform=qnx --use-gl=egl --no-sandbox about:blank` now reaches browser startup and opens DevTools, but the GPU process still restarts/exits before the expected `QNX_OZONE_GPU_TRACE` handoff lines (`QnxGpuPlatformSupportHost::OnGpuServiceLaunched`, `QnxGpuService::Initialize`, `QnxGpuHost::SubmitFrame`). Latest smoke log: `out/qnx_release/content_shell_qnx_virgl_smoke7_pseudosalt.log`.
+As of 2026-07-04, `content/shell:content_shell` builds successfully for QNX with `-j10`; latest successful build log: `out/qnx_release/content_shell_recovery_build72_skiarend.log`. The binary needed two runtime-loader mitigations on QNX x86_64: SysV ELF hash tables and non-PIE executable links. With `ozone_platform_qnx = true`, `content_shell --ozone-platform=qnx --use-gl=egl --no-sandbox --ozone-qnx-gpu-trace about:blank` now reaches browser startup, spawns a stable GPU process, initializes a renderer process, and remains alive (no GPU crash/restart loop). Latest smoke log: `out/qnx_release/content_shell_qnx_virgl_smoke29_skiarend.log`.
 
-Current next blocker:
+Current next blocker (resolved): Three NOTREACHED/int3 crashes in the GPU-process rendering pipeline were fixed:
+
+1. `QnxGLOzoneEGL::CreateViewGLSurface` → falls back to offscreen pbuffer (`ui_ozone_qnx_gl_ozone_egl_view_to_offscreen`, build69).
+2. `PbufferGLSurfaceEGL::SwapBuffers` → QNX no-op returning `SWAP_ACK` (`ui_gl_gl_surface_egl_pbuffer_swap_noop_qnx`, build71).
+3. `SkiaRenderer::BuffersPresented` / `DidReceiveReleasedOverlays` → QNX no-op (`viz_skia_renderer_noop_buffers_presented_qnx`, build72).
+
+Current next blocker (active):
 
 - Browser process starts with native qnx Ozone and receives QNX Screen events.
-- GPU process is launched out-of-process, but command-buffer creation fails and the GPU process exits/restarts (`GPU process exited unexpectedly: exit_code=133` without gdb; under `--gpu-launcher=/usr/bin/gdb ...`, the GPU child exits normally after 15 seconds with no browser connection).
-- Next work should debug the GPU-process Mojo/child connection and make QNX GPU trace logging visible at browser/GPU service handoff before continuing frame-submission work.
+- GPU process is launched out-of-process, and all three NOTREACHED crash points in the pbuffer-offscreen swap/present/release path are resolved (build69-72).
+- GPU process now survives indefinitely (no crash/restart loop in smoke29).
+- GPU Mojo/Viz init chain confirmed through OnGpuServiceConnection (signal handlers installed).
+- Renderer process (pid 610339) initializes successfully.
+- Next work should verify QNX GPU trace handoff (`QnxGpuPlatformSupportHost::OnGpuServiceLaunched`, `QnxGpuService::Initialize`) and SubmitFrame smoke, then clean up debug LOG statements.
 
 Safety note: large broad builds are now user-approved at `-j10`, but continue to capture logs to `out/qnx_release/*.log` and summarize them; do not read raw logs directly.
 

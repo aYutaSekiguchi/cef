@@ -1,0 +1,22 @@
+diff --git ui/gl/gl_surface_egl.cc ui/gl/gl_surface_egl.cc
+--- ui/gl/gl_surface_egl.cc
++++ ui/gl/gl_surface_egl.cc
+@@ -1074,7 +1074,18 @@ bool PbufferGLSurfaceEGL::IsOffscreen() {
+ gfx::SwapResult PbufferGLSurfaceEGL::SwapBuffers(PresentationCallback callback,
+                                                 gfx::FrameData data) {
++#if BUILDFLAG(IS_QNX)
++  // QNX OOP GPU: the GPU process uses a pbuffer as the offscreen render
++  // target. The real buffer export uses eglCreateDRMImageMESA in a separate
++  // path; SwapBuffers is called by the renderer as part of its standard
++  // GL pipeline but is a no-op on QNX. Returning SWAP_ACK prevents the
++  // OOP GPU from trapping in NOTREACHED() (int3;ud2) during init.
++  if (callback)
++    std::move(callback).Run(gfx::PresentationFeedback());
++  return gfx::SwapResult::SWAP_ACK;
++#else
+   NOTREACHED() << "Attempted to call SwapBuffers on a PbufferGLSurfaceEGL.";
++  return gfx::SwapResult::SWAP_FAILED;
++#endif
+ }
+
+ gfx::Size PbufferGLSurfaceEGL::GetSize() {
