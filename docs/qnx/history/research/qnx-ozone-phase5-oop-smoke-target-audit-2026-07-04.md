@@ -130,7 +130,7 @@ QNX_TARGET=/home/yuta/qnx800/target/qnx \
 Then run:
 
 ```bash
-BUILD_DIR=../out/qnx_release \
+BUILD_DIR=/home/yuta/chromium/src/out/qnx_release \
   ./tools/qnx_run.sh --virgl --kill-existing --timeout 60 -- \
   ./content_shell --ozone-platform=qnx --no-sandbox \
   >/tmp/content_shell_qnx.out 2>&1 & \
