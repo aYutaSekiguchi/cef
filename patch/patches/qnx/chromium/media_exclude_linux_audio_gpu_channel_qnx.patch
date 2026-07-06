@@ -4,41 +4,8 @@ diff --git media/audio/BUILD.gn media/audio/BUILD.gn
 @@ -291,7 +291,7 @@ source_set("audio") {
      deps += [ "//media/base/android:media_jni_headers" ]
    }
- 
+
 -  if (is_linux || is_chromeos) {
 +  if ((is_linux || is_chromeos) && !is_qnx) {
      sources += [ "linux/audio_manager_linux.cc" ]
    }
- 
-diff --git media/capture/BUILD.gn media/capture/BUILD.gn
---- media/capture/BUILD.gn
-+++ media/capture/BUILD.gn
-@@ -397,15 +397,27 @@ source_set("capture_gpu_channel") {
-   deps = []
- 
-   # Establish GPU Channel
--  if (enable_gpu_channel_media_capture) {
-+  if (enable_gpu_channel_media_capture && !is_qnx) {
-     sources += [
-       "video/video_capture_gpu_channel_host.cc",
-       "video/video_capture_gpu_channel_host.h",
-     ]
-     deps += [
-       ":capture_base",
-       "//gpu/command_buffer/client",
-       "//gpu/ipc/client",
-     ]
-   }
-+
-+  if (is_qnx) {
-+    sources += [
-+      "video/video_capture_gpu_channel_host.h",
-+      "video/video_capture_gpu_channel_host_qnx.cc",
-+    ]
-+    deps += [
-+      "//base",
-+      "//gpu/command_buffer/client",
-+      "//gpu/ipc/common",
-+    ]
-+  }
- }
