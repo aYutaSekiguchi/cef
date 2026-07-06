@@ -1,0 +1,52 @@
+--- /tmp/intermediate_qnx/ui/ozone/platform/qnx/qnx_window_manager.h	2026-07-08 16:38:15.530461078 +0900
++++ ui/ozone/platform/qnx/qnx_window_manager.h	2026-07-08 16:31:36.504538718 +0900
+@@ -60,7 +60,13 @@
+   QnxWindowManager& operator=(const QnxWindowManager&) = delete;
+ 
+   // Register a new QnxWindow. Returns the stable widget ID.
+-  gfx::AcceleratedWidget AddWindow(QnxWindow* window);
++  // Register a new QnxWindow with its initial size. Returns the stable widget ID.
++  // The initial_size is stored in the widget record so AttachWidget (or
++  // AttachNewWidget) can ship a non-zero size to the GPU process; without
++  // it the GPU side CreateExportFrame would receive a 0x0 size and fail
++  // eglCreateDRMImageMESA on QEMU virgl.
++  gfx::AcceleratedWidget AddWindow(QnxWindow* window,
++                                  const gfx::Size& initial_size);
+ 
+   // Unregister a window.
+   void RemoveWindow(gfx::AcceleratedWidget widget, QnxWindow* window);
+--- /tmp/intermediate_qnx/ui/ozone/platform/qnx/qnx_window_manager.cc	2026-07-08 16:38:15.530498429 +0900
++++ ui/ozone/platform/qnx/qnx_window_manager.cc	2026-07-08 16:31:36.504406896 +0900
+@@ -31,13 +31,16 @@
+   instance_ = nullptr;
+ }
+ 
+-gfx::AcceleratedWidget QnxWindowManager::AddWindow(QnxWindow* window) {
++gfx::AcceleratedWidget QnxWindowManager::AddWindow(
++    QnxWindow* window,
++    const gfx::Size& initial_size) {
+   DCHECK(thread_checker_.CalledOnValidThread());
+   gfx::AcceleratedWidget widget = windows_.Add(window);
+ 
+   QnxWidgetRecord record;
+   record.id = widget;
+   record.window = window;
++  record.size = initial_size;
+   records_[widget] = record;
+ 
+   DLOG(INFO) << "QnxWindowManager: AddWindow widget=" << widget;
+--- /tmp/intermediate_qnx/ui/ozone/platform/qnx/qnx_window.cc	2026-07-08 16:37:54.041014388 +0900
++++ ui/ozone/platform/qnx/qnx_window.cc	2026-07-08 16:31:36.504608822 +0900
+@@ -52,7 +52,11 @@
+   }
+ 
+   // Register with the window manager. This allocates the stable widget ID.
+-  widget_ = manager_->AddWindow(this);
++  // Register with the window manager. This allocates the stable widget ID.
++  // Pass the initial size so the GPU side gets a non-zero AttachWidget size
++  // when AttachNewWidget fires (e.g., content_shell's about:blank window
++  // created after the GPU service has already connected).
++  widget_ = manager_->AddWindow(this, bounds.size());
+   delegate_->OnAcceleratedWidgetAvailable(widget_);
+ 
+   DLOG(INFO) << "QnxWindow: created widget=" << widget_

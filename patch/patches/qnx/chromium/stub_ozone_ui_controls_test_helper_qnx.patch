@@ -1,0 +1,25 @@
+diff --git ui/ozone/common/test/stub_ozone_ui_controls_test_helper.cc ui/ozone/common/test/stub_ozone_ui_controls_test_helper.cc
+index cccd64d644fcc..3f2a3dd1f40a0 100644
+--- ui/ozone/common/test/stub_ozone_ui_controls_test_helper.cc
++++ ui/ozone/common/test/stub_ozone_ui_controls_test_helper.cc
+@@ -25,4 +25,8 @@ OzoneUIControlsTestHelper* CreateOzoneUIControlsTestHelperCast() {
+   NOTREACHED();
+ }
+ 
++OzoneUIControlsTestHelper* CreateOzoneUIControlsTestHelperQnx() {
++  NOTREACHED();
++}
++
+ }  // namespace ui
+diff --git ui/ozone/common/test/stub_ozone_ui_controls_test_helper.h ui/ozone/common/test/stub_ozone_ui_controls_test_helper.h
+index 587830ce427d8..9e9a043f92d9b 100644
+--- ui/ozone/common/test/stub_ozone_ui_controls_test_helper.h
++++ ui/ozone/common/test/stub_ozone_ui_controls_test_helper.h
+@@ -13,6 +13,7 @@ OzoneUIControlsTestHelper* CreateOzoneUIControlsTestHelperDrm();
+ OzoneUIControlsTestHelper* CreateOzoneUIControlsTestHelperFlatland();
+ OzoneUIControlsTestHelper* CreateOzoneUIControlsTestHelperHeadless();
+ OzoneUIControlsTestHelper* CreateOzoneUIControlsTestHelperCast();
++OzoneUIControlsTestHelper* CreateOzoneUIControlsTestHelperQnx();
+ 
+ }  // namespace ui
+ 

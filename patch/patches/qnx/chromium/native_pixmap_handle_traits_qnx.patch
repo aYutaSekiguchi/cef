@@ -1,4 +1,53 @@
+diff --git ui/gfx/mojom/native_handle_types.mojom ui/gfx/mojom/native_handle_types.mojom
+index 28117e1ae6fbf..6de0359703807 100644
+--- ui/gfx/mojom/native_handle_types.mojom
++++ ui/gfx/mojom/native_handle_types.mojom
+@@ -23,10 +23,10 @@ struct NativePixmapPlane {
+ struct NativePixmapHandle {
+   array<NativePixmapPlane> planes;
+ 
+-  [EnableIf=is_chromeos|is_linux]
++  [EnableIf=is_chromeos|is_linux|is_qnx]
+   uint64 modifier;
+ 
+-  [EnableIf=is_chromeos|is_linux]
++  [EnableIf=is_chromeos|is_linux|is_qnx]
+   bool supports_zero_copy_webgpu_import;
+ 
+   [EnableIf=is_fuchsia]
+diff --git ui/gfx/mojom/native_handle_types_mojom_traits.cc ui/gfx/mojom/native_handle_types_mojom_traits.cc
+index 22313e64a5229..6db03db6a3758 100644
+--- ui/gfx/mojom/native_handle_types_mojom_traits.cc
++++ ui/gfx/mojom/native_handle_types_mojom_traits.cc
+@@ -88,6 +88,8 @@ mojo::PlatformHandle StructTraits<
+   return mojo::PlatformHandle(std::move(plane.fd));
+ #elif BUILDFLAG(IS_FUCHSIA)
+   return mojo::PlatformHandle(std::move(plane.vmo));
++#elif BUILDFLAG(IS_QNX)
++  return mojo::PlatformHandle();
+ #endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
+ }
+ 
+@@ -108,6 +110,8 @@ bool StructTraits<
+   if (!handle.is_handle())
+     return false;
+   out->vmo = zx::vmo(handle.TakeHandle());
++#elif BUILDFLAG(IS_QNX)
++  // QNX NativePixmapPlane has no fd or vmo; ignore buffer handle.
+ #endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
+ 
+   return true;
+@@ -126,7 +130,7 @@ bool StructTraits<
+     gfx::mojom::NativePixmapHandleDataView,
+     gfx::NativePixmapHandle>::Read(gfx::mojom::NativePixmapHandleDataView data,
+                                    gfx::NativePixmapHandle* out) {
+-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_QNX)
+   out->modifier = data.modifier();
+   out->supports_zero_copy_webgpu_import =
+       data.supports_zero_copy_webgpu_import();
 diff --git ui/gfx/mojom/native_handle_types_mojom_traits.h ui/gfx/mojom/native_handle_types_mojom_traits.h
+index 5bc99124d2e2a..a4f2e625618fe 100644
 --- ui/gfx/mojom/native_handle_types_mojom_traits.h
 +++ ui/gfx/mojom/native_handle_types_mojom_traits.h
 @@ -77,13 +77,13 @@ struct COMPONENT_EXPORT(GFX_NATIVE_HANDLE_TYPES_SHARED_MOJOM_TRAITS)
@@ -17,15 +66,3 @@ diff --git ui/gfx/mojom/native_handle_types_mojom_traits.h ui/gfx/mojom/native_h
    static bool supports_zero_copy_webgpu_import(
        const gfx::NativePixmapHandle& pixmap_handle) {
      return pixmap_handle.supports_zero_copy_webgpu_import;
-diff --git ui/gfx/mojom/native_handle_types_mojom_traits.cc ui/gfx/mojom/native_handle_types_mojom_traits.cc
---- ui/gfx/mojom/native_handle_types_mojom_traits.cc
-+++ ui/gfx/mojom/native_handle_types_mojom_traits.cc
-@@ -126,7 +126,7 @@ bool StructTraits<
-     gfx::mojom::NativePixmapHandleDataView,
-     gfx::NativePixmapHandle>::Read(gfx::mojom::NativePixmapHandleDataView data,
-                                    gfx::NativePixmapHandle* out) {
--#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
-+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_QNX)
-   out->modifier = data.modifier();
-   out->supports_zero_copy_webgpu_import =
-       data.supports_zero_copy_webgpu_import();

@@ -1,5 +1,103 @@
+diff --git net/http/http_auth_preferences.cc net/http/http_auth_preferences.cc
+index b87d3d5461ef0..9e47b69afc35b 100644
+--- net/http/http_auth_preferences.cc
++++ net/http/http_auth_preferences.cc
+@@ -38,11 +38,11 @@ std::string HttpAuthPreferences::AuthAndroidNegotiateAccountType() const {
+ }
+ #endif  // BUILDFLAG(IS_ANDROID)
+ 
+-#if BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ bool HttpAuthPreferences::AllowGssapiLibraryLoad() const {
+   return allow_gssapi_library_load_;
+ }
+-#endif  // BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ 
+ bool HttpAuthPreferences::CanUseDefaultCredentials(
+     const url::SchemeHostPort& auth_scheme_host_port) const {
+diff --git net/http/http_auth_preferences.h net/http/http_auth_preferences.h
+index 4727f46cde317..a86a0174e89d1 100644
+--- net/http/http_auth_preferences.h
++++ net/http/http_auth_preferences.h
+@@ -49,9 +49,9 @@ class NET_EXPORT HttpAuthPreferences {
+ #if BUILDFLAG(IS_ANDROID)
+   virtual std::string AuthAndroidNegotiateAccountType() const;
+ #endif
+-#if BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+   virtual bool AllowGssapiLibraryLoad() const;
+-#endif  // BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+   virtual bool CanUseDefaultCredentials(
+       const url::SchemeHostPort& auth_scheme_host_port) const;
+   virtual HttpAuth::DelegationType GetDelegationType(
+@@ -85,11 +85,11 @@ class NET_EXPORT HttpAuthPreferences {
+   }
+ #endif  // BUILDFLAG(IS_POSIX) || BUILDFLAG(IS_FUCHSIA)
+ 
+-#if BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+   void set_allow_gssapi_library_load(bool allow_gssapi_library_load) {
+     allow_gssapi_library_load_ = allow_gssapi_library_load;
+   }
+-#endif  // BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ 
+   const std::optional<base::flat_set<std::string>>& allowed_schemes() const {
+     return allowed_schemes_;
+@@ -136,9 +136,9 @@ class NET_EXPORT HttpAuthPreferences {
+   std::string auth_android_negotiate_account_type_;
+ #endif  // BUILDFLAG(IS_ANDROID)
+ 
+-#if BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+   bool allow_gssapi_library_load_ = true;
+-#endif  // BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ 
+   std::optional<base::flat_set<std::string>> allowed_schemes_;
+   std::unique_ptr<URLSecurityManager> security_manager_;
+diff --git services/network/network_context.cc services/network/network_context.cc
+index 3b928d610abb8..0f3588f098111 100644
+--- services/network/network_context.cc
++++ services/network/network_context.cc
+@@ -638,7 +638,7 @@ NetworkContext::NetworkContextHttpAuthPreferences::
+ NetworkContext::NetworkContextHttpAuthPreferences::
+     ~NetworkContextHttpAuthPreferences() = default;
+ 
+-#if BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ bool NetworkContext::NetworkContextHttpAuthPreferences::AllowGssapiLibraryLoad()
+     const {
+   if (network_service_) {
+@@ -646,7 +646,7 @@ bool NetworkContext::NetworkContextHttpAuthPreferences::AllowGssapiLibraryLoad()
+   }
+   return net::HttpAuthPreferences::AllowGssapiLibraryLoad();
+ }
+-#endif  // BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+ 
+ NetworkContext::PendingCertVerify::PendingCertVerify() = default;
+ NetworkContext::PendingCertVerify::~PendingCertVerify() = default;
+diff --git services/network/network_context.h services/network/network_context.h
+index 1f89266833da7..46b1ede46a1c3 100644
+--- services/network/network_context.h
++++ services/network/network_context.h
+@@ -741,9 +741,9 @@ class COMPONENT_EXPORT(NETWORK_SERVICE) NetworkContext
+    public:
+     explicit NetworkContextHttpAuthPreferences(NetworkService* network_service);
+     ~NetworkContextHttpAuthPreferences() override;
+-#if BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+     bool AllowGssapiLibraryLoad() const override;
+-#endif  // BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
+    private:
+     const raw_ptr<NetworkService> network_service_;
+   };
 diff --git services/network/network_service.cc services/network/network_service.cc
-index 119aecb80d16844bea8f0526461dcfb458b1a45c..861820e2c7aabb9a03a13c4f1dacac134a1b7a44 100644
+index 119aecb80d168..861820e2c7aab 100644
 --- services/network/network_service.cc
 +++ services/network/network_service.cc
 @@ -1028,14 +1028,14 @@ void NetworkService::SetExplicitlyAllowedPorts(
@@ -38,7 +136,7 @@ index 119aecb80d16844bea8f0526461dcfb458b1a45c..861820e2c7aabb9a03a13c4f1dacac13
  void NetworkService::InitMockNetworkChangeNotifierForTesting() {
    mock_network_change_notifier_ =
 diff --git services/network/network_service.h services/network/network_service.h
-index 1d09dab4fc9f18215a70a321deafbf668d4cf513..c80bdfd06948125dc243669606f05613dbfc8203 100644
+index 1d09dab4fc9f1..c80bdfd069481 100644
 --- services/network/network_service.h
 +++ services/network/network_service.h
 @@ -237,11 +237,11 @@ class COMPONENT_EXPORT(NETWORK_SERVICE) NetworkService
@@ -79,4 +177,26 @@ index 1d09dab4fc9f18215a70a321deafbf668d4cf513..c80bdfd06948125dc243669606f05613
 +#endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_QNX)
  
    std::unique_ptr<network::tpcd::metadata::Manager> tpcd_metadata_manager_;
+ 
+diff --git services/network/public/mojom/network_service.mojom services/network/public/mojom/network_service.mojom
+index 6374ea268d8db..1b3559ff921e4 100644
+--- services/network/public/mojom/network_service.mojom
++++ services/network/public/mojom/network_service.mojom
+@@ -172,7 +172,7 @@ struct SCTAuditingConfiguration {
+ 
+ // GssapiLibraryLoadObserver will be notified once when GSSAPI libraries
+ // are about to be loaded, on a "WWW_Authenticate: negotiate" header.
+-[EnableIf=is_linux]
++[EnableIf=is_linux|is_qnx]
+ interface GssapiLibraryLoadObserver {
+   // Called only once per network service.
+   OnBeforeGssapiLibraryLoad();
+@@ -408,7 +408,7 @@ interface NetworkService {
+   // Will only be notified once unless the observer is set again.
+   // TODO(crbug.com/40070096): remove this observer once GSSAPI is brokered
+   // out of the network service.
+-  [EnableIf=is_linux]
++  [EnableIf=is_linux|is_qnx]
+   SetGssapiLibraryLoadObserver(
+       pending_remote<GssapiLibraryLoadObserver> gssapi_library_load_observer);
  

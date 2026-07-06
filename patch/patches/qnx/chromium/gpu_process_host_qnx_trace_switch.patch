@@ -1,0 +1,18 @@
+diff --git content/browser/gpu/gpu_process_host.cc content/browser/gpu/gpu_process_host.cc
+index 62cab5dad3a2e..e9f97ecca64fe 100644
+--- content/browser/gpu/gpu_process_host.cc
++++ content/browser/gpu/gpu_process_host.cc
+@@ -306,6 +306,13 @@ static const char* const kSwitchNames[] = {
+     switches::kOzoneDumpFile,
+     switches::kEnableNativeGpuMemoryBuffers,
+     switches::kRenderNodeOverride,
++    // QNX: forward the QNX-specific GPU trace switch so the GPU process can
++    // emit QNX_OZONE_GPU_TRACE diagnostic logs (QnxGpuService::Initialize,
++    // AttachWidget, SubmitTestFrameForWidget, ...). The constant is defined
++    // locally in qnx_gpu_service.cc / qnx_gpu_host.cc, so use the string
++    // literal here to avoid introducing a shared header dependency in this
++    // upstream Chromium file.
++    "ozone-qnx-gpu-trace",
+ #endif
+ #if BUILDFLAG(IS_LINUX)
+     switches::kX11Display,
