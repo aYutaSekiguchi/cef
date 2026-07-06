@@ -376,7 +376,10 @@ def parse_args():
     parser.add_argument("--source-root", required=True)
     parser.add_argument("--output", required=True)
     parser.add_argument("--depfile", required=True)
-    parser.add_argument("--jobs", type=int, default=max(1, min(8, os.cpu_count() or 1)))
+    # QNX clang can fail to assemble compiler-rt x86_64 .S sources in parallel
+    # with "unable to make temporary file" under Ninja. This action runs once
+    # per build directory, so prefer deterministic serial compilation.
+    parser.add_argument("--jobs", type=int, default=1)
     return parser.parse_args()
 
 
@@ -399,7 +402,13 @@ def compile_one(clang: str, source_root: Path, obj_root: Path, common_flags: lis
 
     flags = asm_flags if source.suffix == ".S" else c_flags
     cmd = [clang, *common_flags, *flags, "-MD", "-MF", str(depfile), "-c", str(source), "-o", str(obj)]
-    result = subprocess.run(cmd, capture_output=True, text=True)
+        tmp_dir = obj_root.parent / "tmp"
+    tmp_dir.mkdir(parents=True, exist_ok=True)
+    env = os.environ.copy()
+    env["TMPDIR"] = str(tmp_dir)
+    env["TMP"] = str(tmp_dir)
+    env["TEMP"] = str(tmp_dir)
+    result = subprocess.run(cmd, capture_output=True, text=True, env=env)
     if result.returncode != 0:
         raise RuntimeError(
             f"failed to compile {source}\n"
@@ -423,7 +432,8 @@ def main() -> int:
     arch_config = ARCH_CONFIGS[args.arch]
 
     source_root = Path(args.source_root).resolve()
-    output = Path(args.output).resolve()
+    output_for_depfile = Path(args.output)
+    output = output_for_depfile.resolve()
     depfile_path = Path(args.depfile).resolve()
     work_dir = output.parent / ".build"
     obj_root = work_dir / "obj"
@@ -494,7 +504,7 @@ def main() -> int:
     subprocess.run([args.ranlib, str(archive_tmp)], check=True)
     archive_tmp.replace(output)
 
-    write_depfile(depfile_path, output, deps)
+    write_depfile(depfile_path, output_for_depfile, deps)
     return 0
 
 

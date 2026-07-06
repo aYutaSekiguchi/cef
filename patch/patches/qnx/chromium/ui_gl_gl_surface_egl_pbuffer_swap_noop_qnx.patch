@@ -1,7 +1,7 @@
 diff --git ui/gl/gl_surface_egl.cc ui/gl/gl_surface_egl.cc
 --- ui/gl/gl_surface_egl.cc
 +++ ui/gl/gl_surface_egl.cc
-@@ -1074,7 +1074,18 @@ bool PbufferGLSurfaceEGL::IsOffscreen() {
+@@ -1074,6 +1074,18 @@ bool PbufferGLSurfaceEGL::IsOffscreen() {
  gfx::SwapResult PbufferGLSurfaceEGL::SwapBuffers(PresentationCallback callback,
                                                  gfx::FrameData data) {
 +#if BUILDFLAG(IS_QNX)
@@ -18,5 +18,5 @@ diff --git ui/gl/gl_surface_egl.cc ui/gl/gl_surface_egl.cc
 +  return gfx::SwapResult::SWAP_FAILED;
 +#endif
  }
-
+ 
  gfx::Size PbufferGLSurfaceEGL::GetSize() {

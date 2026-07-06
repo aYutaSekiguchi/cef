@@ -1,7 +1,7 @@
 diff --git services/device/usb/BUILD.gn services/device/usb/BUILD.gn
 --- services/device/usb/BUILD.gn
 +++ services/device/usb/BUILD.gn
-@@ -113,21 +113,21 @@ source_set("usb") {
+@@ -113,16 +113,16 @@ source_set("usb") {
      deps += [ "//third_party/libusb" ]
    }
  

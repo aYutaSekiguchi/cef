@@ -1,0 +1,10 @@
+diff --git gpu/command_buffer/common/BUILD.gn gpu/command_buffer/common/BUILD.gn
+--- gpu/command_buffer/common/BUILD.gn
++++ gpu/command_buffer/common/BUILD.gn
+@@ -53,4 +53,6 @@ source_set("common_sources") {
+   sources = [
+     "buffer.cc",
+     "buffer.h",
++    "qnx_post_swap_hook.cc",
++    "qnx_post_swap_hook.h",
+     "capabilities.cc",

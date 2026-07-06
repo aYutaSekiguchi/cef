@@ -1,7 +1,7 @@
 diff --git third_party/blink/renderer/controller/memory_usage_monitor_posix.h third_party/blink/renderer/controller/memory_usage_monitor_posix.h
 --- third_party/blink/renderer/controller/memory_usage_monitor_posix.h
 +++ third_party/blink/renderer/controller/memory_usage_monitor_posix.h
-@@ -13,7 +13,7 @@
+@@ -13,6 +13,6 @@
  #include "third_party/blink/renderer/controller/controller_export.h"
  #include "third_party/blink/renderer/controller/memory_usage_monitor.h"
  
@@ -9,7 +9,7 @@ diff --git third_party/blink/renderer/controller/memory_usage_monitor_posix.h th
 +#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_QNX)
  #include "third_party/blink/public/mojom/memory_usage_monitor_linux.mojom-blink.h"
  #endif
-@@ -22,14 +22,14 @@ namespace blink {
+@@ -22,15 +22,15 @@ namespace blink {
  // MemoryUsageMonitor implementation for Android and Linux.
  class CONTROLLER_EXPORT MemoryUsageMonitorPosix
      : public MemoryUsageMonitor
@@ -27,7 +27,7 @@ diff --git third_party/blink/renderer/controller/memory_usage_monitor_posix.h th
    static void Bind(
        mojo::PendingReceiver<mojom::blink::MemoryUsageMonitorLinux> receiver);
  #endif
-@@ -48,7 +48,7 @@ class CONTROLLER_EXPORT MemoryUsageMonitorPosix
+@@ -48,8 +48,8 @@ class CONTROLLER_EXPORT MemoryUsageMonitorPosix
                                                uint64_t* swap_footprint,
                                                uint64_t* vm_size,
                                                uint64_t* vm_hwm_size);

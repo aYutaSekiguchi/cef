@@ -10,15 +10,14 @@ diff --git net/BUILD.gn net/BUILD.gn
      sources += [
        "base/address_tracker_linux_test_util.cc",
        "base/address_tracker_linux_test_util.h",
-@@ -3185,14 +3185,14 @@ test("net_unittests") {
-     data += [ "cert/test_root_certs/nist-pkits/" ]
+@@ -3188,13 +3188,13 @@ test("net_unittests") {
    }
  
 -  if (is_linux) {
 +  if (is_linux && !is_qnx) {
      sources += [
        "base/network_change_notifier_linux_unittest.cc",
-       "tools/quic/quic_simple_server_test.cc",
+       "proxy_resolution/proxy_config_service_linux_unittest.cc",
      ]
    }
  

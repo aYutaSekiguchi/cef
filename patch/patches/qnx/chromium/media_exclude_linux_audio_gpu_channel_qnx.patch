@@ -13,7 +13,7 @@ diff --git media/audio/BUILD.gn media/audio/BUILD.gn
 diff --git media/capture/BUILD.gn media/capture/BUILD.gn
 --- media/capture/BUILD.gn
 +++ media/capture/BUILD.gn
-@@ -397,7 +397,7 @@ source_set("capture_gpu_channel") {
+@@ -397,15 +397,27 @@ source_set("capture_gpu_channel") {
    deps = []
  
    # Establish GPU Channel
@@ -22,28 +22,23 @@ diff --git media/capture/BUILD.gn media/capture/BUILD.gn
      sources += [
        "video/video_capture_gpu_channel_host.cc",
        "video/video_capture_gpu_channel_host.h",
-@@ -409,7 +409,10 @@ source_set("capture_gpu_channel") {
+     ]
+     deps += [
+       ":capture_base",
+       "//gpu/command_buffer/client",
+       "//gpu/ipc/client",
+     ]
    }
- 
-   if (is_qnx) {
--    sources += [ "video/video_capture_gpu_channel_host_qnx.cc" ]
++
++  if (is_qnx) {
 +    sources += [
 +      "video/video_capture_gpu_channel_host.h",
 +      "video/video_capture_gpu_channel_host_qnx.cc",
 +    ]
-     deps += [
-       "//base",
-       "//gpu/command_buffer/client",
-diff --git media/capture/video/video_capture_gpu_channel_host_qnx.cc media/capture/video/video_capture_gpu_channel_host_qnx.cc
---- media/capture/video/video_capture_gpu_channel_host_qnx.cc
-+++ media/capture/video/video_capture_gpu_channel_host_qnx.cc
-@@ -22,6 +22,9 @@ VideoCaptureGpuChannelHost::GetSharedImageInterface() {
-   return nullptr;
++    deps += [
++      "//base",
++      "//gpu/command_buffer/client",
++      "//gpu/ipc/common",
++    ]
++  }
  }
- 
-+void VideoCaptureGpuChannelHost::SetSharedImageInterface(
-+    scoped_refptr<gpu::SharedImageInterface> shared_image_interface) {}
-+
- void VideoCaptureGpuChannelHost::OnContextLost() {}
- 
- void VideoCaptureGpuChannelHost::AddObserver(

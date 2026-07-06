@@ -1,7 +1,7 @@
 diff --git net/BUILD.gn net/BUILD.gn
 --- net/BUILD.gn
 +++ net/BUILD.gn
-@@ -126,7 +126,7 @@ net_configs = [
+@@ -126,6 +126,6 @@ net_configs = [
    "//build/config/compiler:wexit_time_destructors",
  ]
  

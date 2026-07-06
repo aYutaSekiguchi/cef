@@ -2,7 +2,7 @@ diff --git skia/BUILD.gn skia/BUILD.gn
 index 31fad5923ad2df81559c7acefe69fe2ec0867cef..0000000000000000000000000000000000000000 100644
 --- skia/BUILD.gn
 +++ skia/BUILD.gn
-@@ -103,6 +103,18 @@ config("skia_config") {
+@@ -103,6 +103,17 @@ config("skia_config") {
        "SK_GAMMA_EXPONENT=1.2",
        "SK_GAMMA_CONTRAST=0.2",
      ]

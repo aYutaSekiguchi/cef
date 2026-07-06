@@ -1,7 +1,7 @@
 diff --git content/public/test/mock_navigation_throttle_registry.h content/public/test/mock_navigation_throttle_registry.h
 --- content/public/test/mock_navigation_throttle_registry.h
 +++ content/public/test/mock_navigation_throttle_registry.h
-@@ -49,7 +49,8 @@ class MockNavigationThrottleRegistry : public NavigationThrottleRegistry {
+@@ -49,6 +49,7 @@ class MockNavigationThrottleRegistry : public NavigationThrottleRegistry {
  
    // Implements NavigationThrottleRegistry:
    NavigationHandle& GetNavigationHandle() override;

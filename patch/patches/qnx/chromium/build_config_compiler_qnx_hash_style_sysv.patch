@@ -1,7 +1,7 @@
 diff --git build/config/compiler/BUILD.gn build/config/compiler/BUILD.gn
 --- build/config/compiler/BUILD.gn
 +++ build/config/compiler/BUILD.gn
-@@ -1063,8 +1063,14 @@ config("compiler") {
+@@ -1063,8 +1063,15 @@ config("compiler") {
        # QNX SDP startup objects (for example crtn.o) do not carry
        # .note.GNU-stack, which makes GNU ld warn about an implied executable
        # stack. Keep fatal linker warnings enabled, but suppress only this

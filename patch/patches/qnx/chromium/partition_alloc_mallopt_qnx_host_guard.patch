@@ -6,9 +6,9 @@ diff --git base/allocator/partition_allocator/src/partition_alloc/shim/allocator
  SHIM_ALWAYS_EXPORT void malloc_stats(void) __THROW {}
  
 +#if PA_BUILDFLAG(IS_QNX)
- SHIM_ALWAYS_EXPORT int mallopt(int cmd, QNX_MALLOPT_ARG_TYPE value) __THROW {
++SHIM_ALWAYS_EXPORT int mallopt(int cmd, QNX_MALLOPT_ARG_TYPE value) __THROW {
 +#else
-+SHIM_ALWAYS_EXPORT int mallopt(int cmd, int value) __THROW {
+ SHIM_ALWAYS_EXPORT int mallopt(int cmd, int value) __THROW {
 +#endif
    return 0;
  }

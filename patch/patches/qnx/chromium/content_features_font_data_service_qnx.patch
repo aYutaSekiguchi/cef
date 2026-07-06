@@ -12,7 +12,7 @@ diff --git content/common/features.h content/common/features.h
  CONTENT_EXPORT BASE_DECLARE_FEATURE(kFontDataServiceLinux);
  #else
  CONTENT_EXPORT BASE_DECLARE_FEATURE(kFontDataServiceChromeOS);
-@@ -126,9 +126,10 @@ enum class FontDataServiceTypefaceType {
+@@ -126,8 +126,9 @@ enum class FontDataServiceTypefaceType {
  };
  CONTENT_EXPORT BASE_DECLARE_FEATURE_PARAM(FontDataServiceTypefaceType,
                                            kFontDataServiceTypefaceType);
@@ -27,7 +27,7 @@ diff --git content/common/features.h content/common/features.h
 diff --git content/common/features.cc content/common/features.cc
 --- content/common/features.cc
 +++ content/common/features.cc
-@@ -297,13 +297,13 @@ BASE_FEATURE_ENUM_PARAM(FontDataServiceTypefaceType,
+@@ -297,12 +297,12 @@ BASE_FEATURE_ENUM_PARAM(FontDataServiceTypefaceType,
                          FontDataServiceTypefaceType::kDwrite,
                          &font_data_service_typeface);
  #endif  // BUILDFLAG(IS_WIN)
@@ -42,7 +42,7 @@ diff --git content/common/features.cc content/common/features.cc
  BASE_FEATURE(kFontDataServiceLinux, base::FEATURE_ENABLED_BY_DEFAULT);
  BASE_FEATURE_ENUM_PARAM(FontDataServiceTypefaceType,
                          kFontDataServiceTypefaceType,
-@@ -319,12 +319,13 @@ BASE_FEATURE_ENUM_PARAM(FontDataServiceTypefaceType,
+@@ -319,13 +319,14 @@ BASE_FEATURE_ENUM_PARAM(FontDataServiceTypefaceType,
                          FontDataServiceTypefaceType::kFontations,
                          &font_data_service_typeface);
 -#endif  // BUILDFLAG(IS_LINUX)

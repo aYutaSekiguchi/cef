@@ -67,6 +67,9 @@ source_set("qnx") {
   defines = [ "OZONE_IMPLEMENTATION" ]
 
   deps = [
+    # Phase 6: register a SkiaRenderer post-swap hook so the GPU-side
+    # QnxGpuService can capture the actual rendered framebuffer.
+    "//gpu/command_buffer/common",
     "//base",
     "//ui/base",
     "//ui/base/cursor",

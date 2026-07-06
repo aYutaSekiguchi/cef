@@ -7,7 +7,7 @@ index d6457551b24af..3d5dc7b95e8c0 100644
      data_deps += [ "//build/win:copy_cdb_to_output" ]
    }
 -  if (is_posix) {
-+  if (is_posix && !is_qnx) {
++  if (is_posix && (!defined(is_qnx) || !is_qnx)) {
      data_deps += [
        "//third_party/breakpad:dump_syms",
        "//third_party/breakpad:minidump_stackwalk",
@@ -15,33 +15,35 @@ diff --git third_party/breakpad/BUILD.gn third_party/breakpad/BUILD.gn
 index f90260b668753..d4c30678f8a8f 100644
 --- third_party/breakpad/BUILD.gn
 +++ third_party/breakpad/BUILD.gn
-@@ -652,7 +652,7 @@ if (is_ios) {
+@@ -652,7 +652,8 @@ if (is_ios) {
    }
  }
  
 -if (is_linux || is_chromeos || is_android) {
-+if ((is_linux || is_chromeos || is_android) && !is_qnx) {
++if ((is_linux || is_chromeos || is_android) &&
++    (!defined(is_qnx) || !is_qnx)) {
    if (current_toolchain == host_system_allocator_toolchain ||
        current_toolchain == default_system_allocator_toolchain) {
      executable("symupload") {
 diff --git BUILD.gn BUILD.gn
 --- BUILD.gn
 +++ BUILD.gn
-@@ -436,7 +436,7 @@ group("gn_all") {
+@@ -436,4 +436,5 @@ group("gn_all") {
 -    if (is_linux || is_chromeos || is_android) {
-+    if ((is_linux && !is_qnx) || is_chromeos || is_android) {
++    if ((is_linux && (!defined(is_qnx) || !is_qnx)) || is_chromeos ||
++        is_android) {
        deps += [
          "//third_party/breakpad:breakpad_unittests",
          "//third_party/breakpad:core-2-minidump",
-@@ -1238,7 +1238,7 @@ group("blink_web_tests_support_data") {
+@@ -1238,4 +1238,4 @@ group("blink_web_tests_support_data") {
 -    if (!is_win && !is_android) {
-+    if (!is_win && !is_android && !is_qnx) {
++    if (!is_win && !is_android && (!defined(is_qnx) || !is_qnx)) {
        # Using the default toolchain for this tool, as it's run during tests not
        # during the build. This places a symlink in the root_build_dir for scrips
        # to use.
-@@ -1251,7 +1251,7 @@ group("blink_web_tests_support_data") {
+@@ -1251,4 +1251,4 @@ group("blink_web_tests_support_data") {
 -    if (is_linux || is_chromeos) {
-+    if ((is_linux && !is_qnx) || is_chromeos) {
++    if ((is_linux && (!defined(is_qnx) || !is_qnx)) || is_chromeos) {
        # Using the default toolchain for this tool, as it's run during tests not
        # during the build. This places a symlink in the root_build_dir for scrips
        # to use.

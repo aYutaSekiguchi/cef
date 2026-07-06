@@ -1,7 +1,7 @@
 diff --git content/browser/BUILD.gn content/browser/BUILD.gn
 --- content/browser/BUILD.gn
 +++ content/browser/BUILD.gn
-@@ -2665,6 +2665,24 @@ source_set("browser") {
+@@ -2665,6 +2665,25 @@ source_set("browser") {
        "zygote_host/zygote_host_impl_linux.cc",
        "zygote_host/zygote_host_impl_linux.h",
      ]

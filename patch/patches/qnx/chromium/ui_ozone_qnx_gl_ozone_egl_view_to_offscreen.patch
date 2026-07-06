@@ -1,7 +1,7 @@
 diff --git ui/ozone/platform/qnx/qnx_gl_ozone_egl.cc ui/ozone/platform/qnx/qnx_gl_ozone_egl.cc
 --- ui/ozone/platform/qnx/qnx_gl_ozone_egl.cc
 +++ ui/ozone/platform/qnx/qnx_gl_ozone_egl.cc
-@@ -41,12 +41,19 @@ scoped_refptr<gl::GLSurface> QnxGLOzoneEGL::CreateViewGLSurface(
+@@ -41,14 +41,23 @@ scoped_refptr<gl::GLSurface> QnxGLOzoneEGL::CreateViewGLSurface(
  scoped_refptr<gl::GLSurface> QnxGLOzoneEGL::CreateViewGLSurface(
      gl::GLDisplay* display,
      gfx::AcceleratedWidget widget) {

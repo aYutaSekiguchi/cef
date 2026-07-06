@@ -1,7 +1,7 @@
 diff --git chrome/browser/web_applications/BUILD.gn chrome/browser/web_applications/BUILD.gn
 --- chrome/browser/web_applications/BUILD.gn
 +++ chrome/browser/web_applications/BUILD.gn
-@@ -471,6 +471,14 @@ source_set("web_applications") {
+@@ -471,6 +471,16 @@ source_set("web_applications") {
      ]
    }
  
