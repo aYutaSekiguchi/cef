@@ -402,7 +402,7 @@ def compile_one(clang: str, source_root: Path, obj_root: Path, common_flags: lis
 
     flags = asm_flags if source.suffix == ".S" else c_flags
     cmd = [clang, *common_flags, *flags, "-MD", "-MF", str(depfile), "-c", str(source), "-o", str(obj)]
-        tmp_dir = obj_root.parent / "tmp"
+    tmp_dir = obj_root.parent / "tmp"
     tmp_dir.mkdir(parents=True, exist_ok=True)
     env = os.environ.copy()
     env["TMPDIR"] = str(tmp_dir)
