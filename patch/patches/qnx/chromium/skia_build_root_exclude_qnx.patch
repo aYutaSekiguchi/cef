@@ -1,0 +1,29 @@
+diff --git skia/BUILD.gn skia/BUILD.gn
+--- skia/BUILD.gn
++++ skia/BUILD.gn
+@@ -363,4 +363,25 @@ component("skia") {
+   sources += skia_utils_private
++  if (is_qnx) {
++    # QNX has no CoreText / CoreGraphics. SK_BUILD_FOR_UNIX define alone
++    # does not stop the mac/utils headers from including
++    # ApplicationServices. Exclude them from sources to avoid the
++    # 'ApplicationServices/ApplicationServices.h' file-not-found error
++    # on content_shell. Chrome root has no callers of these APIs on QNX
++    # (skia/ext/skia_utils_mac.mm is .mm and Mac-only). third_party/skia's
++    # BUILD.gn has its own matching subtract for //third_party/skia:skia;
++    # this hunk handles the chromium-root //skia:skia wrapper which uses
++    # root-relative paths for skia_utils_private.
++    sources -= [
++      "//third_party/skia/src/utils/mac/SkCGBase.h",
++      "//third_party/skia/src/utils/mac/SkCGGeometry.h",
++      "//third_party/skia/src/utils/mac/SkCTFont.cpp",
++      "//third_party/skia/src/utils/mac/SkCTFont.h",
++      "//third_party/skia/src/utils/mac/SkCTFontCreateExactCopy.cpp",
++      "//third_party/skia/src/utils/mac/SkCTFontCreateExactCopy.h",
++      "//third_party/skia/src/utils/mac/SkCreateCGImageRef.cpp",
++      "//third_party/skia/src/utils/mac/SkUniqueCFRef.h",
++    ]
++  }
+   sources += skia_xps_sources
+   sources += skia_encode_srcs
+   sources += skia_encode_png_base
