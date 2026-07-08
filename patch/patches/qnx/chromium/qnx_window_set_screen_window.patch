@@ -1,0 +1,19 @@
+--- /tmp/int_qnx_sw/ui/ozone/platform/qnx/qnx_window.cc	2026-07-09 00:25:01.532227278 +0900
++++ ui/ozone/platform/qnx/qnx_window.cc	2026-07-09 00:22:27.691557671 +0900
+@@ -57,6 +57,16 @@
+   // when AttachNewWidget fires (e.g., content_shell's about:blank window
+   // created after the GPU service has already connected).
+   widget_ = manager_->AddWindow(this, bounds.size());
++  // Push the raw screen_window_t handle into the widget record so that
++  // QnxFrameImporter::GetOrCreateWindowState (called later when the GPU
++  // submits a frame for this widget) can hand it to
++  // eglCreateWindowSurface. Without this, the record's screen_win stays
++  // nullptr and ImportAndDisplayFrame bails out with "scaffold: no
++  // screen_window_t for widget". AddWindow fires AttachNewWidget if the
++  // GPU is already connected, so this must run before AddWindow returns.
++  if (screen_win_) {
++    manager_->SetScreenWindow(widget_, screen_win_);
++  }
+   delegate_->OnAcceleratedWidgetAvailable(widget_);
+ 
+   DLOG(INFO) << "QnxWindow: created widget=" << widget_

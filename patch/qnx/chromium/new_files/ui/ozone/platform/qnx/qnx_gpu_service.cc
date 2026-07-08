@@ -12,6 +12,7 @@
 
 #include "ui/ozone/platform/qnx/qnx_gpu_service.h"
 
+#include <csignal>
 #include <memory>
 #include <string>
 #include <utility>
@@ -38,6 +39,21 @@ constexpr char kOzoneQnxGpuTraceSwitch[] = "ozone-qnx-gpu-trace";
 bool IsQnxGpuTraceEnabled() {
   return base::CommandLine::ForCurrentProcess()->HasSwitch(
       kOzoneQnxGpuTraceSwitch);
+}
+
+// Diagnostic command-line switch for QNX Ozone Phase 6 crash recovery.
+// When present, the GPU process raises SIGKILL on itself after the first
+// successful SubmitFrame callback completes.  Used with `--ozone-qnx-gpu-trace`
+// to verify that the browser-side `OnChannelDestroyed` reconnect path
+// (generation bump + `AttachExistingWidgets`) fires correctly after the
+// GPU process death, without manual `kill -9` from the QEMU shell.
+// Usage: --ozone-qnx-test-crash-after-submit
+constexpr char kOzoneQnxTestCrashAfterSubmitSwitch[] =
+    "ozone-qnx-test-crash-after-submit";
+
+bool IsQnxTestCrashAfterSubmitEnabled() {
+  return base::CommandLine::ForCurrentProcess()->HasSwitch(
+      kOzoneQnxTestCrashAfterSubmitSwitch);
 }
 
 }  // namespace
@@ -81,9 +97,15 @@ void QnxGpuService::BindQnxGpuControl(
 // ======================================================================
 
 void QnxGpuService::Initialize(
-    mojo::PendingRemote<qnx::QnxGpuHost> host_remote) {
+    mojo::PendingRemote<qnx::QnxGpuHost> host_remote,
+    InitializeCallback callback) {
   if (!host_remote) {
     DLOG(ERROR) << "QnxGpuService::Initialize: null host_remote";
+    // Still run the callback so the browser's blocking BindOnce is not
+    // leaked (otherwise the browser UI thread would hang forever waiting
+    // for a reply that will never arrive).
+    if (callback)
+      std::move(callback).Run();
     return;
   }
 
@@ -113,6 +135,14 @@ void QnxGpuService::Initialize(
     LOG(INFO) << "QNX_OZONE_GPU_TRACE QnxGpuService::Initialize: gpu_host_remote"
                  " bound; GPU process is ready to call SubmitFrame";
   }
+
+  // Phase 6: Ack to the browser so it can safely call AttachExistingWidgets.
+  // This serializes the QnxGpuService pipe (Initialize) and the
+  // QnxGpuControl pipe (AttachWidget) on the browser side.  Without
+  // this ack the browser must rely on --v=1 write() syscalls to mask
+  // the cross-interface Mojo ordering race.
+  if (callback)
+    std::move(callback).Run();
 }
 
 // ======================================================================
@@ -303,9 +333,15 @@ void QnxGpuService::DetachWidget(gfx::AcceleratedWidget widget,
 
 // static
 qnx::QnxDmaBufFramePtr QnxGpuService::NativeFrameToMojomFrame(
-    const ::ui::QnxDmaBufFrame& frame) {
-  // Build the mojom frame.  Each plane's base::ScopedFD is converted to
-  // a mojo::PlatformHandle for Mojo handle<platform> serialization.
+    ::ui::QnxDmaBufFrame& frame) {
+  // Build the mojom frame.  Each plane's base::ScopedFD is transferred
+  // (std::move) into a mojo::PlatformHandle for Mojo handle<platform>
+  // serialization.  The native frame must be non-const so we can move from
+  // its ScopedFD members; calling .get() and constructing a fresh ScopedFD
+  // from the raw int would leave both the original ScopedFD and the new
+  // one pointing at the same fd, causing a double close() / EBADF on
+  // destruction.  See crbug pattern for mojo::PlatformHandle from
+  // base::ScopedFD.
   qnx::QnxDmaBufFramePtr mojom_frame = qnx::QnxDmaBufFrame::New();
   mojom_frame->widget = frame.widget;
   mojom_frame->generation = frame.generation;
@@ -314,27 +350,15 @@ qnx::QnxDmaBufFramePtr QnxGpuService::NativeFrameToMojomFrame(
   mojom_frame->fourcc = frame.fourcc;
   mojom_frame->modifier = frame.modifier;
 
-  // Convert planes: base::ScopedFD → mojo::PlatformHandle.
-  // Mojo serialization uses SCM_RIGHTS fd passing; the PlatformHandle
-  // is serialized as a Mojo handle, and Mojo IPC internally calls dup(2)
-  // when passing to the remote process, so the local ScopedFD receives a dup
-  // and is safely closed when it goes out of scope at function return.
-  //
-  // QnxDmaBufPlane has a constructor (fd, stride, offset, size).
-  // StructPtr<S> has constructor (std::in_place_t, Args&&... args) that
-  // forwards to the underlying S constructor.
   for (size_t i = 0; i < frame.planes.size(); ++i) {
-    const QnxDmaBufPlane& native_plane = frame.planes[i];
+    QnxDmaBufPlane& native_plane = frame.planes[i];
 
-    // Extract the raw fd value and construct a new ScopedFD for the
-    // PlatformHandle to take ownership of.  The ScopedFD destructor
-    // closes the dup at end of block; the PlatformHandle owns the
-    // original fd for Mojo serialization.
-    mojo::PlatformHandle handle;
-    if (native_plane.fd.is_valid()) {
-      base::ScopedFD tmp_fd(native_plane.fd.get());
-      handle = mojo::PlatformHandle(std::move(tmp_fd));
-    }
+    // Transfer ownership of the plane fd into the mojo PlatformHandle.
+    // After this std::move, native_plane.fd is empty; the matching
+    // close() will happen via the mojo serialized handle on the browser
+    // side.  This is the supported pattern for mojo::PlatformHandle
+    // construction from a base::ScopedFD.
+    mojo::PlatformHandle handle(std::move(native_plane.fd));
 
     qnx::QnxDmaBufPlanePtr mojom_plane(
         std::in_place,
@@ -408,7 +432,10 @@ void QnxGpuService::SubmitTestFrameForWidget(gfx::AcceleratedWidget widget,
              << " size=" << frame.width << "x" << frame.height
              << "; submitting to QnxGpuHost";
 
-  // Convert the native frame to mojom and submit.
+  // Convert the native frame to mojom and submit.  NativeFrameToMojomFrame
+  // transfers ownership of each plane's ScopedFD into the mojo message,
+  // so the original QnxDmaBufFrame's destructor must not try to close them
+  // again.  After this call, |frame| must not be reused.
   qnx::QnxDmaBufFramePtr mojom_frame = NativeFrameToMojomFrame(frame);
 
   gpu_host_remote_->SubmitFrame(
@@ -428,6 +455,28 @@ void QnxGpuService::SubmitTestFrameForWidget(gfx::AcceleratedWidget widget,
                        << widget << " generation=" << generation
                        << " accepted=" << accepted
                        << " diagnostic=" << diagnostic;
+
+            // Phase 6: GPU-side kill switch for the crash-recovery smoke.
+            // When --ozone-qnx-test-crash-after-submit is set, the GPU
+            // process raises SIGKILL on itself after the first successful
+            // SubmitFrame callback completes.  This exercises the
+            // browser-side OnChannelDestroyed -> ResetGpuServiceAndDetach
+            // reconnect path without manual `kill -9` from outside.
+            // Phase 6 acceptance verification: the smoke log must show
+            //   (1) eglSwapBuffers reached (accepted=true) for the dying
+            //       GPU's SubmitFrame callback,
+            //   (2) a browser-side log line identifying the channel
+            //       destruction / gpu_detached state for the widget,
+            //   (3) a final trace line showing the new GPU process
+            //       reconnecting via OnGpuServiceLaunched + AttachExistingWidgets.
+            // Without this switch set the GPU process exits cleanly.
+            if (IsQnxTestCrashAfterSubmitEnabled() && accepted) {
+              LOG(ERROR) << "[QNX-TRACE] QnxGpuService::"
+                            "SubmitTestFrameForWidget: --ozone-qnx-test-"
+                            "crash-after-submit is set; raising SIGKILL on "
+                            "GPU process now to exercise crash recovery";
+              raise(SIGKILL);
+            }
           },
           widget, generation));
 }

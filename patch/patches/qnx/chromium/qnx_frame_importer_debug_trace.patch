@@ -1,0 +1,280 @@
+--- /tmp/dbg_src/ui/ozone/platform/qnx/qnx_frame_importer.cc	2026-07-09 00:04:07.499230635 +0900
++++ ui/ozone/platform/qnx/qnx_frame_importer.cc	2026-07-09 00:07:31.505459945 +0900
+@@ -35,6 +35,7 @@
+ #include <sstream>
+ #include <vector>
+ 
++#include "base/command_line.h"
+ #include "base/logging.h"
+ #include "ui/ozone/platform/qnx/qnx_window_manager.h"
+ 
+@@ -57,6 +58,18 @@
+ 
+ namespace {
+ 
++// QNX-specific GPU trace switch (mirrors qnx_gpu_service.cc /
++// qnx_gpu_host.cc). When --ozone-qnx-gpu-trace is passed, emits
++// grep-stable LOG(INFO) lines prefixed with "QNX_OZONE_GPU_TRACE"
++// at the major branches of the EGL/display path so a QEMU virgl
++// smoke can pinpoint which step crashes without rebuilding with
++// DLOG visible.
++constexpr char kOzoneQnxGpuTraceSwitch[] = "ozone-qnx-gpu-trace";
++bool IsQnxGpuTraceEnabled() {
++  return base::CommandLine::ForCurrentProcess()->HasSwitch(
++      kOzoneQnxGpuTraceSwitch);
++}
++
+ // Returns a human-readable name for an EGL error code.
+ const char* EglErrorName(EGLint err) {
+   switch (err) {
+@@ -220,7 +233,14 @@
+ // ======================================================================
+ 
+ bool QnxFrameImporter::InitializeEGLDisplay() {
++  if (IsQnxGpuTraceEnabled()) {
++    LOG(INFO) << "QNX_OZONE_GPU_TRACE InitializeEGLDisplay: ENTERED";
++  }
+   if (egl_initialized_) {
++    if (IsQnxGpuTraceEnabled()) {
++      LOG(INFO) << "QNX_OZONE_GPU_TRACE InitializeEGLDisplay: early_return "
++                   "egl_display_=" << static_cast<void*>(egl_display_);
++    }
+     return egl_display_ != EGL_NO_DISPLAY;
+   }
+ 
+@@ -231,6 +251,10 @@
+   // The browser process has a QNX Screen context but no dedicated EGL display.
+   // Using EGL_DEFAULT_DISPLAY is the Phase 1B-display-proven approach.
+   egl_display_ = eglGetDisplay(EGL_DEFAULT_DISPLAY);
++  if (IsQnxGpuTraceEnabled()) {
++    LOG(INFO) << "QNX_OZONE_GPU_TRACE InitializeEGLDisplay: eglGetDisplay_done "
++                 "display=" << static_cast<void*>(egl_display_);
++  }
+   if (egl_display_ == EGL_NO_DISPLAY) {
+     LOG(ERROR) << "QnxFrameImporter: eglGetDisplay(EGL_DEFAULT_DISPLAY) "
+                   "returned EGL_NO_DISPLAY";
+@@ -250,6 +274,11 @@
+              << " initialized (display=" << static_cast<void*>(egl_display_)
+              << ")";
+ 
++  if (IsQnxGpuTraceEnabled()) {
++    LOG(INFO) << "QNX_OZONE_GPU_TRACE InitializeEGLDisplay: eglInitialize_done "
++                 "version=" << maj << "." << min;
++  }
++
+   // ---- Probe EGL extensions ----
+   const char* egl_exts = eglQueryString(egl_display_, EGL_EXTENSIONS);
+   if (egl_exts) {
+@@ -266,31 +295,29 @@
+   egl_create_image_khr_ = Resolve<EglCreateImageKHRFn*>("eglCreateImageKHR");
+   egl_destroy_image_khr_ =
+       Resolve<EglDestroyImageKHRFn*>("eglDestroyImageKHR");
+-
+-  // ---- Probe GL extensions ----
+-  const char* gl_exts =
+-      reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
+-  if (gl_exts) {
+-    DLOG(INFO) << "GL_EXTENSIONS: " << gl_exts;
+-  } else {
+-    DLOG(INFO) << "GL_EXTENSIONS: glGetString returned null";
++  if (IsQnxGpuTraceEnabled()) {
++    LOG(INFO) << "QNX_OZONE_GPU_TRACE InitializeEGLDisplay: egl_fnptrs_resolved "
++                 "create=" << reinterpret_cast<void*>(egl_create_image_khr_)
++              << " destroy=" << reinterpret_cast<void*>(egl_destroy_image_khr_);
+   }
+ 
+-  has_gl_oes_egl_image_ =
+-      gl_exts && strstr(gl_exts, "GL_OES_EGL_image") != nullptr;
+-  has_khr_gl_texture_2d_ =
+-      gl_exts && strstr(gl_exts, "GL_KHR_gl_texture_2d") != nullptr;
+-
+-  // ---- Resolve GL function pointers ----
+-  gl_egl_image_target_texture_2d_oes_ =
+-      Resolve<GlEGLImageTargetTexture2DOESFn*>("glEGLImageTargetTexture2DOES");
+-
+-  // ---- Check minimum requirements ----
++  // ---- Probe GL extensions ----
++  // NOTE: glGetString(GL_EXTENSIONS) requires a current GL context.
++  // QEMU virgl Mesa (verified empirically, also implied by the Khronos
++  // spec which mandates NULL+error) crashes when glGetString is called
++  // before eglMakeCurrent has bound a context. The GL-side probes
++  // (has_gl_oes_egl_image_ / has_khr_gl_texture_2d_ /
++  // gl_egl_image_target_texture_2d_oes_) are deferred to
++  // EnsureGLExtensionsResolved(), which runs after the first
++  // eglMakeCurrent in GetOrCreateWindowState().
++
++  // ---- Check minimum requirements (EGL side only) ----
++  // GL-side presence is checked lazily in ImportAndDisplayFrame via
++  // EnsureGLExtensionsResolved(); at this point we cannot query the GL
++  // extension string safely.
+   bool can_import = has_egl_ext_image_dma_buf_import_ &&
+-                    has_gl_oes_egl_image_ &&
+                     egl_create_image_khr_ != nullptr &&
+-                    egl_destroy_image_khr_ != nullptr &&
+-                    gl_egl_image_target_texture_2d_oes_ != nullptr;
++                    egl_destroy_image_khr_ != nullptr;
+ 
+   if (!can_import) {
+     LOG(ERROR) << "QnxFrameImporter: missing required extensions or function "
+@@ -316,6 +343,56 @@
+   return reinterpret_cast<Fn>(proc);
+ }
+ 
++void QnxFrameImporter::EnsureGLExtensionsResolved() {
++  if (gl_extensions_resolved_) {
++    return;
++  }
++  if (IsQnxGpuTraceEnabled()) {
++    LOG(INFO) << "QNX_OZONE_GPU_TRACE EnsureGLExtensionsResolved: ENTERED "
++                 "(current context should be live)";
++  }
++  // Safe to call glGetString now: caller has just made an EGL context
++  // current via eglMakeCurrent (either the existing-state path or the
++  // new-state path in GetOrCreateWindowState). The Khronos spec says
++  // glGetString returns NULL with GL_INVALID_OPERATION if no context is
++  // current; QEMU virgl Mesa instead dereferences loader state and
++  // crashes the process, hence the deferral.
++  const char* gl_exts =
++      reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
++  if (IsQnxGpuTraceEnabled()) {
++    LOG(INFO) << "QNX_OZONE_GPU_TRACE EnsureGLExtensionsResolved: "
++                 "glGetString_done gl_exts="
++              << static_cast<const void*>(gl_exts);
++  }
++  if (gl_exts) {
++    DLOG(INFO) << "GL_EXTENSIONS: " << gl_exts;
++  } else {
++    DLOG(WARNING) << "GL_EXTENSIONS: glGetString returned null after "
++                     "eglMakeCurrent (driver may not advertise any)";
++  }
++  has_gl_oes_egl_image_ =
++      gl_exts && strstr(gl_exts, "GL_OES_EGL_image") != nullptr;
++  has_khr_gl_texture_2d_ =
++      gl_exts && strstr(gl_exts, "GL_KHR_gl_texture_2d") != nullptr;
++
++  // Resolve the GL extension function pointer. eglGetProcAddress itself
++  // does not require a current context, but we group the call with the
++  // GL extension string probe to keep the GL-side resolution atomic and
++  // make it easy to verify ordering in the trace logs.
++  gl_egl_image_target_texture_2d_oes_ =
++      Resolve<GlEGLImageTargetTexture2DOESFn*>("glEGLImageTargetTexture2DOES");
++
++  gl_extensions_resolved_ = true;
++
++  if (IsQnxGpuTraceEnabled()) {
++    LOG(INFO) << "QNX_OZONE_GPU_TRACE EnsureGLExtensionsResolved: COMPLETE "
++                 "has_gl_oes_egl_image=" << has_gl_oes_egl_image_
++              << " has_khr_gl_texture_2d=" << has_khr_gl_texture_2d_
++              << " glEGLImageTargetTexture2DOES="
++              << reinterpret_cast<void*>(gl_egl_image_target_texture_2d_oes_);
++  }
++}
++
+ // ======================================================================
+ // Per-window EGL state management
+ // ======================================================================
+@@ -343,6 +420,9 @@
+                        "eglMakeCurrent failed: " << EglErrorName(eglGetError());
+         return nullptr;
+       }
++      // Safe to resolve GL extensions now: a current context is bound
++      // for this thread. See EnsureGLExtensionsResolved() doc.
++      EnsureGLExtensionsResolved();
+       DLOG(INFO) << "QnxFrameImporter::GetOrCreateWindowState: reusing "
+                     "existing state for widget="
+                  << widget;
+@@ -352,7 +432,16 @@
+ 
+   // ---- Need to create new window EGL state ----
+ 
++  if (IsQnxGpuTraceEnabled()) {
++    LOG(INFO) << "QNX_OZONE_GPU_TRACE GetOrCreateWindowState: ENTERED widget="
++              << widget;
++  }
++
+   // Lazily initialize EGL display if not yet done.
++  if (IsQnxGpuTraceEnabled()) {
++    LOG(INFO) << "QNX_OZONE_GPU_TRACE GetOrCreateWindowState: "
++                 "before_InitializeEGLDisplay";
++  }
+   if (!InitializeEGLDisplay()) {
+     *out_diagnostic = "scaffold: EGL display initialization failed; "
+                       "import/display deferred";
+@@ -364,6 +453,10 @@
+   // Get screen_window_t from the widget record.
+   screen_window_t screen_win =
+       record ? static_cast<screen_window_t>(record->screen_win) : nullptr;
++  if (IsQnxGpuTraceEnabled()) {
++    LOG(INFO) << "QNX_OZONE_GPU_TRACE GetOrCreateWindowState: screen_win="
++              << static_cast<void*>(screen_win);
++  }
+   if (!screen_win) {
+     *out_diagnostic = "scaffold: no screen_window_t for widget; "
+                       "import/display deferred";
+@@ -476,6 +569,10 @@
+   DLOG(INFO) << "QnxFrameImporter::GetOrCreateWindowState: "
+                  "eglMakeCurrent OK";
+ 
++  // Safe to resolve GL extensions now: a current context is bound for
++  // this thread. Idempotent with the existing-state path above.
++  EnsureGLExtensionsResolved();
++
+   // ---- Step 5: Create GLES2 texture ----
+   GLuint texture = 0;
+   glGenTextures(1, &texture);
+@@ -830,6 +927,10 @@
+ std::pair<bool, std::string> QnxFrameImporter::ImportAndDisplayFrame(
+     gfx::AcceleratedWidget widget,
+     const qnx::QnxDmaBufFrame& frame) {
++  if (IsQnxGpuTraceEnabled()) {
++    LOG(INFO) << "QNX_OZONE_GPU_TRACE ImportAndDisplayFrame: ENTERED widget="
++              << widget << " planes=" << frame.planes.size();
++  }
+   DLOG(INFO) << "QnxFrameImporter::ImportAndDisplayFrame: widget="
+              << widget << " size=" << frame.width << "x" << frame.height
+              << " fourcc=0x" << std::hex << frame.fourcc
+@@ -842,6 +943,11 @@
+   if (window_manager_) {
+     record = window_manager_->GetWidgetRecord(widget);
+   }
++  if (IsQnxGpuTraceEnabled()) {
++    LOG(INFO) << "QNX_OZONE_GPU_TRACE ImportAndDisplayFrame: record="
++              << record << " screen_win="
++              << (record ? record->screen_win : nullptr);
++  }
+   if (!record) {
+     return {false, "scaffold: no widget record for widget; "
+                     "import/display deferred"};
+@@ -851,6 +957,10 @@
+   std::string diag;
+   WindowEGLState* state =
+       GetOrCreateWindowState(widget, record, frame, &diag);
++  if (IsQnxGpuTraceEnabled()) {
++    LOG(INFO) << "QNX_OZONE_GPU_TRACE ImportAndDisplayFrame: state="
++              << state << " diag=\"" << diag << "\"";
++  }
+   if (!state) {
+     DLOG(ERROR) << "QnxFrameImporter::ImportAndDisplayFrame: "
+                    "GetOrCreateWindowState failed: " << diag;
+@@ -862,6 +972,21 @@
+                     "import/display deferred"};
+   }
+ 
++  // GL-side extension probes and function pointer resolution are deferred
++  // until after the first eglMakeCurrent. GetOrCreateWindowState ran that
++  // and called EnsureGLExtensionsResolved(), so by this point
++  // gl_extensions_resolved_ is true and gl_egl_image_target_texture_2d_oes_
++  // is set (or null if the driver never advertised it). Verify here so a
++  // missing function pointer returns a clean diagnostic instead of
++  // crashing later inside ImportDmaBufToTexture.
++  if (!gl_extensions_resolved_) {
++    EnsureGLExtensionsResolved();
++  }
++  if (!gl_egl_image_target_texture_2d_oes_) {
++    return {false, "scaffold: glEGLImageTargetTexture2DOES not available; "
++                    "import/display deferred"};
++  }
++
+   // ---- Extract DMAbuf fds from Mojo PlatformHandle values ----
+   //
+   // Mojo IPC receives the DMAbuf fd via SCM_RIGHTS and wraps it in

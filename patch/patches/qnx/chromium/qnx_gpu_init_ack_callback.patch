@@ -1,0 +1,212 @@
+--- ui/ozone/platform/qnx/mojom/qnx_gpu.mojom	2026-07-09 20:19:09.477258755 +0900
++++ ui/ozone/platform/qnx/mojom/qnx_gpu.mojom	2026-07-09 17:26:50.862610808 +0900
+@@ -99,7 +99,13 @@
+   // |host_remote| is a PendingRemote<QnxGpuHost> owned by the Browser.
+   // The GPU process receives only the client end and stores it as a
+   // mojo::Remote<QnxGpuHost>.
+-  Initialize(pending_remote<QnxGpuHost> host_remote);
++  // Returns ack after the GPU has bound |host_remote|.  The browser uses
++  // this happens-before edge to serialize the QnxGpuService pipe (Initialize)
++  // and the QnxGpuControl pipe (AttachWidget) before sending any
++  // AttachWidget calls.  Mojo does not guarantee ordering across pipes,
++  // so without this ack the GPU may dispatch AttachWidget before
++  // Initialize and silently drop the SubmitFrame trigger.
++  Initialize(pending_remote<QnxGpuHost> host_remote) => ();
+ };
+ 
+ // GPU-control interface. The Browser process holds the client end and uses
+
+--- ui/ozone/platform/qnx/qnx_gpu_service.h	2026-07-09 20:19:09.478219847 +0900
++++ ui/ozone/platform/qnx/qnx_gpu_service.h	2026-07-09 20:07:37.448472486 +0900
+@@ -78,7 +78,13 @@
+       mojo::PendingReceiver<qnx::QnxGpuControl> pending_receiver);
+ 
+   // qnx::QnxGpuService:
+-  void Initialize(mojo::PendingRemote<qnx::QnxGpuHost> host_remote) override;
++  // Phase 6: Initialize is now ack-style. The browser blocks
++  // AttachExistingWidgets on the ack so that the GPU has bound
++  // gpu_host_remote_ before any AttachWidget call is dispatched.
++  // Without the ack, Mojo may deliver AttachWidget before Initialize,
++  // silently dropping the SubmitFrame test trigger.
++  void Initialize(mojo::PendingRemote<qnx::QnxGpuHost> host_remote,
++                  InitializeCallback callback) override;
+ 
+   // qnx::QnxGpuControl: GPU-side handler for widget lifecycle messages
+   // from the browser.  The browser calls these methods on its
+
+--- ui/ozone/platform/qnx/qnx_gpu_service.cc	2026-07-09 20:19:09.479098246 +0900
++++ ui/ozone/platform/qnx/qnx_gpu_service.cc	2026-07-09 20:07:37.448503265 +0900
+@@ -12,6 +12,7 @@
+ 
+ #include "ui/ozone/platform/qnx/qnx_gpu_service.h"
+ 
++#include <csignal>
+ #include <memory>
+ #include <string>
+ #include <utility>
+@@ -40,6 +41,21 @@
+       kOzoneQnxGpuTraceSwitch);
+ }
+ 
++// Diagnostic command-line switch for QNX Ozone Phase 6 crash recovery.
++// When present, the GPU process raises SIGKILL on itself after the first
++// successful SubmitFrame callback completes.  Used with `--ozone-qnx-gpu-trace`
++// to verify that the browser-side `OnChannelDestroyed` reconnect path
++// (generation bump + `AttachExistingWidgets`) fires correctly after the
++// GPU process death, without manual `kill -9` from the QEMU shell.
++// Usage: --ozone-qnx-test-crash-after-submit
++constexpr char kOzoneQnxTestCrashAfterSubmitSwitch[] =
++    "ozone-qnx-test-crash-after-submit";
++
++bool IsQnxTestCrashAfterSubmitEnabled() {
++  return base::CommandLine::ForCurrentProcess()->HasSwitch(
++      kOzoneQnxTestCrashAfterSubmitSwitch);
++}
++
+ }  // namespace
+ 
+ QnxGpuService::QnxGpuService(QnxSurfaceFactoryOzone* surface_factory)
+@@ -81,9 +97,15 @@
+ // ======================================================================
+ 
+ void QnxGpuService::Initialize(
+-    mojo::PendingRemote<qnx::QnxGpuHost> host_remote) {
++    mojo::PendingRemote<qnx::QnxGpuHost> host_remote,
++    InitializeCallback callback) {
+   if (!host_remote) {
+     DLOG(ERROR) << "QnxGpuService::Initialize: null host_remote";
++    // Still run the callback so the browser's blocking BindOnce is not
++    // leaked (otherwise the browser UI thread would hang forever waiting
++    // for a reply that will never arrive).
++    if (callback)
++      std::move(callback).Run();
+     return;
+   }
+ 
+@@ -114,6 +136,13 @@
+                  " bound; GPU process is ready to call SubmitFrame";
+   }
+ 
++  // Phase 6: Ack to the browser so it can safely call AttachExistingWidgets.
++  // This serializes the QnxGpuService pipe (Initialize) and the
++  // QnxGpuControl pipe (AttachWidget) on the browser side.  Without
++  // this ack the browser must rely on --v=1 write() syscalls to mask
++  // the cross-interface Mojo ordering race.
++  if (callback)
++    std::move(callback).Run();
+ }
+ 
+ // ======================================================================
+@@ -427,6 +456,27 @@
+                        << " accepted=" << accepted
+                        << " diagnostic=" << diagnostic;
+ 
++            // Phase 6: GPU-side kill switch for the crash-recovery smoke.
++            // When --ozone-qnx-test-crash-after-submit is set, the GPU
++            // process raises SIGKILL on itself after the first successful
++            // SubmitFrame callback completes.  This exercises the
++            // browser-side OnChannelDestroyed -> ResetGpuServiceAndDetach
++            // reconnect path without manual `kill -9` from outside.
++            // Phase 6 acceptance verification: the smoke log must show
++            //   (1) eglSwapBuffers reached (accepted=true) for the dying
++            //       GPU's SubmitFrame callback,
++            //   (2) a browser-side log line identifying the channel
++            //       destruction / gpu_detached state for the widget,
++            //   (3) a final trace line showing the new GPU process
++            //       reconnecting via OnGpuServiceLaunched + AttachExistingWidgets.
++            // Without this switch set the GPU process exits cleanly.
++            if (IsQnxTestCrashAfterSubmitEnabled() && accepted) {
++              LOG(ERROR) << "[QNX-TRACE] QnxGpuService::"
++                            "SubmitTestFrameForWidget: --ozone-qnx-test-"
++                            "crash-after-submit is set; raising SIGKILL on "
++                            "GPU process now to exercise crash recovery";
++              raise(SIGKILL);
++            }
+           },
+           widget, generation));
+ }
+
+--- ui/ozone/platform/qnx/qnx_gpu_platform_support_host.h	2026-07-09 20:19:09.479952031 +0900
++++ ui/ozone/platform/qnx/qnx_gpu_platform_support_host.h	2026-07-09 20:07:37.448525067 +0900
+@@ -83,6 +83,17 @@
+   // windows and send AttachWidget to the GPU for each one.
+   void AttachExistingWidgets(int host_id);
+ 
++  // Phase 6: Helper that runs on the QnxGpuService::Initialize ack callback.
++  // 1. Binds the browser-side QnxGpuControl remote (which was created
++  //    unbinded in OnGpuServiceLaunched and bound on the GPU side via the
++  //    binder at that time).  Deferred to here so AddWindow -> AttachNewWidget
++  //    calls fired between OnGpuServiceLaunched and the Initialize ack are
++  //    a no-op (gpu_control_remote_ is null), eliminating the cross-interface
++  //    Mojo race in step 2: we know the GPU has already bound gpu_host_remote_
++  //    and is ready to receive AttachWidget.
++  // 2. Calls AttachExistingWidgets to inform the GPU about all windows.
++  void BindGpuControlAndAttachExistingWidgets(int host_id);
++
+   // Called by QnxWindowManager::AddWindow when a new QnxWindow is created
+   // AFTER the GPU service has connected. AttachExistingWidgets runs once at
+   // OnGpuServiceLaunched and only sees widgets that existed at that time, so
+
+--- ui/ozone/platform/qnx/qnx_gpu_platform_support_host.cc	2026-07-09 20:19:09.480873349 +0900
++++ ui/ozone/platform/qnx/qnx_gpu_platform_support_host.cc	2026-07-09 20:07:37.448540837 +0900
+@@ -43,6 +43,9 @@
+     GpuHostTerminateCallback terminate_callback) {
+   DCHECK_CALLED_ON_VALID_THREAD(ui_thread_checker_);
+ 
++  LOG(INFO) << "[QNX-TRACE] OnGpuServiceLaunched: host_id=" << host_id
++            << " starting (gpu_control_remote_.is_bound="
++            << (gpu_control_remote_.is_bound() ? "true" : "false") << ")";
+   DLOG(INFO) << "QnxGpuPlatformSupportHost::OnGpuServiceLaunched: host_id="
+              << host_id;
+ 
+@@ -182,6 +185,9 @@
+ void QnxGpuPlatformSupportHost::OnChannelDestroyed(int host_id) {
+   DCHECK_CALLED_ON_VALID_THREAD(ui_thread_checker_);
+ 
++  LOG(INFO) << "[QNX-TRACE] OnChannelDestroyed: host_id=" << host_id
++            << " (GPU process exited or channel broken; will reset and let "
++               "Chromium respawn a fresh GPU)";
+   DLOG(INFO) << "QnxGpuPlatformSupportHost::OnChannelDestroyed: host_id="
+              << host_id;
+ 
+@@ -236,7 +242,9 @@
+     return;
+   }
+ 
+-  if (!gpu_control_remote_) {
++  if (!gpu_control_remote_ || !gpu_control_remote_.is_bound()) {
++    LOG(INFO) << "[QNX-TRACE] AttachExistingWidgets: gpu_control_remote_ not "
++                 "bound yet (deferred Initialize binding)";
+     DLOG(WARNING) << "AttachExistingWidgets: no GPU control remote; "
+                      "cannot attach widgets";
+     return;
+@@ -246,10 +254,13 @@
+       window_manager_->GetWidgetRecordsForTestingOrGpuAttach();
+ 
+   if (records.empty()) {
++    LOG(INFO) << "[QNX-TRACE] AttachExistingWidgets: no existing widgets";
+     DLOG(INFO) << "AttachExistingWidgets: no existing widgets";
+     return;
+   }
+ 
++  LOG(INFO) << "[QNX-TRACE] AttachExistingWidgets: " << records.size()
++            << " existing widget(s); sending AttachWidget for each";
+   DLOG(INFO) << "AttachExistingWidgets: " << records.size()
+              << " existing widget(s)";
+ 
+@@ -289,7 +300,13 @@
+   // will pick this widget up when the GPU launches and BindGpuControlAndAttachExistingWidgets
+   // fires. This is the common early-boot case.
+   if (!gpu_control_remote_ || !gpu_control_remote_.is_bound()) {
+-      return;
++    LOG(INFO) << "[QNX-TRACE] AttachNewWidget: widget=" << widget
++              << " gpu_control_remote_ not bound yet (Initialize ack in flight); "
++                 "AttachExistingWidgets will handle after ack";
++    DLOG(INFO) << "AttachNewWidget: widget=" << widget
++               << " gpu_control_remote_ not bound yet (Initialize ack in flight); "
++                  "AttachExistingWidgets will handle after ack";
++    return;
+   }
+ 
+   if (!window_manager_) {
+

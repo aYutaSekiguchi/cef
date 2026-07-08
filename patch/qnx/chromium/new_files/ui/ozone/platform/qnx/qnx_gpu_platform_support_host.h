@@ -83,6 +83,25 @@ class QnxGpuPlatformSupportHost : public GpuPlatformSupportHost {
   // windows and send AttachWidget to the GPU for each one.
   void AttachExistingWidgets(int host_id);
 
+  // Phase 6: Helper that runs on the QnxGpuService::Initialize ack callback.
+  // 1. Binds the browser-side QnxGpuControl remote (which was created
+  //    unbinded in OnGpuServiceLaunched and bound on the GPU side via the
+  //    binder at that time).  Deferred to here so AddWindow -> AttachNewWidget
+  //    calls fired between OnGpuServiceLaunched and the Initialize ack are
+  //    a no-op (gpu_control_remote_ is null), eliminating the cross-interface
+  //    Mojo race in step 2: we know the GPU has already bound gpu_host_remote_
+  //    and is ready to receive AttachWidget.
+  // 2. Calls AttachExistingWidgets to inform the GPU about all windows.
+  void BindGpuControlAndAttachExistingWidgets(int host_id);
+
+  // Called by QnxWindowManager::AddWindow when a new QnxWindow is created
+  // AFTER the GPU service has connected. AttachExistingWidgets runs once at
+  // OnGpuServiceLaunched and only sees widgets that existed at that time, so
+  // any widget created later (e.g., content_shell's about:blank window)
+  // must trigger its own AttachWidget. No-op when the GPU isn't connected
+  // yet (early-boot widget creation) or when the widget record is missing.
+  void AttachNewWidget(gfx::AcceleratedWidget widget);
+
  private:
   // Resets the GPU-side QnxGpuService remote. Called on channel destroyed.
   // Also marks all widgets as GPU-detached and increments generation.
@@ -105,8 +124,29 @@ class QnxGpuPlatformSupportHost : public GpuPlatformSupportHost {
 
   // Remote to the GPU-side QnxGpuControl. The browser holds the client end
   // and sends AttachWidget/ResizeWidget/DetachWidget to the GPU.
-  // Bound in OnGpuServiceLaunched; reset on OnChannelDestroyed.
+  //
+  // Phase 6: gpu_control_remote_ is NOT bound by OnGpuServiceLaunched (the
+  // pipe handle is sent to the GPU via the binder, but the browser-side
+  // Remote is left unbound).  It is bound later by
+  // BindGpuControlAndAttachExistingWidgets, which is called only after the
+  // GPU process has dispatched QnxGpuService::Initialize(host_remote) and
+  // acked.  This guarantees the GPU has bound gpu_host_remote_ before any
+  // AttachWidget call lands on the gpu_control pipe, removing the
+  // cross-interface Mojo race.
   mojo::Remote<ui::ozone::qnx::mojom::QnxGpuControl> gpu_control_remote_;
+
+  // Pending remote for QnxGpuControl obtained in OnGpuServiceLaunched via
+  // mojo::MakeRequest(QnxGpuControl) and stored until the Initialize ack
+  // arrives.  The companion PendingReceiver is sent to the GPU via the
+  // binder immediately, so the GPU-side QnxGpuService::BindQnxGpuControl
+  // is bound before any AttachWidget can be sent.  When the GPU replies
+  // to Initialize (the ack callback), BindGpuControlAndAttachExistingWidgets
+  // binds this pending remote into gpu_control_remote_ — only then does
+  // AttachNewWidget find a bound remote and start dispatching AttachWidget.
+  // Reset by BindGpuControlAndAttachExistingWidgets (when host_id matches)
+  // or by ResetGpuServiceAndDetach (on disconnect).
+  mojo::PendingRemote<ui::ozone::qnx::mojom::QnxGpuControl>
+      gpu_control_pending_remote_;
 
   // The host_id of the current GPU channel. -1 if no GPU is connected.
   int host_id_ = -1;

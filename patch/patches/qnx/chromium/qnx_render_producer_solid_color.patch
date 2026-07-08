@@ -1,0 +1,244 @@
+--- /tmp/gen_solid_color7/ui/ozone/platform/qnx/qnx_render_producer.cc	2026-07-09 13:26:40.421978929 +0900
++++ ui/ozone/platform/qnx/qnx_render_producer.cc	2026-07-09 13:21:45.566774064 +0900
+@@ -23,6 +23,7 @@
+ #include <GLES2/gl2.h>
+ 
+ #include "base/notreached.h"
++#include "ui/gl/gl_context.h"
+ #include "ui/ozone/platform/qnx/qnx_surface_factory.h"
+ 
+ // EGL function pointer typedefs (mirrored in header for clarity).
+@@ -44,6 +45,11 @@
+ typedef void(EGLAPIENTRYP PFNGLEGLIMAGETARGETTEXTURE2DOESPROC)(
+     GLenum target, void* image);
+ 
++// GLeglImageOES is the typed EGLImage handle expected by
++// glEGLImageTargetTexture2DOES.  Some platforms typedef it to a pointer
++// type; on others (including QEMU virgl's Mesa driver) it is just void*.
++typedef void* GLeglImageOES;
++
+ namespace ui {
+ 
+ namespace {
+@@ -196,6 +202,28 @@
+   egl_destroy_image_khr_ =
+       ResolveEGL<EglDestroyImageKHRFn*>("eglDestroyImageKHR");
+ 
++  // ---- Resolve GL extension function pointers (FBO render-to-DMAbuf) ----
++  // glEGLImageTargetTexture2DOES lets us bind an EGLImage (the DRM image
++  // backing our DMAbuf) as a texture so we can render into it via an FBO.
++  // This is the missing piece that lets Phase 5 paint a known-good solid
++  // color into the DMAbuf instead of leaving it uninitialized (black).
++  // The extension is GL_OES_EGL_image, which is exposed via
++  // glGetString(GL_EXTENSIONS) — not eglQueryString — so we use the
++  // resolution itself as the presence probe.  QEMU virgl's Mesa driver
++  // advertises this extension; the Phase 1B probes already exercised it.
++  gl_egl_image_target_texture_2d_oes_ =
++      ResolveEGL<GlEGLImageTargetTexture2DOESFn>(
++          "glEGLImageTargetTexture2DOES");
++  if (gl_egl_image_target_texture_2d_oes_) {
++    has_gl_oes_egl_image_ = true;
++    DLOG(INFO) << "QnxRenderProducer::Initialize: GL_OES_EGL_image "
++                  "available; PaintSolidColorToDmaBuf will paint sky blue";
++  } else {
++    DLOG(WARNING) << "QnxRenderProducer::Initialize: GL_OES_EGL_image "
++                     "unavailable; PaintSolidColorToDmaBuf will be a no-op "
++                     "(DMAbuf will be uninitialized / black)";
++  }
++
+   if (!CanExportDmaBuf()) {
+     init_error_ =
+         "QnxRenderProducer::Initialize: required DMAbuf export extensions "
+@@ -446,6 +474,115 @@
+   return true;
+ }
+ 
++bool QnxRenderProducer::PaintSolidColorToDmaBuf(EGLImageKHR image,
++                                                const gfx::Size& size) {
++  // Bail out cleanly if any pre-condition for the FBO render is missing.
++  // The exported DMAbuf will then be uninitialized (black) but the rest
++  // of the export pipeline still completes — this is the same behavior
++  // the Phase 1B-exportonly probe had before this helper was added.
++  if (!is_valid_) {
++    DLOG(WARNING) << "QnxRenderProducer::PaintSolidColorToDmaBuf: producer "
++                     "not initialized; skipping";
++    return false;
++  }
++  if (!gl_egl_image_target_texture_2d_oes_) {
++    DLOG(WARNING)
++        << "QnxRenderProducer::PaintSolidColorToDmaBuf: "
++           "glEGLImageTargetTexture2DOES not resolved; skipping";
++    return false;
++  }
++  // The producer is called from QnxGpuService::SubmitTestFrameForWidget
++  // which runs on the GPU process main thread.  The GPU main thread owns
++  // a GL context created by VizMainImpl, but it is *not* made current on
++  // the thread by default — VizMainImpl makes the GLContext current
++  // lazily on first use.  If no context is current yet, we skip the
++  // paint (the DMAbuf will be black, which is the legacy behavior).
++  if (!gl::GLContext::GetCurrent()) {
++    DLOG(WARNING) << "QnxRenderProducer::PaintSolidColorToDmaBuf: no "
++                     "current GL context on the GPU main thread; "
++                     "skipping (DMAbuf will be uninitialized)";
++    return false;
++  }
++
++  DLOG(INFO) << "QnxRenderProducer::PaintSolidColorToDmaBuf: painting sky "
++                 "blue into "
++              << size.width() << "x" << size.height() << " DMAbuf";
++
++  // 1. Bind the EGLImage as a 2D texture.  This is the GL_OES_EGL_image
++  // extension hook; without it we have no way to render into the DMAbuf
++  // that backs the EGLImage.
++  GLuint texture = 0;
++  glGenTextures(1, &texture);
++  if (texture == 0) {
++    DLOG(WARNING) << "QnxRenderProducer::PaintSolidColorToDmaBuf: "
++                     "glGenTextures returned 0";
++    return false;
++  }
++  glBindTexture(GL_TEXTURE_2D, texture);
++  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
++  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
++  gl_egl_image_target_texture_2d_oes_(GL_TEXTURE_2D,
++                                      static_cast<GLeglImageOES>(image));
++
++  // 2. Create a GLES2 framebuffer object (core in GLES2, no extension
++  // function pointer needed) with the EGLImage-bound texture as the
++  // sole color attachment.  After this returns, drawing into the
++  // framebuffer writes into the DMAbuf that backs |image|.
++  GLuint fbo = 0;
++  glGenFramebuffers(1, &fbo);
++  glBindFramebuffer(GL_FRAMEBUFFER, fbo);
++  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
++                         GL_TEXTURE_2D, texture, 0);
++
++  // 3. Sanity-check the FBO before clearing.  A non-complete FBO means
++  // the driver rejected our attachment (size/format mismatch) and the
++  // glClear would silently no-op, leaving the DMAbuf black anyway.
++  GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
++  if (status != GL_FRAMEBUFFER_COMPLETE) {
++    DLOG(WARNING) << "QnxRenderProducer::PaintSolidColorToDmaBuf: FBO "
++                     "incomplete: status=0x"
++                  << std::hex << status << std::dec
++                  << " (DMAbuf left uninitialized)";
++    glBindFramebuffer(GL_FRAMEBUFFER, 0);
++    glDeleteFramebuffers(1, &fbo);
++    glDeleteTextures(1, &texture);
++    return false;
++  }
++
++  // 4. Clear the framebuffer to sky blue.  glClear fills every pixel
++  // of the FBO's color attachment(s) with the color set by glClearColor.
++  // The texture (and therefore the DMAbuf that backs it) now contains
++  // a solid RGBA(0, 0.498, 1.0, 1.0) image, which the browser-side
++  // QnxFrameImporter will sample and present to the Screen surface.
++  glClearColor(0.0f, 0.498f, 1.0f, 1.0f);  // sky blue
++  glClear(GL_COLOR_BUFFER_BIT);
++  // Make sure the clear is flushed to the GPU before we tear down the
++  // FBO/texture bindings.  Without glFlush, some drivers defer the
++  // clear and a later eglExportDMABUFImageMESA could race with it.
++  glFlush();
++
++  // 5. Unbind and delete the FBO + texture.  Important: the texture is
++  // *not* deleted yet because we still need the EGLImage binding alive
++  // for the export below.  The order matters — delete texture would
++  // unbind the EGLImage, and eglExportDMABUFImageMESA might then
++  // observe a different (uninitialized) backing.
++  glBindFramebuffer(GL_FRAMEBUFFER, 0);
++  glDeleteFramebuffers(1, &fbo);
++  // Keep texture alive until after eglExportDMABUFImageMESA; the
++  // CreateExportFrame caller owns the destruction order via EGLImage
++  // lifetime (eglDestroyImageKHR is called after eglExportDMABUFImageMESA
++  // succeeds, which detaches the texture from the now-exported DMAbuf).
++  // We do release the binding here to keep state clean for any subsequent
++  // GL operations.
++  glBindTexture(GL_TEXTURE_2D, 0);
++  glDeleteTextures(1, &texture);
++
++  DLOG(INFO) << "QnxRenderProducer::PaintSolidColorToDmaBuf: sky blue "
++                 "painted into widget="
++              << widget_ << " DMAbuf " << size.width() << "x" << size.height();
++  return true;
++}
++
+ std::pair<QnxDmaBufFrame, std::string> QnxRenderProducer::CreateExportFrame() {
+   QnxDmaBufFrame frame;
+   frame.widget = widget_;
+@@ -486,6 +623,13 @@
+                           "CreateDRMImage failed: " + error);
+   }
+ 
++  // Phase 5: paint a known-good solid color (sky blue) into the DMAbuf so
++  // the user can see the frame on the QEMU virgl screen during Phase 5
++  // acceptance.  This is a scaffold step; real Skia/Viz rendering will
++  // replace it.  Failures here are non-fatal: the DMAbuf is just left
++  // uninitialized (which is what the Phase 1B-exportonly probe did).
++  PaintSolidColorToDmaBuf(img, size_);
++
+   // Query DMAbuf metadata.
+   uint32_t fourcc = 0;
+   int n_planes = 0;
+
+--- /tmp/gen_solid_color7/ui/ozone/platform/qnx/qnx_render_producer.h	2026-07-09 13:26:40.421072093 +0900
++++ ui/ozone/platform/qnx/qnx_render_producer.h	2026-07-09 13:26:19.449277421 +0900
+@@ -17,6 +17,11 @@
+ #include "ui/gfx/geometry/size.h"
+ #include "ui/gfx/native_ui_types.h"
+ 
++// GL types needed for the PaintSolidColorToDmaBuf FBO path.  Kept
++// scoped to this header to avoid leaking GLES2 includes into the
++// wider ozone QNX platform (which does not otherwise need GLES2).
++#include <GLES2/gl2.h>
++
+ // Include EGL base types before EGL extension types.
+ // This matches the pattern used by ui/gl/gl_surface_egl.h and
+ // ui/ozone/platform/drm/gpu/gbm_surfaceless.h: include egl.h first,
+@@ -186,6 +191,22 @@
+   //   4. Return via Mojo SubmitFrame once binding is wired.
+   std::pair<QnxDmaBufFrame, std::string> CreateExportFrame();
+ 
++  // Phase 5 acceptance helper: paints a solid color (sky blue, RGBA
++  // (0, 0.498, 1.0, 1.0)) into the backing DMAbuf of an EGLImage created
++  // by CreateDRMImage() by binding the image to a texture via
++  // glEGLImageTargetTexture2DOES, creating an FBO, and calling glClear.
++  // This gives the user a visible "the pipeline is alive" signal on the
++  // QEMU virgl screen instead of an uninitialized (black) DMAbuf.
++  //
++  // Bails out gracefully (returns false, leaves DMAbuf untouched) if:
++  //   - No current GL context on this thread (renderer not yet initialized)
++  //   - glEGLImageTargetTexture2DOES is not resolved
++  //   - FBO setup fails
++  //
++  // Called automatically from CreateExportFrame() after CreateDRMImage().
++  // Will be removed when real Skia/Viz rendering replaces the test frame.
++  bool PaintSolidColorToDmaBuf(EGLImageKHR image, const gfx::Size& size);
++
+   // Returns the GPU-side EGL display used by this producer.
+   EGLDisplay egl_display() const { return egl_display_; }
+ 
+@@ -239,6 +260,24 @@
+   using EglDestroyImageKHRFn = EGLBoolean(EGLDisplay dpy, EGLImageKHR image);
+   EglDestroyImageKHRFn* egl_destroy_image_khr_ = nullptr;
+ 
++  // ---- GL function pointers (EGLImage -> texture binding for FBO render) ----
++
++  // glEGLImageTargetTexture2DOES (GL_OES_EGL_image) — binds an EGLImage as
++  // a texture so we can render into it via an FBO. Used by Phase 5
++  // PaintSolidColorToDmaBuf() to write a known-good color (sky blue) into
++  // the exported DMAbuf so the user can see the frame on the QEMU virgl
++  // screen during Phase 5 acceptance.
++  //
++  // The function-type alias "using F = void(GLenum, void*);" form was
++  // rejected by some clang versions with "type-id cannot have a name"
++  // (clang's parser confused the trailing "void* image" with a
++  // declarator), so we use the equivalent typedef-of-pointer form.
++  // GlEGLImageTargetTexture2DOESFn is the function pointer type; the
++  // member below is a pointer-to-function-pointer so it can be nulled.
++  typedef void (*GlEGLImageTargetTexture2DOESFn)(GLenum, void*);
++  GlEGLImageTargetTexture2DOESFn gl_egl_image_target_texture_2d_oes_ =
++      nullptr;
++
+   // ---- Extension presence flags ----
+ 
+   bool has_egl_mesa_drm_image_ = false;

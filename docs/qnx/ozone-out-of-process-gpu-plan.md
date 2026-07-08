@@ -1,7 +1,21 @@
 # QNX Ozone out-of-process GPU implementation plan
 
 > Created: 2026-07-02
-> Status: Phase 5 content_shell now builds; QNX runtime reaches browser startup, renderer init, and GPU process stays alive (no crash/restart loop) with QNX Ozone + OOP GPU selected. GPU Mojo/Viz init chain confirmed through OnGpuServiceConnection. Next: verify QNX GPU trace handoff (QnxGpuPlatformSupportHost::OnGpuServiceLaunched) and SubmitFrame smoke. (2026-07-04).
+> Status: **Phase 5 accepted** (2026-07-09). QEMU virgl smoke at --v=1 shows the full out-of-process Mojo/DMAbuf/EGL/Screen pipeline reaching eglSwapBuffers with accepted=1 from the GPU callback, and the QEMU GTK window displays the sky-blue 800x600 test frame painted by QnxRenderProducer::PaintSolidColorToDmaBuf (a Phase 5 acceptance scaffold that proves the DMAbuf -> EGLImage -> texture -> fullscreen-quad -> Screen path end-to-end). Pipeline includes QnxGpuService Mojo binding, AttachExistingWidgets/AttachNewWidget lifecycle, generation validation, and QnxGpuHost::SubmitFrame browser-side import/display. Next: Phase 6 (Browser/GPU reconnect + crash recovery) and Phase 7 (Chromium/CEF visual smoke with cfsimple).
+>
+> **Update 2026-07-08:** All four trace points from the GPU side
+> (`QnxGpuService::Initialize`, `AttachWidget`, `AttachWidget TRIGGER`,
+> `SubmitTestFrameForWidget`) and the first three from the Browser side
+> (`QnxGpuHost::SubmitFrame: ENTERED`, `VALIDATION_PASSED`,
+> `about to call ImportAndDisplayFrame`) now log under
+> `--ozone-platform=qnx --ozone-qnx-gpu-trace`. The Browser then
+> segfaults inside `QnxFrameImporter::ImportAndDisplayFrame`; the most
+> likely immediate cause is `QnxWidgetRecord::screen_win == nullptr`
+> (QnxWindow does not call `manager_->SetScreenWindow(widget_, screen_win_)`).
+> Open item: fix the screen_win propagation and re-smoke. Five new
+> CEF patches are committed at `53f8cd73a` (see
+> `docs/qnx/history/research/qnx-ozone-phase5-runtime-attach-and-submit-2026-07-08.md`
+> for the full blockers 1-5 walkthrough).
 > Scope: Native QNX Screen/EGL Ozone backend for Chromium/CEF, targeting x86_64 QEMU first and aarch64 boards later.
 
 ## Operating rule
@@ -386,7 +400,7 @@ Acceptance evidence:
 
 ### Phase 5 — GPU-side QNX render producer
 
-Status: active but paused for safety. QNX-local Mojo interface, GPU-side producer/export scaffold, browser/GPU Mojo service binding, attach/generation lifecycle, GPU-side render-producer lifecycle, browser-side EGL/Screen import/display scaffold, attach-time SubmitFrame trigger, and bounded `ozone_demo` software-canvas smoke compile/run after validation. The accepted binding architecture uses the Ozone `GpuPlatformSupportHost` launch bridge: browser owns `QnxGpuHost`, GPU exposes startup `QnxGpuService`, and browser passes a `pending_remote<QnxGpuHost>` to the GPU service after launch. OOP smoke target audit completed; `content_shell` is the smallest viable OOP candidate but is large/heavy; no broad build without explicit approval. `--ozone-qnx-gpu-trace` diagnostic switch implemented. Next: narrow compile validation of the trace logging changes at `-j10`; broad `content_shell` build/run with `--ozone-qnx-gpu-trace` requires explicit approval.
+Status: **accepted** (2026-07-09). The QEMU virgl content_shell smoke at `--v=1 about:blank` runs the full out-of-process path: QnxGpuService Mojo binding -> AttachWidget -> SubmitTestFrameForWidget -> QnxGpuHost::SubmitFrame -> QnxFrameImporter::ImportAndDisplayFrame (eglSwapBuffers reached, accepted=1 from GPU callback). QnxRenderProducer::PaintSolidColorToDmaBuf paints sky blue into the exported DMAbuf, so the QEMU GTK window shows a 800x600 sky-blue rectangle confirming the DMAbuf -> EGLImage -> texture -> fullscreen-quad -> Screen path end-to-end. The QEMU smoke at `--v=N` for N>0 is required to reach SubmitFrame; without `--v=1` the smoke times out at QnxGpuService::Initialize because VLOG(1) write() syscalls provide the memory barrier that masks an underlying race condition. The race is recorded as an open item for Phase 6. The accepted binding architecture uses the Ozone `GpuPlatformSupportHost` launch bridge: browser owns `QnxGpuHost`, GPU exposes startup `QnxGpuService`, and browser passes a `pending_remote<QnxGpuHost>` to the GPU service after launch. The 15 acceptance items below are all checked. Next: Phase 6.
 
 Planned files, subject to Phase 2 design confirmation:
 
@@ -419,23 +433,42 @@ Acceptance evidence:
 - [x] Attach-time out-of-process GPU path has a compiled trigger that attempts to create GPU-side render resources and submit one frame through Mojo.
 - [x] QNX Ozone `ozone_demo --ozone-platform=qnx` starts without the earlier keyboard-layout-engine segfault.
 - [x] QEMU virgl `ozone_demo --ozone-platform=qnx` software-canvas smoke runs without startup crash or software-surface failure and captures a screenshot artifact.
-- [ ] QEMU virgl runtime smoke demonstrates at least one out-of-process `SubmitFrame` attempt and records log/screenshot evidence.
+- [x] QEMU virgl runtime smoke demonstrates at least one out-of-process `SubmitFrame` attempt and records log/screenshot evidence. (log: 9 QNX_OZONE_GPU_TRACE lines through `eglSwapBuffers reached` and `accepted=1` callback; visual: 800x600 sky blue rectangle confirmed by user at 2026-07-09.)
 - [x] Identify smallest viable out-of-process GPU smoke target: `content_shell` is the only candidate found; `ozone_demo` uses `single_process=true` so it never exercises OOP GPU path.
 - [x] Add `--ozone-qnx-gpu-trace` diagnostic command-line switch that emits grep-stable `QNX_OZONE_GPU_TRACE` prefix logs at key Mojo IPC boundaries in `QnxGpuService::Initialize`, `AttachWidget`, `SubmitTestFrameForWidget`, and `QnxGpuHost::SubmitFrame`. Existing behavior is unchanged when the switch is absent.
 - No final acceptance depends on `--in-process-gpu`.
 
 ### Phase 6 — Browser/GPU reconnect and crash recovery
 
-- [ ] Implement or wire Mojo browser/GPU handshake for widget ID + generation + size.
-- [ ] Verify producer death does not destroy browser-visible window.
-- [ ] Verify producer restart reconnects and resumes drawing.
-- [ ] Document recovery behavior and limitations.
+Status: **race-fix accepted (2026-07-09); crash-recovery acceptance evidence pending.** The Phase-6 design-doc acceptance bullets (`kill -9` of GPU process; browser window survives; GPU restart resumes drawing) are split into two parts:
 
-Acceptance evidence:
+(1) **Cross-interface Mojo race fix** — **DONE & TESTED** with `--ozone-qnx-gpu-trace about:blank` (no `--v=1`): `QnxGpuService::Initialize` is now ack-style (`Initialize(host_remote) => ()`), and the browser-side binding of `gpu_control_remote_` is deferred until the ack callback fires (`BindGpuControlAndAttachExistingWidgets`). This serialization removed the need for `--v=1` write() syscalls as an implicit memory barrier. New CEF-managed patch: `qnx_gpu_init_ack_callback` (5 files, 231 lines). 13-step trace verified end-to-end.
 
-- Crash/restart command sequence.
-- Logs showing reconnect.
-- Screenshot before/after restart.
+(2) **Crash-recovery acceptance test infrastructure** — **PARTIALLY DONE**:
+   - `--ozone-qnx-test-crash-after-submit` GPU-side switch implemented in `QnxGpuService::SubmitTestFrameForWidget`. After the SubmitFrame callback fires with `accepted=true`, the GPU process logs "[QNX-TRACE] SubmitTestFrameForWidget: --ozone-qnx-test-crash-after-submit is set; raising SIGKILL on GPU process now" and calls `raise(SIGKILL)`. Switch registers via `base::CommandLine::ForCurrentProcess()->HasSwitch("ozone-qnx-test-crash-after-submit")`.
+   - Browser-side `[QNX-TRACE] OnChannelDestroyed: host_id=... (GPU process exited or channel broken; will reset and let Chromium respawn a fresh GPU)` log marker added in `QnxGpuPlatformSupportHost::OnChannelDestroyed`.
+   - `ReportProducerLost` is **dead code**: only the impl exists on the browser side (`qnx_gpu_host.cc:294`) but no GPU-side caller. This is appropriate for the design (GPU tells browser about screen/producer failures, which the Phase 5 sky-blue test does not exercise) but means the disconnect-driven crash recovery path runs through the standard Chromium `OnChannelDestroyed` rather than via ReportProducerLost.
+   - **Actual end-to-end crash-recovery smoke NOT YET RUN** in this session: the host QEMU environment became wedged after many consecutive runs (smoke hangs without producing serial logs). CEF-managed code path is wired and the switch exists; the user must run the smoke once their environment is reset to confirm:
+     ```
+     /home/yuta/chromium/src/cef/tools/qnx_run.sh --virgl --kill-existing --timeout 120 --        "./content_shell --ozone-platform=qnx --use-gl=egl --no-sandbox         --ozone-qnx-gpu-trace --ozone-qnx-test-crash-after-submit         --enable-logging=stderr about:blank 2>&1"
+     ```
+     Expected log markers: `accepted=true eglSwapBuffers reached`, then `[QNX-TRACE] OnChannelDestroyed` (GPU dead), then re-issuance of `OnGpuServiceLaunched -> BindGpuControlAndAttachExistingWidgets -> AttachExistingWidgets` (Chromium respawning), then `accepted=true eglSwapBuffers reached` again. If the second `eglSwapBuffers reached` fires, Phase 6 acceptance is fully complete.
+
+Existing reconnect code paths (untouched but verifiable once smoke runs):
+  - `QnxGpuPlatformSupportHost::OnChannelDestroyed(host_id)` → `ResetGpuServiceAndDetach()` → `gpu_service_remote_.reset()`, `gpu_control_remote_.reset()`, `qnx_gpu_host_.reset()`, `MarkAllWidgetsGpuDetached()` (increments generation, marks GPU-detached).
+  - `QnxGpuPlatformSupportHost::OnGpuServiceLaunched(host_id, binder, terminate_callback)` → re-creates `qnx_gpu_host_`, binds new pipes, sends `Initialize(host_remote, ack_callback)`, ack callback rebinds `gpu_control_remote_` and re-sends `AttachWidget` for every existing widget at a freshly-incremented generation.
+  - `QnxGpuHost::SubmitFrame(...)` Step 3 generation equality check rejects stale frames from a dead GPU.
+
+Acceptance checkboxes reflect actual evidence:
+
+- [x] Implement or wire Mojo browser/GPU handshake for widget ID + generation + size. (deferred-bind + Initialize ack; tested via 13-step trace.)
+- [x] `--ozone-qnx-test-crash-after-submit` smoke harness implemented. (GPU-side switch + OnChannelDestroyed log; smoke execution pending in next session.)
+- [ ] Verify producer death does not destroy browser-visible window. (PENDING: requires user-side smoke run.)
+- [ ] Verify producer restart reconnects and resumes drawing. (PENDING: requires user-side smoke run.)
+- [x] Document recovery behavior and limitations. (This section.)
+- [ ] Crash/restart command sequence (auto). (PENDING: requires user-side smoke run.)
+- [ ] Logs showing reconnect. (Log markers added; full reconnect log sequence pending user-side smoke run.)
+- [ ] Screenshot before/after restart. (Deferred to Phase 7.)
 
 ### Phase 7 — Chromium/CEF visual smoke
 
@@ -470,6 +503,15 @@ Acceptance evidence:
   - `GL_OES_EGL_image`, `GL_OES_EGL_image_external`: present
 
 ## Change log
+- 2026-07-09: **Phase 6 race-fix accepted; crash-recovery smoke pending.** Eliminated the cross-interface Mojo ordering race between the `QnxGpuService` (Initialize) and `QnxGpuControl` (AttachWidget) interfaces. Root cause: Mojo does not guarantee ordering across interface pipes, so without synchronization the GPU could dispatch `AttachWidget` before `Initialize` and silently drop the `SubmitFrame` test trigger. The smoke previously required `--v=1` because `qnx_platform_event_source.cc:339` `VLOG(1)` write() syscalls happened to provide an implicit memory barrier. Fix: convert `QnxGpuService::Initialize` to ack-style (`Initialize(host_remote) => ()` in mojom) and defer browser-side binding of `gpu_control_remote_` until the Initialize ack callback fires. New CEF-managed patch: `qnx_gpu_init_ack_callback` (5 files: mojom, gpu_service.{h,cc}, gpu_platform_support_host.{h,cc}). Test trace: 13 grep-stable log points include the new deferred-binding markers `[QNX-TRACE] AttachNewWidget: ... gpu_control_remote_ not bound yet` and `[QNX-TRACE] BindGpuControlAndAttachExistingWidgets: Initialize ack received; binding`. `--v=1` is no longer required.
+
+   Second revision (2026-07-09, oracle review): added `--ozone-qnx-test-crash-after-submit` GPU-side switch + `[QNX-TRACE] OnChannelDestroyed` log marker so the crash-recovery acceptance test can be driven from the smoke command alone (no manual `kill -9`). The `--ozone-qnx-test-crash-after-submit` switch raises SIGKILL on the GPU process after the first successful SubmitFrame callback; the browser then observes `OnChannelDestroyed -> ResetGpuServiceAndDetach` and Chromium's GPU respawn path brings up a fresh GPU process which reconnects via `OnGpuServiceLaunched -> Initialize ack -> BindGpuControlAndAttachExistingWidgets -> AttachExistingWidgets`. Verified code path is wired and switch exists; the actual end-to-end crash-and-reconnect smoke run is pending user-side execution (host QEMU environment became wedged after many consecutive runs in this session). `ReportProducerLost` is intentionally not called by the crash path because it is reserved for GPU-detected internal failures (e.g., screen/producer state loss), not for ordinary crashes; the disconnect-driven recovery path through `OnChannelDestroyed` covers the crash case in scope of Phase 6 acceptance.
+- 2026-07-09: **Phase 5 accepted.** QEMU virgl content_shell smoke reaches eglSwapBuffers with accepted=1; QEMU GTK window shows 800x600 sky-blue test frame painted by QnxRenderProducer::PaintSolidColorToDmaBuf (new helper added by `qnx_render_producer_solid_color` patch). Three new CEF-managed patches at `9184cfd19` / `44001aa25`:
+   1. `qnx_frame_importer_debug_trace` (15 QNX_OZONE_GPU_TRACE points)
+   2. `qnx_frame_importer_defer_gl` (defer glGetString to after eglMakeCurrent)
+   3. `qnx_window_set_screen_window` (QnxWindow::CreateScreenWindow now pushes screen_win to record)
+   4. `qnx_render_producer_solid_color` (FBO + glClear to write sky blue into DMAbuf)
+   Open: smoke requires `--v=1` due to a race condition masked by VLOG(1) write() syscalls; to be addressed in Phase 6.
 
 - 2026-07-02: Created plan after user approved out-of-process-first strategy with feasibility probes allowed.
 - 2026-07-02: Phase 1A completed. EGL streams are absent in QEMU virgl; DMAbuf/EGLImage sharing is now the recommended candidate for Phase 1B, pending user decision.
@@ -515,3 +557,24 @@ Acceptance evidence:
 - 2026-07-04: OOP smoke target audit completed in `docs/qnx/history/research/qnx-ozone-phase5-oop-smoke-target-audit-2026-07-04.md`. Key finding: `ozone_demo` uses `single_process=true` so it never calls `OnGpuServiceLaunched`; `content_shell` is the only viable OOP smoke target found. Commands corrected to use `./tools/...` paths and note that `out/qnx_release` must be regenerated via `cef_create_projects_qnx.sh` to include newly committed Phase 5 files.
 - 2026-07-04: `--ozone-qnx-gpu-trace` diagnostic switch implemented in `qnx_gpu_service.cc` and `qnx_gpu_host.cc`. Report in `docs/qnx/history/research/qnx-ozone-phase5-gpu-trace-logging-2026-07-04.md`. Narrow compile validation at `-j10` succeeded: `ui/ozone/platform/qnx/mojom:mojom` + `ui/ozone/platform/qnx:qnx` built 10120/10120 steps with RC: 0. Report in `docs/qnx/history/research/qnx-ozone-phase5-gpu-trace-compile-2026-07-04.md`.
 - 2026-07-04: User-approved `content/shell:content_shell` attempt at `-j10` with `--ozone-qnx-gpu-trace` was stopped. Bootstrap reported 10 patches failed (`base_posix_elf_reader_qnx`, `chrome_browser_linux_is_qnx`, `first_run_dialog_qnx`, and 7 others). The tree is dirty; the result is not accepted. Build then failed on the dirty tree with the wrong GN label `content_shell:content_shell`, restarted with correct label, and progressed to only ~[140/44295] before subagent timeout. First blockers visible in the log: `os_crypt_linux.cc` (unknown identifiers / atomic_ref), `update_query_params.cc` (`#error unknown os`), `policy_constants.cc` (zero-length array to span), `sandbox/linux/proc_util.cc` (`d_type`/`DT_LNK`), `sandbox/linux/syscall_wrappers.cc` and `scoped_process.cc` (`sys/syscall.h` missing). Crashpad/farmhash/libsync blockers reported by timed-out worker were not confirmed in the visible log. Next required step is QNX bootstrap recovery (clean tree, fix or revert the 10 failing patches) before another `content/shell:content_shell` attempt. Report in `docs/qnx/history/research/qnx-ozone-phase5-content-shell-trace-run-2026-07-04.md`.
+- 2026-07-08: Phase 5 runtime smoke reached
+  `QnxGpuHost::SubmitFrame: about to call ImportAndDisplayFrame widget=1`
+  for the first time. Five patches landed in `53f8cd73a`:
+  (1) `gpu_process_host_qnx_trace_switch` propagates
+  `--ozone-qnx-gpu-trace` to the GPU process;
+  (2) `qnx_gpu_attach_new_widget_after_connect` adds
+  `QnxGpuPlatformSupportHost::AttachNewWidget` invoked from
+  `QnxWindowManager::AddWindow` for widgets created after the GPU launch;
+  (3) `qnx_window_addwindow_initial_size` plumbs the initial bounds
+  through `AddWindow(window, size)` so the GPU side gets a non-zero
+  `AttachWidget.size`;
+  (4) `qnx_gpu_service_native_frame_ownership` fixes a double-close /
+  EBADF crash in `NativeFrameToMojomFrame` by `std::move`ing the plane
+  `ScopedFD` into the mojo `PlatformHandle` (the supported pattern)
+  instead of constructing a fresh `ScopedFD` from `fd.get()`;
+  (5) `qnx_gpu_host_add_import_trace` adds a single grep-stable
+  `QNX_OZONE_GPU_TRACE` line just before
+  `QnxFrameImporter::ImportAndDisplayFrame` so the next session can
+  localize the Browser segfault without rebuilding with DLOG visible.
+  Detailed blocker walkthrough and reproduction commands in
+  `docs/qnx/history/research/qnx-ozone-phase5-runtime-attach-and-submit-2026-07-08.md`.

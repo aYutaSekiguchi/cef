@@ -78,7 +78,13 @@ class QnxGpuService : public qnx::QnxGpuService,
       mojo::PendingReceiver<qnx::QnxGpuControl> pending_receiver);
 
   // qnx::QnxGpuService:
-  void Initialize(mojo::PendingRemote<qnx::QnxGpuHost> host_remote) override;
+  // Phase 6: Initialize is now ack-style. The browser blocks
+  // AttachExistingWidgets on the ack so that the GPU has bound
+  // gpu_host_remote_ before any AttachWidget call is dispatched.
+  // Without the ack, Mojo may deliver AttachWidget before Initialize,
+  // silently dropping the SubmitFrame test trigger.
+  void Initialize(mojo::PendingRemote<qnx::QnxGpuHost> host_remote,
+                  InitializeCallback callback) override;
 
   // qnx::QnxGpuControl: GPU-side handler for widget lifecycle messages
   // from the browser.  The browser calls these methods on its
@@ -114,8 +120,10 @@ class QnxGpuService : public qnx::QnxGpuService,
   // (ui::QnxDmaBufFrame) and the Mojo IPC wire format
   // (ui::ozone::qnx::mojom::QnxDmaBufFramePtr).
   // Defined in the .cc file where both headers are available.
+  // Takes a non-const reference so the plane ScopedFDs can be std::move'd
+  // into the mojo PlatformHandle (avoids a double close / EBADF crash).
   qnx::QnxDmaBufFramePtr NativeFrameToMojomFrame(
-      const ::ui::QnxDmaBufFrame& frame);
+      ::ui::QnxDmaBufFrame& frame);
 
   // Mojo receiver owning the message pipe for this interface.
   // Bound in Bind() when AddInterfaces registers the receiver.
