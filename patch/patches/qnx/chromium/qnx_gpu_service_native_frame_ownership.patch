@@ -1,83 +1,11 @@
---- /tmp/intermediate_qnx2/ui/ozone/platform/qnx/qnx_gpu_service.h	2026-07-08 17:01:48.301278660 +0900
-+++ ui/ozone/platform/qnx/qnx_gpu_service.h	2026-07-08 16:58:31.753122888 +0900
-@@ -114,8 +114,10 @@
-   // (ui::QnxDmaBufFrame) and the Mojo IPC wire format
-   // (ui::ozone::qnx::mojom::QnxDmaBufFramePtr).
-   // Defined in the .cc file where both headers are available.
-+  // Takes a non-const reference so the plane ScopedFDs can be std::move'd
-+  // into the mojo PlatformHandle (avoids a double close / EBADF crash).
-   qnx::QnxDmaBufFramePtr NativeFrameToMojomFrame(
--      const ::ui::QnxDmaBufFrame& frame);
-+      ::ui::QnxDmaBufFrame& frame);
+--- cef/patch/qnx/chromium/new_files/ui/ozone/platform/qnx/qnx_gpu_service.cc	2026-07-08 17:01:48.000000000 +0900
++++ ui/ozone/platform/qnx/qnx_gpu_service.cc	2026-07-08 17:01:48.000000000 +0900
+@@ -39,7 +39,6 @@
+   return base::CommandLine::ForCurrentProcess()->HasSwitch(
+       kOzoneQnxGpuTraceSwitch);
+ }
+-
+ }  // namespace
  
-   // Mojo receiver owning the message pipe for this interface.
-   // Bound in Bind() when AddInterfaces registers the receiver.
----
---- /tmp/intermediate_qnx2/ui/ozone/platform/qnx/qnx_gpu_service.cc	2026-07-08 17:01:48.302669340 +0900
-+++ ui/ozone/platform/qnx/qnx_gpu_service.cc	2026-07-08 16:58:16.461246499 +0900
-@@ -303,9 +303,15 @@
- 
- // static
- qnx::QnxDmaBufFramePtr QnxGpuService::NativeFrameToMojomFrame(
--    const ::ui::QnxDmaBufFrame& frame) {
--  // Build the mojom frame.  Each plane's base::ScopedFD is converted to
--  // a mojo::PlatformHandle for Mojo handle<platform> serialization.
-+    ::ui::QnxDmaBufFrame& frame) {
-+  // Build the mojom frame.  Each plane's base::ScopedFD is transferred
-+  // (std::move) into a mojo::PlatformHandle for Mojo handle<platform>
-+  // serialization.  The native frame must be non-const so we can move from
-+  // its ScopedFD members; calling .get() and constructing a fresh ScopedFD
-+  // from the raw int would leave both the original ScopedFD and the new
-+  // one pointing at the same fd, causing a double close() / EBADF on
-+  // destruction.  See crbug pattern for mojo::PlatformHandle from
-+  // base::ScopedFD.
-   qnx::QnxDmaBufFramePtr mojom_frame = qnx::QnxDmaBufFrame::New();
-   mojom_frame->widget = frame.widget;
-   mojom_frame->generation = frame.generation;
-@@ -314,27 +320,15 @@
-   mojom_frame->fourcc = frame.fourcc;
-   mojom_frame->modifier = frame.modifier;
- 
--  // Convert planes: base::ScopedFD → mojo::PlatformHandle.
--  // Mojo serialization uses SCM_RIGHTS fd passing; the PlatformHandle
--  // is serialized as a Mojo handle, and Mojo IPC internally calls dup(2)
--  // when passing to the remote process, so the local ScopedFD receives a dup
--  // and is safely closed when it goes out of scope at function return.
--  //
--  // QnxDmaBufPlane has a constructor (fd, stride, offset, size).
--  // StructPtr<S> has constructor (std::in_place_t, Args&&... args) that
--  // forwards to the underlying S constructor.
-   for (size_t i = 0; i < frame.planes.size(); ++i) {
--    const QnxDmaBufPlane& native_plane = frame.planes[i];
-+    QnxDmaBufPlane& native_plane = frame.planes[i];
- 
--    // Extract the raw fd value and construct a new ScopedFD for the
--    // PlatformHandle to take ownership of.  The ScopedFD destructor
--    // closes the dup at end of block; the PlatformHandle owns the
--    // original fd for Mojo serialization.
--    mojo::PlatformHandle handle;
--    if (native_plane.fd.is_valid()) {
--      base::ScopedFD tmp_fd(native_plane.fd.get());
--      handle = mojo::PlatformHandle(std::move(tmp_fd));
--    }
-+    // Transfer ownership of the plane fd into the mojo PlatformHandle.
-+    // After this std::move, native_plane.fd is empty; the matching
-+    // close() will happen via the mojo serialized handle on the browser
-+    // side.  This is the supported pattern for mojo::PlatformHandle
-+    // construction from a base::ScopedFD.
-+    mojo::PlatformHandle handle(std::move(native_plane.fd));
- 
-     qnx::QnxDmaBufPlanePtr mojom_plane(
-         std::in_place,
-@@ -408,7 +402,10 @@
-              << " size=" << frame.width << "x" << frame.height
-              << "; submitting to QnxGpuHost";
- 
--  // Convert the native frame to mojom and submit.
-+  // Convert the native frame to mojom and submit.  NativeFrameToMojomFrame
-+  // transfers ownership of each plane's ScopedFD into the mojo message,
-+  // so the original QnxDmaBufFrame's destructor must not try to close them
-+  // again.  After this call, |frame| must not be reused.
-   qnx::QnxDmaBufFramePtr mojom_frame = NativeFrameToMojomFrame(frame);
- 
-   gpu_host_remote_->SubmitFrame(
+ QnxGpuService::QnxGpuService(QnxSurfaceFactoryOzone* surface_factory)
+
