@@ -12,7 +12,6 @@
 
 #include "ui/ozone/platform/qnx/qnx_gpu_service.h"
 
-#include <csignal>
 #include <memory>
 #include <string>
 #include <utility>
@@ -39,21 +38,6 @@ constexpr char kOzoneQnxGpuTraceSwitch[] = "ozone-qnx-gpu-trace";
 bool IsQnxGpuTraceEnabled() {
   return base::CommandLine::ForCurrentProcess()->HasSwitch(
       kOzoneQnxGpuTraceSwitch);
-}
-
-// Diagnostic command-line switch for QNX Ozone Phase 6 crash recovery.
-// When present, the GPU process raises SIGKILL on itself after the first
-// successful SubmitFrame callback completes.  Used with `--ozone-qnx-gpu-trace`
-// to verify that the browser-side `OnChannelDestroyed` reconnect path
-// (generation bump + `AttachExistingWidgets`) fires correctly after the
-// GPU process death, without manual `kill -9` from the QEMU shell.
-// Usage: --ozone-qnx-test-crash-after-submit
-constexpr char kOzoneQnxTestCrashAfterSubmitSwitch[] =
-    "ozone-qnx-test-crash-after-submit";
-
-bool IsQnxTestCrashAfterSubmitEnabled() {
-  return base::CommandLine::ForCurrentProcess()->HasSwitch(
-      kOzoneQnxTestCrashAfterSubmitSwitch);
 }
 
 }  // namespace
@@ -97,15 +81,9 @@ void QnxGpuService::BindQnxGpuControl(
 // ======================================================================
 
 void QnxGpuService::Initialize(
-    mojo::PendingRemote<qnx::QnxGpuHost> host_remote,
-    InitializeCallback callback) {
+    mojo::PendingRemote<qnx::QnxGpuHost> host_remote) {
   if (!host_remote) {
     DLOG(ERROR) << "QnxGpuService::Initialize: null host_remote";
-    // Still run the callback so the browser's blocking BindOnce is not
-    // leaked (otherwise the browser UI thread would hang forever waiting
-    // for a reply that will never arrive).
-    if (callback)
-      std::move(callback).Run();
     return;
   }
 
@@ -136,13 +114,6 @@ void QnxGpuService::Initialize(
                  " bound; GPU process is ready to call SubmitFrame";
   }
 
-  // Phase 6: Ack to the browser so it can safely call AttachExistingWidgets.
-  // This serializes the QnxGpuService pipe (Initialize) and the
-  // QnxGpuControl pipe (AttachWidget) on the browser side.  Without
-  // this ack the browser must rely on --v=1 write() syscalls to mask
-  // the cross-interface Mojo ordering race.
-  if (callback)
-    std::move(callback).Run();
 }
 
 // ======================================================================
@@ -456,27 +427,6 @@ void QnxGpuService::SubmitTestFrameForWidget(gfx::AcceleratedWidget widget,
                        << " accepted=" << accepted
                        << " diagnostic=" << diagnostic;
 
-            // Phase 6: GPU-side kill switch for the crash-recovery smoke.
-            // When --ozone-qnx-test-crash-after-submit is set, the GPU
-            // process raises SIGKILL on itself after the first successful
-            // SubmitFrame callback completes.  This exercises the
-            // browser-side OnChannelDestroyed -> ResetGpuServiceAndDetach
-            // reconnect path without manual `kill -9` from outside.
-            // Phase 6 acceptance verification: the smoke log must show
-            //   (1) eglSwapBuffers reached (accepted=true) for the dying
-            //       GPU's SubmitFrame callback,
-            //   (2) a browser-side log line identifying the channel
-            //       destruction / gpu_detached state for the widget,
-            //   (3) a final trace line showing the new GPU process
-            //       reconnecting via OnGpuServiceLaunched + AttachExistingWidgets.
-            // Without this switch set the GPU process exits cleanly.
-            if (IsQnxTestCrashAfterSubmitEnabled() && accepted) {
-              LOG(ERROR) << "[QNX-TRACE] QnxGpuService::"
-                            "SubmitTestFrameForWidget: --ozone-qnx-test-"
-                            "crash-after-submit is set; raising SIGKILL on "
-                            "GPU process now to exercise crash recovery";
-              raise(SIGKILL);
-            }
           },
           widget, generation));
 }

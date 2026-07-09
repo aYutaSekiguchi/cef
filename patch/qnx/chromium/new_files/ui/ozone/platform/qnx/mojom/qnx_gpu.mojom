@@ -99,13 +99,7 @@ interface QnxGpuService {
   // |host_remote| is a PendingRemote<QnxGpuHost> owned by the Browser.
   // The GPU process receives only the client end and stores it as a
   // mojo::Remote<QnxGpuHost>.
-  // Returns ack after the GPU has bound |host_remote|.  The browser uses
-  // this happens-before edge to serialize the QnxGpuService pipe (Initialize)
-  // and the QnxGpuControl pipe (AttachWidget) before sending any
-  // AttachWidget calls.  Mojo does not guarantee ordering across pipes,
-  // so without this ack the GPU may dispatch AttachWidget before
-  // Initialize and silently drop the SubmitFrame trigger.
-  Initialize(pending_remote<QnxGpuHost> host_remote) => ();
+  Initialize(pending_remote<QnxGpuHost> host_remote);
 };
 
 // GPU-control interface. The Browser process holds the client end and uses

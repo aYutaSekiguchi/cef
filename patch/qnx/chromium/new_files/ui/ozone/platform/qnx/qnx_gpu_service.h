@@ -78,13 +78,7 @@ class QnxGpuService : public qnx::QnxGpuService,
       mojo::PendingReceiver<qnx::QnxGpuControl> pending_receiver);
 
   // qnx::QnxGpuService:
-  // Phase 6: Initialize is now ack-style. The browser blocks
-  // AttachExistingWidgets on the ack so that the GPU has bound
-  // gpu_host_remote_ before any AttachWidget call is dispatched.
-  // Without the ack, Mojo may deliver AttachWidget before Initialize,
-  // silently dropping the SubmitFrame test trigger.
-  void Initialize(mojo::PendingRemote<qnx::QnxGpuHost> host_remote,
-                  InitializeCallback callback) override;
+  void Initialize(mojo::PendingRemote<qnx::QnxGpuHost> host_remote) override;
 
   // qnx::QnxGpuControl: GPU-side handler for widget lifecycle messages
   // from the browser.  The browser calls these methods on its
