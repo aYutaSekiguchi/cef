@@ -488,7 +488,7 @@ Evidence recorded so far:
 - `out/qnx_release/content_shell` (843 MiB) — rerun 2026-07-10 under `--virgl`; the trace reaches `SubmitFrame: FINAL ... accepted=true display_ok=true; eglSwapBuffers reached` and the GPU callback reports `accepted=1`.
 - `out/qnx_release/base_unittests` (190 MiB) — built (505/505 actions); valid QNX ELF. On 2026-07-10, guest `FilePathTest.*` ran 32/32 tests passed.
 - `out/qnx_release/url_unittests` (50 MiB) — built (33/33 actions); valid QNX ELF. Guest run is pending.
-- `//cef:cefsimple` is source-wired for QNX, but its current build is blocked before an action starts by `out/qnx_release/locales` being `root:root` mode `0700`; Ninja cannot `stat(locales/af.pak)`. This is a local bootstrap ownership defect, not a source/GN diagnosis.
+- `out/qnx_release/cefsimple` (3.3 MiB) — clean-bootstrap rebuild succeeded 2026-07-10 (`ninja_qnx.sh cefsimple -k 20`, 78,689/78,689 actions, exit 0); `locales/` is now yuta-owned mode 0775. Default CEF Views runtime then exits 139 after `QnxGpuService::Initialize`, before `AttachWidget`. Native CEF mode (`--use-native --url=about:blank`) survives long enough to attach widget 1, but its GPU producer rejects the DMAbuf export extensions/function pointers and skips SubmitFrame. These are distinct runtime blockers, not build blockers.
 
 Acceptance evidence:
 
@@ -497,9 +497,9 @@ Acceptance evidence:
 - A validated PNG artifact plus its capture command (mechanism still to be selected; generic desktop capture and QEMU HMP screendump are both disproved for this virgl path).
 - QEMU regression command/output summary for `base_unittests` plus `url_unittests` (or a documented alternative suite if URL tests expose a distinct port gap).
 
-- [ ] Build required visual targets. (`content_shell` built; `cefsimple` currently blocked by the verified root-owned `locales/` directory; `cefclient` has not been attempted.)
+- [ ] Build required visual targets. (`content_shell` and `cefsimple` are built cleanly; `cefclient` has not been attempted because the first CEF runtime blocker is active.)
 - [x] Run QEMU virgl smoke with out-of-process GPU. (2026-07-10 `content_shell` run: `accepted=true`, `display_ok=true`, and `eglSwapBuffers reached` without `--v=1`.)
-- [ ] Run `cefsimple --ozone-platform=qnx` without `--in-process-gpu`. (Pending successful build.)
+- [ ] Run `cefsimple --ozone-platform=qnx` without `--in-process-gpu`. (Build complete, but default CEF Views mode exits 139 after GPU Initialize; native mode reaches AttachWidget but rejects DMAbuf export requirements, so neither is acceptance evidence.)
 - [ ] Capture screenshot. (Both first candidates are disproved on this host: desktop capture is all-black; QEMU 10.1.2 HMP `screendump` returns `Error: no surface` for `virtio-vga-gl`. Choose a compositor-native capture or render-side readback design before implementation.)
 - [x] Build base_unittests, url_unittests for QNX. (base_unittests + url_unittests built against the post-Phase-6 tree.)
 - [x] Run representative base regression on QEMU. (2026-07-10: `./tools/qnx_run_test.sh --base --filter=FilePathTest.* --timeout 120 --boot-timeout 120 --kill-existing`; 32/32 passed.)
