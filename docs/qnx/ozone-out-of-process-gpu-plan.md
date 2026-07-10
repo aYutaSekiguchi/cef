@@ -488,7 +488,7 @@ Evidence recorded so far:
 - `out/qnx_release/content_shell` (843 MiB) — rerun 2026-07-10 under `--virgl`; the trace reaches `SubmitFrame: FINAL ... accepted=true display_ok=true; eglSwapBuffers reached` and the GPU callback reports `accepted=1`.
 - `out/qnx_release/base_unittests` (190 MiB) — built (505/505 actions); valid QNX ELF. On 2026-07-10, guest `FilePathTest.*` ran 32/32 tests passed.
 - `out/qnx_release/url_unittests` (50 MiB) — built (33/33 actions); valid QNX ELF. Guest run is pending.
-- `out/qnx_release/cefsimple` (3.3 MiB) — clean-bootstrap rebuild succeeded 2026-07-10 (`ninja_qnx.sh cefsimple -k 20`, 78,689/78,689 actions, exit 0); `locales/` is now yuta-owned mode 0775. Default CEF Views runtime then exits 139 after `QnxGpuService::Initialize`, before `AttachWidget`. Native CEF mode (`--use-native --url=about:blank`) survives long enough to attach widget 1, but its GPU producer rejects the DMAbuf export extensions/function pointers and skips SubmitFrame. These are distinct runtime blockers, not build blockers.
+- `out/qnx_release/cefsimple` (3.3 MiB) — clean-bootstrap rebuild succeeded 2026-07-10 (`ninja_qnx.sh cefsimple -k 20`, 78,689/78,689 actions, exit 0); `locales/` is now yuta-owned mode 0775. A diagnostics-only managed patch establishes two distinct runtime blockers: default CEF Views exits 139 after `QnxGpuService::Initialize` **before** `OzonePlatformQnx::CreatePlatformWindow`; native CEF (`--use-native --url=about:blank`) reaches QnxWindow + AttachWidget but the GPU process reports `EGL_MESA_drm_image` / `EGL_MESA_image_dma_buf_export` absent and their `egl*` entry points unresolved, so it skips SubmitFrame. These are CEF runtime/EGL-init issues, not build or OOP-Mojo ordering issues.
 
 Acceptance evidence:
 
