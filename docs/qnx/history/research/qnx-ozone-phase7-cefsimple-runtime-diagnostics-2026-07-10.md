@@ -96,6 +96,41 @@ EGL display/driver state. The next fix must investigate CEF's GPU GL/EGL
 initialization path; do not weaken the producer gate or emulate the missing
 extension.
 
+## LD_PRELOAD hypothesis test
+
+The native CEF run was repeated without any source or build-file change, but
+with the QNX system Mesa EGL library preloaded before the browser and GPU child
+were executed:
+
+```bash
+./tools/qnx_run.sh --virgl --kill-existing --timeout 70 \
+  --env LD_PRELOAD=/usr/lib/libEGL.so.1 -- \
+  './cefsimple --ozone-platform=qnx --use-gl=egl --no-sandbox --use-native \
+  --url=about:blank --ozone-qnx-gpu-trace --enable-logging=stderr'
+```
+
+It changed the native CEF GPU producer from `EGL vendor=<null>` with absent
+Mesa export extensions to:
+
+```text
+EGL vendor=Mesa Project version=1.5
+QnxGpuService::AttachWidget: ... TRIGGER SubmitTestFrameForWidget
+QnxGpuHost::SubmitFrame: FINAL ... accepted=true display_ok=true;
+  eglSwapBuffers reached
+QnxGpuService::SubmitTestFrameForWidget callback: ... accepted=1
+```
+
+This proves the linker/loader hypothesis: `libcef.so` has `NEEDED libEGL.so`
+from `//third_party/angle:libEGL`, which resolves to the generated ANGLE
+`out/qnx_release/libEGL.so`; `content_shell` instead has `NEEDED libEGL.so.1`
+and resolves to QNX system Mesa. The preload fixes the native CEF OOP GPU path
+without changing the `--use-gl=egl` selection (the GPU child already reports
+implementation `egl`, not ANGLE).
+
+Default CEF Views mode remains separate: preload changes its immediate exit
+from 139 to 1, but it still exits after `QnxGpuService::Initialize` and before
+`OzonePlatformQnx::CreatePlatformWindow`.
+
 ## Residual blockers
 
 1. Default CEF Views crash before `CreatePlatformWindow`.
