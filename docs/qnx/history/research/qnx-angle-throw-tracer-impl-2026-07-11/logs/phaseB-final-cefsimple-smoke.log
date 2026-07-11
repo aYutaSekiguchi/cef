@@ -1,0 +1,268 @@
+=== QNX QEMU runner ===
+QEMU dir:  /home/yuta/qnx800/images/qemu/qemu
+Disk:      /home/yuta/qnx800/images/qemu/qemu/output/disk-qemu
+Build dir: /home/yuta/chromium/src/out/qnx_release
+Guest dir: /mnt/nfs/out/qnx_release
+Serial:    127.0.0.1:10024
+Graphics:  virgl
+Display:   gtk
+Log:       /home/yuta/chromium/src/out/qnx_release/qnx_run_20260711_162143_null____true__exit_0.log
+Command:   ./cefsimple --ozone-platform=qnx --use-gl=angle --use-angle=gles-egl --no-sandbox --use-native --url=about:blank --ozone-qnx-gpu-trace --enable-logging=stderr 2>&1 & p=$!; sleep 15; kill -TERM $p 2>/dev/null || true; wait $p 2>/dev/null || true; exit 0
+=== Starting QEMU ===
+QEMU PID: 724058
+=== Connected to QNX serial; waiting for login/shell ===
+
+=== QNX shell ready; running setup ===
+umount /mnt/nfs 2>/dev/null
+[?2004l[?2004h[root@qnxqemu ~]# umount /mnt 2>/dev/null
+[?2004l[?2004h[root@qnxqemu ~]# mkdir -p /mnt
+[?2004lmkdir: '/mnt': Function not implemented
+[?2004h[root@qnxqemu ~]# ifconfig vtnet0 10.0.2.2 netmask 255.255.255.0 up
+[?2004l[?2004h[root@qnxqemu ~]# route add default 10.0.2.1
+[?2004ladd net default: gateway 10.0.2.1
+[?2004h[root@qnxqemu ~]# mkdir -p /mnt/nfs
+[?2004lmkdir: '/mnt': Function not implemented
+[?2004h[root@qnxqemu ~]# fs-nfs3 10.0.2.1:/export/chromium-src /mnt/nfs
+[?2004l[?2004h[root@qnxqemu ~]# cd /mnt/nfs/out/qnx_release
+[?2004l[?2004h[root@qnxqemu /mnt/nfs/out/qnx_release]# export LD_LIBRARY_PATH=/mnt/nfs/out/qnx_release
+[?2004l[?2004h[root@qnxqemu /mnt/nfs/out/qnx_release]# export CHROME_EXE_PATH=/mnt/nfs/out/qnx_release/cefsimple
+[?2004l[?2004h[root@qnxqemu /mnt/nfs/out/qnx_release]# export CR_SOURCE_ROOT=/mnt/nfs
+[?2004l[?2004h[root@qnxqemu /mnt/nfs/out/qnx_release]# 
+=== Running command ===
+sh -c './cefsimple --ozone-platform=qnx --use-gl=angle --use-angle=gles-egl --no-sandbox --use-native --url=about:blank --ozone-qnx-gpu-trace --enable-logging=stderr 2>&1 & p=$!; sleep 15; kill -TERM $p 2>/dev/null || true; wait $p 2>/dev/null || true; exit 0'; echo __PI_QNX_EXIT__:$?
+[?2004l[QNX-ANGLE-TRACE] terminate handler installed (pid=434206)
+[0711/072156.036404:WARNING:cef/libcef/common/resource_util.cc:83] Please customize CefSettings.root_cache_path for your application. Use of the default value may lead to unintended process singleton behavior.
+[434206:1:0711/072201.641831:WARNING:net/proxy_resolution/proxy_config_service.cc:138] Failed to choose a system proxy settings fetcher for this platform.
+[434206:1:0711/072201.718820:INFO:ui/ozone/platform/qnx/qnx_gpu_platform_support_host.cc:46] [QNX-TRACE] OnGpuServiceLaunched: host_id=1 starting (gpu_control_remote_.is_bound=false)
+[QNX-ANGLE-TRACE] terminate handler installed (pid=528415)
+[QNX-ANGLE-TRACE] terminate handler installed (pid=528415)
+[434206:1:0711/072201.956645:WARNING:chrome/browser/signin/account_consistency_mode_manager.cc:74] Desktop Identity Consistency cannot be enabled as no OAuth client ID and client secret have been configured.
+[528415:1:0711/072201.979779:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+[528415:1:0711/072201.986957:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+[528415:1:0711/072201.993086:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+[528415:1:0711/072201.998508:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+[528415:1:0711/072202.004805:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+[528415:1:0711/072202.010827:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+[528415:1:0711/072202.016805:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+[QNX-A[528415:1:0711/072202.023167:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+NGLE-[528415:1:0711/072202.029151:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+TRACE[528415:1:0711/072202.035237:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR]: DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ [528415:1:0711/072202.040579:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+[528415:1:0711/072202.045887:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+te[528415:1:0711/072202.051526:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERRr: DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+min[528415:1:0711/072202.057191:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+at[528415:1:0711/072202.062619:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERRe: DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ hand[528415:1:0711/072202.068363:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR[434206:1:0711/072202.069061:WARNING:net/proxy_resolution/proxy_config_service.cc:138] Failed to choose a system proxy settings fetcher for this platform.
+:[434206:1:0711/072202.077544:WARNING:net/proxy_resolution/proxy_config_service.cc:138] Failed to choose a system proxy settings fetcher for this platform.
+ lDisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+e[528415:1:0711/072202.086512:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR:r DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ instal[528415:1:0711/072202.092333:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERRl:e DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+d[528415:1:0711/072202.097931:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR:  DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+([528415:1:0711/072202.103508:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR:p DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+id[528415:1:0711/072202.109233:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR=: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+528417[528415:1:0711/072202.114524:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+)
+[528415:1:0711/072202.120410:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[528415:1:0711/072202.126997:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[528415:1:0711/072202.132561:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[528415:1:0711/072202.138392:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[528415:1:0711/072202.143956:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[528415:1:0711/072202.149331:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[528415:1:0711/072202.155312:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[528415:1:0711/072202.161370:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[528415:1:0711/072202.167188:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[528415:1:0711/072202.172875:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[528415:1:0711/072202.178402:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[528415:1:0711/072202.183013:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[528415:1:0711/072202.189569:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[528415:1:0711/072202.195170:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[528415:1:0711/072202.201450:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[528415:1:0711/072202.207468:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[528415:1:0711/072202.214051:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[434206:1:0711/072202.220358:INFO:ui/ozone/platform/qnx/ozone_platform_qnx.cc:118] [QNX-TRACE] OzonePlatformQnx::CreatePlatformWindow: bounds=10,10 1004x748
+[528415:1:0711/072202.220559:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[434206:1:0711/072202.220835:INFO:ui/ozone/platform/qnx/qnx_window.cc:44] [QNX-TRACE] QnxWindow::QnxWindow: bounds=10,10 1004x748
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[434206:1:0711/072202.242179:INFO:ui/ozone/platform/qnx/qnx_gpu_platform_support_host.cc:303] [QNX-TRACE] AttachNewWidget: widget=1 gpu_control_remote_ not bound yet (Initialize ack in flight); AttachExistingWidgets will handle after ack
+[434206:1:0711/072202.242477:INFO:ui/ozone/platform/qnx/qnx_window.cc:73] [QNX-TRACE] QnxWindow::QnxWindow: widget=1 screen_win=1c00090ea0
+[528415:1:0711/072202.287814:INFO:ui/ozone/platform/qnx/qnx_gpu_service.cc:135] QNX_OZONE_GPU_TRACE QnxGpuService::Initialize: gpu_host_remote bound; GPU process is ready to call SubmitFrame
+[QNX-ANGLE-TRACE] terminate handler installed (pid=528418)
+[QNX-ANGLE-TRACE] terminate handler installed (pid=528419)
+[528419:1:0711/072202.487048:ERROR:third_party/webrtc/rtc_base/cpu_info.cc:73] No function to get number of cores
+[QNX-ANGLE-TRACE] terminate handler installed (pid=528420)
+[528420:1:0711/072202.545418:ERROR:third_party/webrtc/rtc_base/cpu_info.cc:73] No function to get number of cores
+[434206:1:0711/072202.871481:INFO:ui/ozone/platform/qnx/qnx_gpu_platform_support_host.cc:150] [QNX-TRACE] BindGpuControlAndAttachExistingWidgets: Initialize ack received; binding gpu_control_remote_ now
+[434206:1:0711/072202.872676:INFO:ui/ozone/platform/qnx/qnx_gpu_platform_support_host.cc:262] [QNX-TRACE] AttachExistingWidgets: 1 existing widget(s); sending AttachWidget for each
+[528415:1:0711/072202.878372:INFO:ui/ozone/platform/qnx/qnx_gpu_service.cc:159] QNX_OZONE_GPU_TRACE QnxGpuService::AttachWidget: widget=1 generation=1 size=1004x748
+[528415:1:0711/072202.882861:INFO:ui/ozone/platform/qnx/qnx_render_producer.cc:170] [QNX-TRACE] QnxRenderProducer: using current GLContext EGLDisplay=3c000d4800
+[528415:1:0711/072202.887066:INFO:ui/ozone/platform/qnx/qnx_render_producer.cc:181] [QNX-TRACE] QnxRenderProducer: --use-gl=angle implementation=angle angle=gles
+[528415:1:0711/072202.892037:INFO:ui/ozone/platform/qnx/qnx_render_producer.cc:289] [QNX-TRACE] QnxRenderProducer: EGL vendor=Google Inc. (Mesa) version=1.5 (ANGLE 2.1.27290 git hash: 534e0d1c1d0f)
+[528415:1:0711/072202.896493:ERROR:ui/ozone/platform/qnx/qnx_render_producer.cc:245] [QNX-TRACE] QnxRenderProducer::Initialize: required DMAbuf export extensions or function pointers are missing. See ExtensionReport() for details.
+QnxRenderProducer extension report (widget=1):
+  EGL_MESA_drm_image:          ABSENT
+  EGL_MESA_image_dma_buf_export:ABSENT
+  EGL_EXT_image_dma_buf_import: PRESENT
+  EGL_EXT_image_dma_buf_import_modifiers: PRESENT
+  EGL_KHR_gl_texture_2d:        ABSENT
+  EGL_KHR_surfaceless_context:  PRESENT
+  eglCreateDRMImageMESA:        NOT RESOLVED
+  eglExportDMABUFImageMESA:     NOT RESOLVED
+  eglExportDMABUFImageQueryMESA:NOT RESOLVED
+  eglDestroyImageKHR:            RESOLVED
+
+[528415:1:0711/072202.902217:INFO:ui/ozone/platform/qnx/qnx_gpu_service.cc:232] QNX_OZONE_GPU_TRACE QnxGpuService::AttachWidget: widget=1 generation=1 SKIP SubmitTestFrameForWidget (producer_valid=false)
+[434206:20:0711/072204.795137:ERROR:base/files/file_path_watcher_inotify.cc:929] Failed to read /proc/sys/fs/inotify/max_user_watches
+[434206:17:0711/072210.072485:ERROR:gpu/ipc/client/shared_image_interface_proxy.cc:133] Buffer handle is null. Not creating a mailbox from it.
+[434206:17:0711/072210.073258:ERROR:cc/raster/one_copy_raster_buffer_provider.cc:282] Creation of StagingBuffer's SharedImage failed.
+[434206:17:0711/072210.078224:ERROR:cc/raster/one_copy_raster_buffer_provider.cc:282] Creation of StagingBuffer's SharedImage failed.
+[434206:17:0711/072210.081890:ERROR:cc/raster/one_copy_raster_buffer_provider.cc:282] Creation of StagingBuffer's SharedImage failed.
+[434206:17:0711/072210.085657:ERROR:cc/raster/one_copy_raster_buffer_provider.cc:282] Creation of StagingBuffer's SharedImage failed.
+[434206:17:0711/072210.089185:ERROR:cc/raster/one_copy_raster_buffer_provider.cc:282] Creation of StagingBuffer's SharedImage failed.
+[434206:17:0711/072210.092999:ERROR:cc/raster/one_copy_raster_buffer_provider.cc:282] Creation of StagingBuffer's SharedImage failed.
+[434206:17:0711/072210.097438:ERROR:cc/raster/one_copy_raster_buffer_provider.cc:282] Creation of StagingBuffer's SharedImage failed.
+[434206:17:0711/072210.101489:ERROR:cc/raster/one_copy_raster_buffer_provider.cc:282] Creation of StagingBuffer's SharedImage failed.
+[434206:17:0711/072210.105876:ERROR:cc/raster/one_copy_raster_buffer_provider.cc:282] Creation of StagingBuffer's SharedImage failed.
+[434206:17:0711/072210.110139:ERROR:cc/raster/one_copy_raster_buffer_provider.cc:282] Creation of StagingBuffer's SharedImage failed.
+[434206:17:0711/072210.114394:ERROR:cc/raster/one_copy_raster_buffer_provider.cc:282] Creation of StagingBuffer's SharedImage failed.
+[434206:17:0711/072210.117750:ERROR:cc/raster/one_copy_raster_buffer_provider.cc:282] Creation of StagingBuffer's SharedImage failed.
+[434206:17:0711/072210.121323:ERROR:cc/raster/one_copy_raster_buffer_provider.cc:282] Creation of StagingBuffer's SharedImage failed.
+[434206:17:0711/072210.124374:ERROR:cc/raster/one_copy_raster_buffer_provider.cc:282] Creation of StagingBuffer's SharedImage failed.
+[434206:17:0711/072210.127470:ERROR:cc/raster/one_copy_raster_buffer_provider.cc:282] Creation of StagingBuffer's SharedImage failed.
+[434206:17:0711/072210.130974:ERROR:cc/raster/one_copy_raster_buffer_provider.cc:282] Creation of StagingBuffer's SharedImage failed.
+[434206:17:0711/072210.134038:ERROR:cc/raster/one_copy_raster_buffer_provider.cc:282] Creation of StagingBuffer's SharedImage failed.
+[434206:1:0711/072210.279259:ERROR:content/browser/gpu/gpu_process_host.cc:1006] GPU process exited unexpectedly: exit_code=139
+[434206:1:0711/072210.280088:WARNING:content/browser/gpu/gpu_process_host.cc:1448] The GPU process has crashed 1 time(s)
+[434206:1:0711/072210.391945:INFO:ui/ozone/platform/qnx/qnx_gpu_platform_support_host.cc:46] [QNX-TRACE] OnGpuServiceLaunched: host_id=2 starting (gpu_control_remote_.is_bound=true)
+[434206:1:0711/072210.392558:INFO:ui/ozone/platform/qnx/qnx_gpu_platform_support_host.cc:188] [QNX-TRACE] OnChannelDestroyed: host_id=1 (GPU process exited or channel broken; will reset and let Chromium respawn a fresh GPU)
+[QNX-ANGLE-TRACE] terminate handler installed (pid=536607)
+[QNX-ANGLE-TRACE] terminate handler installed (pid=536607)
+[536607:1:0711/072210.513030:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+[536607:1:0711/072210.518544:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+[536607:1:0711/072210.523453:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+[536607:1:0711/072210.529436:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+[536607:1:0711/072210.534851:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+[536607:1:0711/072210.540687:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+[536607:1:0711/072210.547354:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+[536607:1:0711/072210.554298:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+[536607:1:0711/072210.563778:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+[536607:1:0711/072210.572706:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+[536607:1:0711/072210.578934:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+[536607:1:0711/072210.585721:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+[536607:1:0711/072210.592096:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+[536607:1:0711/072210.599609:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+[536607:1:0711/072210.604818:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+[536607:1:0711/072210.610194:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+[536607:1:0711/072210.615586:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+[536607:1:0711/072210.622948:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+[536607:1:0711/072210.628202:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+[536607:1:0711/072210.633190:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(5,5,5,0) not handled
+[536607:1:0711/072210.638331:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[536607:1:0711/072210.650447:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[536607:1:0711/072210.656865:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[536607:1:0711/072210.662092:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[536607:1:0711/072210.667156:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[536607:1:0711/072210.672340:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[536607:1:0711/072210.679195:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[536607:1:0711/072210.684438:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[536607:1:0711/072210.696077:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[536607:1:0711/072210.702017:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[536607:1:0711/072210.707491:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[536607:1:0711/072210.716319:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[536607:1:0711/072210.721754:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[536607:1:0711/072210.727438:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[536607:1:0711/072210.733111:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[536607:1:0711/072210.738900:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[536607:1:0711/072210.746295:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[536607:1:0711/072210.754274:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[536607:1:0711/072210.761500:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[536607:1:0711/072210.768393:ERROR:ui/gl/angle_platform_impl.cc:47] DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+ERR: DisplayEGL.cpp:672 (generateConfigs): RGBA(4,4,4,0) not handled
+[536607:1:0711/072210.813681:INFO:ui/ozone/platform/qnx/qnx_gpu_service.cc:135] QNX_OZONE_GPU_TRACE QnxGpuService::Initialize: gpu_host_remote bound; GPU process is ready to call SubmitFrame
+[434206:1:0711/072210.907739:WARNING:content/browser/gpu/gpu_process_host.cc:1028] Reinitialized the GPU process after a crash. The reported initialization time was 335 ms
+[434206:1:0711/072210.909060:INFO:ui/ozone/platform/qnx/qnx_gpu_platform_support_host.cc:150] [QNX-TRACE] BindGpuControlAndAttachExistingWidgets: Initialize ack received; binding gpu_control_remote_ now
+[434206:1:0711/072210.915773:INFO:ui/ozone/platform/qnx/qnx_gpu_platform_support_host.cc:257] [QNX-TRACE] AttachExistingWidgets: no existing widgets
+__PI_QNX_EXIT__:0
+=== QNX command exit: 0 ===
+Log: /home/yuta/chromium/src/out/qnx_release/qnx_run_20260711_162143_null____true__exit_0.log
+=== Done ===
+Log: /home/yuta/chromium/src/out/qnx_release/qnx_run_20260711_162143_null____true__exit_0.log
+Serial transcript: /home/yuta/chromium/src/out/qnx_release/qnx_run_20260711_162143_null____true__exit_0.log.serial
+Boot log: /home/yuta/chromium/src/out/qnx_release/qnx_run_20260711_162143_null____true__exit_0_boot.log

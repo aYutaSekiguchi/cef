@@ -1,0 +1,18 @@
+diff --git third_party/angle/BUILD.gn third_party/angle/BUILD.gn
+index 7903654785234c7295b40faae927bb40b2330598..e4b3a97b6dff6de3ce6be66940a7c97cdd1f201e 100644
+--- third_party/angle/BUILD.gn
++++ third_party/angle/BUILD.gn
+@@ -184,6 +184,13 @@ config("internal_config") {
+     defines += [ "ANGLE_IS_LINUX" ]
+   }
+ 
++  # QNX: enable ANGLE's recursive GlobalMutex implementation so that
++  # same-thread re-entry on egl::priv::GlobalMutex does not abort
++  # (commit 36988aca confirmed 2/2 GPU child re-entry).
++  if (is_qnx) {
++    defines += [ "ANGLE_ENABLE_GLOBAL_MUTEX_RECURSION=1" ]
++  }
++
+   if (angle_enable_share_context_lock) {
+     defines += [ "ANGLE_ENABLE_SHARE_CONTEXT_LOCK=1" ]
+   }
