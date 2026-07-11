@@ -1,0 +1,43 @@
+=== QNX QEMU runner ===
+QEMU dir:  /home/yuta/qnx800/images/qemu/qemu
+Disk:      /home/yuta/qnx800/images/qemu/qemu/output/disk-qemu
+Build dir: /home/yuta/chromium/src/out/qnx_release
+Guest dir: /mnt/nfs/out/qnx_release
+Serial:    127.0.0.1:10024
+Graphics:  virgl
+Display:   gtk
+Log:       /home/yuta/chromium/src/out/qnx_release/qnx_run_20260711_123011_throw_qnx_v3_thrower_mini_2__1__echo___P.log
+Command:   export LD_PRELOAD="/mnt/nfs/out/qnx_release/throw_qnx_v3_cxa_throw_mini.so"; /mnt/nfs/out/qnx_release/throw_qnx_v3_thrower_mini 2>&1; echo __PI_QNX_EXIT__:$?
+=== Starting QEMU ===
+QEMU PID: 593605
+=== Connected to QNX serial; waiting for login/shell ===
+
+=== QNX shell ready; running setup ===
+umount /mnt/nfs 2>/dev/null
+[?2004l[?2004h[root@qnxqemu ~]# umount /mnt 2>/dev/null
+[?2004l[?2004h[root@qnxqemu ~]# mkdir -p /mnt
+[?2004lmkdir: '/mnt': Function not implemented
+[?2004h[root@qnxqemu ~]# ifconfig vtnet0 10.0.2.2 netmask 255.255.255.0 up
+[?2004l[?2004h[root@qnxqemu ~]# route add default 10.0.2.1
+[?2004ladd net default: gateway 10.0.2.1
+[?2004h[root@qnxqemu ~]# mkdir -p /mnt/nfs
+[?2004lmkdir: '/mnt': Function not implemented
+[?2004h[root@qnxqemu ~]# fs-nfs3 10.0.2.1:/export/chromium-src /mnt/nfs
+[?2004l[?2004h[root@qnxqemu ~]# cd /mnt/nfs/out/qnx_release
+[?2004l[?2004h[root@qnxqemu /mnt/nfs/out/qnx_release]# export LD_LIBRARY_PATH=/mnt/nfs/out/qnx_release
+[?2004l[?2004h[root@qnxqemu /mnt/nfs/out/qnx_release]# export CHROME_EXE_PATH=/mnt/nfs/out/qnx_release/export
+[?2004l[?2004h[root@qnxqemu /mnt/nfs/out/qnx_release]# export CR_SOURCE_ROOT=/mnt/nfs
+[?2004l[?2004h[root@qnxqemu /mnt/nfs/out/qnx_release]# 
+=== Running command ===
+sh -c 'export LD_PRELOAD="/mnt/nfs/out/qnx_release/throw_qnx_v3_cxa_throw_mini.so"; /mnt/nfs/out/qnx_release/throw_qnx_v3_thrower_mini 2>&1; echo __PI_QNX_EXIT__:$?'; echo __PI_QNX_EXIT__:$?
+[?2004l[MINI-CXA] invoked
+[thrower] caught: code=45 what="mutex lock failed: Resource deadlock avoided"
+__PI_QNX_EXIT__:0
+__PI_QNX_EXIT__:0
+[?2004h[root@qnxqemu /mnt/nfs/out/qnx_release]# 
+=== QNX command exit: 0 ===
+Log: /home/yuta/chromium/src/out/qnx_release/qnx_run_20260711_123011_throw_qnx_v3_thrower_mini_2__1__echo___P.log
+=== Done ===
+Log: /home/yuta/chromium/src/out/qnx_release/qnx_run_20260711_123011_throw_qnx_v3_thrower_mini_2__1__echo___P.log
+Serial transcript: /home/yuta/chromium/src/out/qnx_release/qnx_run_20260711_123011_throw_qnx_v3_thrower_mini_2__1__echo___P.log.serial
+Boot log: /home/yuta/chromium/src/out/qnx_release/qnx_run_20260711_123011_throw_qnx_v3_thrower_mini_2__1__echo___P_boot.log

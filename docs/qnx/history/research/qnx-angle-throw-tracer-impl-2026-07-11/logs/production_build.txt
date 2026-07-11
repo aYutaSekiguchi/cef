@@ -1,0 +1,20 @@
+# Production wrapper build (libangle_throw_tracer.so)
+
+## Compile command
+```
+q++ -Vgcc_ntox86_64 -std=c++17 -O0 -g -D_POSIX_C_SOURCE=200809L \
+    -fexceptions -fno-rtti -fPIC -fvisibility=default -shared \
+    -o libangle_throw_tracer.so libangle_throw_tracer.cc
+```
+
+## Result
+-rwxrwxr-x 1 yuta yuta 89104 Jul 11 12:33 /tmp/throw_qnx_v3/build/libangle_throw_tracer.so
+/tmp/throw_qnx_v3/build/libangle_throw_tracer.so: ELF 64-bit LSB shared object, x86-64, version 1 (SYSV), dynamically linked, BuildID[md5/uuid]=f466b87ddb29e39769679aa8afa5a353, with debug_info, not stripped
+
+## Exported symbols (GLOBAL DEFAULT visibility, interposable)
+
+## NEEDED (G7: no ANGLE-derived DSO)
+ 0x0000000000000001 (NEEDED)             Shared library: [libc++.so.2]
+ 0x0000000000000001 (NEEDED)             Shared library: [libm.so.3]
+ 0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]
+ 0x0000000000000001 (NEEDED)             Shared library: [libgcc_s.so.1]

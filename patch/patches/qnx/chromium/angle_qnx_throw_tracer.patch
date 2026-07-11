@@ -1,0 +1,37 @@
+diff --git third_party/angle/BUILD.gn third_party/angle/BUILD.gn
+index 0cb785515c..1111111111 100644
+--- third_party/angle/BUILD.gn
++++ third_party/angle/BUILD.gn
+@@ -1609,6 +1609,32 @@
+   }
+ }
+ 
++# QNX ANGLE EGL abort diagnostic tracer (DESIGN: qnx-angle-throw-tracer-design-2026-07-11).
++# LD_PRELOAD this shared library into the chromium GPU process to interpose
++# __cxa_throw and 4 EGL entry points. Diagnostic-only, NOT a permanent
++# implementation. On catch of std::system_error, prints call name + e.code()
++# + e.what() to stderr, then ::_exit(1) (RAII in -fno-exceptions
++# intermediate frames does not run, so we cannot return normally).
++# Build with -fexceptions -fno-rtti -fvisibility=default. RTTI not used
++# (catch is on a fixed type std::system_error&).
++
++config("angle_throw_tracer_exceptions") {
++  if (is_qnx) {
++    cflags_cc = [ "-fexceptions" ]
++  }
++}
++
++if (is_qnx) {
++  shared_library("libangle_throw_tracer") {
++    sources = [ "src/libangle_throw_tracer.cc" ]
++    configs -= [ "//build/config/compiler:no_exceptions" ]
++    configs += [ ":angle_throw_tracer_exceptions" ]
++    cflags_cc = [ "-fvisibility=default" ]
++    output_name = "libangle_throw_tracer"
++    deps = []
++  }
++}
++
+ libEGL_template("libEGL_static") {
+   target_type = "angle_static_library"
+   public_configs = [ ":angle_static_config" ]
