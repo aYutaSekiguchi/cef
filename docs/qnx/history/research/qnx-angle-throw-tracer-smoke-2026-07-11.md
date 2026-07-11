@@ -92,12 +92,19 @@ thread identity was a category error.
 
 **[RETIRED]:** the original explanation ("throw on different thread
 so catch never fires") was based on the retired §3.  The EGL catch
-does not fire in the LD_PRELOAD smoke because **ANGLE calls EGL via
-`eglGetProcAddress` + function-pointer indirection** (verified by
-`nm -u libGLESv2.so | grep egl` returning no undefined EGL
-symbols).  LD_PRELOAD only interposes EGL functions reached through
-dynamic symbols; indirect calls bypass our wrappers entirely.
-This is the actual reason, not the thread story.
+does not fire in the LD_PRELOAD smoke — that is FACT (0 EGL wrapper
+entry/exit events recorded across the GPU child processes in this
+run).  `nm -u libGLESv2.so | grep egl` returning no undefined EGL
+symbols is consistent with ANGLE resolving EGL via internal /
+pre-resolved function-pointer paths, but the exact resolution
+path (whether `eglGetProcAddress` is invoked at runtime, or the
+symbols are statically linked into ANGLE's own `libEGL.so`, or some
+other mechanism) was not separately verified in this smoke and
+remains UNCONFIRMED.  The mere absence of UND EGL symbols does not
+prove which resolution path is used.  LD_PRELOAD only interposes
+EGL functions reached through dynamic-symbol lookup; whether
+ANGLE's call path reaches our wrappers through such a lookup is
+NOT independently verified here.
 
 ### 5. Throw site: `libGLESv2.so` — `std::set<string>::find` ~~(ANGLE TLS index map)~~ [RETIRED]
 

@@ -90,15 +90,14 @@ instrumented by this commit.
   every iteration of the GPU init (we see the lock(A)→unlock(A)→lock(A)
   pattern repeated 11 times before the final nested sequence).  Not
   proven; just observation.
-- The "mutex lock failed: Resource deadlock avoided" message that is
-  reported by `std::terminate` after the REENTRY event is consistent
-  with `std::mutex::lock()` aborting when the calling thread already
-  owns the mutex, but the FACT scope of this RESULT is limited to
-  REENTRY immediately preceding `std::terminate invoked` and
-  `exit_code=134`.  Whether the exact `std::system_error(EDEADLK)`
-  message was emitted is not observed in this run's raw log (the
-  terminate handler captured only 1 post-unwind frame, which we do not
-  use here).
+- The FACT scope of this RESULT is REENTRY event immediately
+  preceding `std::terminate invoked` (tid=1, same pid) and
+  `exit_code=134`.  The "mutex lock failed: Resource deadlock
+  avoided" message string was NOT searched for / NOT observed in this
+  run's raw log (the in-process [GMD] diag and the QNX-ANGLE-TRACE
+  terminate handler do not print that message in this build).  Any
+  speculation that this specific message was emitted would be
+  unsupported by this run's evidence.
 
 ### UNKNOWN / NOT OBSERVED
 

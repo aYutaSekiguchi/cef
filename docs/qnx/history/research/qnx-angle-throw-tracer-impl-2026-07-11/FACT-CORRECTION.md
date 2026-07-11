@@ -82,6 +82,37 @@ host-side correlation 用途 (ANGLE/libGLESv2 frames) で将来有用な可能�
 - `cef/patch/patch.cfg` の `qnx/chromium/angle_qnx_throw_tracer` エントリ
   — 訂正不要 (tracer 自体は維持、smoke 結論のみ訂正)。
 
+
+### 追加訂正 (2026-07-11, post-36988aca 監査)
+
+Commit `36988aca` の commit message 内に含まれた以下の 2 断定は、本追加訂正
+で撤回する:
+
+1. **撤回**: "`eglGetProcAddress + function-pointer indirection` が
+   actual reason"  (commit message および qnx-angle-throw-tracer-smoke
+   -2026-07-11.md §4 RETIRED 内)
+   - **訂正**: 「EGL wrapper が観測されなかった」ことは FACT (本 LD_PRELOAD
+     smoke run で EGL wrapper entry/exit event = 0)。
+     `nm -u libGLESv2.so | grep egl` で EGL UND 0 だったことは、
+     ANGLE が EGL を internal / pre-resolved function-pointer 経路で
+     解決していることと整合する、**しかし** `eglGetProcAddress` を使った
+     正確な解決経路かどうかは未確認 (UNCONFIRMED)。 UND 0 だけでは
+     どの解決経路が使われているかは決まらない。
+   - 反映先: `qnx-angle-throw-tracer-smoke-2026-07-11.md` §4 RETIRED を
+     修正済 (本追加訂正と同一 commit)。
+
+2. **撤回**: "mutex lock failed: Resource deadlock avoided" メッセージが
+   REENTRY 後に reported された (RESULT.md 旧 SPECULATION)
+   - **訂正**: 本 raw log でその文字列は観測されていない (in-process
+     [GMD] diag も QNX-ANGLE-TRACE terminate handler も本 build では
+     その文字列を出力しない)。FACT は REENTRY → in-flight terminate →
+     exit_code=134 のみ。
+   - 反映先: RESULT.md SPECULATION を本追加訂正と同一 commit で修正済。
+
+commit message は履歴的に不変。 ただし本ファイルが訂正の正本 (superseded link
+付き qnx-angle-throw-tracer-smoke-2026-07-11.md および RESULT.md 内の
+FACT scope が真)。
+
 ### Patch 機械生成手順の遵守記録
 
 本コミット (提案) の 3 patch は手書き header/hunk なし。`/tmp/angle_diag_patchroot`
