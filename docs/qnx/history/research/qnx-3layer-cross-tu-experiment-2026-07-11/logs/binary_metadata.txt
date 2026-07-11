@@ -1,0 +1,7 @@
+=== binary metadata for /tmp/throw_qnx_v2/build/throw_qnx ===
+/tmp/throw_qnx_v2/build/throw_qnx: ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /usr/lib/ldqnx-64.so.2, BuildID[md5/uuid]=335539454ac2fa2b1d5a464e88bd3449, with debug_info, not stripped
+dac4295e9466af49b81e6b9895a9bbf0  /tmp/throw_qnx_v2/build/throw_qnx
+  [12] .text             PROGBITS        0000000000000fc0 000fc0 0016fe 00  AX  0   0 16
+  [15] .eh_frame_hdr     PROGBITS        0000000000002b24 002b24 00032c 00   A  0   0  4
+  [16] .eh_frame         PROGBITS        0000000000002e50 002e50 000cf4 00   A  0   0  8
+  [17] .gcc_except_table PROGBITS        0000000000003b44 003b44 0000b4 00   A  0   0  4

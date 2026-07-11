@@ -1,0 +1,49 @@
+=== QNX QEMU runner ===
+QEMU dir:  /home/yuta/qnx800/images/qemu/qemu
+Disk:      /home/yuta/qnx800/images/qemu/qemu/output/disk-qemu
+Build dir: /home/yuta/chromium/src/out/qnx_release
+Guest dir: /mnt/nfs/out/qnx_release
+Serial:    127.0.0.1:10024
+Graphics:  virgl
+Display:   gtk
+Log:       /home/yuta/chromium/src/out/qnx_release/qnx_run_20260711_114657_throw_qnx_v2_3.log
+Command:   /mnt/nfs/out/qnx_release/throw_qnx_v2 3
+=== Starting QEMU ===
+QEMU PID: 582278
+=== Connected to QNX serial; waiting for login/shell ===
+
+=== QNX shell ready; running setup ===
+umount /mnt/nfs 2>/dev/null
+[root@qnxqemu ~]# umount /mnt 2>/dev/null
+[root@qnxqemu ~]# mkdir -p /mnt
+mkdir: '/mnt': Function not implemented
+[root@qnxqemu ~]# ifconfig vtnet0 10.0.2.2 netmask 255.255.255.0 up
+[root@qnxqemu ~]# route add default 10.0.2.1
+add net default: gateway 10.0.2.1
+[root@qnxqemu ~]# mkdir -p /mnt/nfs
+mkdir: '/mnt': Function not implemented
+[root@qnxqemu ~]# fs-nfs3 10.0.2.1:/export/chromium-src /mnt/nfs
+[root@qnxqemu ~]# cd /mnt/nfs/out/qnx_release
+[root@qnxqemu /mnt/nfs/out/qnx_release]# export LD_LIBRARY_PATH=/mnt/nfs/out/qnx_release
+[root@qnxqemu /mnt/nfs/out/qnx_release]# export CHROME_EXE_PATH=/mnt/nfs/out/qnx_release/throw_qnx_v2
+[root@qnxqemu /mnt/nfs/out/qnx_release]# export CR_SOURCE_ROOT=/mnt/nfs
+[root@qnxqemu /mnt/nfs/out/qnx_release]# 
+=== Running command ===
+sh -c '/mnt/nfs/out/qnx_release/throw_qnx_v2 3'; echo __PI_QNX_EXIT__:$?
+[main] === case 3 start ===
+[ctor] main-init-lock
+[main] g_test_mutex locked, this thread holds it
+[dtor] main-init-lock
+[C] case-3: CCatchThroughBWithDtors entered
+[ctor] BWithDtors-entry
+[ctor] BWithDtors-before-call
+[C] case-3: CAUGHT std::system_error code=45 what="mutex lock failed: Resource deadlock avoided"
+[main] === case 3 end ===
+__PI_QNX_EXIT__:0
+[root@qnxqemu /mnt/nfs/out/qnx_release]# 
+=== QNX command exit: 0 ===
+Log: /home/yuta/chromium/src/out/qnx_release/qnx_run_20260711_114657_throw_qnx_v2_3.log
+=== Done ===
+Log: /home/yuta/chromium/src/out/qnx_release/qnx_run_20260711_114657_throw_qnx_v2_3.log
+Serial transcript: /home/yuta/chromium/src/out/qnx_release/qnx_run_20260711_114657_throw_qnx_v2_3.log.serial
+Boot log: /home/yuta/chromium/src/out/qnx_release/qnx_run_20260711_114657_throw_qnx_v2_3_boot.log
