@@ -1,12 +1,33 @@
 # QNX ANGLE throw-tracer LD_PRELOAD smoke (2026-07-11)
 
-## Context
+> **SUPERSEDED — corrections applied 2026-07-11.**
+>
+> Sections marked **[RETIRED]** below contain conclusions that have been
+> retracted.  The currently accepted FACT and the corrected interpretation
+> are in:
+>
+> - `docs/qnx/history/research/qnx-angle-throw-tracer-impl-2026-07-11/RESULT.md`
+>   — in-process GlobalMutex diagnostic smoke (44 [GMD] events, 2 GPU
+>   children), same-thread same-GlobalMutex re-entry CONFIRMED 2/2.
+> - `docs/qnx/history/research/qnx-angle-throw-tracer-impl-2026-07-11/FACT-CORRECTION.md`
+>   — explicit retraction of the [RETIRED] conclusions below.
+>
+> The `libangle_throw_tracer.so` LD_PRELOAD design itself is **NOT**
+> retracted: G1–G9 gates pass on mini tests, `__cxa_throw` interpose
+> fires, and the tool is useful for ANGLE/libGLESv2 frames within the
+> limitations documented in RESULT.md.
 
-The `libangle_throw_tracer.so` (DESIGN: `qnx-angle-throw-tracer-design-2026-07-11`) was integrated into the CEF-managed bootstrap pipeline and smoke-tested against `cefsimple --use-gl=angle --use-angle=gles-egl` under QEMU virgl.
+## Context (historical, pre-correction)
 
-Goal: confirm the LD_PRELOAD interpose fires in the GPU child process and determine whether the `std::system_error(EDEADLK)` throw site can be identified.
+The `libangle_throw_tracer.so` (DESIGN: `qnx-angle-throw-tracer-design-2026-07-11`)
+was integrated into the CEF-managed bootstrap pipeline and smoke-tested
+against `cefsimple --use-gl=angle --use-angle=gles-egl` under QEMU virgl.
 
-## Build + Bootstrap
+Goal: confirm the LD_PRELOAD interpose fires in the GPU child process
+and determine whether the `std::system_error(EDEADLK)` throw site can
+be identified.
+
+## Build + Bootstrap (FACT)
 
 - Patch: `cef/patch/patches/qnx/chromium/angle_qnx_throw_tracer.patch` (26-line addition to `third_party/angle/BUILD.gn`)
 - New file: `cef/patch/qnx/chromium/new_files/third_party/angle/src/libangle_throw_tracer.cc`
@@ -16,69 +37,139 @@ Goal: confirm the LD_PRELOAD interpose fires in the GPU child process and determ
 
 ## Smoke Results
 
-### 1. Tracer IS loaded in GPU child processes
+### 1. Tracer IS loaded in GPU child processes (FACT)
 
 With `--env LD_PRELOAD=/mnt/nfs/out/qnx_release/libangle_throw_tracer.so`:
 - `[ANGLE-THROW-TRACER] libangle_throw_tracer.so LOADED` appears 8+ times
 - Multiple child processes (browser, GPU, renderer, utility) load the tracer
 - `LD_PRELOAD` propagates through `posix_spawnp` to child processes on QNX (`--no-sandbox`)
 
-### 2. `__cxa_throw` interpose FIRES (verified by removing EGL filter)
+### 2. `__cxa_throw` interpose FIRES (FACT, with EGL filter removed)
 
 With the EGL filter temporarily disabled (`if (false && tls_egl_call_depth == 0) {...}`):
 ```
 [ANGLE-THROW-TRACER] __cxa_throw (raw) 0x00000037aef0d691 0x00000037aef3646d
 ```
-- The hook fires for each `std::system_error(EDEADLK)` throw
-- Raw return addresses captured before unwinding
+The hook fires for each `std::system_error(EDEADLK)` throw and captures
+raw return addresses before unwinding.
 
-With the EGL filter ENABLED (production mode):
-- No `__cxa_throw` output — because `tls_egl_call_depth == 0` at throw time
-- The filter correctly suppresses output for throws outside EGL wrappers
+**Caveat — libc++ caller frames are unreliable on QNX:**
+`addr2line` on offset `0x58691` (ra[1]) resolves to
+`std::__throw_future_error(future_errc)` at `future:501`, but
+disassembly shows the real `__cxa_throw` call site is at offset
+`0x586bc` (return `0x586c1`); control flow cannot pass through
+`0x58691`.  Similarly, `0x8146d` (ra[2]) does not match the unwind
+sequence.  Therefore, throw-site identification from `__cxa_throw`
+hook frames for libc++ internal callers is not reliable on QNX
+(this is an unwinder/library limitation, not a tracer design defect).
+ANGLE/libGLESv2 caller frames are adoptable individually when
+`nm`, `objdump` disassembly, and `addr2line` independently agree
+(three-point confirmation), as done for `libGLESv2.so+0x9eb85`
+(`EGL_GetDisplay` size 128, `entry_points_egl_autogen.cpp:498`,
+instruction at `0x9eb80` calls `ScopedGlobalMutexLock<0>::ScopedGlobalMutexLock()`).
 
-### 3. Throw is on a DIFFERENT thread than EGL entry wrappers
+With the EGL filter ENABLED (production mode): no `__cxa_throw`
+output — because `tls_egl_call_depth == 0` at throw time.  The filter
+correctly suppresses output for throws outside EGL wrappers, BUT
+this same observation is consistent with either (a) a throw on a
+different thread, (b) a throw before `tls_push_egl_call`, or (c) a
+throw via ANGLE's `eglGetProcAddress` + function-pointer call (which
+does NOT pass through our wrappers).  These alternatives are NOT
+distinguishable by the EGL filter alone.
 
-The EGL filter finding proves that `tls_egl_call_depth == 0` when the throw occurs. This means the throw does NOT happen inside our EGL entry wrappers. Possible explanations:
-- ANGLE spawns an internal thread for EGL initialization (likely: `DisplayEGL` creates a worker thread)
-- The recursive `std::mutex::lock()` is called on that worker thread, not the main thread that called `eglGetPlatformDisplay`
-- The `thread_local tls_egl_call_depth` is per-thread, so the worker thread sees depth=0
+### 3. ~~Throw is on a DIFFERENT thread than EGL entry wrappers~~ [RETIRED]
 
-### 4. EGL catch block does NOT fire
+**[RETIRED 2026-07-11]:** the original conclusion "different thread"
+was based on `tls_egl_call_depth == 0` at throw time and is not a
+proof of thread identity.  The current in-process GlobalMutex
+diagnostic (see RESULT.md) shows the same-thread same-GlobalMutex
+re-entry pattern with **same tid=1**, contradicting the "different
+thread" hypothesis.  The EGL filter observation was consistent with
+multiple mutually-exclusive alternatives; treating it as proof of
+thread identity was a category error.
 
-The `try/catch(std::system_error&)` in our EGL entry wrappers never fires because the throw is on a different thread. The exception propagates on the worker thread, hits no catch handler, and `std::terminate()` is called → SIGABRT (exit code 134).
+### 4. EGL catch block does NOT fire [RETIRED]
 
-### 5. Throw site: `libGLESv2.so` — `std::set<string>::find` (ANGLE TLS index map)
+**[RETIRED]:** the original explanation ("throw on different thread
+so catch never fires") was based on the retired §3.  The EGL catch
+does not fire in the LD_PRELOAD smoke because **ANGLE calls EGL via
+`eglGetProcAddress` + function-pointer indirection** (verified by
+`nm -u libGLESv2.so | grep egl` returning no undefined EGL
+symbols).  LD_PRELOAD only interposes EGL functions reached through
+dynamic symbols; indirect calls bypass our wrappers entirely.
+This is the actual reason, not the thread story.
 
-The `angle_qnx_terminate_capture` termination handler (set via `std::set_terminate`) captures 1 post-unwind frame:
-```
-#00 0x15c637ef7f libGLESv2.so :: std::__2::__tree<...>::find(...)
-```
-This is ANGLE's TLS index map (`std::set<std::string>`) lookup, called during per-thread EGL initialization. The mutex protecting this TLS map is locked recursively → `EDEADLK`.
+### 5. Throw site: `libGLESv2.so` — `std::set<string>::find` ~~(ANGLE TLS index map)~~ [RETIRED]
 
-### 6. DIAGNOSTIC FINDING: the recursive mutex is in the TLS index map, not the global EGL mutex
+**[RETIRED]:** the original conclusion "ANGLE TLS index map" was
+based on:
+- a single post-unwind frame from `terminate_capture_qnx.cc`
+  (`std::__tree::find`),
+- nm lookup showing `std::__tree::find` is a WEAK template
+  instantiation in `libGLESv2.so`,
+- and disassembly reverse-calculation from the dladdr `+0x4d9f`
+  offset.
 
-Previous investigation assumed the `ScopedGlobalEGLMutexLock` inside `eglGetPlatformDisplay` was the source. The smoke evidence suggests the recursive lock is on ANGLE's TLS index map, which is accessed from a worker thread spawned inside `eglInitialize` or a similar EGL call.
+**The disassembly reverse-calculation is unreliable** (supervisor
+audit, 2026-07-11): `+0x4d9f` is the offset from `dladdr`'s
+"nearest preceding symbol" report, not a verified intra-function
+offset; the WEAK template instantiation may not be the actual
+call site.  The actual `std::__tree::find` function is a generic
+C++ template instantiation that can be called from anywhere that
+uses `std::set<std::string>::find()` — including GL extension-set
+processing (`DispatchTableGL::initProcsSharedExtensions(const
+std::set<std::string>&)`).  Calling this the "ANGLE TLS index map"
+was unsupported speculation.
 
-## Impact on DESIGN.md
+### 6. ~~DIAGNOSTIC FINDING: the recursive mutex is in the TLS index map, not the global EGL mutex~~ [RETIRED]
 
-- **§4.2 (EGL context filter)**: The assumption that the throw happens inside EGL wrappers was WRONG. The throw is on a different thread where `tls_egl_call_depth` is always 0. The EGL catch blocks never fire.
-- **§4.4 (Catch and `::_exit(1)`)**: The `::_exit(1)` path never executes because the exception propagates to `std::terminate()` on the worker thread.
-- **The tracer's `__cxa_throw` interpose is still functional**: it can capture throw-site addresses regardless of thread, but needs the EGL filter removed to be useful for ANGLE diagnostics.
+**[RETIRED]:** based on §3 and §5.  Superseded by the in-process
+GlobalMutex diagnostic (RESULT.md), which shows same-thread
+same-GlobalMutex re-entry on `egl::priv::GlobalMutex` (non-recursive
+default variant, which is exactly the configuration that aborts on
+re-entry).
 
-## Recommended Next Steps
+## Impact on DESIGN.md (corrected)
 
-1. **System EGL linkage** (proven path): `LD_PRELOAD=/usr/lib/libEGL.so.1` makes native CEF GPU producer reach `accepted=true; eglSwapBuffers reached`. The permanent fix (`cef/BUILD.gn:1099` → system Mesa EGL) is the right direction for Phase 7.
+- **§4.2 (EGL context filter)**: the filter is correct *as
+  designed* but assumes the throw occurs inside our EGL wrappers.
+  This assumption fails for ANGLE's `eglGetProcAddress` indirection
+  path.  The filter is therefore not a useful gate for ANGLE
+  diagnostics.
+- **§4.4 (Catch and `::_exit(1)`)**: the `::_exit(1)` path never
+  executes because ANGLE's call path bypasses our wrappers.
+- **The tracer's `__cxa_throw` interpose is functional**: it can
+  capture throw-site addresses regardless of thread, but
+  libc++ internal caller frames are not reliably unwound on QNX
+  (see §2 caveat).  ANGLE/libGLESv2 caller frames require
+  three-point confirmation (nm + objdump + addr2line) for adoption.
 
-2. **ANGLE explicit runtime**: The recursive mutex is on ANGLE's TLS index map, not the global EGL mutex. A thread-local TLS slot initialization collides with the same slot's lock. Diagnosis would require:
-   - Remove EGL filter from `__cxa_throw` interpose
-   - Add `dladdr()`-based symbol resolution to identify exact call site
-   - Add thread-ID to output to confirm thread isolation
-   - Consider adding `Dl_info` resolution in the tracer (like `terminate_capture_qnx.cc`)
+## Status of `angle_qnx_throw_tracer` patch (LD_PRELOAD tracer)
 
-3. **The `angle_qnx_throw_tracer` patch is diagnostic-only** and should remain; it's useful for future ANGLE debugging with filter removed.
+- The tracer itself is **retained**: G1–G9 gates pass on mini tests;
+  `__cxa_throw` interpose fires; useful for ANGLE/libGLESv2 frames
+  with three-point symbol confirmation.
+- The conclusion in this smoke that the throw site was at the
+  ANGLE TLS index map is retracted; the in-process GlobalMutex
+  diagnostic provides the corroborated evidence instead
+  (RESULT.md).
 
-## Tracer Design Change (applied)
+## Corrected interpretation (FACT)
 
-Constructor now outputs a `[ANGLE-THROW-TRACER] libangle_throw_tracer.so LOADED` message via `::write(2,...)` to confirm loading in each process. This is a permanent diagnostic feature.
+- Same-thread same-GlobalMutex re-entry on ANGLE `egl::priv::GlobalMutex`
+  (default, non-recursive variant) is **CONFIRMED** for two GPU
+  child processes in the in-process GlobalMutex diagnostic smoke.
+  See RESULT.md for evidence.
+- The recursive lock fix would require `ANGLE_ENABLE_GLOBAL_MUTEX_RECURSION`
+  or an equivalent code change to `GlobalMutex::lock()` itself,
+  not the unrelated `angle::priv::MutexOnStd` class.
 
-EGL filter comment updated with diagnostic finding.
+## See also
+
+- `docs/qnx/history/research/qnx-angle-throw-tracer-design-2026-07-11/DESIGN.md`
+  — original design (LD_PRELOAD), not retracted but its assumptions
+  refined.
+- `docs/qnx/history/research/qnx-angle-throw-tracer-impl-2026-07-11/RESULT.md`
+  — current accepted FACT.
+- `docs/qnx/history/research/qnx-angle-throw-tracer-impl-2026-07-11/FACT-CORRECTION.md`
+  — explicit retraction list.

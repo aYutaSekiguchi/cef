@@ -1,0 +1,157 @@
+=== QNX QEMU runner ===
+QEMU dir:  /home/yuta/qnx800/images/qemu/qemu
+Disk:      /home/yuta/qnx800/images/qemu/qemu/output/disk-qemu
+Build dir: /home/yuta/chromium/src/out/qnx_release
+Guest dir: /mnt/nfs/out/qnx_release
+Serial:    127.0.0.1:10024
+Graphics:  virgl
+Display:   gtk
+Log:       /home/yuta/chromium/src/out/qnx_release/qnx_run_20260711_153206_null____true__exit_0.log
+Command:   ./cefsimple --ozone-platform=qnx --use-gl=angle --use-angle=gles-egl --no-sandbox --use-native --url=about:blank --ozone-qnx-gpu-trace --enable-logging=stderr 2>&1 & p=$!; sleep 15; kill -TERM $p 2>/dev/null || true; wait $p 2>/dev/null || true; exit 0
+=== Starting QEMU ===
+QEMU PID: 692964
+=== Connected to QNX serial; waiting for login/shell ===
+
+=== QNX shell ready; running setup ===
+umount /mnt/nfs 2>/dev/null
+[?2004l[?2004h[root@qnxqemu ~]# umount /mnt 2>/dev/null
+[?2004l[?2004h[root@qnxqemu ~]# mkdir -p /mnt
+[?2004lmkdir: '/mnt': Function not implemented
+[?2004h[root@qnxqemu ~]# ifconfig vtnet0 10.0.2.2 netmask 255.255.255.0 up
+[?2004l[?2004h[root@qnxqemu ~]# route add default 10.0.2.1
+[?2004ladd net default: gateway 10.0.2.1
+[?2004h[root@qnxqemu ~]# mkdir -p /mnt/nfs
+[?2004lmkdir: '/mnt': Function not implemented
+[?2004h[root@qnxqemu ~]# fs-nfs3 10.0.2.1:/export/chromium-src /mnt/nfs
+[?2004l[?2004h[root@qnxqemu ~]# cd /mnt/nfs/out/qnx_release
+[?2004l[?2004h[root@qnxqemu /mnt/nfs/out/qnx_release]# export LD_LIBRARY_PATH=/mnt/nfs/out/qnx_release
+[?2004l[?2004h[root@qnxqemu /mnt/nfs/out/qnx_release]# export CHROME_EXE_PATH=/mnt/nfs/out/qnx_release/cefsimple
+[?2004l[?2004h[root@qnxqemu /mnt/nfs/out/qnx_release]# export CR_SOURCE_ROOT=/mnt/nfs
+[?2004l[?2004h[root@qnxqemu /mnt/nfs/out/qnx_release]# 
+=== Running command ===
+sh -c './cefsimple --ozone-platform=qnx --use-gl=angle --use-angle=gles-egl --no-sandbox --use-native --url=about:blank --ozone-qnx-gpu-trace --enable-logging=stderr 2>&1 & p=$!; sleep 15; kill -TERM $p 2>/dev/null || true; wait $p 2>/dev/null || true; exit 0'; echo __PI_QNX_EXIT__:$?
+[?2004l[QNX-ANGLE-TRACE] terminate handler installed (pid=606238)
+[0711/063223.473972:WARNING:cef/libcef/common/resource_util.cc:83] Please customize CefSettings.root_cache_path for your application. Use of the default value may lead to unintended process singleton behavior.
+[606238:1:0711/063223.731380:WARNING:net/proxy_resolution/proxy_config_service.cc:138] Failed to choose a system proxy settings fetcher for this platform.
+[606238:1:0711/063223.808324:INFO:ui/ozone/platform/qnx/qnx_gpu_platform_support_host.cc:46] [QNX-TRACE] OnGpuServiceLaunched: host_id=1 starting (gpu_control_remote_.is_bound=false)
+[QNX-ANGLE-TRACE] terminate handler installed (pid=614431)
+[QNX-ANGLE-TRACE] terminate handler installed (pid=614431)
+[GMD] pid=614431 tid=0x0000000000000001 event=lock-entry this=0x0000005c00004230 was_held=0 total_held=0
+[GMD] pid=614431 tid=0x0000000000000001 event=lock-ok this=0x0000005c00004230 now_held=1 total_held=1
+[GMD] pid=614431 tid=0x0000000000000001 event=unlock-entry this=0x0000005c00004230 was_held=1 total_held=1
+[GMD] pid=614431 tid=0x0000000000000001 event=unlock-ok this=0x0000005c00004230 total_held=0
+[GMD] pid=614431 tid=0x0000000000000001 event=lock-entry this=0x0000005c00004230 was_held=0 total_held=0
+[GMD] pid=614431 tid=0x0000000000000001 event=lock-ok this=0x0000005c00004230 now_held=1 total_held=1
+[GMD] pid=614431 tid=0x0000000000000001 event=unlock-entry this=0x0000005c00004230 was_held=1 total_held=1
+[GMD] pid=614431 tid=0x0000000000000001 event=unlock-ok this=0x0000005c00004230 total_held=0
+[606238:1:0711/063224.053940:WARNING:chrome/browser/signin/account_consistency_mode_manager.cc:74] Desktop Identity Consistency cannot be enabled as no OAuth client ID and client secret have been configured.
+[GMD] pid=614431 tid=0x0000000000000001 event=lock-entry this=0x0000005c00004230 was_held=0 total_held=0
+[GMD] pid=614431 tid=0x0000000000000001 event=lock-ok this=0x0000005c00004230 now_held=1 total_held=1
+[GMD] pid=614431 tid=0x0000000000000001 event=unlock-entry this=0x0000005c00004230 was_held=1 total_held=1
+[GMD] pid=614431 tid=0x0000000000000001 event=unlock-ok this=0x0000005c00004230 total_held=0
+[GMD] pid=614431 tid=0x0000000000000001 event=lock-entry this=0x0000005c00004230 was_held=0 total_held=0
+[GMD] pid=614431 tid=0x0000000000000001 event=lock-ok this=0x0000005c00004230 now_held=1 total_held=1
+[GMD] pid=614431 tid=0x0000000000000001 event=unlock-entry this=0x0000005c00004230 was_held=1 total_held=1
+[GMD] pid=614431 tid=0x0000000000000001 event=unlock-ok this=0x0000005c00004230 total_held=0
+[GMD] pid=614431 tid=0x0000000000000001 event=lock-entry this=0x0000005c00004230 was_held=0 total_held=0
+[GMD] pid=614431 tid=0x0000000000000001 event=lock-ok this=0x0000005c00004230 now_held=1 total_held=1
+[GMD] pid=614431 tid=0x0000000000000001 event=unlock-entry this=0x0000005c00004230 was_held=1 total_held=1
+[GMD] pid=614431 tid=0x0000000000000001 event=unlock-ok this=0x0000005c00004230 total_held=0
+[GMD] pid=614431 tid=0x0000000000000001 event=lock-entry this=0x0000005c00004230 was_held=0 total_held=0
+[GMD] pid=614431 tid=0x0000000000000001 event=lock-ok this=0x0000005c00004230 now_held=1 total_held=1
+[GMD] pid=614431 tid=0x0000000000000001 event=unlock-entry this=0x0000005c00004230 was_held=1 total_held=1
+[GMD] pid=614431 tid=0x0000000000000001 event=unlock-ok this=0x0000005c00004230 total_held=0
+[GMD] pid=614431 tid=0x0000000000000001 event=lock-entry this=0x0000005c00004230 was_held=0 total_held=0
+[GMD] pid=614431 tid=0x0000000000000001 event=lock-ok this=0x0000005c00004230 now_held=1 total_held=1
+[GMD] pid=614431 tid=0x0000000000000001 event=unlock-entry this=0x0000005c00004230 was_held=1 total_held=1
+[GMD] pid=614431 tid=0x0000000000000001 event=unlock-ok this=0x0000005c00004230 total_held=0
+[GMD] pid=614431 tid=0x0000000000000001 event=lock-entry this=0x0000005c00004230 was_held=0 total_held=0
+[GMD] pid=614431 tid=0x0000000000000001 event=lock-ok this=0x0000005c00004230 now_held=1 total_held=1
+[GMD] pid=614431 tid=0x0000000000000001 event=unlock-entry this=0x0000005c00004230 was_held=1 total_held=1
+[GMD] pid=614431 tid=0x0000000000000001 event=unlock-ok this=0x0000005c00004230 total_held=0
+[GMD] pid=614431 tid=0x0000000000000001 event=lock-entry this=0x0000005c00004230 was_held=0 total_held=0
+[GMD] pid=614431 tid=0x0000000000000001 event=lock-ok this=0x0000005c00004230 now_held=1 total_held=1
+[GMD] pid=614431 tid=0x0000000000000001 event=unlock-entry this=0x0000005c00004230 was_held=1 total_held=1
+[GMD] pid=614431 tid=0x0000000000000001 event=unlock-ok this=0x0000005c00004230 total_held=0
+[GMD] pid=614431 tid=0x0000000000000001 event=lock-entry this=0x0000005c00004230 was_held=0 total_held=0
+[GMD] pid=614431 tid=0x0000000000000001 event=lock-ok this=0x0000005c00004230 now_held=1 total_held=1
+[GMD] pid=614431 tid=0x0000000000000001 event=lock-entry this=0x0000005c000042a0 was_held=0 total_held=1
+[GMD] pid=614431 tid=0x0000000000000001 event=lock-ok this=0x0000005c000042a0 now_held=1 total_held=2
+[GMD] pid=614431 tid=0x0000000000000001 event=lock-entry this=0x0000005c00004230 was_held=1 total_held=2
+[GMD] pid=614431 tid=0x0000000000000001 event=REENTRY this=0x0000005c00004230 was_held=1
+[QNX-ANGLE-TRACE] std::terminate invoked (pid=614431 tid=1)
+[QNX-ANGLE-TRACE] terminate backtrace (1 frames):
+  #00 0x1e8db22e3f /mnt/nfs/out/qnx_release/libGLESv2.so :: _ZNSt3__26__treeINS_12basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEEENS_4lessIS6_EENS4_IS6_EEE4findIS6_EENS_15__tree_iteratorIS6_PNS_11__tree_nodeIS6_PvEElEERKT_+0x4c9f
+[QNX-ANGLE-TRACE] exception: in-flight (rethrow/catch disabled; inspect backtrace above for throw site)
+[606238:1:0711/063224.184026:WARNING:net/proxy_resolution/proxy_config_service.cc:138] Failed to choose a system proxy settings fetcher for this platform.
+[606238:1:0711/063224.189778:WARNING:net/proxy_resolution/proxy_config_service.cc:138] Failed to choose a system proxy settings fetcher for this platform.
+[606238:1:0711/063224.229890:INFO:ui/ozone/platform/qnx/ozone_platform_qnx.cc:118] [QNX-TRACE] OzonePlatformQnx::CreatePlatformWindow: bounds=10,10 1004x748
+[606238:1:0711/063224.230375:INFO:ui/ozone/platform/qnx/qnx_window.cc:44] [QNX-TRACE] QnxWindow::QnxWindow: bounds=10,10 1004x748
+[606238:1:0711/063224.250719:INFO:ui/ozone/platform/qnx/qnx_gpu_platform_support_host.cc:303] [QNX-TRACE] AttachNewWidget: widget=1 gpu_control_remote_ not bound yet (Initialize ack in flight); AttachExistingWidgets will handle after ack
+[606238:1:0711/063224.251230:INFO:ui/ozone/platform/qnx/qnx_window.cc:73] [QNX-TRACE] QnxWindow::QnxWindow: widget=1 screen_win=5c008b1840
+[QNX-ANGLE-TRACE] terminate handler installed (pid=614433)
+[QNX-ANGLE-TRACE] terminate handler installed (pid=614434)
+[QNX-ANGLE-TRACE] terminate handler installed (pid=614435)
+[614435:1:0711/063224.713162:ERROR:third_party/webrtc/rtc_base/cpu_info.cc:73] No function to get number of cores
+[QNX-ANGLE-TRACE] terminate handler installed (pid=614436)
+[614436:1:0711/063224.849928:ERROR:third_party/webrtc/rtc_base/cpu_info.cc:73] No function to get number of cores
+[606238:20:0711/063227.976413:ERROR:base/files/file_path_watcher_inotify.cc:929] Failed to read /proc/sys/fs/inotify/max_user_watches
+[606238:1:0711/063232.323122:ERROR:content/browser/gpu/gpu_process_host.cc:1006] GPU process exited unexpectedly: exit_code=134
+[606238:1:0711/063232.323886:WARNING:content/browser/gpu/gpu_process_host.cc:1448] The GPU process has crashed 1 time(s)
+[606238:1:0711/063232.335991:INFO:ui/ozone/platform/qnx/qnx_gpu_platform_support_host.cc:46] [QNX-TRACE] OnGpuServiceLaunched: host_id=2 starting (gpu_control_remote_.is_bound=false)
+[QNX-ANGLE-TRACE] terminate handler installed (pid=708639)
+[QNX-ANGLE-TRACE] terminate handler installed (pid=708639)
+[GMD] pid=708639 tid=0x0000000000000001 event=lock-entry this=0x0000003c00074210 was_held=0 total_held=0
+[GMD] pid=708639 tid=0x0000000000000001 event=lock-ok this=0x0000003c00074210 now_held=1 total_held=1
+[GMD] pid=708639 tid=0x0000000000000001 event=unlock-entry this=0x0000003c00074210 was_held=1 total_held=1
+[GMD] pid=708639 tid=0x0000000000000001 event=unlock-ok this=0x0000003c00074210 total_held=0
+[GMD] pid=708639 tid=0x0000000000000001 event=lock-entry this=0x0000003c00074210 was_held=0 total_held=0
+[GMD] pid=708639 tid=0x0000000000000001 event=lock-ok this=0x0000003c00074210 now_held=1 total_held=1
+[GMD] pid=708639 tid=0x0000000000000001 event=unlock-entry this=0x0000003c00074210 was_held=1 total_held=1
+[GMD] pid=708639 tid=0x0000000000000001 event=unlock-ok this=0x0000003c00074210 total_held=0
+[GMD] pid=708639 tid=0x0000000000000001 event=lock-entry this=0x0000003c00074210 was_held=0 total_held=0
+[GMD] pid=708639 tid=0x0000000000000001 event=lock-ok this=0x0000003c00074210 now_held=1 total_held=1
+[606238:1:0711/063232.418328:INFO:ui/ozone/platform/qnx/qnx_gpu_platform_support_host.cc:188] [QNX-TRACE] OnChannelDestroyed: host_id=1 (GPU process exited or channel broken; will reset and let Chromium respawn a fresh GPU)
+[GMD] pid=708639 tid=0x0000000000000001 event=unlock-entry this=0x0000003c00074210 was_held=1 total_held=1
+[GMD] pid=708639 tid=0x0000000000000001 event=unlock-ok this=0x0000003c00074210 total_held=0
+[GMD] pid=708639 tid=0x0000000000000001 event=lock-entry this=0x0000003c00074210 was_held=0 total_held=0
+[GMD] pid=708639 tid=0x0000000000000001 event=lock-ok this=0x0000003c00074210 now_held=1 total_held=1
+[GMD] pid=708639 tid=0x0000000000000001 event=unlock-entry this=0x0000003c00074210 was_held=1 total_held=1
+[GMD] pid=708639 tid=0x0000000000000001 event=unlock-ok this=0x0000003c00074210 total_held=0
+[GMD] pid=708639 tid=0x0000000000000001 event=lock-entry this=0x0000003c00074210 was_held=0 total_held=0
+[GMD] pid=708639 tid=0x0000000000000001 event=lock-ok this=0x0000003c00074210 now_held=1 total_held=1
+[GMD] pid=708639 tid=0x0000000000000001 event=unlock-entry this=0x0000003c00074210 was_held=1 total_held=1
+[GMD] pid=708639 tid=0x0000000000000001 event=unlock-ok this=0x0000003c00074210 total_held=0
+[GMD] pid=708639 tid=0x0000000000000001 event=lock-entry this=0x0000003c00074210 was_held=0 total_held=0
+[GMD] pid=708639 tid=0x0000000000000001 event=lock-ok this=0x0000003c00074210 now_held=1 total_held=1
+[GMD] pid=708639 tid=0x0000000000000001 event=unlock-entry this=0x0000003c00074210 was_held=1 total_held=1
+[GMD] pid=708639 tid=0x0000000000000001 event=unlock-ok this=0x0000003c00074210 total_held=0
+[GMD] pid=708639 tid=0x0000000000000001 event=lock-entry this=0x0000003c00074210 was_held=0 total_held=0
+[GMD] pid=708639 tid=0x0000000000000001 event=lock-ok this=0x0000003c00074210 now_held=1 total_held=1
+[GMD] pid=708639 tid=0x0000000000000001 event=unlock-entry this=0x0000003c00074210 was_held=1 total_held=1
+[GMD] pid=708639 tid=0x0000000000000001 event=unlock-ok this=0x0000003c00074210 total_held=0
+[GMD] pid=708639 tid=0x0000000000000001 event=lock-entry this=0x0000003c00074210 was_held=0 total_held=0
+[GMD] pid=708639 tid=0x0000000000000001 event=lock-ok this=0x0000003c00074210 now_held=1 total_held=1
+[GMD] pid=708639 tid=0x0000000000000001 event=unlock-entry this=0x0000003c00074210 was_held=1 total_held=1
+[GMD] pid=708639 tid=0x0000000000000001 event=unlock-ok this=0x0000003c00074210 total_held=0
+[GMD] pid=708639 tid=0x0000000000000001 event=lock-entry this=0x0000003c00074210 was_held=0 total_held=0
+[GMD] pid=708639 tid=0x0000000000000001 event=lock-ok this=0x0000003c00074210 now_held=1 total_held=1
+[GMD] pid=708639 tid=0x0000000000000001 event=unlock-entry this=0x0000003c00074210 was_held=1 total_held=1
+[GMD] pid=708639 tid=0x0000000000000001 event=unlock-ok this=0x0000003c00074210 total_held=0
+[GMD] pid=708639 tid=0x0000000000000001 event=lock-entry this=0x0000003c00074210 was_held=0 total_held=0
+[GMD] pid=708639 tid=0x0000000000000001 event=lock-ok this=0x0000003c00074210 now_held=1 total_held=1
+[GMD] pid=708639 tid=0x0000000000000001 event=lock-entry this=0x0000003c00074280 was_held=0 total_held=1
+[GMD] pid=708639 tid=0x0000000000000001 event=lock-ok this=0x0000003c00074280 now_held=1 total_held=2
+[GMD] pid=708639 tid=0x0000000000000001 event=lock-entry this=0x0000003c00074210 was_held=1 total_held=2
+[GMD] pid=708639 tid=0x0000000000000001 event=REENTRY this=0x0000003c00074210 was_held=1
+[QNX-ANGLE-TRACE] std::terminate invoked (pid=708639 tid=1)
+[QNX-ANGLE-TRACE] terminate backtrace (1 frames):
+  #00 0x40002d2e3f /mnt/nfs/out/qnx_release/libGLESv2.so :: _ZNSt3__26__treeINS_12basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEEENS_4lessIS6_EENS4_IS6_EEE4findIS6_EENS_15__tree_iteratorIS6_PNS_11__tree_nodeIS6_PvEElEERKT_+0x4c9f
+[QNX-ANGLE-TRACE] exception: in-flight (rethrow/catch disabled; inspect backtrace above for throw site)
+__PI_QNX_EXIT__:0
+=== QNX command exit: 0 ===
+Log: /home/yuta/chromium/src/out/qnx_release/qnx_run_20260711_153206_null____true__exit_0.log
+=== Done ===
+Log: /home/yuta/chromium/src/out/qnx_release/qnx_run_20260711_153206_null____true__exit_0.log
+Serial transcript: /home/yuta/chromium/src/out/qnx_release/qnx_run_20260711_153206_null____true__exit_0.log.serial
+Boot log: /home/yuta/chromium/src/out/qnx_release/qnx_run_20260711_153206_null____true__exit_0_boot.log

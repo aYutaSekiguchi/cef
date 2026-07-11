@@ -1,0 +1,14 @@
+diff --git third_party/angle/src/libGLESv2.gni third_party/angle/src/libGLESv2.gni
+index 293036bf616fe1fafccba27d96ca1c943fcdf942..320873da059bfe044603e5ec05b35a1342f63367 100644
+--- third_party/angle/src/libGLESv2.gni
++++ third_party/angle/src/libGLESv2.gni
+@@ -432,6 +432,9 @@ libangle_sources = [
+   "src/libANGLE/GLES1Renderer.cpp",
+   "src/libANGLE/GLES1State.cpp",
+   "src/libANGLE/GlobalMutex.cpp",
++  # QNX-only GlobalMutex diagnostic (always included on QNX;
++  # no-op without ANGLE_QNX_GLOBAL_MUTEX_DIAGNOSTIC).
++  "src/libANGLE/global_mutex_qnx_diag.cc",
+   "src/libANGLE/HandleAllocator.cpp",
+   "src/libANGLE/Image.cpp",
+   "src/libANGLE/ImageIndex.cpp",

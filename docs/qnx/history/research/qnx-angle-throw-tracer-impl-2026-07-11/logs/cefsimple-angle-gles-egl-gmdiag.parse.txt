@@ -1,0 +1,42 @@
+=== parse_gmd.py /home/yuta/chromium/src/cef/docs/qnx/history/research/qnx-angle-throw-tracer-impl-2026-07-11/logs/cefsimple-angle-gles-egl-gmdiag.log ===
+total events: 44, terminates: 2, GPU exits: 1
+
+  pid=614431: 22 events, 2 distinct mutex addresses, 1 REENTRY events, terminate=YES
+    mutex: 0x0000005c00004230
+    mutex: 0x0000005c000042a0
+
+  pid=708639: 22 events, 2 distinct mutex addresses, 1 REENTRY events, terminate=YES
+    mutex: 0x0000003c00074210
+    mutex: 0x0000003c00074280
+
+=== REENTRY → terminate correlation ===
+  pid=614431 tid=1 (terminate @ line 94):
+    last REENTRY @ line 93: this=0x0000005c00004230 was_held=1
+    last 8 events before terminate:
+      L80 [lock-entry    ] this=0x0000005c00004230 was_held=0 total_held=0
+      L82 [unlock-entry  ] this=0x0000005c00004230 was_held=1 total_held=1
+      L84 [lock-entry    ] this=0x0000005c00004230 was_held=0 total_held=0
+      L86 [unlock-entry  ] this=0x0000005c00004230 was_held=1 total_held=1
+      L88 [lock-entry    ] this=0x0000005c00004230 was_held=0 total_held=0
+      L90 [lock-entry    ] this=0x0000005c000042a0 was_held=0 total_held=1
+      L92 [lock-entry    ] this=0x0000005c00004230 was_held=1 total_held=2
+      L93 [REENTRY       ] this=0x0000005c00004230 was_held=1 total_held=-
+  pid=708639 tid=1 (terminate @ line 159):
+    last REENTRY @ line 158: this=0x0000003c00074210 was_held=1
+    last 8 events before terminate:
+      L145 [lock-entry    ] this=0x0000003c00074210 was_held=0 total_held=0
+      L147 [unlock-entry  ] this=0x0000003c00074210 was_held=1 total_held=1
+      L149 [lock-entry    ] this=0x0000003c00074210 was_held=0 total_held=0
+      L151 [unlock-entry  ] this=0x0000003c00074210 was_held=1 total_held=1
+      L153 [lock-entry    ] this=0x0000003c00074210 was_held=0 total_held=0
+      L155 [lock-entry    ] this=0x0000003c00074280 was_held=0 total_held=1
+      L157 [lock-entry    ] this=0x0000003c00074210 was_held=1 total_held=2
+      L158 [REENTRY       ] this=0x0000003c00074210 was_held=1 total_held=-
+
+=== Verdict ===
+  pid=614431: CONFIRMED same-thread same-GlobalMutex re-entry
+    REENTRY immediately precedes terminate (tid=1 same pid), exit_code=134
+  pid=708639: CONFIRMED same-thread same-GlobalMutex re-entry
+    REENTRY immediately precedes terminate (tid=1 same pid), exit_code=134
+
+Total CONFIRMED: 2/2 terminate events
