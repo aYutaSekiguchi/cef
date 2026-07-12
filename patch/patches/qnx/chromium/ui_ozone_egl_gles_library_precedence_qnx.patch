@@ -1,0 +1,23 @@
+diff --git ui/ozone/common/egl_util.cc ui/ozone/common/egl_util.cc
+index 63a2305dd8e79dc4d51af4a39a37e92258ec8e6a..fe91b3dec32fb9111e55048c1fdc06c85303f3b6 100644
+--- ui/ozone/common/egl_util.cc
++++ ui/ozone/common/egl_util.cc
+@@ -129,8 +129,18 @@ bool LoadEGLGLES2Bindings(const base::FilePath& egl_library_path,
+   gl::AddGLNativeLibrary(trace_library);
+ #endif
+
++#if BUILDFLAG(IS_QNX)
++  // On QNX the process also links the system EGL/GLES libraries for ANGLE's
++  // native DisplayEGL backend.  Looking through the EGL handle first can
++  // therefore resolve core GL symbols from system libGLESv2.so.1 while
++  // extension symbols come from ANGLE's libGLESv2.so, mixing two object
++  // namespaces.  Prefer the selected GLES library for all GL entry points.
++  gl::AddGLNativeLibrary(gles_library);
++  gl::AddGLNativeLibrary(egl_library);
++#else
+   gl::AddGLNativeLibrary(egl_library);
+   gl::AddGLNativeLibrary(gles_library);
++#endif
+
+   return true;
+ }
