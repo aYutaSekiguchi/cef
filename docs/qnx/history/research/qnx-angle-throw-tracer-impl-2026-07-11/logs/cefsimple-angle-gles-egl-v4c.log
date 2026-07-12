@@ -1,0 +1,1243 @@
+=== QNX QEMU runner ===
+QEMU dir:  /home/yuta/qnx800/images/qemu/qemu
+Disk:      /home/yuta/qnx800/images/qemu/qemu/output/disk-qemu
+Build dir: /home/yuta/chromium/src/out/qnx_release
+Guest dir: /mnt/nfs/out/qnx_release
+Serial:    127.0.0.1:10024
+Graphics:  virgl
+Display:   gtk
+Log:       /home/yuta/chromium/src/out/qnx_release/qnx_run_20260711_145808_null____true__exit_0.log
+Command:   ./cefsimple --ozone-platform=qnx --use-gl=angle --use-angle=gles-egl --no-sandbox --use-native --url=about:blank --ozone-qnx-gpu-trace --enable-logging=stderr 2>&1 & p=$!; sleep 15; kill -TERM $p 2>/dev/null || true; wait $p 2>/dev/null || true; exit 0
+=== Starting QEMU ===
+QEMU PID: 653574
+=== Connected to QNX serial; waiting for login/shell ===
+
+=== QNX shell ready; running setup ===
+umount /mnt/nfs 2>/dev/null
+[?2004l[?2004h[root@qnxqemu ~]# umount /mnt 2>/dev/null
+[?2004l[?2004h[root@qnxqemu ~]# mkdir -p /mnt
+[?2004lmkdir: '/mnt': Function not implemented
+[?2004h[root@qnxqemu ~]# ifconfig vtnet0 10.0.2.2 netmask 255.255.255.0 up
+[?2004l[?2004h[root@qnxqemu ~]# route add default 10.0.2.1
+[?2004ladd net default: gateway 10.0.2.1
+[?2004h[root@qnxqemu ~]# mkdir -p /mnt/nfs
+[?2004lmkdir: '/mnt': Function not implemented
+[?2004h[root@qnxqemu ~]# fs-nfs3 10.0.2.1:/export/chromium-src /mnt/nfs
+[?2004l[?2004h[root@qnxqemu ~]# cd /mnt/nfs/out/qnx_release
+[?2004l[?2004h[root@qnxqemu /mnt/nfs/out/qnx_release]# export LD_LIBRARY_PATH=/mnt/nfs/out/qnx_release
+[?2004l[?2004h[root@qnxqemu /mnt/nfs/out/qnx_release]# export CHROME_EXE_PATH=/mnt/nfs/out/qnx_release/cefsimple
+[?2004l[?2004h[root@qnxqemu /mnt/nfs/out/qnx_release]# export CR_SOURCE_ROOT=/mnt/nfs
+[?2004l[?2004h[root@qnxqemu /mnt/nfs/out/qnx_release]# export LD_PRELOAD=/mnt/nfs/out/qnx_release/libangle_throw_tracer.so
+[?2004l[?2004h[root@qnxqemu /mnt/nfs/out/qnx_release]# 
+=== Running command ===
+sh -c './cefsimple --ozone-platform=qnx --use-gl=angle --use-angle=gles-egl --no-sandbox --use-native --url=about:blank --ozone-qnx-gpu-trace --enable-logging=stderr 2>&1 & p=$!; sleep 15; kill -TERM $p 2>/dev/null || true; wait $p 2>/dev/null || true; exit 0'; echo __PI_QNX_EXIT__:$?
+[?2004l[MAP] snap=1 pid=602141 tid=0x0000000000000001  BEGIN reason=constructor
+[MAP] snap=1 pid=602141 tid=0x0000000000000001  name=/usr/bin/sh  base=0x0000003f4607c000
+[MAP] snap=1 pid=602141 tid=0x0000000000000001    seg base=0x0000003f4607c000 end=0x0000003f4615d908 filesz=0x00000000000e1908
+[MAP] snap=1 pid=602141 tid=0x0000000000000001    seg base=0x0000003f4615e938 end=0x0000003f4616c9b0 filesz=0x0000000000005ae4
+[MAP] snap=1 pid=602141 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libangle_throw_tracer.so  base=0x0000004ba1adc000
+[MAP] snap=1 pid=602141 tid=0x0000000000000001    seg base=0x0000004ba1adc000 end=0x0000004ba1ae49bc filesz=0x00000000000089bc
+[MAP] snap=1 pid=602141 tid=0x0000000000000001    seg base=0x0000004ba1ae5c80 end=0x0000004ba1ae6100 filesz=0x000000000000042c
+[MAP] snap=1 pid=602141 tid=0x0000000000000001  name=/proc/boot/libregex.so.1  base=0x0000004ba1ae7000
+[MAP] snap=1 pid=602141 tid=0x0000000000000001    seg base=0x0000004ba1ae7000 end=0x0000004ba1af756c filesz=0x000000000001056c
+[MAP] snap=1 pid=602141 tid=0x0000000000000001    seg base=0x0000004ba1af8ad8 end=0x0000004ba1af9160 filesz=0x0000000000000530
+[MAP] snap=1 pid=602141 tid=0x0000000000000001  name=/usr/lib/libreadline.so.8.3  base=0x0000004ba1afa000
+[MAP] snap=1 pid=602141 tid=0x0000000000000001    seg base=0x0000004ba1afa000 end=0x0000004ba1b546ec filesz=0x000000000005a6ec
+[MAP] snap=1 pid=602141 tid=0x0000000000000001    seg base=0x0000004ba1b552b8 end=0x0000004ba1b5e6a8 filesz=0x00000000000081e8
+[MAP] snap=1 pid=602141 tid=0x0000000000000001  name=/usr/lib/libhistory.so.8.3  base=0x0000004ba1b5f000
+[MAP] snap=1 pid=602141 tid=0x0000000000000001    seg base=0x0000004ba1b5f000 end=0x0000004ba1b6b65c filesz=0x000000000000c65c
+[MAP] snap=1 pid=602141 tid=0x0000000000000001    seg base=0x0000004ba1b6cb20 end=0x0000004ba1b6d0e0 filesz=0x000000000000050c
+[MAP] snap=1 pid=602141 tid=0x0000000000000001  name=/usr/lib/libncursesw.so.6.4  base=0x0000004ba1b6e000
+[MAP] snap=1 pid=602141 tid=0x0000000000000001    seg base=0x0000004ba1b6e000 end=0x0000004ba1bec648 filesz=0x000000000007e648
+[MAP] snap=1 pid=602141 tid=0x0000000000000001    seg base=0x0000004ba1beded8 end=0x0000004ba1bf8b50 filesz=0x000000000000a624
+[MAP] snap=1 pid=602141 tid=0x0000000000000001  name=/usr/lib/libintl.so.8.4.5  base=0x0000004ba1bf9000
+[MAP] snap=1 pid=602141 tid=0x0000000000000001    seg base=0x0000004ba1bf9000 end=0x0000004ba1c2b928 filesz=0x0000000000032928
+[MAP] snap=1 pid=602141 tid=0x0000000000000001    seg base=0x0000004ba1c2cb38 end=0x0000004ba1c2eba8 filesz=0x0000000000000520
+[MAP] snap=1 pid=602141 tid=0x0000000000000001  name=/usr/lib/libiconv.so.2.7.0  base=0x0000004ba1c2f000
+[MAP] snap=1 pid=602141 tid=0x0000000000000001    seg base=0x0000004ba1c2f000 end=0x0000004ba1d3a748 filesz=0x000000000010b748
+[MAP] snap=1 pid=602141 tid=0x0000000000000001    seg base=0x0000004ba1d3be98 end=0x0000004ba1d3e010 filesz=0x0000000000002174
+[MAP] snap=1 pid=602141 tid=0x0000000000000001  name=/proc/boot/libgcc_s.so.1  base=0x0000004ba1d3f000
+[MAP] snap=1 pid=602141 tid=0x0000000000000001    seg base=0x0000004ba1d3f000 end=0x0000004ba1d5acd0 filesz=0x000000000001bcd0
+[MAP] snap=1 pid=602141 tid=0x0000000000000001    seg base=0x0000004ba1d5bc70 end=0x0000004ba1d5c288 filesz=0x00000000000003d0
+[MAP] snap=1 pid=602141 tid=0x0000000000000001  name=/usr/lib/ldqnx-64.so.2  base=0x0000004ba1aa1000
+[MAP] snap=1 pid=602141 tid=0x0000000000000001    seg base=0x0000004ba1aa1000 end=0x0000004ba1ad7498 filesz=0x0000000000036498
+[MAP] snap=1 pid=602141 tid=0x0000000000000001    seg base=0x0000004ba1ad85d8 end=0x0000004ba1adbcf8 filesz=0x0000000000002878
+[MAP] snap=1 pid=602141 tid=0x0000000000000001  name=/proc/boot/libc.so.6  base=0x0000004ba1d5d000
+[MAP] snap=1 pid=602141 tid=0x0000000000000001    seg base=0x0000004ba1d5d000 end=0x0000004ba1e039d0 filesz=0x00000000000a69d0
+[MAP] snap=1 pid=602141 tid=0x0000000000000001    seg base=0x0000004ba1e043b0 end=0x0000004ba1e0fa40 filesz=0x00000000000053d2
+[MAP] snap=1 pid=602141 tid=0x0000000000000001  name=/usr/lib/libc++.so.2  base=0x0000004ba1e10000
+[MAP] snap=1 pid=602141 tid=0x0000000000000001    seg base=0x0000004ba1e10000 end=0x0000004ba1f404d0 filesz=0x00000000001304d0
+[MAP] snap=1 pid=602141 tid=0x0000000000000001    seg base=0x0000004ba1f415e8 end=0x0000004ba1f50470 filesz=0x0000000000008cf0
+[MAP] snap=1 pid=602141 tid=0x0000000000000001  name=/proc/boot/libm.so.3  base=0x0000004ba1f51000
+[MAP] snap=1 pid=602141 tid=0x0000000000000001    seg base=0x0000004ba1f51000 end=0x0000004ba1f87308 filesz=0x0000000000036308
+[MAP] snap=1 pid=602141 tid=0x0000000000000001    seg base=0x0000004ba1f88930 end=0x0000004ba1f89500 filesz=0x0000000000000b30
+[MAP] snap=1 pid=602141 tid=0x0000000000000001  name=/proc/boot/libsocket.so.4  base=0x0000004ba1f8a000
+[MAP] snap=1 pid=602141 tid=0x0000000000000001    seg base=0x0000004ba1f8a000 end=0x0000004ba1fcf430 filesz=0x0000000000045430
+[MAP] snap=1 pid=602141 tid=0x0000000000000001    seg base=0x0000004ba1fd0068 end=0x0000004ba1fd8d10 filesz=0x000000000000227c
+[MAP] snap=1 pid=602141 tid=0x0000000000000001  name=/proc/boot/libfsnotify.so.1  base=0x0000004ba1fd9000
+[MAP] snap=1 pid=602141 tid=0x0000000000000001    seg base=0x0000004ba1fd9000 end=0x0000004ba1fe24c0 filesz=0x00000000000094c0
+[MAP] snap=1 pid=602141 tid=0x0000000000000001    seg base=0x0000004ba1fe3c18 end=0x0000004ba1fe6500 filesz=0x00000000000028c8
+[MAP] snap=1 pid=602141 tid=0x0000000000000001  name=/usr/lib/libeventfd.so.1  base=0x0000004ba1fe7000
+[MAP] snap=1 pid=602141 tid=0x0000000000000001    seg base=0x0000004ba1fe7000 end=0x0000004ba1feaa20 filesz=0x0000000000003a20
+[MAP] snap=1 pid=602141 tid=0x0000000000000001    seg base=0x0000004ba1febbd8 end=0x0000004ba1fec020 filesz=0x0000000000000438
+[MAP] snap=1 pid=602141 tid=0x0000000000000001  END
+[TRACER] snap=0 pid=602141 tid=0x0000000000000001 libangle_throw_tracer.so LOADED
+[MAP] snap=1 pid=606240 tid=0x0000000000000001  BEGIN reason=constructor
+[MAP] snap=1 pid=606240 tid=0x0000000000000001  name=/usr/bin/sleep  base=0x000000348fe43000
+[MAP] snap=1 pid=606240 tid=0x0000000000000001    seg base=0x000000348fe43000 end=0x000000348fe978c4 filesz=0x00000000000548c4
+[MAP] snap=1 pid=606240 tid=0x0000000000000001    seg base=0x000000348fe98298 end=0x000000348fe9fd60 filesz=0x0000000000002758
+[MAP] snap=1 pid=606240 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libangle_throw_tracer.so  base=0x00000041db3ff000
+[MAP] snap=1 pid=606240 tid=0x0000000000000001    seg base=0x00000041db3ff000 end=0x00000041db4079bc filesz=0x00000000000089bc
+[MAP] snap=1 pid=606240 tid=0x0000000000000001    seg base=0x00000041db408c80 end=0x00000041db409100 filesz=0x000000000000042c
+[MAP] snap=1 pid=606240 tid=0x0000000000000001  name=/proc/boot/libfsnotify.so.1  base=0x00000041db40a000
+[MAP] snap=1 pid=606240 tid=0x0000000000000001    seg base=0x00000041db40a000 end=0x00000041db4134c0 filesz=0x00000000000094c0
+[MAP] snap=1 pid=606240 tid=0x0000000000000001    seg base=0x00000041db414c18 end=0x00000041db417500 filesz=0x00000000000028c8
+[MAP] snap=1 pid=606240 tid=0x0000000000000001  name=/proc/boot/libsecpol.so.1  base=0x00000041db418000
+[MAP] snap=1 pid=606240 tid=0x0000000000000001    seg base=0x00000041db418000 end=0x00000041db41c424 filesz=0x0000000000004424
+[MAP] snap=1 pid=606240 tid=0x0000000000000001    seg base=0x00000041db41dc58 end=0x00000041db41e050 filesz=0x00000000000003c8
+[MAP] snap=1 pid=606240 tid=0x0000000000000001  name=/proc/boot/libm.so.3  base=0x00000041db41f000
+[MAP] snap=1 pid=606240 tid=0x0000000000000001    seg base=0x00000041db41f000 end=0x00000041db455308 filesz=0x0000000000036308
+[MAP] snap=1 pid=606240 tid=0x0000000000000001    seg base=0x00000041db456930 end=0x00000041db457500 filesz=0x0000000000000b30
+[MAP] snap=1 pid=606240 tid=0x0000000000000001  name=/proc/boot/libz.so.2  base=0x00000041db458000
+[MAP] snap=1 pid=606240 tid=0x0000000000000001    seg base=0x00000041db458000 end=0x00000041db471280 filesz=0x0000000000019280
+[MAP] snap=1 pid=606240 tid=0x0000000000000001    seg base=0x00000041db472b38 end=0x00000041db473010 filesz=0x00000000000004d0
+[MAP] snap=1 pid=606240 tid=0x0000000000000001  name=/usr/lib/ldqnx-64.so.2  base=0x00000041db3c4000
+[MAP] snap=1 pid=606240 tid=0x0000000000000001    seg base=0x00000041db3c4000 end=0x00000041db3fa498 filesz=0x0000000000036498
+[MAP] snap=1 pid=606240 tid=0x0000000000000001    seg base=0x00000041db3fb5d8 end=0x00000041db3fecf8 filesz=0x0000000000002878
+[MAP] snap=1 pid=606240 tid=0x0000000000000001  name=/proc/boot/libc.so.6  base=0x00000041db474000
+[MAP] snap=1 pid=606240 tid=0x0000000000000001    seg base=0x00000041db474000 end=0x00000041db51a9d0 filesz=0x00000000000a69d0
+[MAP] snap=1 pid=606240 tid=0x0000000000000001    seg base=0x00000041db51b3b0 end=0x00000041db526a40 filesz=0x00000000000053d2
+[MAP] snap=1 pid=606240 tid=0x0000000000000001  name=/usr/lib/libc++.so.2  base=0x00000041db527000
+[MAP] snap=1 pid=606240 tid=0x0000000000000001    seg base=0x00000041db527000 end=0x00000041db6574d0 filesz=0x00000000001304d0
+[MAP] snap=1 pid=606240 tid=0x0000000000000001    seg base=0x00000041db6585e8 end=0x00000041db667470 filesz=0x0000000000008cf0
+[MAP] snap=1 pid=606240 tid=0x0000000000000001  name=/proc/boot/libregex.so.1  base=0x00000041db668000
+[MAP] snap=1 pid=606240 tid=0x0000000000000001    seg base=0x00000041db668000 end=0x00000041db67856c filesz=0x000000000001056c
+[MAP] snap=1 pid=606240 tid=0x0000000000000001    seg base=0x00000041db679ad8 end=0x00000041db67a160 filesz=0x0000000000000530
+[MAP] snap=1 pid=606240 tid=0x0000000000000001  name=/proc/boot/libsocket.so.4  base=0x00000041db67b000
+[MAP] snap=1 pid=606240 tid=0x0000000000000001    seg base=0x00000041db67b000 end=0x00000041db6c0430 filesz=0x0000000000045430
+[MAP] snap=1 pid=606240 tid=0x0000000000000001    seg base=0x00000041db6c1068 end=0x00000041db6c9d10 filesz=0x000000000000227c
+[MAP] snap=1 pid=606240 tid=0x0000000000000001  name=/usr/lib/libeventfd.so.1  base=0x00000041db6ca000
+[MAP] snap=1 pid=606240 tid=0x0000000000000001    seg base=0x00000041db6ca000 end=0x00000041db6cda20 filesz=0x0000000000003a20
+[MAP] snap=1 pid=606240 tid=0x0000000000000001    seg base=0x00000041db6cebd8 end=0x00000041db6cf020 filesz=0x0000000000000438
+[MAP] snap=1 pid=606240 tid=0x0000000000000001  name=/proc/boot/libgcc_s.so.1  base=0x00000041db6d0000
+[MAP] snap=1 pid=606240 tid=0x0000000000000001    seg base=0x00000041db6d0000 end=0x00000041db6ebcd0 filesz=0x000000000001bcd0
+[MAP] snap=1 pid=606240 tid=0x0000000000000001    seg base=0x00000041db6ecc70 end=0x00000041db6ed288 filesz=0x00000000000003d0
+[MAP] snap=1 pid=606240 tid=0x0000000000000001  END
+[TRACER] snap=0 pid=606240 tid=0x0000000000000001 libangle_throw_tracer.so LOADED
+[QNX-ANGLE-TRACE] terminate handler installed (pid=606238)
+[MAP] snap=1 pid=606238 tid=0x0000000000000001  BEGIN reason=constructor
+[MAP] snap=1 pid=606238 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/./cefsimple  base=0x0000000000000000
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x0000000000400000 end=0x0000000000474830 filesz=0x0000000000074830
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x0000000000475fe0 end=0x000000000047c258 filesz=0x0000000000006250
+[MAP] snap=1 pid=606238 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libangle_throw_tracer.so  base=0x00000021f842e000
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x00000021f842e000 end=0x00000021f84369bc filesz=0x00000000000089bc
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x00000021f8437c80 end=0x00000021f8438100 filesz=0x000000000000042c
+[MAP] snap=1 pid=606238 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libcef.so  base=0x00000021f8439000
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x00000021f8439000 end=0x0000002207477980 filesz=0x000000000f03e980
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x00000022074789b8 end=0x00000022081758a4 filesz=0x0000000000b22818
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x00000022081768a8 end=0x000000220836efb7 filesz=0x00000000001f870f
+[MAP] snap=1 pid=606238 tid=0x0000000000000001  name=/usr/lib/libc++.so.2  base=0x000000220836f000
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x000000220836f000 end=0x000000220849f4d0 filesz=0x00000000001304d0
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x00000022084a05e8 end=0x00000022084af470 filesz=0x0000000000008cf0
+[MAP] snap=1 pid=606238 tid=0x0000000000000001  name=/proc/boot/libm.so.3  base=0x00000022084b0000
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x00000022084b0000 end=0x00000022084e6308 filesz=0x0000000000036308
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x00000022084e7930 end=0x00000022084e8500 filesz=0x0000000000000b30
+[MAP] snap=1 pid=606238 tid=0x0000000000000001  name=/proc/boot/libregex.so.1  base=0x00000022084e9000
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x00000022084e9000 end=0x00000022084f956c filesz=0x000000000001056c
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x00000022084faad8 end=0x00000022084fb160 filesz=0x0000000000000530
+[MAP] snap=1 pid=606238 tid=0x0000000000000001  name=/proc/boot/libsocket.so.4  base=0x00000022084fc000
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x00000022084fc000 end=0x0000002208541430 filesz=0x0000000000045430
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x0000002208542068 end=0x000000220854ad10 filesz=0x000000000000227c
+[MAP] snap=1 pid=606238 tid=0x0000000000000001  name=/proc/boot/libfsnotify.so.1  base=0x000000220854b000
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x000000220854b000 end=0x00000022085544c0 filesz=0x00000000000094c0
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x0000002208555c18 end=0x0000002208558500 filesz=0x00000000000028c8
+[MAP] snap=1 pid=606238 tid=0x0000000000000001  name=/usr/lib/libeventfd.so.1  base=0x0000002208559000
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x0000002208559000 end=0x000000220855ca20 filesz=0x0000000000003a20
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x000000220855dbd8 end=0x000000220855e020 filesz=0x0000000000000438
+[MAP] snap=1 pid=606238 tid=0x0000000000000001  name=/usr/lib/ldqnx-64.so.2  base=0x0000005a225cb000
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x0000005a225cb000 end=0x0000005a22601498 filesz=0x0000000000036498
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x0000005a226025d8 end=0x0000005a22605cf8 filesz=0x0000000000002878
+[MAP] snap=1 pid=606238 tid=0x0000000000000001  name=/proc/boot/libc.so.6  base=0x000000220855f000
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x000000220855f000 end=0x00000022086059d0 filesz=0x00000000000a69d0
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x00000022086063b0 end=0x0000002208611a40 filesz=0x00000000000053d2
+[MAP] snap=1 pid=606238 tid=0x0000000000000001  name=/proc/boot/libgcc_s.so.1  base=0x0000002208612000
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x0000002208612000 end=0x000000220862dcd0 filesz=0x000000000001bcd0
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x000000220862ec70 end=0x000000220862f288 filesz=0x00000000000003d0
+[MAP] snap=1 pid=606238 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libEGL.so  base=0x0000002208630000
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x0000002208630000 end=0x000000220863c9b4 filesz=0x000000000000c9b4
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x000000220863db60 end=0x000000220863e3e0 filesz=0x00000000000004bc
+[MAP] snap=1 pid=606238 tid=0x0000000000000001  name=/usr/lib/libbacktrace.so.1  base=0x000000220863f000
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x000000220863f000 end=0x0000002208640d40 filesz=0x0000000000001d40
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x0000002208641d48 end=0x0000002208642010 filesz=0x00000000000002c0
+[MAP] snap=1 pid=606238 tid=0x0000000000000001  name=/usr/lib/libscreen.so.1  base=0x0000002208643000
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x0000002208643000 end=0x0000002208657a44 filesz=0x0000000000014a44
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x0000002208658c78 end=0x0000002208659010 filesz=0x0000000000000390
+[MAP] snap=1 pid=606238 tid=0x0000000000000001  name=/usr/lib/libEGL.so.1  base=0x000000220865a000
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x000000220865a000 end=0x000000220867dac0 filesz=0x0000000000023ac0
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x000000220867eb38 end=0x0000002208685730 filesz=0x0000000000006a20
+[MAP] snap=1 pid=606238 tid=0x0000000000000001  name=/usr/lib/libGLESv2.so.1  base=0x0000002208686000
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x0000002208686000 end=0x00000022086dd008 filesz=0x0000000000057008
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x00000022086defb0 end=0x00000022086f6010 filesz=0x0000000000017058
+[MAP] snap=1 pid=606238 tid=0x0000000000000001  name=/proc/boot/libz.so.2  base=0x00000022086f7000
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x00000022086f7000 end=0x0000002208710280 filesz=0x0000000000019280
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x0000002208711b38 end=0x0000002208712010 filesz=0x00000000000004d0
+[MAP] snap=1 pid=606238 tid=0x0000000000000001  name=/usr/lib/libunwind-nto.so.0  base=0x0000002208713000
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x0000002208713000 end=0x0000002208716a30 filesz=0x0000000000003a30
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x0000002208717cf0 end=0x0000002208718090 filesz=0x0000000000000388
+[MAP] snap=1 pid=606238 tid=0x0000000000000001  name=/usr/lib/libunwind-x86_64.so.8  base=0x0000002208719000
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x0000002208719000 end=0x000000220872ac40 filesz=0x0000000000011c40
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x000000220872bbc0 end=0x0000002208736850 filesz=0x0000000000000470
+[MAP] snap=1 pid=606238 tid=0x0000000000000001  name=/usr/lib/libunwind.so.8  base=0x0000002208737000
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x0000002208737000 end=0x00000022087453d0 filesz=0x000000000000e3d0
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x0000002208746ba0 end=0x0000002208751870 filesz=0x0000000000000498
+[MAP] snap=1 pid=606238 tid=0x0000000000000001  name=/usr/lib/liblzma.so.5  base=0x0000002208752000
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x0000002208752000 end=0x0000002208783b68 filesz=0x0000000000031b68
+[MAP] snap=1 pid=606238 tid=0x0000000000000001    seg base=0x0000002208784408 end=0x00000022087850d8 filesz=0x0000000000000cb8
+[MAP] snap=1 pid=606238 tid=0x0000000000000001  END
+[TRACER] snap=0 pid=606238 tid=0x0000000000000001 libangle_throw_tracer.so LOADED
+[0711/055827.548925:WARNING:cef/libcef/common/resource_util.cc:83] Please customize CefSettings.root_cache_path for your application. Use of the default value may lead to unintended process singleton behavior.
+[606238:1:0711/055827.777192:WARNING:net/proxy_resolution/proxy_config_service.cc:138] Failed to choose a system proxy settings fetcher for this platform.
+[606238:1:0711/055827.849386:INFO:ui/ozone/platform/qnx/qnx_gpu_platform_support_host.cc:46] [QNX-TRACE] OnGpuServiceLaunched: host_id=1 starting (gpu_control_remote_.is_bound=false)
+[QNX-ANGLE-TRACE] terminate handler installed (pid=614431)
+[MAP] snap=1 pid=614431 tid=0x0000000000000001  BEGIN reason=constructor
+[MAP] snap=1 pid=614431 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/cefsimple  base=0x0000000000000000
+[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x0000000000400000 end=0x0000000000474830 filesz=0x0000000000074830
+[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x0000000000475fe0 end=0x000000000047c258 filesz=0x0000000000006250
+[MAP] snap=1 pid=614431 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libangle_throw_tracer.so  base=0x00000017da493000
+[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017da493000 end=0x00000017da49b9bc filesz=0x00000000000089bc
+[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017da49cc80 end=0x00000017da49d100 filesz=0x000000000000042c
+[MAP] snap=1 pid=614431 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libcef.so  base=0x00000017da49e000
+[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017da49e000 end=0x00000017e94dc980 filesz=0x000000000f03e980
+[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017e94dd9b8 end=0x00000017ea1da8a4 filesz=0x0000000000b22818
+[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea1db8a8 end=0x00000017ea3d3fb7 filesz=0x00000000001f870f
+[MAP] snap=1 pid=614431 tid=0x0000000000000001  name=/usr/lib/libc++.so.2  base=0x00000017ea3d4000
+[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea3d4000 end=0x00000017ea5044d0 filesz=0x00000000001304d0
+[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea5055e8 end=0x00000017ea514470 filesz=0x0000000000008cf0
+[MAP] snap=1 pid=614431 tid=0x0000000000000001  name=/proc/boot/libm.so.3  base=0x00000017ea515000
+[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea515000 end=0x00000017ea54b308 filesz=0x0000000000036308
+[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea54c930 end=0x00000017ea54d500 filesz=0x0000000000000b30
+[MAP] snap=1 pid=614431 tid=0x0000000000000001  name=/proc/boot/libregex.so.1  base=0x00000017ea54e000
+[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea54e000 end=0x00000017ea55e56c filesz=0x000000000001056c
+[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea55fad8 end=0x00000017ea560160 filesz=0x0000000000000530
+[MAP] snap=1 pid=614431 tid=0x0000000000000001  name=/proc/boot/libsocket.so.4  base=0x00000017ea561000
+[606238:1:0711/055828.087692:WARNING:chrome/browser/signin/account_consistency_mode_manager.cc:74] Desktop Identity Consistency cannot be enabled as no OAuth client ID and client secret have been configured.
+[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea561000 end=0x00000017ea5a6430 filesz=0x0000000000045430
+[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea5a7068 end=0x00000017ea5afd10 filesz=0x000000000000227c
+[MAP] snap=1 pid=614431 tid=0x0000000000000001  name=/proc/boot/libfsnotify.so.1  base=0x00000017ea5b0000
+[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea5b0000 end=0x00000017ea5b94c0 filesz=0x00000000000094c0
+[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea5bac18 end=0x00000017ea5bd500 filesz=0x00000000000028c8
+[MAP] snap=1 pid=614431 tid=0x0000000000000001  name=/usr/lib/libeventfd.so.1  base=0x00000017ea5be000
+[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea5be000 end=0x00000017ea5c1a20 filesz=0x0000000000003a20
+[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea5c2bd8 end=0x00000017ea5c3020 filesz=0x0000000000000438
+[MAP] snap=1 pid=614431 tid=0x0000000000000001  name=/usr/lib/ldqnx-64.so.2  base=0x0000004719396000
+[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x0000004719396000 end=0x00000047193cc498 filesz=0x0000000000036498
+[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000047193cd5d8 end=0x00000047193d0cf8 filesz=0x0000000000002878
+[MAP] snap=1 pid=614431 tid=0x0000000000000001  name=/proc/boot/libc.so.6  base=0x00000017ea5c4000
+[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea5c4000 end=0x00000017ea66a9d0 filesz=0x00000000000a69d0
+[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea66b3b0 end=0x00000017ea676a40 filesz=0x00000000000053d2
+[MAP] snap=1 pid=614431 tid=0x0000000000000001  name=/proc/boot/libgcc_s.so.1  base=0x00000017ea677000
+[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea677000 end=0x00000017ea692cd0 filesz=0x000000000001bcd0
+[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea693c70 end=0x00000017ea694288 filesz=0x00000000000003d0
+[MAP] snap=1 pid=614431 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libEGL.so  base=0x00000017ea695000
+[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea695000 end=0x00000017ea6a19b4 filesz=0x000000000000c9b4
+[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6a2b60 end=0x00000017ea6a33e0 filesz=0x00000000000004bc
+[MAP] snap=1 pid=614431 tid=0x0000000000000001  name=/usr/lib/libbacktrace.so.1  base=0x00000017ea6a4000
+[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6a4000 end=0x00000017ea6a5d40 filesz=0x0000000000001d40
+[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6a6d48 end=0x00000017ea6a7010 filesz=0x00000000000002c0
+[MAP] snap=1 pid=614431 tid=0x0000000000000001  name=/usr/lib/libscreen.so.1  base=0x00000017ea6a8000
+[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6a8000 end=0x00000017ea6bca44 filesz=0x0000000000014a44
+[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6bdc78 end=0x00000017ea6be010 filesz=0x0000000000000390
+[MAP] snap=1 pid=614431 tid=0x0000000000000001  name=/usr/lib/libEGL.so.1  base=0x00000017ea6bf000
+[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6bf000 end=0x00000017ea6e2ac0 filesz=0x0000000000023ac0
+[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6e3b38 end=0x00000017ea6ea730 filesz=0x0000000000006a20
+[MAP] snap=1 pid=614431 tid=0x0000000000000001  name=/usr/lib/libGLESv2.so.1  base=0x00000017ea6eb000
+[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6eb000 end=0x00000017ea742008 filesz=0x0000000000057008
+[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea743fb0 end=0x00000017ea75b010 filesz=0x0000000000017058
+[[MAP] snap=1 pid=614431 tid=0x0000000000000001  name=/proc/boot/libz.so.2  base=0x00000017ea75c000
+Q[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea75c000 end=0x00000017ea775280 filesz=0x0000000000019280
+N[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea776b38 end=0x00000017ea777010 filesz=0x00000000000004d0
+X[MAP] snap=1 pid=614431 tid=0x0000000000000001  name=/usr/lib/libunwind-nto.so.0  base=0x00000017ea778000
+-[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea778000 end=0x00000017ea77ba30 filesz=0x0000000000003a30
+A[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea77ccf0 end=0x00000017ea77d090 filesz=0x0000000000000388
+N[MAP] snap=1 pid=614431 tid=0x0000000000000001  name=/usr/lib/libunwind-x86_64.so.8  base=0x00000017ea77e000
+G[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea77e000 end=0x00000017ea78fc40 filesz=0x0000000000011c40
+L[606238:1:0711/055828.220922:WARNING:net/proxy_resolution/proxy_config_service.cc:138] Failed to choose a system proxy settings fetcher for this platform.
+[606238:1:0711/055828.225570:WARNING:net/proxy_resolution/proxy_config_service.cc:138] Failed to choose a system proxy settings fetcher for this platform.
+[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea790bc0 end=0x00000017ea79b850 filesz=0x0000000000000470
+E[MAP] snap=1 pid=614431 tid=0x0000000000000001  name=/usr/lib/libunwind.so.8  base=0x00000017ea79c000
+-[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea79c000 end=0x00000017ea7aa3d0 filesz=0x000000000000e3d0
+T[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea7abba0 end=0x00000017ea7b6870 filesz=0x0000000000000498
+R[MAP] snap=1 pid=614431 tid=0x0000000000000001  name=/usr/lib/liblzma.so.5  base=0x00000017ea7b7000
+A[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea7b7000 end=0x00000017ea7e8b68 filesz=0x0000000000031b68
+C[MAP] snap=1 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea7e9408 end=0x00000017ea7ea0d8 filesz=0x0000000000000cb8
+E[MAP] snap=1 pid=614431 tid=0x0000000000000001  END
+][TRACER] snap=0 pid=614431 tid=0x0000000000000001 libangle_throw_tracer.so LOADED
+ terminate handler installed (pid=614433)
+[MAP] snap=1 pid=614433 tid=0x0000000000000001  BEGIN reason=constructor
+[MAP] snap=1 pid=614433 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/cefsimple  base=0x0000000000000000
+[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x0000000000400000 end=0x0000000000474830 filesz=0x0000000000074830
+[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x0000000000475fe0 end=0x000000000047c258 filesz=0x0000000000006250
+[[606238:1:0711/055828.277636:INFO:ui/ozone/platform/qnx/ozone_platform_qnx.cc:118] [QNX-TRACE] OzonePlatformQnx::CreatePlatformWindow: bounds=10,10 1004x748
+Q[606238:1:0711/055828.278993:INFO:ui/ozone/platform/qnx/qnx_window.cc:44] [QNX-TRACE] QnxWindow::QnxWindow: bounds=10,10 1004x748
+N[MAP] snap=1 pid=614433 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libangle_throw_tracer.so  base=0x000000350ff3f000
+X[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x000000350ff3f000 end=0x000000350ff479bc filesz=0x00000000000089bc
+-A[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x000000350ff48c80 end=0x000000350ff49100 filesz=0x000000000000042c
+N[606238:1:0711/055828.300537:INFO:ui/ozone/platform/qnx/qnx_gpu_platform_support_host.cc:303] [QNX-TRACE] AttachNewWidget: widget=1 gpu_control_remote_ not bound yet (Initialize ack in flight); AttachExistingWidgets will handle after ack
+G[606238:1:0711/055828.301297:INFO:ui/ozone/platform/qnx/qnx_window.cc:73] [QNX-TRACE] QnxWindow::QnxWindow: widget=1 screen_win=64008debf0
+L[MAP] snap=1 pid=614433 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libcef.so  base=0x000000350ff4a000
+E-[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x000000350ff4a000 end=0x000000351ef88980 filesz=0x000000000f03e980
+T[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x000000351ef899b8 end=0x000000351fc868a4 filesz=0x0000000000b22818
+R[A[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x000000351fc878a8 end=0x000000351fe7ffb7 filesz=0x00000000001f870f
+CQE[MAP] snap=1 pid=614433 tid=0x0000000000000001  name=/usr/lib/libc++.so.2  base=0x000000351fe80000
+] Nt[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x000000351fe80000 end=0x000000351ffb04d0 filesz=0x00000000001304d0
+erXmin[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x000000351ffb15e8 end=0x000000351ffc0470 filesz=0x0000000000008cf0
+ate h-a[MAP] snap=1 pid=614433 tid=0x0000000000000001  name=/proc/boot/libm.so.3  base=0x000000351ffc1000
+ndAl[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x000000351ffc1000 end=0x000000351fff7308 filesz=0x0000000000036308
+erN i[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x000000351fff8930 end=0x000000351fff9500 filesz=0x0000000000000b30
+nGst[MAP] snap=1 pid=614433 tid=0x0000000000000001  name=/proc/boot/libregex.so.1  base=0x000000351fffa000
+aLl[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x000000351fffa000 end=0x000000352000a56c filesz=0x000000000001056c
+led (Epi[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x000000352000bad8 end=0x000000352000c160 filesz=0x0000000000000530
+d-=[MAP] snap=1 pid=614433 tid=0x0000000000000001  name=/proc/boot/libsocket.so.4  base=0x000000352000d000
+614431)T
+[MAP] snap=2 pid=614431 tid=0x0000000000000001  BEGIN reason=dlopen-returned-non-null
+[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x000000352000d000 end=0x0000003520052430 filesz=0x0000000000045430
+[MAP] snap=2 pid=614431 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/cefsimple  base=0x0000000000000000
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x0000000000400000 end=0x0000000000474830 filesz=0x0000000000074830
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x0000000000475fe0 end=0x000000000047c258 filesz=0x0000000000006250
+R[MAP] snap=2 pid=614431 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libangle_throw_tracer.so  base=0x00000017da493000
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017da493000 end=0x00000017da49b9bc filesz=0x00000000000089bc
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017da49cc80 end=0x00000017da49d100 filesz=0x000000000000042c
+[MAP] snap=2 pid=614431 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libcef.so  base=0x00000017da49e000
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017da49e000 end=0x00000017e94dc980 filesz=0x000000000f03e980
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017e94dd9b8 end=0x00000017ea1da8a4 filesz=0x0000000000b22818
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea1db8a8 end=0x00000017ea3d3fb7 filesz=0x00000000001f870f
+[MAP] snap=2 pid=614431 tid=0x0000000000000001  name=/usr/lib/libc++.so.2  base=0x00000017ea3d4000
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea3d4000 end=0x00000017ea5044d0 filesz=0x00000000001304d0
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea5055e8 end=0x00000017ea514470 filesz=0x0000000000008cf0
+[MAP] snap=2 pid=614431 tid=0x0000000000000001  name=/proc/boot/libm.so.3  base=0x00000017ea515000
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea515000 end=0x00000017ea54b308 filesz=0x0000000000036308
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea54c930 end=0x00000017ea54d500 filesz=0x0000000000000b30
+[MAP] snap=2 pid=614431 tid=0x0000000000000001  name=/proc/boot/libregex.so.1  base=0x00000017ea54e000
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea54e000 end=0x00000017ea55e56c filesz=0x000000000001056c
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea55fad8 end=0x00000017ea560160 filesz=0x0000000000000530
+[MAP] snap=2 pid=614431 tid=0x0000000000000001  name=/proc/boot/libsocket.so.4  base=0x00000017ea561000
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea561000 end=0x00000017ea5a6430 filesz=0x0000000000045430
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea5a7068 end=0x00000017ea5afd10 filesz=0x000000000000227c
+[MAP] snap=2 pid=614431 tid=0x0000000000000001  name=/proc/boot/libfsnotify.so.1  base=0x00000017ea5b0000
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea5b0000 end=0x00000017ea5b94c0 filesz=0x00000000000094c0
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea5bac18 end=0x00000017ea5bd500 filesz=0x00000000000028c8
+[MAP] snap=2 pid=614431 tid=0x0000000000000001  name=/usr/lib/libeventfd.so.1  base=0x00000017ea5be000
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea5be000 end=0x00000017ea5c1a20 filesz=0x0000000000003a20
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea5c2bd8 end=0x00000017ea5c3020 filesz=0x0000000000000438
+[MAP] snap=2 pid=614431 tid=0x0000000000000001  name=/usr/lib/ldqnx-64.so.2  base=0x0000004719396000
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x0000004719396000 end=0x00000047193cc498 filesz=0x0000000000036498
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000047193cd5d8 end=0x00000047193d0cf8 filesz=0x0000000000002878
+[MAP] snap=2 pid=614431 tid=0x0000000000000001  name=/proc/boot/libc.so.6  base=0x00000017ea5c4000
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea5c4000 end=0x00000017ea66a9d0 filesz=0x00000000000a69d0
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea66b3b0 end=0x00000017ea676a40 filesz=0x00000000000053d2
+[MAP] snap=2 pid=614431 tid=0x0000000000000001  name=/proc/boot/libgcc_s.so.1  base=0x00000017ea677000
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea677000 end=0x00000017ea692cd0 filesz=0x000000000001bcd0
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea693c70 end=0x00000017ea694288 filesz=0x00000000000003d0
+[MAP] snap=2 pid=614431 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libEGL.so  base=0x00000017ea695000
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea695000 end=0x00000017ea6a19b4 filesz=0x000000000000c9b4
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6a2b60 end=0x00000017ea6a33e0 filesz=0x00000000000004bc
+[MAP] snap=2 pid=614431 tid=0x0000000000000001  name=/usr/lib/libbacktrace.so.1  base=0x00000017ea6a4000
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6a4000 end=0x00000017ea6a5d40 filesz=0x0000000000001d40
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6a6d48 end=0x00000017ea6a7010 filesz=0x00000000000002c0
+[MAP] snap=2 pid=614431 tid=0x0000000000000001  name=/usr/lib/libscreen.so.1  base=0x00000017ea6a8000
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6a8000 end=0x00000017ea6bca44 filesz=0x0000000000014a44
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6bdc78 end=0x00000017ea6be010 filesz=0x0000000000000390
+[MAP] snap=2 pid=614431 tid=0x0000000000000001  name=/usr/lib/libEGL.so.1  base=0x00000017ea6bf000
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6bf000 end=0x00000017ea6e2ac0 filesz=0x0000000000023ac0
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6e3b38 end=0x00000017ea6ea730 filesz=0x0000000000006a20
+[MAP] snap=2 pid=614431 tid=0x0000000000000001  name=/usr/lib/libGLESv2.so.1  base=0x00000017ea6eb000
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6eb000 end=0x00000017ea742008 filesz=0x0000000000057008
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea743fb0 end=0x00000017ea75b010 filesz=0x0000000000017058
+[MAP] snap=2 pid=614431 tid=0x0000000000000001  name=/proc/boot/libz.so.2  base=0x00000017ea75c000
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea75c000 end=0x00000017ea775280 filesz=0x0000000000019280
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea776b38 end=0x00000017ea777010 filesz=0x00000000000004d0
+[MAP] snap=2 pid=614431 tid=0x0000000000000001  name=/usr/lib/libunwind-nto.so.0  base=0x00000017ea778000
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea778000 end=0x00000017ea77ba30 filesz=0x0000000000003a30
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea77ccf0 end=0x00000017ea77d090 filesz=0x0000000000000388
+[MAP] snap=2 pid=614431 tid=0x0000000000000001  name=/usr/lib/libunwind-x86_64.so.8  base=0x00000017ea77e000
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea77e000 end=0x00000017ea78fc40 filesz=0x0000000000011c40
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea790bc0 end=0x00000017ea79b850 filesz=0x0000000000000470
+[MAP] snap=2 pid=614431 tid=0x0000000000000001  name=/usr/lib/libunwind.so.8  base=0x00000017ea79c000
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea79c000 end=0x00000017ea7aa3d0 filesz=0x000000000000e3d0
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea7abba0 end=0x00000017ea7b6870 filesz=0x0000000000000498
+[MAP] snap=2 pid=614431 tid=0x0000000000000001  name=/usr/lib/liblzma.so.5  base=0x00000017ea7b7000
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea7b7000 end=0x00000017ea7e8b68 filesz=0x0000000000031b68
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea7e9408 end=0x00000017ea7ea0d8 filesz=0x0000000000000cb8
+[MAP] snap=2 pid=614431 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libGLESv2.so  base=0x00000017ea7eb000
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea7eb000 end=0x00000017eabe1dfc filesz=0x00000000003f6dfc
+[MAP] snap=2 pid=614431 tid=0x0000000000000001    seg base=0x00000017eabe2070 end=0x00000017eac34068 filesz=0x0000000000051430
+[MAP] snap=2 pid=614431 tid=0x0000000000000001  END
+[MAP] snap=3 pid=614431 tid=0x0000000000000001  BEGIN reason=dlopen-returned-non-null
+[MAP] snap=3 pid=614431 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/cefsimple  base=0x0000000000000000
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x0000000000400000 end=0x0000000000474830 filesz=0x0000000000074830
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x0000000000475fe0 end=0x000000000047c258 filesz=0x0000000000006250
+[MAP] snap=3 pid=614431 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libangle_throw_tracer.so  base=0x00000017da493000
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017da493000 end=0x00000017da49b9bc filesz=0x00000000000089bc
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017da49cc80 end=0x00000017da49d100 filesz=0x000000000000042c
+[MAP] snap=3 pid=614431 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libcef.so  base=0x00000017da49e000
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017da49e000 end=0x00000017e94dc980 filesz=0x000000000f03e980
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017e94dd9b8 end=0x00000017ea1da8a4 filesz=0x0000000000b22818
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea1db8a8 end=0x00000017ea3d3fb7 filesz=0x00000000001f870f
+[MAP] snap=3 pid=614431 tid=0x0000000000000001  name=/usr/lib/libc++.so.2  base=0x00000017ea3d4000
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea3d4000 end=0x00000017ea5044d0 filesz=0x00000000001304d0
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea5055e8 end=0x00000017ea514470 filesz=0x0000000000008cf0
+[MAP] snap=3 pid=614431 tid=0x0000000000000001  name=/proc/boot/libm.so.3  base=0x00000017ea515000
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea515000 end=0x00000017ea54b308 filesz=0x0000000000036308
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea54c930 end=0x00000017ea54d500 filesz=0x0000000000000b30
+[MAP] snap=3 pid=614431 tid=0x0000000000000001  name=/proc/boot/libregex.so.1  base=0x00000017ea54e000
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea54e000 end=0x00000017ea55e56c filesz=0x000000000001056c
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea55fad8 end=0x00000017ea560160 filesz=0x0000000000000530
+[MAP] snap=3 pid=614431 tid=0x0000000000000001  name=/proc/boot/libsocket.so.4  base=0x00000017ea561000
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea561000 end=0x00000017ea5a6430 filesz=0x0000000000045430
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea5a7068 end=0x00000017ea5afd10 filesz=0x000000000000227c
+[MAP] snap=3 pid=614431 tid=0x0000000000000001  name=/proc/boot/libfsnotify.so.1  base=0x00000017ea5b0000
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea5b0000 end=0x00000017ea5b94c0 filesz=0x00000000000094c0
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea5bac18 end=0x00000017ea5bd500 filesz=0x00000000000028c8
+[MAP] snap=3 pid=614431 tid=0x0000000000000001  name=/usr/lib/libeventfd.so.1  base=0x00000017ea5be000
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea5be000 end=0x00000017ea5c1a20 filesz=0x0000000000003a20
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea5c2bd8 end=0x00000017ea5c3020 filesz=0x0000000000000438
+[MAP] snap=3 pid=614431 tid=0x0000000000000001  name=/usr/lib/ldqnx-64.so.2  base=0x0000004719396000
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x0000004719396000 end=0x00000047193cc498 filesz=0x0000000000036498
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000047193cd5d8 end=0x00000047193d0cf8 filesz=0x0000000000002878
+[MAP] snap=3 pid=614431 tid=0x0000000000000001  name=/proc/boot/libc.so.6  base=0x00000017ea5c4000
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea5c4000 end=0x00000017ea66a9d0 filesz=0x00000000000a69d0
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea66b3b0 end=0x00000017ea676a40 filesz=0x00000000000053d2
+[MAP] snap=3 pid=614431 tid=0x0000000000000001  name=/proc/boot/libgcc_s.so.1  base=0x00000017ea677000
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea677000 end=0x00000017ea692cd0 filesz=0x000000000001bcd0
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea693c70 end=0x00000017ea694288 filesz=0x00000000000003d0
+[MAP] snap=3 pid=614431 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libEGL.so  base=0x00000017ea695000
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea695000 end=0x00000017ea6a19b4 filesz=0x000000000000c9b4
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6a2b60 end=0x00000017ea6a33e0 filesz=0x00000000000004bc
+[MAP] snap=3 pid=614431 tid=0x0000000000000001  name=/usr/lib/libbacktrace.so.1  base=0x00000017ea6a4000
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6a4000 end=0x00000017ea6a5d40 filesz=0x0000000000001d40
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6a6d48 end=0x00000017ea6a7010 filesz=0x00000000000002c0
+[MAP] snap=3 pid=614431 tid=0x0000000000000001  name=/usr/lib/libscreen.so.1  base=0x00000017ea6a8000
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6a8000 end=0x00000017ea6bca44 filesz=0x0000000000014a44
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6bdc78 end=0x00000017ea6be010 filesz=0x0000000000000390
+[MAP] snap=3 pid=614431 tid=0x0000000000000001  name=/usr/lib/libEGL.so.1  base=0x00000017ea6bf000
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6bf000 end=0x00000017ea6e2ac0 filesz=0x0000000000023ac0
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6e3b38 end=0x00000017ea6ea730 filesz=0x0000000000006a20
+[MAP] snap=3 pid=614431 tid=0x0000000000000001  name=/usr/lib/libGLESv2.so.1  base=0x00000017ea6eb000
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6eb000 end=0x00000017ea742008 filesz=0x0000000000057008
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea743fb0 end=0x00000017ea75b010 filesz=0x0000000000017058
+[MAP] snap=3 pid=614431 tid=0x0000000000000001  name=/proc/boot/libz.so.2  base=0x00000017ea75c000
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea75c000 end=0x00000017ea775280 filesz=0x0000000000019280
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea776b38 end=0x00000017ea777010 filesz=0x00000000000004d0
+[MAP] snap=3 pid=614431 tid=0x0000000000000001  name=/usr/lib/libunwind-nto.so.0  base=0x00000017ea778000
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea778000 end=0x00000017ea77ba30 filesz=0x0000000000003a30
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea77ccf0 end=0x00000017ea77d090 filesz=0x0000000000000388
+[MAP] snap=3 pid=614431 tid=0x0000000000000001  name=/usr/lib/libunwind-x86_64.so.8  base=0x00000017ea77e000
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea77e000 end=0x00000017ea78fc40 filesz=0x0000000000011c40
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea790bc0 end=0x00000017ea79b850 filesz=0x0000000000000470
+[MAP] snap=3 pid=614431 tid=0x0000000000000001  name=/usr/lib/libunwind.so.8  base=0x00000017ea79c000
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea79c000 end=0x00000017ea7aa3d0 filesz=0x000000000000e3d0
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea7abba0 end=0x00000017ea7b6870 filesz=0x0000000000000498
+[MAP] snap=3 pid=614431 tid=0x0000000000000001  name=/usr/lib/liblzma.so.5  base=0x00000017ea7b7000
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea7b7000 end=0x00000017ea7e8b68 filesz=0x0000000000031b68
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea7e9408 end=0x00000017ea7ea0d8 filesz=0x0000000000000cb8
+[MAP] snap=3 pid=614431 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libGLESv2.so  base=0x00000017ea7eb000
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea7eb000 end=0x00000017eabe1dfc filesz=0x00000000003f6dfc
+[MAP] snap=3 pid=614431 tid=0x0000000000000001    seg base=0x00000017eabe2070 end=0x00000017eac34068 filesz=0x0000000000051430
+[MAP] snap=3 pid=614431 tid=0x0000000000000001  END
+[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x0000003520053068 end=0x000000352005bd10 filesz=0x000000000000227c
+[MAP] snap=4 pid=614431 tid=0x0000000000000001  BEGIN reason=dlopen-returned-non-null
+[MAP] snap=4 pid=614431 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/cefsimple  base=0x0000000000000000
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x0000000000400000 end=0x0000000000474830 filesz=0x0000000000074830
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x0000000000475fe0 end=0x000000000047c258 filesz=0x0000000000006250
+[MAP] snap=4 pid=614431 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libangle_throw_tracer.so  base=0x00000017da493000
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017da493000 end=0x00000017da49b9bc filesz=0x00000000000089bc
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017da49cc80 end=0x00000017da49d100 filesz=0x000000000000042c
+[MAP] snap=4 pid=614431 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libcef.so  base=0x00000017da49e000
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017da49e000 end=0x00000017e94dc980 filesz=0x000000000f03e980
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017e94dd9b8 end=0x00000017ea1da8a4 filesz=0x0000000000b22818
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea1db8a8 end=0x00000017ea3d3fb7 filesz=0x00000000001f870f
+[MAP] snap=4 pid=614431 tid=0x0000000000000001  name=/usr/lib/libc++.so.2  base=0x00000017ea3d4000
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea3d4000 end=0x00000017ea5044d0 filesz=0x00000000001304d0
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea5055e8 end=0x00000017ea514470 filesz=0x0000000000008cf0
+[MAP] snap=4 pid=614431 tid=0x0000000000000001  name=/proc/boot/libm.so.3  base=0x00000017ea515000
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea515000 end=0x00000017ea54b308 filesz=0x0000000000036308
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea54c930 end=0x00000017ea54d500 filesz=0x0000000000000b30
+[MAP] snap=4 pid=614431 tid=0x0000000000000001  name=/proc/boot/libregex.so.1  base=0x00000017ea54e000
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea54e000 end=0x00000017ea55e56c filesz=0x000000000001056c
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea55fad8 end=0x00000017ea560160 filesz=0x0000000000000530
+[MAP] snap=4 pid=614431 tid=0x0000000000000001  name=/proc/boot/libsocket.so.4  base=0x00000017ea561000
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea561000 end=0x00000017ea5a6430 filesz=0x0000000000045430
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea5a7068 end=0x00000017ea5afd10 filesz=0x000000000000227c
+[MAP] snap=4 pid=614431 tid=0x0000000000000001  name=/proc/boot/libfsnotify.so.1  base=0x00000017ea5b0000
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea5b0000 end=0x00000017ea5b94c0 filesz=0x00000000000094c0
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea5bac18 end=0x00000017ea5bd500 filesz=0x00000000000028c8
+[MAP] snap=4 pid=614431 tid=0x0000000000000001  name=/usr/lib/libeventfd.so.1  base=0x00000017ea5be000
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea5be000 end=0x00000017ea5c1a20 filesz=0x0000000000003a20
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea5c2bd8 end=0x00000017ea5c3020 filesz=0x0000000000000438
+[MAP] snap=4 pid=614431 tid=0x0000000000000001  name=/usr/lib/ldqnx-64.so.2  base=0x0000004719396000
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x0000004719396000 end=0x00000047193cc498 filesz=0x0000000000036498
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000047193cd5d8 end=0x00000047193d0cf8 filesz=0x0000000000002878
+[MAP] snap=4 pid=614431 tid=0x0000000000000001  name=/proc/boot/libc.so.6  base=0x00000017ea5c4000
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea5c4000 end=0x00000017ea66a9d0 filesz=0x00000000000a69d0
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea66b3b0 end=0x00000017ea676a40 filesz=0x00000000000053d2
+[MAP] snap=4 pid=614431 tid=0x0000000000000001  name=/proc/boot/libgcc_s.so.1  base=0x00000017ea677000
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea677000 end=0x00000017ea692cd0 filesz=0x000000000001bcd0
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea693c70 end=0x00000017ea694288 filesz=0x00000000000003d0
+[MAP] snap=4 pid=614431 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libEGL.so  base=0x00000017ea695000
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea695000 end=0x00000017ea6a19b4 filesz=0x000000000000c9b4
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6a2b60 end=0x00000017ea6a33e0 filesz=0x00000000000004bc
+[MAP] snap=4 pid=614431 tid=0x0000000000000001  name=/usr/lib/libbacktrace.so.1  base=0x00000017ea6a4000
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6a4000 end=0x00000017ea6a5d40 filesz=0x0000000000001d40
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6a6d48 end=0x00000017ea6a7010 filesz=0x00000000000002c0
+[MAP] snap=4 pid=614431 tid=0x0000000000000001  name=/usr/lib/libscreen.so.1  base=0x00000017ea6a8000
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6a8000 end=0x00000017ea6bca44 filesz=0x0000000000014a44
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6bdc78 end=0x00000017ea6be010 filesz=0x0000000000000390
+[MAP] snap=4 pid=614431 tid=0x0000000000000001  name=/usr/lib/libEGL.so.1  base=0x00000017ea6bf000
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6bf000 end=0x00000017ea6e2ac0 filesz=0x0000000000023ac0
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6e3b38 end=0x00000017ea6ea730 filesz=0x0000000000006a20
+[MAP] snap=4 pid=614431 tid=0x0000000000000001  name=/usr/lib/libGLESv2.so.1  base=0x00000017ea6eb000
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6eb000 end=0x00000017ea742008 filesz=0x0000000000057008
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea743fb0 end=0x00000017ea75b010 filesz=0x0000000000017058
+[MAP] snap=4 pid=614431 tid=0x0000000000000001  name=/proc/boot/libz.so.2  base=0x00000017ea75c000
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea75c000 end=0x00000017ea775280 filesz=0x0000000000019280
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea776b38 end=0x00000017ea777010 filesz=0x00000000000004d0
+[MAP] snap=4 pid=614431 tid=0x0000000000000001  name=/usr/lib/libunwind-nto.so.0  base=0x00000017ea778000
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea778000 end=0x00000017ea77ba30 filesz=0x0000000000003a30
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea77ccf0 end=0x00000017ea77d090 filesz=0x0000000000000388
+[MAP] snap=4 pid=614431 tid=0x0000000000000001  name=/usr/lib/libunwind-x86_64.so.8  base=0x00000017ea77e000
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea77e000 end=0x00000017ea78fc40 filesz=0x0000000000011c40
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea790bc0 end=0x00000017ea79b850 filesz=0x0000000000000470
+[MAP] snap=4 pid=614431 tid=0x0000000000000001  name=/usr/lib/libunwind.so.8  base=0x00000017ea79c000
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea79c000 end=0x00000017ea7aa3d0 filesz=0x000000000000e3d0
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea7abba0 end=0x00000017ea7b6870 filesz=0x0000000000000498
+[MAP] snap=4 pid=614431 tid=0x0000000000000001  name=/usr/lib/liblzma.so.5  base=0x00000017ea7b7000
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea7b7000 end=0x00000017ea7e8b68 filesz=0x0000000000031b68
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea7e9408 end=0x00000017ea7ea0d8 filesz=0x0000000000000cb8
+[MAP] snap=4 pid=614431 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libGLESv2.so  base=0x00000017ea7eb000
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea7eb000 end=0x00000017eabe1dfc filesz=0x00000000003f6dfc
+[MAP] snap=4 pid=614431 tid=0x0000000000000001    seg base=0x00000017eabe2070 end=0x00000017eac34068 filesz=0x0000000000051430
+[MAP] snap=4 pid=614431 tid=0x0000000000000001  END
+A[MAP] snap=1 pid=614433 tid=0x0000000000000001  name=/proc/boot/libfsnotify.so.1  base=0x000000352005c000
+[MAP] snap=5 pid=614431 tid=0x0000000000000001  BEGIN reason=dlopen-returned-non-null
+[MAP] snap=5 pid=614431 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/cefsimple  base=0x0000000000000000
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x0000000000400000 end=0x0000000000474830 filesz=0x0000000000074830
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x0000000000475fe0 end=0x000000000047c258 filesz=0x0000000000006250
+[MAP] snap=5 pid=614431 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libangle_throw_tracer.so  base=0x00000017da493000
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017da493000 end=0x00000017da49b9bc filesz=0x00000000000089bc
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017da49cc80 end=0x00000017da49d100 filesz=0x000000000000042c
+[MAP] snap=5 pid=614431 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libcef.so  base=0x00000017da49e000
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017da49e000 end=0x00000017e94dc980 filesz=0x000000000f03e980
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017e94dd9b8 end=0x00000017ea1da8a4 filesz=0x0000000000b22818
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea1db8a8 end=0x00000017ea3d3fb7 filesz=0x00000000001f870f
+[MAP] snap=5 pid=614431 tid=0x0000000000000001  name=/usr/lib/libc++.so.2  base=0x00000017ea3d4000
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea3d4000 end=0x00000017ea5044d0 filesz=0x00000000001304d0
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea5055e8 end=0x00000017ea514470 filesz=0x0000000000008cf0
+[MAP] snap=5 pid=614431 tid=0x0000000000000001  name=/proc/boot/libm.so.3  base=0x00000017ea515000
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea515000 end=0x00000017ea54b308 filesz=0x0000000000036308
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea54c930 end=0x00000017ea54d500 filesz=0x0000000000000b30
+[MAP] snap=5 pid=614431 tid=0x0000000000000001  name=/proc/boot/libregex.so.1  base=0x00000017ea54e000
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea54e000 end=0x00000017ea55e56c filesz=0x000000000001056c
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea55fad8 end=0x00000017ea560160 filesz=0x0000000000000530
+[MAP] snap=5 pid=614431 tid=0x0000000000000001  name=/proc/boot/libsocket.so.4  base=0x00000017ea561000
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea561000 end=0x00000017ea5a6430 filesz=0x0000000000045430
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea5a7068 end=0x00000017ea5afd10 filesz=0x000000000000227c
+[MAP] snap=5 pid=614431 tid=0x0000000000000001  name=/proc/boot/libfsnotify.so.1  base=0x00000017ea5b0000
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea5b0000 end=0x00000017ea5b94c0 filesz=0x00000000000094c0
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea5bac18 end=0x00000017ea5bd500 filesz=0x00000000000028c8
+[MAP] snap=5 pid=614431 tid=0x0000000000000001  name=/usr/lib/libeventfd.so.1  base=0x00000017ea5be000
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea5be000 end=0x00000017ea5c1a20 filesz=0x0000000000003a20
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea5c2bd8 end=0x00000017ea5c3020 filesz=0x0000000000000438
+[MAP] snap=5 pid=614431 tid=0x0000000000000001  name=/usr/lib/ldqnx-64.so.2  base=0x0000004719396000
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x0000004719396000 end=0x00000047193cc498 filesz=0x0000000000036498
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000047193cd5d8 end=0x00000047193d0cf8 filesz=0x0000000000002878
+[MAP] snap=5 pid=614431 tid=0x0000000000000001  name=/proc/boot/libc.so.6  base=0x00000017ea5c4000
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea5c4000 end=0x00000017ea66a9d0 filesz=0x00000000000a69d0
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea66b3b0 end=0x00000017ea676a40 filesz=0x00000000000053d2
+[MAP] snap=5 pid=614431 tid=0x0000000000000001  name=/proc/boot/libgcc_s.so.1  base=0x00000017ea677000
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea677000 end=0x00000017ea692cd0 filesz=0x000000000001bcd0
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea693c70 end=0x00000017ea694288 filesz=0x00000000000003d0
+[MAP] snap=5 pid=614431 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libEGL.so  base=0x00000017ea695000
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea695000 end=0x00000017ea6a19b4 filesz=0x000000000000c9b4
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6a2b60 end=0x00000017ea6a33e0 filesz=0x00000000000004bc
+[MAP] snap=5 pid=614431 tid=0x0000000000000001  name=/usr/lib/libbacktrace.so.1  base=0x00000017ea6a4000
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6a4000 end=0x00000017ea6a5d40 filesz=0x0000000000001d40
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6a6d48 end=0x00000017ea6a7010 filesz=0x00000000000002c0
+[MAP] snap=5 pid=614431 tid=0x0000000000000001  name=/usr/lib/libscreen.so.1  base=0x00000017ea6a8000
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6a8000 end=0x00000017ea6bca44 filesz=0x0000000000014a44
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6bdc78 end=0x00000017ea6be010 filesz=0x0000000000000390
+[MAP] snap=5 pid=614431 tid=0x0000000000000001  name=/usr/lib/libEGL.so.1  base=0x00000017ea6bf000
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6bf000 end=0x00000017ea6e2ac0 filesz=0x0000000000023ac0
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6e3b38 end=0x00000017ea6ea730 filesz=0x0000000000006a20
+[MAP] snap=5 pid=614431 tid=0x0000000000000001  name=/usr/lib/libGLESv2.so.1  base=0x00000017ea6eb000
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea6eb000 end=0x00000017ea742008 filesz=0x0000000000057008
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea743fb0 end=0x00000017ea75b010 filesz=0x0000000000017058
+[MAP] snap=5 pid=614431 tid=0x0000000000000001  name=/proc/boot/libz.so.2  base=0x00000017ea75c000
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea75c000 end=0x00000017ea775280 filesz=0x0000000000019280
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea776b38 end=0x00000017ea777010 filesz=0x00000000000004d0
+[MAP] snap=5 pid=614431 tid=0x0000000000000001  name=/usr/lib/libunwind-nto.so.0  base=0x00000017ea778000
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea778000 end=0x00000017ea77ba30 filesz=0x0000000000003a30
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea77ccf0 end=0x00000017ea77d090 filesz=0x0000000000000388
+[MAP] snap=5 pid=614431 tid=0x0000000000000001  name=/usr/lib/libunwind-x86_64.so.8  base=0x00000017ea77e000
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea77e000 end=0x00000017ea78fc40 filesz=0x0000000000011c40
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea790bc0 end=0x00000017ea79b850 filesz=0x0000000000000470
+[MAP] snap=5 pid=614431 tid=0x0000000000000001  name=/usr/lib/libunwind.so.8  base=0x00000017ea79c000
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea79c000 end=0x00000017ea7aa3d0 filesz=0x000000000000e3d0
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea7abba0 end=0x00000017ea7b6870 filesz=0x0000000000000498
+[MAP] snap=5 pid=614431 tid=0x0000000000000001  name=/usr/lib/liblzma.so.5  base=0x00000017ea7b7000
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea7b7000 end=0x00000017ea7e8b68 filesz=0x0000000000031b68
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea7e9408 end=0x00000017ea7ea0d8 filesz=0x0000000000000cb8
+[MAP] snap=5 pid=614431 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libGLESv2.so  base=0x00000017ea7eb000
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017ea7eb000 end=0x00000017eabe1dfc filesz=0x00000000003f6dfc
+[MAP] snap=5 pid=614431 tid=0x0000000000000001    seg base=0x00000017eabe2070 end=0x00000017eac34068 filesz=0x0000000000051430
+[MAP] snap=5 pid=614431 tid=0x0000000000000001  END
+[TRACER] snap=0 pid=614431 tid=0x0000000000000001 __cxa_throw depth=0 call=(none)
+[TRACER] snap=0 pid=614431 tid=0x0000000000000001 ra[0]=0x00000017da49570d
+[TRACER] snap=0 pid=614431 tid=0x0000000000000001 ra[1]=0x00000017ea42c691
+[TRACER] snap=0 pid=614431 tid=0x0000000000000001 ra[2]=0x00000017ea45546d
+[TRACER] snap=0 pid=614431 tid=0x0000000000000001 ra[3]=0x00000017ea889b85
+[QCNX-[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x000000352005c000 end=0x00000035200654c0 filesz=0x00000000000094c0
+ANGELE[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x0000003520066c18 end=0x0000003520069500 filesz=0x00000000000028c8
+-TRACE]] [MAP] snap=1 pid=614433 tid=0x0000000000000001  name=/usr/lib/libeventfd.so.1  base=0x000000352006a000
+std ::[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x000000352006a000 end=0x000000352006da20 filesz=0x0000000000003a20
+tetrmin[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x000000352006ebd8 end=0x000000352006f020 filesz=0x0000000000000438
+ate ien[MAP] snap=1 pid=614433 tid=0x0000000000000001  name=/usr/lib/ldqnx-64.so.2  base=0x00000054a7f64000
+vokred [MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x00000054a7f64000 end=0x00000054a7f9a498 filesz=0x0000000000036498
+(pmid=614431 ti[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x00000054a7f9b5d8 end=0x00000054a7f9ecf8 filesz=0x0000000000002878
+d=1)i
+[QNX-[MAP] snap=1 pid=614433 tid=0x0000000000000001  name=/proc/boot/libc.so.6  base=0x0000003520070000
+ANGLnE-TR[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x0000003520070000 end=0x00000035201169d0 filesz=0x00000000000a69d0
+ACaE[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x00000035201173b0 end=0x0000003520122a40 filesz=0x00000000000053d2
+]t [MAP] snap=1 pid=614433 tid=0x0000000000000001  name=/proc/boot/libgcc_s.so.1  base=0x0000003520123000
+terminate eba[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x0000003520123000 end=0x000000352013ecd0 filesz=0x000000000001bcd0
+ckt rac[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x000000352013fc70 end=0x0000003520140288 filesz=0x00000000000003d0
+e h(1 [MAP] snap=1 pid=614433 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libEGL.so  base=0x0000003520141000
+framaes):[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x0000003520141000 end=0x000000352014d9b4 filesz=0x000000000000c9b4
+
+ [ n#00 0x17eaabaf7f [MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x000000352014eb60 end=0x000000352014f3e0 filesz=0x00000000000004bc
+/mnt/nfs/out/qnx_release/libGLESv2.so Q:: _ZNSt3__26__treeINS_12basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEEENS_4lessIS6_EENS4_IS6_EEE4findIS6_EENS_15__tree_iteratorIS6_PNS_11__tree_nodeIS6_PvEElEERKT_+0x4d9f
+d[QNX-ANGLE-TRACE] exception: in-flight (rethrow/catch disabled; inspect backtrace above for throw site)
+[MAP] snap=1 pid=614433 tid=0x0000000000000001  name=/usr/lib/libbacktrace.so.1  base=0x0000003520150000
+Nl[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x0000003520150000 end=0x0000003520151d40 filesz=0x0000000000001d40
+Xe[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x0000003520152d48 end=0x0000003520153010 filesz=0x00000000000002c0
+-r[MAP] snap=1 pid=614433 tid=0x0000000000000001  name=/usr/lib/libscreen.so.1  base=0x0000003520154000
+A [MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x0000003520154000 end=0x0000003520168a44 filesz=0x0000000000014a44
+Ni[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x0000003520169c78 end=0x000000352016a010 filesz=0x0000000000000390
+Gn[MAP] snap=1 pid=614433 tid=0x0000000000000001  name=/usr/lib/libEGL.so.1  base=0x000000352016b000
+Ls[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x000000352016b000 end=0x000000352018eac0 filesz=0x0000000000023ac0
+Et[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x000000352018fb38 end=0x0000003520196730 filesz=0x0000000000006a20
+-a[MAP] snap=1 pid=614433 tid=0x0000000000000001  name=/usr/lib/libGLESv2.so.1  base=0x0000003520197000
+Tl[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x0000003520197000 end=0x00000035201ee008 filesz=0x0000000000057008
+Rl[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x00000035201effb0 end=0x0000003520207010 filesz=0x0000000000017058
+Ae[MAP] snap=1 pid=614433 tid=0x0000000000000001  name=/proc/boot/libz.so.2  base=0x0000003520208000
+Cd[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x0000003520208000 end=0x0000003520221280 filesz=0x0000000000019280
+E [MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x0000003520222b38 end=0x0000003520223010 filesz=0x00000000000004d0
+]([MAP] snap=1 pid=614433 tid=0x0000000000000001  name=/usr/lib/libunwind-nto.so.0  base=0x0000003520224000
+ p[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x0000003520224000 end=0x0000003520227a30 filesz=0x0000000000003a30
+ti[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x0000003520228cf0 end=0x0000003520229090 filesz=0x0000000000000388
+[ed[MAP] snap=1 pid=614433 tid=0x0000000000000001  name=/usr/lib/libunwind-x86_64.so.8  base=0x000000352022a000
+Qr=[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x000000352022a000 end=0x000000352023bc40 filesz=0x0000000000011c40
+Nm614434[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x000000352023cbc0 end=0x0000003520247850 filesz=0x0000000000000470
+Xi)[MAP] snap=1 pid=614433 tid=0x0000000000000001  name=/usr/lib/libunwind.so.8  base=0x0000003520248000
+-n
+[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x0000003520248000 end=0x00000035202563d0 filesz=0x000000000000e3d0
+Aa[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x0000003520257ba0 end=0x0000003520262870 filesz=0x0000000000000498
+[MAP] snap=1 pid=614434 tid=0x0000000000000001  BEGIN reason=constructor
+Nt[MAP] snap=1 pid=614433 tid=0x0000000000000001  name=/usr/lib/liblzma.so.5  base=0x0000003520263000
+[MAP] snap=1 pid=614434 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/cefsimple  base=0x0000000000000000
+Ge[MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x0000003520263000 end=0x0000003520294b68 filesz=0x0000000000031b68
+[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000000000400000 end=0x0000000000474830 filesz=0x0000000000074830
+L [MAP] snap=1 pid=614433 tid=0x0000000000000001    seg base=0x0000003520295408 end=0x00000035202960d8 filesz=0x0000000000000cb8
+[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000000000475fe0 end=0x000000000047c258 filesz=0x0000000000006250
+Eh[MAP] snap=1 pid=614433 tid=0x0000000000000001  END
+[MAP] snap=1 pid=614434 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libangle_throw_tracer.so  base=0x0000004edb440000
+-a[TRACER] snap=0 pid=614433 tid=0x0000000000000001 libangle_throw_tracer.so LOADED
+[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004edb440000 end=0x0000004edb4489bc filesz=0x00000000000089bc
+Tn[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004edb449c80 end=0x0000004edb44a100 filesz=0x000000000000042c
+Rd[MAP] snap=1 pid=614434 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libcef.so  base=0x0000004edb44b000
+Al[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004edb44b000 end=0x0000004eea489980 filesz=0x000000000f03e980
+Ce[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eea48a9b8 end=0x0000004eeb1878a4 filesz=0x0000000000b22818
+Er[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb1888a8 end=0x0000004eeb380fb7 filesz=0x00000000001f870f
+] [MAP] snap=1 pid=614434 tid=0x0000000000000001  name=/usr/lib/libc++.so.2  base=0x0000004eeb381000
+ i[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb381000 end=0x0000004eeb4b14d0 filesz=0x00000000001304d0
+tn[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb4b25e8 end=0x0000004eeb4c1470 filesz=0x0000000000008cf0
+es[MAP] snap=1 pid=614434 tid=0x0000000000000001  name=/proc/boot/libm.so.3  base=0x0000004eeb4c2000
+rt[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb4c2000 end=0x0000004eeb4f8308 filesz=0x0000000000036308
+ma[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb4f9930 end=0x0000004eeb4fa500 filesz=0x0000000000000b30
+il[MAP] snap=1 pid=614434 tid=0x0000000000000001  name=/proc/boot/libregex.so.1  base=0x0000004eeb4fb000
+nl[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb4fb000 end=0x0000004eeb50b56c filesz=0x000000000001056c
+ae[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb50cad8 end=0x0000004eeb50d160 filesz=0x0000000000000530
+td[MAP] snap=1 pid=614434 tid=0x0000000000000001  name=/proc/boot/libsocket.so.4  base=0x0000004eeb50e000
+e [MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb50e000 end=0x0000004eeb553430 filesz=0x0000000000045430
+ ([MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb554068 end=0x0000004eeb55cd10 filesz=0x000000000000227c
+hp[MAP] snap=1 pid=614434 tid=0x0000000000000001  name=/proc/boot/libfsnotify.so.1  base=0x0000004eeb55d000
+ai[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb55d000 end=0x0000004eeb5664c0 filesz=0x00000000000094c0
+nd[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb567c18 end=0x0000004eeb56a500 filesz=0x00000000000028c8
+d=[MAP] snap=1 pid=614434 tid=0x0000000000000001  name=/usr/lib/libeventfd.so.1  base=0x0000004eeb56b000
+l614435[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb56b000 end=0x0000004eeb56ea20 filesz=0x0000000000003a20
+e)[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb56fbd8 end=0x0000004eeb570020 filesz=0x0000000000000438
+r
+[MAP] snap=1 pid=614434 tid=0x0000000000000001  name=/usr/lib/ldqnx-64.so.2  base=0x00000023a3022000
+ [MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x00000023a3022000 end=0x00000023a3058498 filesz=0x0000000000036498
+[MAP] snap=1 pid=614435 tid=0x0000000000000001  BEGIN reason=constructor
+i[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x00000023a30595d8 end=0x00000023a305ccf8 filesz=0x0000000000002878
+[MAP] snap=1 pid=614435 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/cefsimple  base=0x0000000000000000
+n[MAP] snap=1 pid=614434 tid=0x0000000000000001  name=/proc/boot/libc.so.6  base=0x0000004eeb571000
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x0000000000400000 end=0x0000000000474830 filesz=0x0000000000074830
+s[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb571000 end=0x0000004eeb6179d0 filesz=0x00000000000a69d0
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x0000000000475fe0 end=0x000000000047c258 filesz=0x0000000000006250
+t[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb6183b0 end=0x0000004eeb623a40 filesz=0x00000000000053d2
+[MAP] snap=1 pid=614435 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libangle_throw_tracer.so  base=0x0000003898949000
+a[MAP] snap=1 pid=614434 tid=0x0000000000000001  name=/proc/boot/libgcc_s.so.1  base=0x0000004eeb624000
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x0000003898949000 end=0x00000038989519bc filesz=0x00000000000089bc
+l[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb624000 end=0x0000004eeb63fcd0 filesz=0x000000000001bcd0
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x0000003898952c80 end=0x0000003898953100 filesz=0x000000000000042c
+l[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb640c70 end=0x0000004eeb641288 filesz=0x00000000000003d0
+[MAP] snap=1 pid=614435 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libcef.so  base=0x0000003898954000
+e[MAP] snap=1 pid=614434 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libEGL.so  base=0x0000004eeb642000
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x0000003898954000 end=0x00000038a7992980 filesz=0x000000000f03e980
+d[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb642000 end=0x0000004eeb64e9b4 filesz=0x000000000000c9b4
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a79939b8 end=0x00000038a86908a4 filesz=0x0000000000b22818
+ [MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb64fb60 end=0x0000004eeb6503e0 filesz=0x00000000000004bc
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a86918a8 end=0x00000038a8889fb7 filesz=0x00000000001f870f
+([MAP] snap=1 pid=614434 tid=0x0000000000000001  name=/usr/lib/libbacktrace.so.1  base=0x0000004eeb651000
+[MAP] snap=1 pid=614435 tid=0x0000000000000001  name=/usr/lib/libc++.so.2  base=0x00000038a888a000
+p[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb651000 end=0x0000004eeb652d40 filesz=0x0000000000001d40
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a888a000 end=0x00000038a89ba4d0 filesz=0x00000000001304d0
+i[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb653d48 end=0x0000004eeb654010 filesz=0x00000000000002c0
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a89bb5e8 end=0x00000038a89ca470 filesz=0x0000000000008cf0
+d[MAP] snap=1 pid=614434 tid=0x0000000000000001  name=/usr/lib/libscreen.so.1  base=0x0000004eeb655000
+[MAP] snap=1 pid=614435 tid=0x0000000000000001  name=/proc/boot/libm.so.3  base=0x00000038a89cb000
+=[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb655000 end=0x0000004eeb669a44 filesz=0x0000000000014a44
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a89cb000 end=0x00000038a8a01308 filesz=0x0000000000036308
+614436[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb66ac78 end=0x0000004eeb66b010 filesz=0x0000000000000390
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a8a02930 end=0x00000038a8a03500 filesz=0x0000000000000b30
+)[MAP] snap=1 pid=614434 tid=0x0000000000000001  name=/usr/lib/libEGL.so.1  base=0x0000004eeb66c000
+[MAP] snap=1 pid=614435 tid=0x0000000000000001  name=/proc/boot/libregex.so.1  base=0x00000038a8a04000
+
+[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb66c000 end=0x0000004eeb68fac0 filesz=0x0000000000023ac0
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a8a04000 end=0x00000038a8a1456c filesz=0x000000000001056c
+[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb690b38 end=0x0000004eeb697730 filesz=0x0000000000006a20
+[MAP] snap=1 pid=614436 tid=0x0000000000000001  BEGIN reason=constructor
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a8a15ad8 end=0x00000038a8a16160 filesz=0x0000000000000530
+[MAP] snap=1 pid=614434 tid=0x0000000000000001  name=/usr/lib/libGLESv2.so.1  base=0x0000004eeb698000
+[MAP] snap=1 pid=614436 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/cefsimple  base=0x0000000000000000
+[MAP] snap=1 pid=614435 tid=0x0000000000000001  name=/proc/boot/libsocket.so.4  base=0x00000038a8a17000
+[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb698000 end=0x0000004eeb6ef008 filesz=0x0000000000057008
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000000000400000 end=0x0000000000474830 filesz=0x0000000000074830
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a8a17000 end=0x00000038a8a5c430 filesz=0x0000000000045430
+[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb6f0fb0 end=0x0000004eeb708010 filesz=0x0000000000017058
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000000000475fe0 end=0x000000000047c258 filesz=0x0000000000006250
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a8a5d068 end=0x00000038a8a65d10 filesz=0x000000000000227c
+[MAP] snap=1 pid=614434 tid=0x0000000000000001  name=/proc/boot/libz.so.2  base=0x0000004eeb709000
+[MAP] snap=1 pid=614436 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libangle_throw_tracer.so  base=0x0000004cb9d59000
+[MAP] snap=1 pid=614435 tid=0x0000000000000001  name=/proc/boot/libfsnotify.so.1  base=0x00000038a8a66000
+[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb709000 end=0x0000004eeb722280 filesz=0x0000000000019280
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cb9d59000 end=0x0000004cb9d619bc filesz=0x00000000000089bc
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a8a66000 end=0x00000038a8a6f4c0 filesz=0x00000000000094c0
+[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb723b38 end=0x0000004eeb724010 filesz=0x00000000000004d0
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cb9d62c80 end=0x0000004cb9d63100 filesz=0x000000000000042c
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a8a70c18 end=0x00000038a8a73500 filesz=0x00000000000028c8
+[MAP] snap=1 pid=614434 tid=0x0000000000000001  name=/usr/lib/libunwind-nto.so.0  base=0x0000004eeb725000
+[MAP] snap=1 pid=614436 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libcef.so  base=0x0000004cb9d64000
+[MAP] snap=1 pid=614435 tid=0x0000000000000001  name=/usr/lib/libeventfd.so.1  base=0x00000038a8a74000
+[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb725000 end=0x0000004eeb728a30 filesz=0x0000000000003a30
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cb9d64000 end=0x0000004cc8da2980 filesz=0x000000000f03e980
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a8a74000 end=0x00000038a8a77a20 filesz=0x0000000000003a20
+[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb729cf0 end=0x0000004eeb72a090 filesz=0x0000000000000388
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cc8da39b8 end=0x0000004cc9aa08a4 filesz=0x0000000000b22818
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a8a78bd8 end=0x00000038a8a79020 filesz=0x0000000000000438
+[MAP] snap=1 pid=614434 tid=0x0000000000000001  name=/usr/lib/libunwind-x86_64.so.8  base=0x0000004eeb72b000
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cc9aa18a8 end=0x0000004cc9c99fb7 filesz=0x00000000001f870f
+[MAP] snap=1 pid=614435 tid=0x0000000000000001  name=/usr/lib/ldqnx-64.so.2  base=0x0000001c0c7ce000
+[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb72b000 end=0x0000004eeb73cc40 filesz=0x0000000000011c40
+[MAP] snap=1 pid=614436 tid=0x0000000000000001  name=/usr/lib/libc++.so.2  base=0x0000004cc9c9a000
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x0000001c0c7ce000 end=0x0000001c0c804498 filesz=0x0000000000036498
+[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb73dbc0 end=0x0000004eeb748850 filesz=0x0000000000000470
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cc9c9a000 end=0x0000004cc9dca4d0 filesz=0x00000000001304d0
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x0000001c0c8055d8 end=0x0000001c0c808cf8 filesz=0x0000000000002878
+[MAP] snap=1 pid=614434 tid=0x0000000000000001  name=/usr/lib/libunwind.so.8  base=0x0000004eeb749000
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cc9dcb5e8 end=0x0000004cc9dda470 filesz=0x0000000000008cf0
+[MAP] snap=1 pid=614435 tid=0x0000000000000001  name=/proc/boot/libc.so.6  base=0x00000038a8a7a000
+[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb749000 end=0x0000004eeb7573d0 filesz=0x000000000000e3d0
+[MAP] snap=1 pid=614436 tid=0x0000000000000001  name=/proc/boot/libm.so.3  base=0x0000004cc9ddb000
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a8a7a000 end=0x00000038a8b209d0 filesz=0x00000000000a69d0
+[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb758ba0 end=0x0000004eeb763870 filesz=0x0000000000000498
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cc9ddb000 end=0x0000004cc9e11308 filesz=0x0000000000036308
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a8b213b0 end=0x00000038a8b2ca40 filesz=0x00000000000053d2
+[MAP] snap=1 pid=614434 tid=0x0000000000000001  name=/usr/lib/liblzma.so.5  base=0x0000004eeb764000
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cc9e12930 end=0x0000004cc9e13500 filesz=0x0000000000000b30
+[MAP] snap=1 pid=614435 tid=0x0000000000000001  name=/proc/boot/libgcc_s.so.1  base=0x00000038a8b2d000
+[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb764000 end=0x0000004eeb795b68 filesz=0x0000000000031b68
+[MAP] snap=1 pid=614436 tid=0x0000000000000001  name=/proc/boot/libregex.so.1  base=0x0000004cc9e14000
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a8b2d000 end=0x00000038a8b48cd0 filesz=0x000000000001bcd0
+[MAP] snap=1 pid=614434 tid=0x0000000000000001    seg base=0x0000004eeb796408 end=0x0000004eeb7970d8 filesz=0x0000000000000cb8
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cc9e14000 end=0x0000004cc9e2456c filesz=0x000000000001056c
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a8b49c70 end=0x00000038a8b4a288 filesz=0x00000000000003d0
+[MAP] snap=1 pid=614434 tid=0x0000000000000001  END
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cc9e25ad8 end=0x0000004cc9e26160 filesz=0x0000000000000530
+[MAP] snap=1 pid=614435 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libEGL.so  base=0x00000038a8b4b000
+[TRACER] snap=0 pid=614434 tid=0x0000000000000001 libangle_throw_tracer.so LOADED
+[MAP] snap=1 pid=614436 tid=0x0000000000000001  name=/proc/boot/libsocket.so.4  base=0x0000004cc9e27000
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a8b4b000 end=0x00000038a8b579b4 filesz=0x000000000000c9b4
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cc9e27000 end=0x0000004cc9e6c430 filesz=0x0000000000045430
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a8b58b60 end=0x00000038a8b593e0 filesz=0x00000000000004bc
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cc9e6d068 end=0x0000004cc9e75d10 filesz=0x000000000000227c
+[MAP] snap=1 pid=614435 tid=0x0000000000000001  name=/usr/lib/libbacktrace.so.1  base=0x00000038a8b5a000
+[MAP] snap=1 pid=614436 tid=0x0000000000000001  name=/proc/boot/libfsnotify.so.1  base=0x0000004cc9e76000
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a8b5a000 end=0x00000038a8b5bd40 filesz=0x0000000000001d40
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cc9e76000 end=0x0000004cc9e7f4c0 filesz=0x00000000000094c0
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a8b5cd48 end=0x00000038a8b5d010 filesz=0x00000000000002c0
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cc9e80c18 end=0x0000004cc9e83500 filesz=0x00000000000028c8
+[MAP] snap=1 pid=614435 tid=0x0000000000000001  name=/usr/lib/libscreen.so.1  base=0x00000038a8b5e000
+[MAP] snap=1 pid=614436 tid=0x0000000000000001  name=/usr/lib/libeventfd.so.1  base=0x0000004cc9e84000
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a8b5e000 end=0x00000038a8b72a44 filesz=0x0000000000014a44
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cc9e84000 end=0x0000004cc9e87a20 filesz=0x0000000000003a20
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a8b73c78 end=0x00000038a8b74010 filesz=0x0000000000000390
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cc9e88bd8 end=0x0000004cc9e89020 filesz=0x0000000000000438
+[MAP] snap=1 pid=614435 tid=0x0000000000000001  name=/usr/lib/libEGL.so.1  base=0x00000038a8b75000
+[MAP] snap=1 pid=614436 tid=0x0000000000000001  name=/usr/lib/ldqnx-64.so.2  base=0x000000387362e000
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a8b75000 end=0x00000038a8b98ac0 filesz=0x0000000000023ac0
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x000000387362e000 end=0x0000003873664498 filesz=0x0000000000036498
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a8b99b38 end=0x00000038a8ba0730 filesz=0x0000000000006a20
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x00000038736655d8 end=0x0000003873668cf8 filesz=0x0000000000002878
+[MAP] snap=1 pid=614435 tid=0x0000000000000001  name=/usr/lib/libGLESv2.so.1  base=0x00000038a8ba1000
+[MAP] snap=1 pid=614436 tid=0x0000000000000001  name=/proc/boot/libc.so.6  base=0x0000004cc9e8a000
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a8ba1000 end=0x00000038a8bf8008 filesz=0x0000000000057008
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cc9e8a000 end=0x0000004cc9f309d0 filesz=0x00000000000a69d0
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a8bf9fb0 end=0x00000038a8c11010 filesz=0x0000000000017058
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cc9f313b0 end=0x0000004cc9f3ca40 filesz=0x00000000000053d2
+[MAP] snap=1 pid=614435 tid=0x0000000000000001  name=/proc/boot/libz.so.2  base=0x00000038a8c12000
+[MAP] snap=1 pid=614436 tid=0x0000000000000001  name=/proc/boot/libgcc_s.so.1  base=0x0000004cc9f3d000
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a8c12000 end=0x00000038a8c2b280 filesz=0x0000000000019280
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cc9f3d000 end=0x0000004cc9f58cd0 filesz=0x000000000001bcd0
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a8c2cb38 end=0x00000038a8c2d010 filesz=0x00000000000004d0
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cc9f59c70 end=0x0000004cc9f5a288 filesz=0x00000000000003d0
+[MAP] snap=1 pid=614435 tid=0x0000000000000001  name=/usr/lib/libunwind-nto.so.0  base=0x00000038a8c2e000
+[MAP] snap=1 pid=614436 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libEGL.so  base=0x0000004cc9f5b000
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a8c2e000 end=0x00000038a8c31a30 filesz=0x0000000000003a30
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cc9f5b000 end=0x0000004cc9f679b4 filesz=0x000000000000c9b4
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a8c32cf0 end=0x00000038a8c33090 filesz=0x0000000000000388
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cc9f68b60 end=0x0000004cc9f693e0 filesz=0x00000000000004bc
+[MAP] snap=1 pid=614435 tid=0x0000000000000001  name=/usr/lib/libunwind-x86_64.so.8  base=0x00000038a8c34000
+[MAP] snap=1 pid=614436 tid=0x0000000000000001  name=/usr/lib/libbacktrace.so.1  base=0x0000004cc9f6a000
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a8c34000 end=0x00000038a8c45c40 filesz=0x0000000000011c40
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cc9f6a000 end=0x0000004cc9f6bd40 filesz=0x0000000000001d40
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a8c46bc0 end=0x00000038a8c51850 filesz=0x0000000000000470
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cc9f6cd48 end=0x0000004cc9f6d010 filesz=0x00000000000002c0
+[MAP] snap=1 pid=614435 tid=0x0000000000000001  name=/usr/lib/libunwind.so.8  base=0x00000038a8c52000
+[MAP] snap=1 pid=614436 tid=0x0000000000000001  name=/usr/lib/libscreen.so.1  base=0x0000004cc9f6e000
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a8c52000 end=0x00000038a8c603d0 filesz=0x000000000000e3d0
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cc9f6e000 end=0x0000004cc9f82a44 filesz=0x0000000000014a44
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a8c61ba0 end=0x00000038a8c6c870 filesz=0x0000000000000498
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cc9f83c78 end=0x0000004cc9f84010 filesz=0x0000000000000390
+[MAP] snap=1 pid=614435 tid=0x0000000000000001  name=/usr/lib/liblzma.so.5  base=0x00000038a8c6d000
+[MAP] snap=1 pid=614436 tid=0x0000000000000001  name=/usr/lib/libEGL.so.1  base=0x0000004cc9f85000
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a8c6d000 end=0x00000038a8c9eb68 filesz=0x0000000000031b68
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cc9f85000 end=0x0000004cc9fa8ac0 filesz=0x0000000000023ac0
+[MAP] snap=1 pid=614435 tid=0x0000000000000001    seg base=0x00000038a8c9f408 end=0x00000038a8ca00d8 filesz=0x0000000000000cb8
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cc9fa9b38 end=0x0000004cc9fb0730 filesz=0x0000000000006a20
+[MAP] snap=1 pid=614435 tid=0x0000000000000001  END
+[MAP] snap=1 pid=614436 tid=0x0000000000000001  name=/usr/lib/libGLESv2.so.1  base=0x0000004cc9fb1000
+[TRACER] snap=0 pid=614435 tid=0x0000000000000001 libangle_throw_tracer.so LOADED
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cc9fb1000 end=0x0000004cca008008 filesz=0x0000000000057008
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cca009fb0 end=0x0000004cca021010 filesz=0x0000000000017058
+[MAP] snap=1 pid=614436 tid=0x0000000000000001  name=/proc/boot/libz.so.2  base=0x0000004cca022000
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cca022000 end=0x0000004cca03b280 filesz=0x0000000000019280
+[614435:1:0711/055830.035320:ERROR:third_party/webrtc/rtc_base/cpu_info.cc:73] No function to get number of cores
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cca03cb38 end=0x0000004cca03d010 filesz=0x00000000000004d0
+[MAP] snap=1 pid=614436 tid=0x0000000000000001  name=/usr/lib/libunwind-nto.so.0  base=0x0000004cca03e000
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cca03e000 end=0x0000004cca041a30 filesz=0x0000000000003a30
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cca042cf0 end=0x0000004cca043090 filesz=0x0000000000000388
+[MAP] snap=1 pid=614436 tid=0x0000000000000001  name=/usr/lib/libunwind-x86_64.so.8  base=0x0000004cca044000
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cca044000 end=0x0000004cca055c40 filesz=0x0000000000011c40
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cca056bc0 end=0x0000004cca061850 filesz=0x0000000000000470
+[MAP] snap=1 pid=614436 tid=0x0000000000000001  name=/usr/lib/libunwind.so.8  base=0x0000004cca062000
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cca062000 end=0x0000004cca0703d0 filesz=0x000000000000e3d0
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cca071ba0 end=0x0000004cca07c870 filesz=0x0000000000000498
+[MAP] snap=1 pid=614436 tid=0x0000000000000001  name=/usr/lib/liblzma.so.5  base=0x0000004cca07d000
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cca07d000 end=0x0000004cca0aeb68 filesz=0x0000000000031b68
+[MAP] snap=1 pid=614436 tid=0x0000000000000001    seg base=0x0000004cca0af408 end=0x0000004cca0b00d8 filesz=0x0000000000000cb8
+[MAP] snap=1 pid=614436 tid=0x0000000000000001  END
+[TRACER] snap=0 pid=614436 tid=0x0000000000000001 libangle_throw_tracer.so LOADED
+[614436:1:0711/055830.096316:ERROR:third_party/webrtc/rtc_base/cpu_info.cc:73] No function to get number of cores
+[606238:20:0711/055833.133546:ERROR:base/files/file_path_watcher_inotify.cc:929] Failed to read /proc/sys/fs/inotify/max_user_watches
+[606238:1:0711/055836.833572:ERROR:content/browser/gpu/gpu_process_host.cc:1006] GPU process exited unexpectedly: exit_code=134
+[606238:1:0711/055836.834177:WARNING:content/browser/gpu/gpu_process_host.cc:1448] The GPU process has crashed 1 time(s)
+[606238:1:0711/055836.846477:INFO:ui/ozone/platform/qnx/qnx_gpu_platform_support_host.cc:46] [QNX-TRACE] OnGpuServiceLaunched: host_id=2 starting (gpu_control_remote_.is_bound=false)
+[QNX-ANGLE-TRACE] terminate handler installed (pid=708639)
+[MAP] snap=1 pid=708639 tid=0x0000000000000001  BEGIN reason=constructor
+[MAP] snap=1 pid=708639 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/cefsimple  base=0x0000000000000000
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x0000000000400000 end=0x0000000000474830 filesz=0x0000000000074830
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x0000000000475fe0 end=0x000000000047c258 filesz=0x0000000000006250
+[MAP] snap=1 pid=708639 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libangle_throw_tracer.so  base=0x000000220d3be000
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000220d3be000 end=0x000000220d3c69bc filesz=0x00000000000089bc
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000220d3c7c80 end=0x000000220d3c8100 filesz=0x000000000000042c
+[MAP] snap=1 pid=708639 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libcef.so  base=0x000000220d3c9000
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000220d3c9000 end=0x000000221c407980 filesz=0x000000000f03e980
+[606238:1:0711/055836.924186:INFO:ui/ozone/platform/qnx/qnx_gpu_platform_support_host.cc:188] [QNX-TRACE] OnChannelDestroyed: host_id=1 (GPU process exited or channel broken; will reset and let Chromium respawn a fresh GPU)
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221c4089b8 end=0x000000221d1058a4 filesz=0x0000000000b22818
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d1068a8 end=0x000000221d2fefb7 filesz=0x00000000001f870f
+[MAP] snap=1 pid=708639 tid=0x0000000000000001  name=/usr/lib/libc++.so.2  base=0x000000221d2ff000
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d2ff000 end=0x000000221d42f4d0 filesz=0x00000000001304d0
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d4305e8 end=0x000000221d43f470 filesz=0x0000000000008cf0
+[MAP] snap=1 pid=708639 tid=0x0000000000000001  name=/proc/boot/libm.so.3  base=0x000000221d440000
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d440000 end=0x000000221d476308 filesz=0x0000000000036308
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d477930 end=0x000000221d478500 filesz=0x0000000000000b30
+[MAP] snap=1 pid=708639 tid=0x0000000000000001  name=/proc/boot/libregex.so.1  base=0x000000221d479000
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d479000 end=0x000000221d48956c filesz=0x000000000001056c
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d48aad8 end=0x000000221d48b160 filesz=0x0000000000000530
+[MAP] snap=1 pid=708639 tid=0x0000000000000001  name=/proc/boot/libsocket.so.4  base=0x000000221d48c000
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d48c000 end=0x000000221d4d1430 filesz=0x0000000000045430
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d4d2068 end=0x000000221d4dad10 filesz=0x000000000000227c
+[MAP] snap=1 pid=708639 tid=0x0000000000000001  name=/proc/boot/libfsnotify.so.1  base=0x000000221d4db000
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d4db000 end=0x000000221d4e44c0 filesz=0x00000000000094c0
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d4e5c18 end=0x000000221d4e8500 filesz=0x00000000000028c8
+[MAP] snap=1 pid=708639 tid=0x0000000000000001  name=/usr/lib/libeventfd.so.1  base=0x000000221d4e9000
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d4e9000 end=0x000000221d4eca20 filesz=0x0000000000003a20
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d4edbd8 end=0x000000221d4ee020 filesz=0x0000000000000438
+[MAP] snap=1 pid=708639 tid=0x0000000000000001  name=/usr/lib/ldqnx-64.so.2  base=0x0000004b8e2d1000
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x0000004b8e2d1000 end=0x0000004b8e307498 filesz=0x0000000000036498
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x0000004b8e3085d8 end=0x0000004b8e30bcf8 filesz=0x0000000000002878
+[MAP] snap=1 pid=708639 tid=0x0000000000000001  name=/proc/boot/libc.so.6  base=0x000000221d4ef000
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d4ef000 end=0x000000221d5959d0 filesz=0x00000000000a69d0
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5963b0 end=0x000000221d5a1a40 filesz=0x00000000000053d2
+[MAP] snap=1 pid=708639 tid=0x0000000000000001  name=/proc/boot/libgcc_s.so.1  base=0x000000221d5a2000
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5a2000 end=0x000000221d5bdcd0 filesz=0x000000000001bcd0
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5bec70 end=0x000000221d5bf288 filesz=0x00000000000003d0
+[MAP] snap=1 pid=708639 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libEGL.so  base=0x000000221d5c0000
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5c0000 end=0x000000221d5cc9b4 filesz=0x000000000000c9b4
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5cdb60 end=0x000000221d5ce3e0 filesz=0x00000000000004bc
+[MAP] snap=1 pid=708639 tid=0x0000000000000001  name=/usr/lib/libbacktrace.so.1  base=0x000000221d5cf000
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5cf000 end=0x000000221d5d0d40 filesz=0x0000000000001d40
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5d1d48 end=0x000000221d5d2010 filesz=0x00000000000002c0
+[MAP] snap=1 pid=708639 tid=0x0000000000000001  name=/usr/lib/libscreen.so.1  base=0x000000221d5d3000
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5d3000 end=0x000000221d5e7a44 filesz=0x0000000000014a44
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5e8c78 end=0x000000221d5e9010 filesz=0x0000000000000390
+[MAP] snap=1 pid=708639 tid=0x0000000000000001  name=/usr/lib/libEGL.so.1  base=0x000000221d5ea000
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5ea000 end=0x000000221d60dac0 filesz=0x0000000000023ac0
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d60eb38 end=0x000000221d615730 filesz=0x0000000000006a20
+[MAP] snap=1 pid=708639 tid=0x0000000000000001  name=/usr/lib/libGLESv2.so.1  base=0x000000221d616000
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d616000 end=0x000000221d66d008 filesz=0x0000000000057008
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d66efb0 end=0x000000221d686010 filesz=0x0000000000017058
+[MAP] snap=1 pid=708639 tid=0x0000000000000001  name=/proc/boot/libz.so.2  base=0x000000221d687000
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d687000 end=0x000000221d6a0280 filesz=0x0000000000019280
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6a1b38 end=0x000000221d6a2010 filesz=0x00000000000004d0
+[MAP] snap=1 pid=708639 tid=0x0000000000000001  name=/usr/lib/libunwind-nto.so.0  base=0x000000221d6a3000
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6a3000 end=0x000000221d6a6a30 filesz=0x0000000000003a30
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6a7cf0 end=0x000000221d6a8090 filesz=0x0000000000000388
+[MAP] snap=1 pid=708639 tid=0x0000000000000001  name=/usr/lib/libunwind-x86_64.so.8  base=0x000000221d6a9000
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6a9000 end=0x000000221d6bac40 filesz=0x0000000000011c40
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6bbbc0 end=0x000000221d6c6850 filesz=0x0000000000000470
+[MAP] snap=1 pid=708639 tid=0x0000000000000001  name=/usr/lib/libunwind.so.8  base=0x000000221d6c7000
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6c7000 end=0x000000221d6d53d0 filesz=0x000000000000e3d0
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6d6ba0 end=0x000000221d6e1870 filesz=0x0000000000000498
+[MAP] snap=1 pid=708639 tid=0x0000000000000001  name=/usr/lib/liblzma.so.5  base=0x000000221d6e2000
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6e2000 end=0x000000221d713b68 filesz=0x0000000000031b68
+[MAP] snap=1 pid=708639 tid=0x0000000000000001    seg base=0x000000221d714408 end=0x000000221d7150d8 filesz=0x0000000000000cb8
+[MAP] snap=1 pid=708639 tid=0x0000000000000001  END
+[TRACER] snap=0 pid=708639 tid=0x0000000000000001 libangle_throw_tracer.so LOADED
+[QNX-ANGLE-TRACE] terminate handler installed (pid=708639)
+[MAP] snap=2 pid=708639 tid=0x0000000000000001  BEGIN reason=dlopen-returned-non-null
+[MAP] snap=2 pid=708639 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/cefsimple  base=0x0000000000000000
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x0000000000400000 end=0x0000000000474830 filesz=0x0000000000074830
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x0000000000475fe0 end=0x000000000047c258 filesz=0x0000000000006250
+[MAP] snap=2 pid=708639 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libangle_throw_tracer.so  base=0x000000220d3be000
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000220d3be000 end=0x000000220d3c69bc filesz=0x00000000000089bc
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000220d3c7c80 end=0x000000220d3c8100 filesz=0x000000000000042c
+[MAP] snap=2 pid=708639 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libcef.so  base=0x000000220d3c9000
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000220d3c9000 end=0x000000221c407980 filesz=0x000000000f03e980
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221c4089b8 end=0x000000221d1058a4 filesz=0x0000000000b22818
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d1068a8 end=0x000000221d2fefb7 filesz=0x00000000001f870f
+[MAP] snap=2 pid=708639 tid=0x0000000000000001  name=/usr/lib/libc++.so.2  base=0x000000221d2ff000
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d2ff000 end=0x000000221d42f4d0 filesz=0x00000000001304d0
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d4305e8 end=0x000000221d43f470 filesz=0x0000000000008cf0
+[MAP] snap=2 pid=708639 tid=0x0000000000000001  name=/proc/boot/libm.so.3  base=0x000000221d440000
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d440000 end=0x000000221d476308 filesz=0x0000000000036308
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d477930 end=0x000000221d478500 filesz=0x0000000000000b30
+[MAP] snap=2 pid=708639 tid=0x0000000000000001  name=/proc/boot/libregex.so.1  base=0x000000221d479000
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d479000 end=0x000000221d48956c filesz=0x000000000001056c
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d48aad8 end=0x000000221d48b160 filesz=0x0000000000000530
+[MAP] snap=2 pid=708639 tid=0x0000000000000001  name=/proc/boot/libsocket.so.4  base=0x000000221d48c000
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d48c000 end=0x000000221d4d1430 filesz=0x0000000000045430
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d4d2068 end=0x000000221d4dad10 filesz=0x000000000000227c
+[MAP] snap=2 pid=708639 tid=0x0000000000000001  name=/proc/boot/libfsnotify.so.1  base=0x000000221d4db000
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d4db000 end=0x000000221d4e44c0 filesz=0x00000000000094c0
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d4e5c18 end=0x000000221d4e8500 filesz=0x00000000000028c8
+[MAP] snap=2 pid=708639 tid=0x0000000000000001  name=/usr/lib/libeventfd.so.1  base=0x000000221d4e9000
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d4e9000 end=0x000000221d4eca20 filesz=0x0000000000003a20
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d4edbd8 end=0x000000221d4ee020 filesz=0x0000000000000438
+[MAP] snap=2 pid=708639 tid=0x0000000000000001  name=/usr/lib/ldqnx-64.so.2  base=0x0000004b8e2d1000
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x0000004b8e2d1000 end=0x0000004b8e307498 filesz=0x0000000000036498
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x0000004b8e3085d8 end=0x0000004b8e30bcf8 filesz=0x0000000000002878
+[MAP] snap=2 pid=708639 tid=0x0000000000000001  name=/proc/boot/libc.so.6  base=0x000000221d4ef000
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d4ef000 end=0x000000221d5959d0 filesz=0x00000000000a69d0
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5963b0 end=0x000000221d5a1a40 filesz=0x00000000000053d2
+[MAP] snap=2 pid=708639 tid=0x0000000000000001  name=/proc/boot/libgcc_s.so.1  base=0x000000221d5a2000
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5a2000 end=0x000000221d5bdcd0 filesz=0x000000000001bcd0
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5bec70 end=0x000000221d5bf288 filesz=0x00000000000003d0
+[MAP] snap=2 pid=708639 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libEGL.so  base=0x000000221d5c0000
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5c0000 end=0x000000221d5cc9b4 filesz=0x000000000000c9b4
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5cdb60 end=0x000000221d5ce3e0 filesz=0x00000000000004bc
+[MAP] snap=2 pid=708639 tid=0x0000000000000001  name=/usr/lib/libbacktrace.so.1  base=0x000000221d5cf000
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5cf000 end=0x000000221d5d0d40 filesz=0x0000000000001d40
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5d1d48 end=0x000000221d5d2010 filesz=0x00000000000002c0
+[MAP] snap=2 pid=708639 tid=0x0000000000000001  name=/usr/lib/libscreen.so.1  base=0x000000221d5d3000
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5d3000 end=0x000000221d5e7a44 filesz=0x0000000000014a44
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5e8c78 end=0x000000221d5e9010 filesz=0x0000000000000390
+[MAP] snap=2 pid=708639 tid=0x0000000000000001  name=/usr/lib/libEGL.so.1  base=0x000000221d5ea000
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5ea000 end=0x000000221d60dac0 filesz=0x0000000000023ac0
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d60eb38 end=0x000000221d615730 filesz=0x0000000000006a20
+[MAP] snap=2 pid=708639 tid=0x0000000000000001  name=/usr/lib/libGLESv2.so.1  base=0x000000221d616000
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d616000 end=0x000000221d66d008 filesz=0x0000000000057008
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d66efb0 end=0x000000221d686010 filesz=0x0000000000017058
+[MAP] snap=2 pid=708639 tid=0x0000000000000001  name=/proc/boot/libz.so.2  base=0x000000221d687000
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d687000 end=0x000000221d6a0280 filesz=0x0000000000019280
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6a1b38 end=0x000000221d6a2010 filesz=0x00000000000004d0
+[MAP] snap=2 pid=708639 tid=0x0000000000000001  name=/usr/lib/libunwind-nto.so.0  base=0x000000221d6a3000
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6a3000 end=0x000000221d6a6a30 filesz=0x0000000000003a30
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6a7cf0 end=0x000000221d6a8090 filesz=0x0000000000000388
+[MAP] snap=2 pid=708639 tid=0x0000000000000001  name=/usr/lib/libunwind-x86_64.so.8  base=0x000000221d6a9000
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6a9000 end=0x000000221d6bac40 filesz=0x0000000000011c40
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6bbbc0 end=0x000000221d6c6850 filesz=0x0000000000000470
+[MAP] snap=2 pid=708639 tid=0x0000000000000001  name=/usr/lib/libunwind.so.8  base=0x000000221d6c7000
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6c7000 end=0x000000221d6d53d0 filesz=0x000000000000e3d0
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6d6ba0 end=0x000000221d6e1870 filesz=0x0000000000000498
+[MAP] snap=2 pid=708639 tid=0x0000000000000001  name=/usr/lib/liblzma.so.5  base=0x000000221d6e2000
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6e2000 end=0x000000221d713b68 filesz=0x0000000000031b68
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000221d714408 end=0x000000221d7150d8 filesz=0x0000000000000cb8
+[MAP] snap=2 pid=708639 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libGLESv2.so  base=0x000000261d716000
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000261d716000 end=0x000000261db0cdfc filesz=0x00000000003f6dfc
+[MAP] snap=2 pid=708639 tid=0x0000000000000001    seg base=0x000000261db0d070 end=0x000000261db5f068 filesz=0x0000000000051430
+[MAP] snap=2 pid=708639 tid=0x0000000000000001  END
+[MAP] snap=3 pid=708639 tid=0x0000000000000001  BEGIN reason=dlopen-returned-non-null
+[MAP] snap=3 pid=708639 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/cefsimple  base=0x0000000000000000
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x0000000000400000 end=0x0000000000474830 filesz=0x0000000000074830
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x0000000000475fe0 end=0x000000000047c258 filesz=0x0000000000006250
+[MAP] snap=3 pid=708639 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libangle_throw_tracer.so  base=0x000000220d3be000
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000220d3be000 end=0x000000220d3c69bc filesz=0x00000000000089bc
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000220d3c7c80 end=0x000000220d3c8100 filesz=0x000000000000042c
+[MAP] snap=3 pid=708639 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libcef.so  base=0x000000220d3c9000
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000220d3c9000 end=0x000000221c407980 filesz=0x000000000f03e980
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221c4089b8 end=0x000000221d1058a4 filesz=0x0000000000b22818
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d1068a8 end=0x000000221d2fefb7 filesz=0x00000000001f870f
+[MAP] snap=3 pid=708639 tid=0x0000000000000001  name=/usr/lib/libc++.so.2  base=0x000000221d2ff000
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d2ff000 end=0x000000221d42f4d0 filesz=0x00000000001304d0
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d4305e8 end=0x000000221d43f470 filesz=0x0000000000008cf0
+[MAP] snap=3 pid=708639 tid=0x0000000000000001  name=/proc/boot/libm.so.3  base=0x000000221d440000
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d440000 end=0x000000221d476308 filesz=0x0000000000036308
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d477930 end=0x000000221d478500 filesz=0x0000000000000b30
+[MAP] snap=3 pid=708639 tid=0x0000000000000001  name=/proc/boot/libregex.so.1  base=0x000000221d479000
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d479000 end=0x000000221d48956c filesz=0x000000000001056c
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d48aad8 end=0x000000221d48b160 filesz=0x0000000000000530
+[MAP] snap=3 pid=708639 tid=0x0000000000000001  name=/proc/boot/libsocket.so.4  base=0x000000221d48c000
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d48c000 end=0x000000221d4d1430 filesz=0x0000000000045430
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d4d2068 end=0x000000221d4dad10 filesz=0x000000000000227c
+[MAP] snap=3 pid=708639 tid=0x0000000000000001  name=/proc/boot/libfsnotify.so.1  base=0x000000221d4db000
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d4db000 end=0x000000221d4e44c0 filesz=0x00000000000094c0
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d4e5c18 end=0x000000221d4e8500 filesz=0x00000000000028c8
+[MAP] snap=3 pid=708639 tid=0x0000000000000001  name=/usr/lib/libeventfd.so.1  base=0x000000221d4e9000
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d4e9000 end=0x000000221d4eca20 filesz=0x0000000000003a20
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d4edbd8 end=0x000000221d4ee020 filesz=0x0000000000000438
+[MAP] snap=3 pid=708639 tid=0x0000000000000001  name=/usr/lib/ldqnx-64.so.2  base=0x0000004b8e2d1000
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x0000004b8e2d1000 end=0x0000004b8e307498 filesz=0x0000000000036498
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x0000004b8e3085d8 end=0x0000004b8e30bcf8 filesz=0x0000000000002878
+[MAP] snap=3 pid=708639 tid=0x0000000000000001  name=/proc/boot/libc.so.6  base=0x000000221d4ef000
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d4ef000 end=0x000000221d5959d0 filesz=0x00000000000a69d0
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5963b0 end=0x000000221d5a1a40 filesz=0x00000000000053d2
+[MAP] snap=3 pid=708639 tid=0x0000000000000001  name=/proc/boot/libgcc_s.so.1  base=0x000000221d5a2000
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5a2000 end=0x000000221d5bdcd0 filesz=0x000000000001bcd0
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5bec70 end=0x000000221d5bf288 filesz=0x00000000000003d0
+[MAP] snap=3 pid=708639 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libEGL.so  base=0x000000221d5c0000
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5c0000 end=0x000000221d5cc9b4 filesz=0x000000000000c9b4
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5cdb60 end=0x000000221d5ce3e0 filesz=0x00000000000004bc
+[MAP] snap=3 pid=708639 tid=0x0000000000000001  name=/usr/lib/libbacktrace.so.1  base=0x000000221d5cf000
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5cf000 end=0x000000221d5d0d40 filesz=0x0000000000001d40
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5d1d48 end=0x000000221d5d2010 filesz=0x00000000000002c0
+[MAP] snap=3 pid=708639 tid=0x0000000000000001  name=/usr/lib/libscreen.so.1  base=0x000000221d5d3000
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5d3000 end=0x000000221d5e7a44 filesz=0x0000000000014a44
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5e8c78 end=0x000000221d5e9010 filesz=0x0000000000000390
+[MAP] snap=3 pid=708639 tid=0x0000000000000001  name=/usr/lib/libEGL.so.1  base=0x000000221d5ea000
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5ea000 end=0x000000221d60dac0 filesz=0x0000000000023ac0
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d60eb38 end=0x000000221d615730 filesz=0x0000000000006a20
+[MAP] snap=3 pid=708639 tid=0x0000000000000001  name=/usr/lib/libGLESv2.so.1  base=0x000000221d616000
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d616000 end=0x000000221d66d008 filesz=0x0000000000057008
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d66efb0 end=0x000000221d686010 filesz=0x0000000000017058
+[MAP] snap=3 pid=708639 tid=0x0000000000000001  name=/proc/boot/libz.so.2  base=0x000000221d687000
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d687000 end=0x000000221d6a0280 filesz=0x0000000000019280
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6a1b38 end=0x000000221d6a2010 filesz=0x00000000000004d0
+[MAP] snap=3 pid=708639 tid=0x0000000000000001  name=/usr/lib/libunwind-nto.so.0  base=0x000000221d6a3000
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6a3000 end=0x000000221d6a6a30 filesz=0x0000000000003a30
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6a7cf0 end=0x000000221d6a8090 filesz=0x0000000000000388
+[MAP] snap=3 pid=708639 tid=0x0000000000000001  name=/usr/lib/libunwind-x86_64.so.8  base=0x000000221d6a9000
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6a9000 end=0x000000221d6bac40 filesz=0x0000000000011c40
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6bbbc0 end=0x000000221d6c6850 filesz=0x0000000000000470
+[MAP] snap=3 pid=708639 tid=0x0000000000000001  name=/usr/lib/libunwind.so.8  base=0x000000221d6c7000
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6c7000 end=0x000000221d6d53d0 filesz=0x000000000000e3d0
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6d6ba0 end=0x000000221d6e1870 filesz=0x0000000000000498
+[MAP] snap=3 pid=708639 tid=0x0000000000000001  name=/usr/lib/liblzma.so.5  base=0x000000221d6e2000
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6e2000 end=0x000000221d713b68 filesz=0x0000000000031b68
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000221d714408 end=0x000000221d7150d8 filesz=0x0000000000000cb8
+[MAP] snap=3 pid=708639 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libGLESv2.so  base=0x000000261d716000
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000261d716000 end=0x000000261db0cdfc filesz=0x00000000003f6dfc
+[MAP] snap=3 pid=708639 tid=0x0000000000000001    seg base=0x000000261db0d070 end=0x000000261db5f068 filesz=0x0000000000051430
+[MAP] snap=3 pid=708639 tid=0x0000000000000001  END
+[MAP] snap=4 pid=708639 tid=0x0000000000000001  BEGIN reason=dlopen-returned-non-null
+[MAP] snap=4 pid=708639 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/cefsimple  base=0x0000000000000000
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x0000000000400000 end=0x0000000000474830 filesz=0x0000000000074830
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x0000000000475fe0 end=0x000000000047c258 filesz=0x0000000000006250
+[MAP] snap=4 pid=708639 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libangle_throw_tracer.so  base=0x000000220d3be000
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000220d3be000 end=0x000000220d3c69bc filesz=0x00000000000089bc
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000220d3c7c80 end=0x000000220d3c8100 filesz=0x000000000000042c
+[MAP] snap=4 pid=708639 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libcef.so  base=0x000000220d3c9000
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000220d3c9000 end=0x000000221c407980 filesz=0x000000000f03e980
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221c4089b8 end=0x000000221d1058a4 filesz=0x0000000000b22818
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d1068a8 end=0x000000221d2fefb7 filesz=0x00000000001f870f
+[MAP] snap=4 pid=708639 tid=0x0000000000000001  name=/usr/lib/libc++.so.2  base=0x000000221d2ff000
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d2ff000 end=0x000000221d42f4d0 filesz=0x00000000001304d0
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d4305e8 end=0x000000221d43f470 filesz=0x0000000000008cf0
+[MAP] snap=4 pid=708639 tid=0x0000000000000001  name=/proc/boot/libm.so.3  base=0x000000221d440000
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d440000 end=0x000000221d476308 filesz=0x0000000000036308
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d477930 end=0x000000221d478500 filesz=0x0000000000000b30
+[MAP] snap=4 pid=708639 tid=0x0000000000000001  name=/proc/boot/libregex.so.1  base=0x000000221d479000
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d479000 end=0x000000221d48956c filesz=0x000000000001056c
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d48aad8 end=0x000000221d48b160 filesz=0x0000000000000530
+[MAP] snap=4 pid=708639 tid=0x0000000000000001  name=/proc/boot/libsocket.so.4  base=0x000000221d48c000
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d48c000 end=0x000000221d4d1430 filesz=0x0000000000045430
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d4d2068 end=0x000000221d4dad10 filesz=0x000000000000227c
+[MAP] snap=4 pid=708639 tid=0x0000000000000001  name=/proc/boot/libfsnotify.so.1  base=0x000000221d4db000
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d4db000 end=0x000000221d4e44c0 filesz=0x00000000000094c0
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d4e5c18 end=0x000000221d4e8500 filesz=0x00000000000028c8
+[MAP] snap=4 pid=708639 tid=0x0000000000000001  name=/usr/lib/libeventfd.so.1  base=0x000000221d4e9000
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d4e9000 end=0x000000221d4eca20 filesz=0x0000000000003a20
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d4edbd8 end=0x000000221d4ee020 filesz=0x0000000000000438
+[MAP] snap=4 pid=708639 tid=0x0000000000000001  name=/usr/lib/ldqnx-64.so.2  base=0x0000004b8e2d1000
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x0000004b8e2d1000 end=0x0000004b8e307498 filesz=0x0000000000036498
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x0000004b8e3085d8 end=0x0000004b8e30bcf8 filesz=0x0000000000002878
+[MAP] snap=4 pid=708639 tid=0x0000000000000001  name=/proc/boot/libc.so.6  base=0x000000221d4ef000
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d4ef000 end=0x000000221d5959d0 filesz=0x00000000000a69d0
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5963b0 end=0x000000221d5a1a40 filesz=0x00000000000053d2
+[MAP] snap=4 pid=708639 tid=0x0000000000000001  name=/proc/boot/libgcc_s.so.1  base=0x000000221d5a2000
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5a2000 end=0x000000221d5bdcd0 filesz=0x000000000001bcd0
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5bec70 end=0x000000221d5bf288 filesz=0x00000000000003d0
+[MAP] snap=4 pid=708639 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libEGL.so  base=0x000000221d5c0000
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5c0000 end=0x000000221d5cc9b4 filesz=0x000000000000c9b4
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5cdb60 end=0x000000221d5ce3e0 filesz=0x00000000000004bc
+[MAP] snap=4 pid=708639 tid=0x0000000000000001  name=/usr/lib/libbacktrace.so.1  base=0x000000221d5cf000
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5cf000 end=0x000000221d5d0d40 filesz=0x0000000000001d40
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5d1d48 end=0x000000221d5d2010 filesz=0x00000000000002c0
+[MAP] snap=4 pid=708639 tid=0x0000000000000001  name=/usr/lib/libscreen.so.1  base=0x000000221d5d3000
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5d3000 end=0x000000221d5e7a44 filesz=0x0000000000014a44
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5e8c78 end=0x000000221d5e9010 filesz=0x0000000000000390
+[MAP] snap=4 pid=708639 tid=0x0000000000000001  name=/usr/lib/libEGL.so.1  base=0x000000221d5ea000
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5ea000 end=0x000000221d60dac0 filesz=0x0000000000023ac0
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d60eb38 end=0x000000221d615730 filesz=0x0000000000006a20
+[MAP] snap=4 pid=708639 tid=0x0000000000000001  name=/usr/lib/libGLESv2.so.1  base=0x000000221d616000
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d616000 end=0x000000221d66d008 filesz=0x0000000000057008
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d66efb0 end=0x000000221d686010 filesz=0x0000000000017058
+[MAP] snap=4 pid=708639 tid=0x0000000000000001  name=/proc/boot/libz.so.2  base=0x000000221d687000
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d687000 end=0x000000221d6a0280 filesz=0x0000000000019280
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6a1b38 end=0x000000221d6a2010 filesz=0x00000000000004d0
+[MAP] snap=4 pid=708639 tid=0x0000000000000001  name=/usr/lib/libunwind-nto.so.0  base=0x000000221d6a3000
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6a3000 end=0x000000221d6a6a30 filesz=0x0000000000003a30
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6a7cf0 end=0x000000221d6a8090 filesz=0x0000000000000388
+[MAP] snap=4 pid=708639 tid=0x0000000000000001  name=/usr/lib/libunwind-x86_64.so.8  base=0x000000221d6a9000
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6a9000 end=0x000000221d6bac40 filesz=0x0000000000011c40
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6bbbc0 end=0x000000221d6c6850 filesz=0x0000000000000470
+[MAP] snap=4 pid=708639 tid=0x0000000000000001  name=/usr/lib/libunwind.so.8  base=0x000000221d6c7000
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6c7000 end=0x000000221d6d53d0 filesz=0x000000000000e3d0
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6d6ba0 end=0x000000221d6e1870 filesz=0x0000000000000498
+[MAP] snap=4 pid=708639 tid=0x0000000000000001  name=/usr/lib/liblzma.so.5  base=0x000000221d6e2000
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6e2000 end=0x000000221d713b68 filesz=0x0000000000031b68
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000221d714408 end=0x000000221d7150d8 filesz=0x0000000000000cb8
+[MAP] snap=4 pid=708639 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libGLESv2.so  base=0x000000261d716000
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000261d716000 end=0x000000261db0cdfc filesz=0x00000000003f6dfc
+[MAP] snap=4 pid=708639 tid=0x0000000000000001    seg base=0x000000261db0d070 end=0x000000261db5f068 filesz=0x0000000000051430
+[MAP] snap=4 pid=708639 tid=0x0000000000000001  END
+[MAP] snap=5 pid=708639 tid=0x0000000000000001  BEGIN reason=dlopen-returned-non-null
+[MAP] snap=5 pid=708639 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/cefsimple  base=0x0000000000000000
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x0000000000400000 end=0x0000000000474830 filesz=0x0000000000074830
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x0000000000475fe0 end=0x000000000047c258 filesz=0x0000000000006250
+[MAP] snap=5 pid=708639 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libangle_throw_tracer.so  base=0x000000220d3be000
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000220d3be000 end=0x000000220d3c69bc filesz=0x00000000000089bc
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000220d3c7c80 end=0x000000220d3c8100 filesz=0x000000000000042c
+[MAP] snap=5 pid=708639 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libcef.so  base=0x000000220d3c9000
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000220d3c9000 end=0x000000221c407980 filesz=0x000000000f03e980
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221c4089b8 end=0x000000221d1058a4 filesz=0x0000000000b22818
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d1068a8 end=0x000000221d2fefb7 filesz=0x00000000001f870f
+[MAP] snap=5 pid=708639 tid=0x0000000000000001  name=/usr/lib/libc++.so.2  base=0x000000221d2ff000
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d2ff000 end=0x000000221d42f4d0 filesz=0x00000000001304d0
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d4305e8 end=0x000000221d43f470 filesz=0x0000000000008cf0
+[MAP] snap=5 pid=708639 tid=0x0000000000000001  name=/proc/boot/libm.so.3  base=0x000000221d440000
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d440000 end=0x000000221d476308 filesz=0x0000000000036308
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d477930 end=0x000000221d478500 filesz=0x0000000000000b30
+[MAP] snap=5 pid=708639 tid=0x0000000000000001  name=/proc/boot/libregex.so.1  base=0x000000221d479000
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d479000 end=0x000000221d48956c filesz=0x000000000001056c
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d48aad8 end=0x000000221d48b160 filesz=0x0000000000000530
+[MAP] snap=5 pid=708639 tid=0x0000000000000001  name=/proc/boot/libsocket.so.4  base=0x000000221d48c000
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d48c000 end=0x000000221d4d1430 filesz=0x0000000000045430
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d4d2068 end=0x000000221d4dad10 filesz=0x000000000000227c
+[MAP] snap=5 pid=708639 tid=0x0000000000000001  name=/proc/boot/libfsnotify.so.1  base=0x000000221d4db000
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d4db000 end=0x000000221d4e44c0 filesz=0x00000000000094c0
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d4e5c18 end=0x000000221d4e8500 filesz=0x00000000000028c8
+[MAP] snap=5 pid=708639 tid=0x0000000000000001  name=/usr/lib/libeventfd.so.1  base=0x000000221d4e9000
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d4e9000 end=0x000000221d4eca20 filesz=0x0000000000003a20
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d4edbd8 end=0x000000221d4ee020 filesz=0x0000000000000438
+[MAP] snap=5 pid=708639 tid=0x0000000000000001  name=/usr/lib/ldqnx-64.so.2  base=0x0000004b8e2d1000
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x0000004b8e2d1000 end=0x0000004b8e307498 filesz=0x0000000000036498
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x0000004b8e3085d8 end=0x0000004b8e30bcf8 filesz=0x0000000000002878
+[MAP] snap=5 pid=708639 tid=0x0000000000000001  name=/proc/boot/libc.so.6  base=0x000000221d4ef000
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d4ef000 end=0x000000221d5959d0 filesz=0x00000000000a69d0
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5963b0 end=0x000000221d5a1a40 filesz=0x00000000000053d2
+[MAP] snap=5 pid=708639 tid=0x0000000000000001  name=/proc/boot/libgcc_s.so.1  base=0x000000221d5a2000
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5a2000 end=0x000000221d5bdcd0 filesz=0x000000000001bcd0
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5bec70 end=0x000000221d5bf288 filesz=0x00000000000003d0
+[MAP] snap=5 pid=708639 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libEGL.so  base=0x000000221d5c0000
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5c0000 end=0x000000221d5cc9b4 filesz=0x000000000000c9b4
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5cdb60 end=0x000000221d5ce3e0 filesz=0x00000000000004bc
+[MAP] snap=5 pid=708639 tid=0x0000000000000001  name=/usr/lib/libbacktrace.so.1  base=0x000000221d5cf000
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5cf000 end=0x000000221d5d0d40 filesz=0x0000000000001d40
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5d1d48 end=0x000000221d5d2010 filesz=0x00000000000002c0
+[MAP] snap=5 pid=708639 tid=0x0000000000000001  name=/usr/lib/libscreen.so.1  base=0x000000221d5d3000
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5d3000 end=0x000000221d5e7a44 filesz=0x0000000000014a44
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5e8c78 end=0x000000221d5e9010 filesz=0x0000000000000390
+[MAP] snap=5 pid=708639 tid=0x0000000000000001  name=/usr/lib/libEGL.so.1  base=0x000000221d5ea000
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d5ea000 end=0x000000221d60dac0 filesz=0x0000000000023ac0
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d60eb38 end=0x000000221d615730 filesz=0x0000000000006a20
+[MAP] snap=5 pid=708639 tid=0x0000000000000001  name=/usr/lib/libGLESv2.so.1  base=0x000000221d616000
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d616000 end=0x000000221d66d008 filesz=0x0000000000057008
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d66efb0 end=0x000000221d686010 filesz=0x0000000000017058
+[MAP] snap=5 pid=708639 tid=0x0000000000000001  name=/proc/boot/libz.so.2  base=0x000000221d687000
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d687000 end=0x000000221d6a0280 filesz=0x0000000000019280
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6a1b38 end=0x000000221d6a2010 filesz=0x00000000000004d0
+[MAP] snap=5 pid=708639 tid=0x0000000000000001  name=/usr/lib/libunwind-nto.so.0  base=0x000000221d6a3000
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6a3000 end=0x000000221d6a6a30 filesz=0x0000000000003a30
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6a7cf0 end=0x000000221d6a8090 filesz=0x0000000000000388
+[MAP] snap=5 pid=708639 tid=0x0000000000000001  name=/usr/lib/libunwind-x86_64.so.8  base=0x000000221d6a9000
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6a9000 end=0x000000221d6bac40 filesz=0x0000000000011c40
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6bbbc0 end=0x000000221d6c6850 filesz=0x0000000000000470
+[MAP] snap=5 pid=708639 tid=0x0000000000000001  name=/usr/lib/libunwind.so.8  base=0x000000221d6c7000
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6c7000 end=0x000000221d6d53d0 filesz=0x000000000000e3d0
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6d6ba0 end=0x000000221d6e1870 filesz=0x0000000000000498
+[MAP] snap=5 pid=708639 tid=0x0000000000000001  name=/usr/lib/liblzma.so.5  base=0x000000221d6e2000
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d6e2000 end=0x000000221d713b68 filesz=0x0000000000031b68
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000221d714408 end=0x000000221d7150d8 filesz=0x0000000000000cb8
+[MAP] snap=5 pid=708639 tid=0x0000000000000001  name=/mnt/nfs/out/qnx_release/libGLESv2.so  base=0x000000261d716000
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000261d716000 end=0x000000261db0cdfc filesz=0x00000000003f6dfc
+[MAP] snap=5 pid=708639 tid=0x0000000000000001    seg base=0x000000261db0d070 end=0x000000261db5f068 filesz=0x0000000000051430
+[MAP] snap=5 pid=708639 tid=0x0000000000000001  END
+[TRACER] snap=0 pid=708639 tid=0x0000000000000001 __cxa_throw depth=0 call=(none)
+[TRACER] snap=0 pid=708639 tid=0x0000000000000001 ra[0]=0x000000220d3c070d
+[TRACER] snap=0 pid=708639 tid=0x0000000000000001 ra[1]=0x000000221d357691
+[TRACER] snap=0 pid=708639 tid=0x0000000000000001 ra[2]=0x000000221d38046d
+[TRACER] snap=0 pid=708639 tid=0x0000000000000001 ra[3]=0x000000261d7b4b85
+[QNX-ANGLE-TRACE] std::terminate invoked (pid=708639 tid=1)
+[QNX-ANGLE-TRACE] terminate backtrace (1 frames):
+  #00 0x261d9e5f7f /mnt/nfs/out/qnx_release/libGLESv2.so :: _ZNSt3__26__treeINS_12basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEEENS_4lessIS6_EENS4_IS6_EEE4findIS6_EENS_15__tree_iteratorIS6_PNS_11__tree_nodeIS6_PvEElEERKT_+0x4d9f
+[QNX-ANGLE-TRACE] exception: in-flight (rethrow/catch disabled; inspect backtrace above for throw site)
+__PI_QNX_EXIT__:0
+=== QNX command exit: 0 ===
+Log: /home/yuta/chromium/src/out/qnx_release/qnx_run_20260711_145808_null____true__exit_0.log
+=== Done ===
+Log: /home/yuta/chromium/src/out/qnx_release/qnx_run_20260711_145808_null____true__exit_0.log
+Serial transcript: /home/yuta/chromium/src/out/qnx_release/qnx_run_20260711_145808_null____true__exit_0.log.serial
+Boot log: /home/yuta/chromium/src/out/qnx_release/qnx_run_20260711_145808_null____true__exit_0_boot.log
