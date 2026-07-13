@@ -1,21 +1,23 @@
 diff --git components/viz/service/display_embedder/skia_output_surface_impl.cc components/viz/service/display_embedder/skia_output_surface_impl.cc
+index 6575f947c8630cd55102163acf90978f185f2e55..96e559c37ac6a9a6e017a884c4d2edfcd0fe2fb3 100644
 --- components/viz/service/display_embedder/skia_output_surface_impl.cc
 +++ components/viz/service/display_embedder/skia_output_surface_impl.cc
-@@ -32,6 +32,7 @@
- #include "build/build_config.h"
+@@ -33,6 +33,7 @@
  #include "components/viz/common/frame_sinks/begin_frame_source.h"
  #include "components/viz/common/frame_sinks/blit_request.h"
  #include "components/viz/common/frame_sinks/copy_output_request.h"
 +#include "gpu/command_buffer/common/qnx_post_swap_hook.h"
  #include "components/viz/common/frame_sinks/copy_output_result.h"
  #include "components/viz/common/frame_sinks/copy_output_util.h"
-@@ -1335,5 +1336,13 @@ void SkiaOutputSurfaceImpl::DidSwapBuffersComplete(
+ #include "components/viz/common/resources/release_callback.h"
+@@ -1335,6 +1336,14 @@ void SkiaOutputSurfaceImpl::DidSwapBuffersComplete(
+     client_->DidReceiveReleasedOverlays(params.released_overlays);
    if (needs_swap_size_notifications_)
      client_->DidSwapWithSize(pixel_size);
 +
-+  // QNX post-swap hook (Phase 6). The QNX Ozone platform registers this
-+  // hook in the GPU process so it can export the rendered framebuffer as
-+  // a DMAbuf and submit it to the browser via the QnxGpuHost Mojo bridge.
++  // QNX post-swap completion hook (Phase 6). Frame capture happens at the
++  // pre-swap GPU-thread hook; this callback only records presentation
++  // completion for correlation with the browser-side eglSwapBuffers result.
 +  // The hook is registered through gpu/command_buffer/common so that
 +  // ui/ozone does not need to depend on components/viz/service.
 +  // The call returns immediately if no hook is registered.

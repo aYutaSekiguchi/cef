@@ -78,6 +78,7 @@ rg -n "crtn.o|GNU-stack|no-warn-execstack|fatal-warnings" docs/qnx/history/build
 rg -n "qnx_compiler_builtins|floatundidf.S|unable to make temporary file|expected depfile" docs/qnx/history/build-errors
 rg -n "boringssl_asm|OPENSSL_NO_ASM|aes-gcm-avx512|aes-gcm-avx2" docs/qnx/history/build-errors
 rg -n "corrupt patch at line|hunk body shorter than header|trailing empty line" docs/qnx/history/build-errors/bootstrap
+rg -n "overlapping QNX patches|reverse detection|qnx_mesa_fallback_gate|qnx_compositor_frame_capture" docs/qnx/history/build-errors/bootstrap
 rg -n "mojo_webui_version_ts_qnx|is_qnx.*mojo|version.mojom-webui" docs/qnx/history/build-errors/bootstrap
 rg -n "FontCache::DeviceScaleFactor|font_platform_data.cc" docs/qnx/history/build-errors/compile
 rg -n "kServiceSandbox|ScreenAIServiceFactory|kScreenAI|conditional_features|RemoveDisabledDefinitions" docs/qnx/history/build-errors/compile

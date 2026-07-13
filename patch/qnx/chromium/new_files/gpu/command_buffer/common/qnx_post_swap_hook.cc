@@ -10,15 +10,24 @@ namespace viz {
 
 namespace {
 
-QnxPostSwapHook& GetQnxPostSwapHookStorage() {
-  static base::NoDestructor<QnxPostSwapHook> hook;
+QnxSwapHook& GetQnxPostSwapHookStorage() {
+  static base::NoDestructor<QnxSwapHook> hook;
+  return *hook;
+}
+
+QnxSwapHook& GetQnxPreSwapHookStorage() {
+  static base::NoDestructor<QnxSwapHook> hook;
   return *hook;
 }
 
 }  // namespace
 
-void SetQnxPostSwapHook(QnxPostSwapHook hook) {
+void SetQnxPostSwapHook(QnxSwapHook hook) {
   GetQnxPostSwapHookStorage() = std::move(hook);
+}
+
+void SetQnxPreSwapHook(QnxSwapHook hook) {
+  GetQnxPreSwapHookStorage() = std::move(hook);
 }
 
 namespace internal {
@@ -26,6 +35,14 @@ namespace internal {
 bool RunQnxPostSwapHook(const gfx::Size& pixel_size) {
   if (GetQnxPostSwapHookStorage()) {
     GetQnxPostSwapHookStorage().Run(pixel_size);
+    return true;
+  }
+  return false;
+}
+
+bool RunQnxPreSwapHook(const gfx::Size& pixel_size) {
+  if (GetQnxPreSwapHookStorage()) {
+    GetQnxPreSwapHookStorage().Run(pixel_size);
     return true;
   }
   return false;

@@ -556,3 +556,120 @@ is in
 `SCREEN-PROPERTY-FD-BLOCKER-2026-07-13.md` §7.1.
 - Investigation E coding remains blocked pending explicit supervisor approval.
 
+### 6.3 Option A content-rendering follow-up plan (2026-07-13)
+
+#### Objective
+
+Keep the Option A `SCREEN_PROPERTY_FD == ENOTSUP` handling as a non-fatal
+fallback, while making real GPU compositor content visible in the
+Browser-owned QNX Screen window. The target remains the existing OOP-GPU
+architecture: the Browser owns `screen_window_t`; the GPU process produces a
+shareable frame; the Browser imports and presents it.
+
+#### Decision
+
+Do not make `SCREEN_PROPERTY_NATIVE_IMAGE` or an `EGL_NATIVE_PIXMAP_KHR`
+pointer the primary cross-process transport. Those handles are not a stable
+Mojo payload and would not attach the GPU pixmap to the Browser-owned window.
+Use the already-proven DMABuf/EGLImage path for visible frames:
+
+```text
+GPU compositor render target
+  -> shareable Mesa DMABuf export when Screen FD is unavailable
+  -> Mojo handle<platform>
+  -> Browser EGL_LINUX_DMA_BUF_EXT import
+  -> fullscreen composition into screen_window_t
+  -> eglSwapBuffers
+```
+
+Option A remains the final safety net:
+
+```text
+Screen FD available       -> existing kScreenBridge FD path
+Screen FD ENOTSUP + Mesa  -> visible DMABuf fallback path
+Both unavailable          -> existing render-only success, no crash
+```
+
+#### Phases
+
+1. **Baseline and capability gate**
+   - Confirm the current `kMesaFallback` export/import/display path with a
+     bounded solid-color frame under `--virgl`.
+   - Add an explicit path diagnostic when `kScreenBridge` receives ENOTSUP
+     and Mesa fallback is selected.
+   - Preserve the existing render-only branch when Mesa capability or
+     metadata validation is unavailable.
+   - Acceptance: no `SCREEN_PROPERTY_FD` fatal error; valid Mesa frames reach
+     `eglSwapBuffers`; render-only remains non-fatal.
+
+2. **Export the actual compositor output**
+   - Identify the QNX GPU compositor render target and its completion point;
+     `PaintSolidColorToDmaBuf` is only a test helper and is not sufficient.
+   - Allocate or reuse a Mesa-exportable EGL image/DMABuf with the widget
+     dimensions and ARGB/XRGB linear metadata.
+   - Copy the compositor output into that image using a GLES2 texture/FBO
+     draw path, or bind the image as the compositor target if the existing
+     `QnxGLES2Surface` lifecycle permits it.
+   - Keep ownership single-directional: producer owns the export image until
+     Mojo frame construction, and the Browser owns the received fd thereafter.
+   - Acceptance: a non-solid page frame has changing metadata/content and
+     survives at least two consecutive submissions.
+
+3. **Use the existing Browser compositor**
+   - Keep `QnxFrameImporter`'s valid-FD
+     `EGL_LINUX_DMA_BUF_EXT` import path unchanged.
+   - Keep the Browser-owned `eglCreateWindowSurface(screen_window_t)` and
+     fullscreen quad composition path from the Phase 1B design.
+   - Reserve the render-only early return for frames with no shareable FD.
+   - Acceptance: imported frames reach `eglSwapBuffers` and the widget window
+     remains valid across repeated frames.
+
+4. **Runtime content validation**
+   - Run a bounded `content_shell` or CEF smoke with a deterministic page
+     containing text and two contrasting colors.
+   - Capture a QNX screenshot and verify non-black, non-uniform pixels and
+     content changes after navigation or animation.
+   - Correlate producer path, frame generation, importer validation, and final
+     `eglSwapBuffers` markers in the serial log.
+   - Run the existing headless QNX target smoke after the visible-path test.
+
+5. **Failure and recovery validation**
+   - Verify that a failed Mesa export returns to render-only without taking
+     down the Browser or GPU process.
+   - Verify stale generations are rejected and a GPU reconnect resumes the
+     visible window with a new generation.
+   - Add explicit fence/synchronization work only if real hardware shows
+     tearing or stale frames; QEMU evidence currently relies on implicit
+     synchronization.
+
+#### Planned source ownership
+
+- `qnx_render_producer.{h,cc}`: capability decision, Mesa fallback selection,
+  compositor-target export and frame ownership.
+- `qnx_gpu_service.cc`: only if the current test-trigger submission must be
+  replaced by a compositor completion callback.
+- `qnx_frame_importer.{h,cc}`: retain the valid-FD import path; add only
+  diagnostics or synchronization handling required by the measured runtime.
+- `qnx_gles2_surface.{h,cc}` and related GPU surface code: inspect first;
+  modify only if the compositor target cannot be copied through the existing
+  EGL/GLES2 surface lifecycle.
+- CEF-managed patch files under `patch/patches/qnx/chromium/`: all durable
+  source changes must be represented as a clean, independently applicable
+  patch. Do not make direct Chromium-tree edits the source of truth.
+
+#### Explicit non-goals
+
+- No `screen_window_t` or raw `native_image` pointer crosses Mojo.
+- No implementation of `EGL_KHR_image_pixmap` as the visible-output fix.
+- No `screen_post_buffer` of a GPU-process pixmap into a Browser-owned window
+  without first proving a supported cross-process Screen ownership mechanism.
+- No change to the existing valid DMABuf import path or to headless defaults.
+
+#### Go/no-go criteria
+
+- **Go:** Mesa DMABuf export and Browser EGL composition both pass under QEMU;
+  proceed to actual compositor-target wiring.
+- **Hold:** only the solid-color test passes; do not claim content rendering.
+- **Fallback:** Mesa export is unavailable; retain Option A render-only and
+  open a separate window-direct-render or shared-memory design, rather than
+  expanding this plan with an unproven native-image transport.

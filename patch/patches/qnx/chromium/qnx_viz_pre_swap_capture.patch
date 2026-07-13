@@ -1,0 +1,25 @@
+diff --git components/viz/service/display_embedder/skia_output_surface_impl_on_gpu.cc components/viz/service/display_embedder/skia_output_surface_impl_on_gpu.cc
+index 1b51c0f1ebf94cccbb428a1c77f3a910d2dc2a67..20a5d1d10d431b89a7d85d3ecafc68d95aab1aec 100644
+--- components/viz/service/display_embedder/skia_output_surface_impl_on_gpu.cc
++++ components/viz/service/display_embedder/skia_output_surface_impl_on_gpu.cc
+@@ -27,6 +27,7 @@
+ #include "base/time/time.h"
+ #include "base/trace_event/typed_macros.h"
+ #include "build/build_config.h"
++#include "gpu/command_buffer/common/qnx_post_swap_hook.h"
+ #include "components/viz/common/features.h"
+ #include "components/viz/common/frame_sinks/blit_request.h"
+ #include "components/viz/common/frame_sinks/copy_output_request.h"
+@@ -2294,6 +2295,12 @@ void SkiaOutputSurfaceImplOnGpu::SwapBuffersInternal(
+   ResetStateOfImages();
+   gl::ScopedProgressReporter scoped_process_reporter(
+       context_state_->progress_reporter());
++
++  // The GPU thread still has the compositor framebuffer current here. Capture
++  // before Submit swaps it away; DidSwapBuffersComplete remains the separate
++  // completion marker used for correlation.
++  viz::internal::RunQnxPreSwapHook(size_);
++
+   output_device_->Submit(
+       context_state_, sync_cpu,
+       base::BindOnce(&SkiaOutputSurfaceImplOnGpu::PostSubmit,
