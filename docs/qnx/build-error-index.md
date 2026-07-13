@@ -81,6 +81,7 @@ rg -n "corrupt patch at line|hunk body shorter than header|trailing empty line" 
 rg -n "overlapping QNX patches|reverse detection|qnx_mesa_fallback_gate|qnx_compositor_frame_capture" docs/qnx/history/build-errors/bootstrap
 rg -n "mojo_webui_version_ts_qnx|is_qnx.*mojo|version.mojom-webui" docs/qnx/history/build-errors/bootstrap
 rg -n "FontCache::DeviceScaleFactor|font_platform_data.cc" docs/qnx/history/build-errors/compile
+rg -n "ImportCompatibilityReport|ValidateIncomingFrameForBridge|qnx_frame_importer" docs/qnx/history/build-errors/compile
 rg -n "kServiceSandbox|ScreenAIServiceFactory|kScreenAI|conditional_features|RemoveDisabledDefinitions" docs/qnx/history/build-errors/compile
 rg -n "screen_ai_features_qnx_service|sandbox_mojom_kScreenAI|mojom_gni_is_qnx" docs/qnx/history/build-errors/compile
 rg -n "kSizesNeededForShortcutCreation|GetOsSpecificSizes|icon_badging" docs/qnx/history/build-errors/compile

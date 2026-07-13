@@ -158,6 +158,36 @@ index 35f7a394256cf8e88d70056d4f17c9e8fd18de4e..5623e44c17c08d4cf9f72d7445de60dc
    // ---- Get widget record ----
    const QnxWidgetRecord* record = nullptr;
    if (window_manager_) {
+diff --git ui/ozone/platform/qnx/qnx_frame_importer.h ui/ozone/platform/qnx/qnx_frame_importer.h
+index af50aed3f3e26147e3d091b8f5b9df3378c35962..0a1cec8f4d77273ee9c309545467e1aff3398b33 100644
+--- ui/ozone/platform/qnx/qnx_frame_importer.h
++++ ui/ozone/platform/qnx/qnx_frame_importer.h
+@@ -143,6 +143,16 @@ class QnxFrameImporter {
+                                          const qnx::QnxDmaBufFrame& frame,
+                                          std::string* out_diagnostic);
+ 
++  struct ImportCompatibilityReport {
++    bool compatible = false;
++    std::string reason;
++  };
++
++  // Validates that incoming producer metadata remains compatible with the
++  // current EGL_LINUX_DMA_BUF_EXT import path.
++  ImportCompatibilityReport ValidateIncomingFrameForBridge(
++      const qnx::QnxDmaBufFrame& frame) const;
++
+   // Builds the EGL_LINUX_DMA_BUF_EXT attribute list for single-plane ARGB
+   // frames.  |frame| provides width/height/fourcc/modifier.
+   // |fds| must have at least one element (the plane fd).
+@@ -243,7 +253,7 @@ class QnxFrameImporter {
+     )";
+ 
+   // Thread check: all methods must be called from the browser UI thread.
+-  base::ThreadChecker thread_checker_;
++  [[maybe_unused]] base::ThreadChecker thread_checker_;
+ };
+ 
+ }  // namespace ui
 diff --git ui/ozone/platform/qnx/qnx_gpu_service.cc ui/ozone/platform/qnx/qnx_gpu_service.cc
 index bd641091b10fadeec6348fc46cb9bca01773c138..1d2b4ca42e1e9203b7b4b5936bf6410f90e5c9aa 100644
 --- ui/ozone/platform/qnx/qnx_gpu_service.cc
