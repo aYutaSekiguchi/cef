@@ -3,7 +3,8 @@
 - Date: 2026-07-13
 - Scope: `//cef:cefsimple` runtime under QEMU `--virgl` on QNX 800 /
   Chromium 147.0.7727.147
-- Status: investigation only. **No source fix applied. No rebuild. No commit.**
+- Status: initial matrix plus post-rebuild resolution in §9. **No source
+  logic fix was required.**
 - Binary under test: `/home/yuta/chromium/src/out/qnx_release/cefsimple`
   (built 2026-07-11, before the 2026-07-13 `ad3d491a4` SCREEN_PROPERTY_FD
   Option A fix, so this matrix reflects the state of the current binary
@@ -254,3 +255,140 @@ without re-deriving the matrix; **none were attempted in this session**.
 - The `--use-angle=gles-egl` variant (documented to reach native-EGL
   ANGLE then abort with `Resource deadlock`/exit 134) was not run, per
   the bounded `--use-angle=gl|gles` scope of this matrix.
+
+## 9. Post-rebuild resolution (2026-07-13)
+
+The matrix above documents N0pre passing on a stale `cefsimple` binary
+(2026-07-11) plus `LD_PRELOAD=/usr/lib/libEGL.so.1`. A subsequent
+rebuild plus re-run with the same N0pre flags produced full compositor
+content. **The persistent sky-blue frame was caused by the stale binary,
+not by missing compositor source logic.** The separate EGL library-resolution
+issue remains and still requires the system-EGL preload in this configuration.
+
+### 9.1 Stale binary
+
+- Prior `cefsimple` mtime was 2026-07-11 21:42 (built before the
+  `SetQnxPreSwapHook`/`OnCompositorPreSwap` install landed in
+  `QnxGpuService::Initialize`).
+- Symptom in the prior run (N0pre, log
+  `/tmp/cefsimple-native-egl-preload.log`):
+  `QnxGpuService::Initialize` log only reached
+  `qnx_gpu_service.cc:135` (`QNX_OZONE_GPU_TRACE … gpu_host_remote
+  bound`); **no** `qnx_gpu_service.cc:172` "compositor pre-swap
+  capture hook and post-swap completion marker installed" line; **no**
+  `OnCompositorPreSwap` ever fired; only the attach-time sky-blue
+  `SubmitTestFrameForWidget` reached the screen.
+- content_shell (CS0, log `/tmp/content-shell-egl.log`) at the same
+  moment logged cc:172 plus repeated `OnCompositorPreSwap` capturing the
+  compositor framebuffer (`CreateMesaExportFrame source=compositor`).
+  The 135-vs-172 line gap is the stale-binary smoking gun.
+
+### 9.2 Build-state cleanup (no source edit)
+
+- `ninja -C out/qnx_release cefsimple` failed at gn regeneration with
+  `ERROR at //build/config/clang/BUILD.gn:231:3: Duplicate definition.
+  action("qnx_compiler_builtins")`. ned parse (`ned parse`) confirmed
+  one failed edge `build.ninja.stamp`.
+- The live `build/config/clang/BUILD.gn` carried four stacked copies of
+  the same `if (is_qnx) { action("qnx_compiler_builtins") { … } }`
+  block, accumulated from prior repeated bootstrap runs.
+- `patch.cfg` registers **only** `qnx/chromium/build_qnx_toolchain`;
+  `patch/patches/qnx/chromium/compiler_rt_builtins_qnx.patch` is
+  unregistered stale local residue that adds the same block at the
+  same anchor — it must not be re-applied.
+- Recovery restored the affected parent-tree file to its clean Chromium
+  baseline, then used the standard CEF-managed bootstrap. No registered
+  durable patch was edited:
+  1. The clean `build/config/clang/BUILD.gn` baseline had md5
+     `0f14836c1edff6e84e0b1d5691158f62` (zero
+     `qnx_compiler_builtins` occurrences).
+  2. `cef/tools/cef_create_projects_qnx.sh --build-type Release
+     --qnx-sdp-root $HOME/qnx800`. Only the registered
+     `build_qnx_toolchain` patch was applied; the unregistered
+     `compiler_rt_builtins_qnx` was skipped (not in `patch.cfg`). Live
+     `build/config/clang/BUILD.gn` md5 became
+     `6ce08e92b12e64d79454c7326ab2508e` with exactly **one**
+     `action("qnx_compiler_builtins")` block at line 181. `gn gen`
+     succeeded (33073 targets).
+  3. `./out/qnx_release/ninja_qnx.sh cefsimple` ran with
+     `set -o pipefail`. Exit 0 at `[54906/54906] LINK ./cefsimple`.
+     Fresh `cefsimple` md5 `7bf28ad3156d0ccba3cd22202f4f9410`,
+     mtime 2026-07-13 20:51; `libcef.so` mtime 2026-07-13 20:50:58.
+
+### 9.3 Re-run evidence (N0pre, post-rebuild)
+
+Re-ran the N0pre command through
+`./cef/tools/qnx_run.sh --virgl --preload-system-egl --kill-existing
+--timeout 240 --env CHROME_EXE_PATH=/mnt/nfs/out/qnx_release/cefsimple
+-- '/mnt/nfs/out/qnx_release/cefsimple --ozone-platform=qnx
+--use-gl=egl --no-sandbox --use-native
+--url=file:///mnt/nfs/out/qnx_release/qnx-option-a.html
+--ozone-qnx-gpu-trace --enable-logging=stderr …'` with the guest
+script backgrounding `cefsimple`, `sleep 30`, then
+`screenshot -file=/mnt/nfs/out/qnx_release/qnx-cefsimple-content.bmp
+-verbose`, tail, kill.
+
+- Build/run logs prove the hook chain (timestamps from
+  `/tmp/cefsimple-content-run.log`):
+  - `qnx_gpu_service.cc:172` `QnxGpuService::Initialize: compositor
+    pre-swap capture hook and post-swap completion marker installed`.
+  - `qnx_gpu_service.cc:408` `QnxGpuService::OnCompositorPreSwap:
+    entered size=1004x748` (repeats per frame).
+  - `qnx_render_producer.cc:1138` `QnxRenderProducer::
+    CreateExportFrameFromCompositor: selected kMesaFallback from
+    compositor completion`.
+  - `qnx_render_producer.cc:1111` `…CaptureCurrentFramebufferToDmaBuf:
+    captured compositor framebuffer widget=1 generation=1 size=1004x748`.
+  - `qnx_render_producer.cc:1299` `…CreateMesaExportFrame:
+    path=kMesaFallback source=compositor widget=1 generation=1
+    fourcc=0x34325241 planes=1 frame ready`.
+  - `qnx_gpu_service.cc:441` `…OnCompositorPreSwap: submitting
+    compositor frame widget=1 generation=1 size=1004x748`.
+  - `qnx_gpu_host.cc:271` `QnxGpuHost::SubmitFrame: FINAL widget=1
+    generation=1 accepted=true display_ok=true; eglSwapBuffers reached`
+    (repeats).
+  - `qnx_gpu_service.cc:454` `…OnCompositorPreSwap: completion widget=1
+    generation=1 accepted=1 diagnostic=`.
+- Screenshot `/home/yuta/chromium/src/out/qnx_release/qnx-cefsimple-content.bmp`:
+  1280×768 BMP, sha256
+  `4a43c33ad21b2b0f936ed519778a865428c269f74733d20a5b28aa295455d625`,
+  4798 distinct colours, 840777/983040 non-black pixels, dominant
+  white 255270 (25.97%). Visual inspection confirms browser chrome
+  plus the **QNX OPTION A** header (yellow on black with red border)
+  plus the red/green/blue colour blocks from
+  `qnx-option-a.html` — **not** the sky-blue attach-time test frame.
+
+### 9.4 What this changes in the matrix
+
+- The N0pre row of §3 should now be read as the post-rebuild truth,
+  not as a one-off LD_PRELOAD rescue: the rebuild alone is what
+  brought the `OnCompositorPreSwap` path into the binary. The
+  `LD_PRELOAD=/usr/lib/libEGL.so.1` is still required for the same
+  ANGLE-vs-system-Mesa reason documented in §4 / §5 (P0 I1) and is
+  orthogonal to the rebuild — the rebuild only changes which paths
+  inside `QnxGpuService` are reached, not which `libEGL` resolves at
+  process start.
+- §5 P0 I1 (`libcef.so NEEDED libEGL.so` → generated ANGLE), P0 I3
+  (Views SIGSEGV before `CreatePlatformWindow`), and P1 I4 (ANGLE not
+  viable) are unchanged by this rebuild. They remain open and are
+  tracked outside this doc.
+- §7 recommended-next-investigation #1 (linkage fix for the
+  `--use-gl=egl` runtime path) becomes more important, not less: with
+  the rebuild done, removing the `LD_PRELOAD` should now be the next
+  experiment to confirm whether N0 reaches the same success shape as
+  N0pre without the preload.
+
+### 9.5 Hygiene notes
+
+- No CEF-managed patch file (`cef/patch/patches/qnx/…`) was added,
+  edited, or regenerated by this resolution.
+- `cef/patch/patches/qnx/chromium/compiler_rt_builtins_qnx.patch`
+  remains on disk as unregistered stale residue. Removing it (or
+  registering it explicitly and removing the overlap from
+  `build_qnx_toolchain.patch`) is a separate cleanup, deliberately not
+  bundled into this rebuild.
+- No `git commit` / `git push` was made; this doc update is left
+  uncommitted per the same hygiene rule as §8.
+- Build artifacts written this session: `/tmp/cefsimple-content-build.log`,
+  `/tmp/cefsimple-content-bootstrap.log`, `/tmp/cefsimple-content-run.log`,
+  `/tmp/pi-cefsimple-content-status.txt`.
