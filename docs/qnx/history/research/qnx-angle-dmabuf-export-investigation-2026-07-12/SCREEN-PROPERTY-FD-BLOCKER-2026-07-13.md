@@ -317,19 +317,75 @@ a Stage 1+2 implementation issue.
 
 ## 7. Recommended next steps (sequenced)
 
+(Updated 2026-07-13 — items 1–5 below were completed in commit
+`ad3d491a4`. The fundamental rendering question is *separate* and
+documented in §7.1.)
+
 1. **Apply Option A fix** to `qnx_render_producer.cc:515` and the
    `PopulateFrameFromScreenDescriptor` consumer. Estimate: ~30 lines of edits
    + ~5 lines of header change. Risk: low (graceful branch, no destructive
    change to existing pixels).
+   - ✅ **Done** (ad3d491a4). Patch:
+     `patch/patches/qnx/chromium/qnx_screen_bridge_render_only_fallback.patch`.
 2. **Re-run smoke** with `qnx_run.sh --virgl --kill-existing --timeout 70 --`
    and `./content_shell --ozone-platform=qnx --use-gl=egl --ozone-qnx-gpu-trace
    --enable-logging=stderr --v=1 about:blank` (the verified invocation in
    §2.1). Verify `SCREEN_PROPERTY_FD` is no longer fatal (Option A fallback
    is engaged) and exit code is clean (no 139/134).
+   - ✅ **Done**. Pre-fix log (`/tmp/egl_case.W0F2st.log`) had the
+     `qnx_render_producer.cc:515 BuildScreenBufferDescriptor: failed to
+     read SCREEN_PROPERTY_FD: Not supported (48)` ERROR. Post-fix
+     (`/tmp/egl_post2.1uQqye.log`) shows that ERROR is gone; Screen
+     CREATE/PROPERTY events continue to flow.
 3. **If smoke is clean**, run `--use-gl=angle` smoke (§2.2 invocation) to
    confirm the ANGLE display init failure is unchanged (parallel known
    issue, not affected by Option A).
+   - ✅ **Done**. ANGLE display init failure (`gl_display.cc:673`) is
+     still emitted; the `qnx_render_producer.cc:515` ERROR is no longer
+     emitted.
 4. Update `IMPLEMENTATION-PLAN.md` §1(c) with the Option A behavior (renderer
    always renders into Screen buffer; FD is best-effort for shareable
    fallback).
+   - ✅ **Done** (ad3d491a4). See §1(c').
 5. Commit fixes as a follow-up CEF-managed patch.
+   - ✅ **Done** (ad3d491a4).
+
+### 7.1 Rendering-actually-visible question (raised 2026-07-13)
+
+Even with Option A applied, **the rendered content does not visibly appear
+on the user's QEMU host window**. The root cause is unrelated to the
+ENOTSUP question this doc addresses:
+
+| Stage | State |
+|---|---|
+| Producer: `screen_create_pixmap`, `screen_create_pixmap_buffer` | ✅ (QEMU verified) |
+| Producer: `SCREEN_PROPERTY_NATIVE_IMAGE` retrieval | ✅ (QEMU verified) |
+| Producer: `RenderSolidIntoScreenBuffer` writes via `glEGLImageTargetTexture2DOES` into NATIVE_IMAGE | ✅ (QEMU verified; colour visible in pixmap memory) |
+| Producer: pixmap associated to `screen_win` via `screen_post_buffer` / `screen_set_window_property_cv` | **❌ NO** — pixmap is floating, not attached to any window |
+| QNX Screen compositor scans the buffer and updates the visible surface | **❌ NO** — no window knowledge |
+| `qnx_window.cc` has SEPARATE buffers via `screen_create_window_buffers` | (independent of producer) |
+
+Achievement summary, post-Option A:
+
+- Producer reaches the export code path without SIGSEGV.
+- Importer detects render-only, returns success with no EGL work.
+- Browser process keeps running; screen events are emitted.
+- **No content reaches the user-visible surface** — the floating pixmap's
+  pixels are not displayed.
+
+This is correctable via one of:
+
+- A **window-attach** pass: producer's pixmap (or its NATIVE_IMAGE wrapped
+  EGLImage) becomes the window buffer via `screen_post_buffer`. Likely
+  100-200 lines and requires understanding of QNX Screen surface state
+  machine; out of scope for this patch series.
+- A **window-direct render** redesign: the producer is abolished and
+  `qnx_window.cc` binds its own window buffer to GLES2 directly via
+  `GLSurfaceEGL`. Larger refactor (200+ lines); out of scope.
+
+Option B (NATIVE_IMAGE cross-process) is **not sufficient** for visible
+output either — it solves process handoff, not surface attachment.
+
+This limitation is independent of the SCREEN_PROPERTY_FD ENOTSUP question
+and is documented here to prevent future commits from claiming end-to-end
+visual success on the back of Option A alone.

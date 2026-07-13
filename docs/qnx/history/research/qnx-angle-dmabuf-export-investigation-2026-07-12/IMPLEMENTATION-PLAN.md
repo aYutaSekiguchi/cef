@@ -525,5 +525,34 @@ Derived from `BRIDGE-DESIGN.md` §7 (`L241+`).
 ## 6. Exit condition for this planning step
 
 - This document is complete when all five requested sections are present and no source implementation files are edited.
+
+## 6.1 Implementation outcome (post-2026-07-13)
+
+Stages completed against this plan:
+
+- **Stage 1 + 2** — `qnx_render_producer.{h,cc}`, `qnx_gpu_service.cc`,
+  `qnx_frame_importer.{h,cc}` modified per §1 (a)(b)(c)(d). ~750 lines added.
+- **Review pass** — 4 FAILs found and fixed: destructor `screen_destroy_buffer`
+  misuse, `SCREEN_PROPERTY_EGL_HANDLE` getter type (`_pv`), `SCREEN_PROPERTY_BUFFER_SIZE`
+  getter type (`_iv`), and a missing render path for `kScreenBridge`.
+- **Option A** — SCREEN_PROPERTY_FD ENOTSUP graceful handling in
+  `BuildScreenBufferDescriptor` (errno=0 + ENOTSUP branch + `if (fd >= 0)`
+  guard) plus `render_only` short-circuit in `ImportAndDisplayFrame`.
+- **CEF-managed patch**: `qnx_screen_bridge_render_only_fallback.patch`
+  registered in `patch/patch.cfg`.
+- **Smoke verified** via `qnx_run.sh --virgl --kill-existing`. The
+  `qnx_render_producer.cc:515 ... SCREEN_PROPERTY_FD Not supported (48)`
+  ERROR is gone; ANGLE display init failure (`gl_display.cc:673`) remains
+  as a parallel known issue.
+
+### 6.2 Rendering not actually visible (raised 2026-07-13)
+
+Even with Option A applied, **rendered content does not visibly appear
+on the user's QEMU host window**. The producer's pixmap is floating, not
+attached to a `screen_win`. Visible output requires a separate
+window-attach or window-direct-render design pass; Option A only
+achieves the "no SIGSEGV, export completes" robustness level. Full analysis
+is in
+`SCREEN-PROPERTY-FD-BLOCKER-2026-07-13.md` §7.1.
 - Investigation E coding remains blocked pending explicit supervisor approval.
 
