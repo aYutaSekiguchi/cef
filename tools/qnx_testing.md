@@ -46,6 +46,20 @@ Override when needed:
 BUILD_DIR=/absolute/path/to/out/qnx_x64 ./cef/tools/qnx_run_test.sh --base
 ```
 
+## System EGL preload
+
+CEF binaries can resolve the generated ANGLE `libEGL.so` even when launched
+with `--use-gl=egl`. Use the generic runner's convenience option to force the
+QNX system EGL implementation for a bounded runtime check:
+
+```bash
+./cef/tools/qnx_run.sh --virgl --kill-existing --preload-system-egl -- \
+  ./cefsimple --ozone-platform=qnx --use-gl=egl --no-sandbox --use-native
+```
+
+This is equivalent to `--env LD_PRELOAD=/usr/lib/libEGL.so.1`. Do not combine
+the two forms; the runner rejects conflicting `LD_PRELOAD` configuration.
+
 ## Module overview
 
 | Flag | Binary | Strategy | Notes |

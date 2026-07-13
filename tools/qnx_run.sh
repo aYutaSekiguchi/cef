@@ -17,6 +17,7 @@ CMD_TIMEOUT="${CMD_TIMEOUT:-1800}"
 KEEP_QEMU=0
 MOUNT_ONLY=0
 KILL_EXISTING=0
+PRELOAD_SYSTEM_EGL=0
 QEMU_GRAPHICS="${QEMU_GRAPHICS:-headless}"
 QEMU_DISPLAY_BACKEND="${QEMU_DISPLAY_BACKEND:-gtk}"
 
@@ -30,6 +31,7 @@ Examples:
   $0 --keep-qemu -- bash
   $0 --mount-only
   $0 --qemu-graphics virgl -- egl-configs
+  $0 --virgl --preload-system-egl -- ./cefsimple --use-native --use-gl=egl
 
 Behavior:
   - mounts /export/chromium-src at /mnt/nfs in the guest
@@ -48,6 +50,7 @@ Options:
   --virgl              Alias for --qemu-graphics virgl
   --qemu-display NAME  QEMU display backend for window/virgl modes
                        (default: $QEMU_DISPLAY_BACKEND; e.g. gtk, sdl)
+  --preload-system-egl Preload QNX system EGL (/usr/lib/libEGL.so.1)
   --env NAME=VALUE     Extra guest environment variable (may repeat)
   -h, --help           Show help
 
@@ -110,6 +113,10 @@ while [[ $# -gt 0 ]]; do
       QEMU_DISPLAY_BACKEND="${1#*=}"
       shift
       ;;
+    --preload-system-egl)
+      PRELOAD_SYSTEM_EGL=1
+      shift
+      ;;
     --env)
       EXTRA_ENV+=("${2:?--env requires NAME=VALUE}")
       shift 2
@@ -143,6 +150,16 @@ while [[ $# -gt 0 ]]; do
   POSITIONAL+=("$1")
   shift
 done
+
+if [[ "$PRELOAD_SYSTEM_EGL" == 1 ]]; then
+  for envvar in "${EXTRA_ENV[@]}"; do
+    if [[ "$envvar" == LD_PRELOAD=* ]]; then
+      echo "ERROR: --preload-system-egl cannot be combined with --env LD_PRELOAD=..." >&2
+      exit 2
+    fi
+  done
+  EXTRA_ENV+=("LD_PRELOAD=/usr/lib/libEGL.so.1")
+fi
 
 case "$QEMU_GRAPHICS" in
   headless|window|virgl)
