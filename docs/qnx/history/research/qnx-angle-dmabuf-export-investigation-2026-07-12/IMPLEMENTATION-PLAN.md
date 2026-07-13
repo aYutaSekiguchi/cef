@@ -86,6 +86,52 @@ Initialize():
   else fail with aggregated diagnostic
 ```
 
+### (c'). Render-only frame contract (post-Option A, 2026-07-13)
+
+`SCREEN_PROPERTY_FD` is documented in `screen.h` as set-only ("This can
+only be used to provide memory to Screen"). Pixmap-owned buffers
+(`screen_create_pixmap_buffer`) do not expose a gettable FD and return
+`ENOTSUP` (errno 48) on `screen_get_buffer_property_iv(...)`. This is
+the documented, correct behavior, not a runtime error.
+
+`BuildScreenBufferDescriptor` therefore does NOT bail the entire
+export on `ENOTSUP`. Instead:
+
+```cpp
+errno = 0;
+const int fd_rc = screen_get_buffer_property_iv(screen_buffer_, SCREEN_PROPERTY_FD, &fd);
+if (fd_rc != 0 && errno == ENOTSUP) {
+  DLOG(INFO) << "... SCREEN_PROPERTY_FD not exposed by screen; using render-only frame";
+  // fallthrough: leave out_desc->fd invalid; populate the rest of the descriptor
+} else if (fd_rc != 0 || fd < 0) {
+  // genuine error: bail
+}
+if (fd >= 0) { /* dup() */ out_desc->fd.reset(...); }
+```
+
+The corresponding importer is informed by `frame.fd.is_valid()`:
+
+```cpp
+const bool render_only = frame.planes.empty()
+  || (frame.planes.size() == 1 && frame.planes[0]
+      && !frame.planes[0]->fd.is_valid());
+if (render_only) {
+  DLOG(INFO) << "... render-only frame; deferring to local Screen buffer presentation";
+  return {true, std::string()};
+}
+```
+
+Resulting semantics:
+- **QEMU smoke (`--virgl`)**: producer completes the render into the
+  Screen buffer; importer skips EGL import; presentation uses Screen
+  buffer (QEMU framebuffer back-channel); no SIGSEGV.
+- **Real QNX with `SCREEN_PROPERTY_FD` exposed** (e.g. via `screen_create_buffer`
+  with explicit FD): normal dma-buf sharing path; Option A branch
+  inert.
+- **Real QNX with pixmap + later dma-buf allocator**: producer-side
+  Option B (`SCREEN_PROPERTY_NATIVE_IMAGE` + `EGL_NATIVE_PIXMAP_KHR`)
+  is the next step; out of scope for this patch.
+
 ### (d) Helper structs needed
 
 - `ScreenBufferDescriptor` (above)

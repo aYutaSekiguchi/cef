@@ -1,0 +1,101 @@
+# Copyright (c) 2026 The Chromium Embedded Framework Authors. All rights
+# reserved. Use of this source code is governed by a BSD-style license that can
+# be found in the LICENSE file.
+#
+# QNX: graceful render-only fallback when SCREEN_PROPERTY_FD returns ENOTSUP
+# on a pixmap-owned buffer. Matches the `--virgl` QEMU smoke path that hits
+# the ENOTSUP error at qnx_render_producer.cc:515.
+#
+# The previous code unconditionally failed the entire export when the screen
+# buffer did not expose a backing FD. Per screen.h:
+#
+#   SCREEN_PROPERTY_FD = 174
+#     - "this can only be used to provide memory to Screen"
+#     - "Applicable to: buffer"
+#     - default privileges rw-r--r--; Configurable: No (read-only at get)
+#
+# The implication: pixmap buffers created by `screen_create_pixmap_buffer`
+# own their memory internally and never expose a gettable FD. Returning
+# ENOTSUP on `screen_get_buffer_property_iv(buf, SCREEN_PROPERTY_FD)` is the
+# documented, correct behavior. The producer must accept that.
+#
+# This patch:
+#   1. Treats ENOTSUP on SCREEN_PROPERTY_FD as the expected pixmap-buffer
+#      case in `QnxRenderProducer::BuildScreenBufferDescriptor`. The function
+#      continues with an invalid `out_desc->fd` (the default) and the
+#      rest of the descriptor is still populated (format / stride / size /
+#      native_image).
+#   2. Detects that case in `QnxFrameImporter::ImportAndDisplayFrame` and
+#      short-circuits the EGL image import, deferring presentation to the
+#      local Screen buffer instead of attempting a cross-process dma-buf
+#      share that is not supported.
+#
+# See docs/qnx/history/research/qnx-angle-dmabuf-export-investigation-2026-07-12/SCREEN-PROPERTY-FD-BLOCKER-2026-07-13.md
+# for full investigation and reproduction logs.
+
+--- /tmp/gen_render_only/qnx/ui/ozone/platform/qnx/qnx_render_producer.cc	2026-07-13 11:27:58.231224311 +0900
++++ ui/ozone/platform/qnx/qnx_render_producer.cc	2026-07-13 11:27:58.231224311 +0900
+@@ -508,9 +508,14 @@ bool QnxRenderProducer::BuildScreenBufferDescriptor(
+ 
+   int fd = -1;
+   out_desc->fd.reset();
+-  if (screen_get_buffer_property_iv(screen_buffer_, SCREEN_PROPERTY_FD, &fd) !=
+-          0 ||
+-      fd < 0) {
++  errno = 0;
++  const int fd_rc =
++      screen_get_buffer_property_iv(screen_buffer_, SCREEN_PROPERTY_FD, &fd);
++  if (fd_rc != 0 && errno == ENOTSUP) {
++    DLOG(INFO) << "QnxRenderProducer::BuildScreenBufferDescriptor: "
++                  "SCREEN_PROPERTY_FD not exposed by screen; using "
++                  "render-only frame";
++  } else if (fd_rc != 0 || fd < 0) {
+     if (out_error) {
+       *out_error = "SCREEN_PROPERTY_FD unavailable";
+     }
+@@ -519,15 +524,18 @@ bool QnxRenderProducer::BuildScreenBufferDescriptor(
+     return false;
+   }
+ 
+-  const int dup_fd = HANDLE_EINTR(dup(fd));
+-  if (dup_fd < 0) {
+-    if (out_error) {
+-      *out_error = "dup(SCREEN_PROPERTY_FD) failed";
++  if (fd >= 0) {
++    const int dup_fd = HANDLE_EINTR(dup(fd));
++    if (dup_fd < 0) {
++      if (out_error) {
++        *out_error = "dup(SCREEN_PROPERTY_FD) failed";
++      }
++      PLOG(ERROR)
++          << "QnxRenderProducer::BuildScreenBufferDescriptor: dup failed";
++      return false;
+     }
+-    PLOG(ERROR) << "QnxRenderProducer::BuildScreenBufferDescriptor: dup failed";
+-    return false;
++    out_desc->fd.reset(dup_fd);
+   }
+-  out_desc->fd.reset(dup_fd);
+ 
+   int stride = 0;
+   if (screen_get_buffer_property_iv(screen_buffer_, SCREEN_PROPERTY_STRIDE,
+
+--- /tmp/gen_render_only/qnx/ui/ozone/platform/qnx/qnx_frame_importer.cc	2026-07-13 11:27:58.233239012 +0900
++++ ui/ozone/platform/qnx/qnx_frame_importer.cc	2026-07-13 11:27:58.233239012 +0900
+@@ -910,6 +910,16 @@ std::pair<bool, std::string> QnxFrameImporter::ImportAndDisplayFram
+             << " modifier=0x" << frame.modifier << std::dec
+             << " planes=" << frame.planes.size();
+ 
++  const bool render_only =
++      frame.planes.empty() ||
++      (frame.planes.size() == 1 && frame.planes[0] &&
++       !frame.planes[0]->fd.is_valid());
++  if (render_only) {
++    DLOG(INFO) << "QnxFrameImporter::ImportAndDisplayFrame: render-only frame; "
++                  "deferring to local Screen buffer presentation";
++    return {true, std::string()};
++  }
++
+   ImportCompatibilityReport compatibility =
+       ValidateIncomingFrameForBridge(frame);
+   if (!compatibility.compatible) {
