@@ -673,3 +673,48 @@ Both unavailable          -> existing render-only success, no crash
 - **Fallback:** Mesa export is unavailable; retain Option A render-only and
   open a separate window-direct-render or shared-memory design, rather than
   expanding this plan with an unproven native-image transport.
+
+### 6.4 Runtime content validation — guest Screen screenshot (2026-07-13)
+
+Phase 4 of §6.3 executed with a deterministic QEMU smoke. **No source
+change was required.** The prior "rendered content does not visibly
+appear" / all-black observation from §6.2 was **not reproduced** when
+capturing the guest Screen framebuffer with the deterministic `file://`
+URL below.
+
+**Command shape** (single quoted guest string; binary first so
+`CHROME_EXE_PATH` is valid):
+
+```bash
+./tools/qnx_run.sh --virgl --kill-existing --boot-timeout 60 --timeout 45 -- \
+  '/mnt/nfs/out/qnx_release/content_shell --ozone-platform=qnx --use-gl=egl --ozone-qnx-gpu-trace --enable-logging=stderr --v=1 file:///mnt/nfs/out/qnx_release/qnx-option-a.html > /tmp/cs3.out 2>&1 & PID=$!; sleep 8; screenshot -file=/mnt/nfs/out/qnx_release/qnx-option-a-content3.bmp -verbose; tail -60 /tmp/cs3.out; kill $PID 2>/dev/null; wait $PID 2>/dev/null'
+```
+
+Test page `qnx-option-a.html` (1054 B): yellow "QNX OPTION A" header on
+a #444 body, followed by full-width RED/GREEN/BLUE/WHITE/BLACK blocks.
+Loaded via `file:///mnt/nfs/out/qnx_release/qnx-option-a.html` —
+deterministic, no network dependency.
+
+**Artifact**:
+
+- path: `/home/yuta/chromium/src/out/qnx_release/qnx-option-a-content3.bmp`
+- size: 3,932,282 bytes; 1280x768, 32bpp BI_BITFIELDS, top-down
+- pixel stats (supervisor): 1167 distinct colors; nonblack 759786/983040; dominant red 233897 (23.79%)
+- sha256: `aa6aee9402553c8017ee6fc0e9f8381e31d1e06b6734b38ba4a04b62b24e7590`
+
+**Key log evidence** (`/tmp/qnx-option-a-shot3.log`):
+
+- repeated `[QNX-TRACE] QnxGpuService::OnCompositorPreSwap` capturing 800x600 compositor framebuffer
+- `QnxRenderProducer::CreateMesaExportFrame: path=kMesaFallback source=compositor widget=1 generation=1 fourcc=0x34325241 planes=1 frame ready`
+- `QnxGpuHost::SubmitFrame: VALIDATION_PASSED widget=1 generation=1`
+- `QnxGpuHost::SubmitFrame: FINAL widget=1 generation=1 accepted=true display_ok=true; eglSwapBuffers reached`
+
+`qnx_run.sh` was terminated after the screenshot because the background
+content_shell did not exit within `--timeout 45`; the screenshot and trace
+tail completed before that teardown timeout.
+Supervisor visually verified the BMP shows the QNX OPTION A header plus
+red/green/blue/black blocks (not desktop background). For the QEMU
+validation purpose of Phase 4, the Option A shareable Mesa DMabuf fallback
+path is sufficient — visible content reaches the captured BMP without
+any new source change. Status: `/tmp/pi-qnx-status3.txt`; host log:
+`/tmp/qnx-option-a-shot3.log`.
