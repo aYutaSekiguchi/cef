@@ -12,6 +12,14 @@ These scripts are the repo-managed QNX helpers for the Chromium/CEF port.
   - generic QEMU + serial + NFS runner for arbitrary commands
   - keeps the legacy "any shell command" UX (still works exactly as
     before; no behavior change)
+  - `--detach` (with optional `--qconn-port PORT`): launches the
+    post-`--` QNX command in the guest shell as a background job
+    (stdout/stderr/stdin redirected to `<HOST_LOG>_app.log`), exits
+    the wrapper cleanly, and implicitly keeps QEMU alive. The
+    foreground command no longer owns the serial, so post-run
+    `qconn`/gdb attach via `target qnx 10.0.2.2:8000` works.
+    Use this when you want `qnx_run.sh` to behave like a daemon
+    launcher rather than a synchronous runner.
 - `cef/tools/qnx_run_test.sh`
   - dispatcher entry point for the per-module test runner
   - thin shim over `python3 tools/qnx_tests/cli.py "$@"`
@@ -186,6 +194,50 @@ tmux attach -t qnx-base
   one boot/login per invocation.
 - Per-test timeout defaults to 600s; per-batch (broad) timeout
   defaults to 7200s.  Both are overrideable via `--timeout`.
+
+## Native EGL launch with `--detach` (cefsimple, gdb-friendly)
+
+`--detach` solves a problem the legacy foreground UX hits on long-lived
+guest commands: once `qnx_run.sh` returns, the foreground guest
+process may still be holding the serial console, and reattaching
+serial or running a fresh `qnx_run.sh` fails. With `--detach`, the
+guest command is launched in the guest shell as a background job,
+its stdout/stderr/stdin are redirected to a log file in `BUILD_DIR`,
+the wrapper exits cleanly, and QEMU stays running. `--qconn-port`
+also starts (or reuses) `qconn` on the specified port in the guest,
+so a host `gdb` can `target qnx 10.0.2.2:<port>` without competing
+with the foreground command for serial.
+
+Example (native EGL `cefsimple --url=about:blank`, runs as a detached
+guest job with `qconn` on port 8000 ready for gdb attach):
+
+```bash
+./tools/qnx_run.sh --virgl --preload-system-egl --with-input --kill-existing \
+    --detach --qconn-port 8000 -- \
+    ./cefsimple --ozone-platform=qnx --use-gl=egl --use-native --no-sandbox \
+              --enable-logging=stderr --v=1 --vmodule=qnx_platform_event_source=2 \
+              --ozone-qnx-gpu-trace --url=about:blank
+```
+
+After the wrapper exits, QEMU is still running and the host can:
+
+- Confirm the guest job is alive:
+  `ssh qemu@10.0.2.15 'pidin | grep cefsimple'` (or via the qnx serial
+  console if it's free).
+- Read the app's log:
+  `tail -f out/qnx_release/qnx_run_<ts>_cefsimple_app.log`
+- Attach `gdb` without serial involvement:
+  `gdb -ex 'target qnx 10.0.2.2:8000' -ex 'attach <pid>'`
+- Send QMP pointer events:
+  `socat - UNIX-CONNECT:/tmp/qnx-qmp.sock` and use
+  `input-send-event` (abs `x`/`y`, btn `left`/`middle`/`right`).
+
+If `qconn` was already running on the chosen port from a prior session,
+`--detach` reuses it and prints `QCONN_REUSED=1 QCONN_PID=<pid>`.
+If a fresh `qconn` is launched, the wrapper prints
+`QCONN_LAUNCHED=1 QCONN_PORT=<port> QCONN_PID=<pid> QCONN_LOG=<path>`.
+In both cases, the main command's PID is printed as
+`APP_PID=<pid> APP_LOG=<path> APP_ALIVE=0|1`.
 
 ## Adding a new module
 
