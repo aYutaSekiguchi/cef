@@ -138,9 +138,10 @@ class OzonePlatformQnxImpl : public OzonePlatform {
   }
 
   bool IsWindowCompositingSupported() const override {
-    // Phase 5: true once EGL display composition is wired.
-    // Phase 4 returns false (no compositing surface yet).
-    return false;
+    // EGL display composition is wired and proven: SubmitFrame reaches
+    // eglSwapBuffers, display_ok=true confirmed. Return true so the
+    // Views compositor initializes and browser init can complete.
+    return true;
   }
 
   bool InitializeUI(const InitParams& params) override {

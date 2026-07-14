@@ -5,7 +5,7 @@ index 35f7a394256cf8e88d70056d4f17c9e8fd18de4e..5623e44c17c08d4cf9f72d7445de60dc
 @@ -131,21 +131,8 @@ bool CheckGL(const char* expr, const char* file, int line) {
    return true;
  }
- 
+
 -// Checks an EGL error and logs it.  Returns true if no error.
 -bool CheckEGL(const char* expr, EGLDisplay display, const char* file, int line) {
 -  EGLint err = eglGetError();
@@ -22,7 +22,7 @@ index 35f7a394256cf8e88d70056d4f17c9e8fd18de4e..5623e44c17c08d4cf9f72d7445de60dc
 +// Macro to wrap GL error checks.
  #define CHECK_GLEXR(expr) CheckGL(#expr, __FILE__, __LINE__)
 -#define CHECK_EGLERR(expr, display) CheckEGL(#expr, display, __FILE__, __LINE__)
- 
+
  }  // namespace
  
 @@ -212,7 +199,8 @@ std::string QnxFrameImporter::ExtensionReport() const {
@@ -1581,3 +1581,13 @@ index 0a3db236a2c0f3c464f84bf96f1c90afa4d4f164..1a538bb24b20c39bf9270b9de6b584d4
    // Raw pointer to the owning surface factory (non-owning).
    raw_ptr<QnxSurfaceFactoryOzone> surface_factory_;
  };
+diff --git ui/ozone/platform/qnx/qnx_frame_importer.cc ui/ozone/platform/qnx/qnx_frame_importer.cc
+index 0c588fbff0f607f82c5724253641780fe14802a3..399f4172c865ac57073df3166ac6ec492521a4c7 100644
+--- ui/ozone/platform/qnx/qnx_frame_importer.cc
++++ ui/ozone/platform/qnx/qnx_frame_importer.cc
+@@ -1005,3 +1005,5 @@ std::pair<bool, std::string> QnxFrameImporter::ImportAndDisplayFrame(
+   // ---- Draw fullscreen quad with imported texture ----
++  glViewport(0, 0, static_cast<GLsizei>(frame.width),
++             static_cast<GLsizei>(frame.height));
+   DrawFullscreenQuad(state->program, state->texture);
+   CHECK_GLEXR(glDrawArrays);

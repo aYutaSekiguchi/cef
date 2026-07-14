@@ -1,0 +1,1743 @@
+diff --git ui/ozone/platform/qnx/qnx_platform_event_source.cc ui/ozone/platform/qnx/qnx_platform_event_source.cc
+new file mode 100644
+index 0000000000000000000000000000000000000000..642199cf21181a5a3ddf414c35699f7afc711b06
+--- /dev/null
++++ ui/ozone/platform/qnx/qnx_platform_event_source.cc
+@@ -0,0 +1,595 @@
++// Copyright 2026 The Chromium Authors
++// Use of this code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++// Phase 4, second substep: minimal QNX Screen event source.
++// Polls QNX Screen events via screen_get_event() with a short non-blocking
++// timeout and dispatches them to registered PlatformEventDispatchers.
++//
++// Limitations (Phase 4 scope):
++// - Uses a periodic timer rather than a dedicated polling thread.
++// - Keyboard, pointer, and close events are logged or partially translated.
++// - Full IME, display-enumeration events, multi-touch, and GPU input deferred.
++// - Non-blocking short-timeout polling avoids busy loops.
++
++#include "ui/ozone/platform/qnx/qnx_platform_event_source.h"
++
++#include <errno.h>
++#include <iomanip>
++#include <string.h>
++
++#include "base/location.h"
++#include "base/logging.h"
++#include "base/memory/scoped_refptr.h"
++#include "base/task/sequenced_task_runner.h"
++#include "base/time/time.h"
++#include "ui/events/event.h"
++#include "ui/events/event_constants.h"
++#include "ui/events/event_utils.h"
++#include "ui/events/ozone/events_ozone.h"
++#include "ui/gfx/geometry/point_f.h"
++#include "ui/gfx/geometry/rect.h"
++#include "ui/gfx/geometry/vector2d.h"
++#include "ui/ozone/platform/qnx/qnx_window.h"
++#include "ui/ozone/platform/qnx/qnx_window_manager.h"
++
++namespace ui {
++
++namespace {
++
++const char* SafeStrError(int error_number) {
++  const char* message = strerror(error_number);
++  return message ? message : "unknown error";
++}
++
++void LogScreenError(const char* operation, int error_number) {
++  LOG(ERROR) << operation << " failed: errno=" << error_number << " ("
++             << SafeStrError(error_number) << ")";
++}
++
++// Short timeout for screen_get_event() in nanoseconds.
++// 16ms (~60 fps) balances responsiveness with CPU cost.
++// This is the minimum polling granularity; events arriving between ticks
++// are picked up on the next tick.
++constexpr int64_t kScreenEventTimeoutNs = 16 * 1000 * 1000;  // 16 ms
++
++// Polling interval for the timer. Match the event timeout for simplicity.
++// A longer interval (e.g. 50ms) reduces CPU at the cost of input latency.
++constexpr int64_t kPollingIntervalMs = 16;  // ~60 Hz
++
++// Maximum length for a SCREEN_PROPERTY_NAME string retrieved from events.
++constexpr size_t kMaxEventNameLen = 64;
++
++// Event types handled in this Phase 4 skeleton.
++constexpr int kHandledEventTypes[] = {
++    SCREEN_EVENT_CLOSE,
++    SCREEN_EVENT_KEYBOARD,
++    SCREEN_EVENT_POINTER,
++    SCREEN_EVENT_DISPLAY,
++    SCREEN_EVENT_IDLE,
++    SCREEN_EVENT_MTOUCH_TOUCH,
++    SCREEN_EVENT_MTOUCH_MOVE,
++    SCREEN_EVENT_MTOUCH_RELEASE,
++};
++
++// Returns a human-readable name for a SCREEN_EVENT_* type.
++const char* ScreenEventTypeName(int type) {
++  switch (type) {
++    case SCREEN_EVENT_NONE:
++      return "NONE";
++    case SCREEN_EVENT_CREATE:
++      return "CREATE";
++    case SCREEN_EVENT_PROPERTY:
++      return "PROPERTY";
++    case SCREEN_EVENT_CLOSE:
++      return "CLOSE";
++    case SCREEN_EVENT_INPUT:
++      return "INPUT";
++    case SCREEN_EVENT_JOG:
++      return "JOG";
++    case SCREEN_EVENT_POINTER:
++      return "POINTER";
++    case SCREEN_EVENT_KEYBOARD:
++      return "KEYBOARD";
++    case SCREEN_EVENT_USER:
++      return "USER";
++    case SCREEN_EVENT_POST:
++      return "POST";
++    case SCREEN_EVENT_DISPLAY:
++      return "DISPLAY";
++    case SCREEN_EVENT_IDLE:
++      return "IDLE";
++    case SCREEN_EVENT_UNREALIZE:
++      return "UNREALIZE";
++    case SCREEN_EVENT_GAMEPAD:
++      return "GAMEPAD";
++    case SCREEN_EVENT_JOYSTICK:
++      return "JOYSTICK";
++    case SCREEN_EVENT_INPUT_CONTROL:
++      return "INPUT_CONTROL";
++    case SCREEN_EVENT_GESTURE:
++      return "GESTURE";
++    case SCREEN_EVENT_MANAGER:
++      return "MANAGER";
++    case SCREEN_EVENT_MTOUCH_PRETOUCH:
++      return "MTOUCH_PRETOUCH";
++    case SCREEN_EVENT_MTOUCH_TOUCH:
++      return "MTOUCH_TOUCH";
++    case SCREEN_EVENT_MTOUCH_MOVE:
++      return "MTOUCH_MOVE";
++    case SCREEN_EVENT_MTOUCH_RELEASE:
++      return "MTOUCH_RELEASE";
++    default:
++      return "UNKNOWN";
++  }
++}
++
++}  // namespace
++
++// static
++QnxPlatformEventSource* QnxPlatformEventSource::GetInstance() {
++  return static_cast<QnxPlatformEventSource*>(PlatformEventSource::GetInstance());
++}
++
++QnxPlatformEventSource::QnxPlatformEventSource(
++    screen_context_t ctx,
++    QnxWindowManager* window_manager)
++    : context_(ctx), window_manager_(window_manager) {
++  // Create a reusable screen_event_t handle for polling.
++  if (context_) {
++    int rc = screen_create_event(&screen_event_);
++    if (rc != 0) {
++      LogScreenError("QnxPlatformEventSource: screen_create_event", errno);
++      screen_event_ = nullptr;
++    } else {
++      DLOG(INFO) << "QnxPlatformEventSource: created (event=" << screen_event_
++                 << ")";
++    }
++  }
++}
++
++QnxPlatformEventSource::~QnxPlatformEventSource() {
++  // QNX_INPUT Phase 3 shutdown summary: print translator + dispatch
++  // counters once. Pairs with the per-window summary emitted by
++  // ~QnxWindow. No AtExitManager dependency; this runs from the
++  // existing destructor.
++  LOG(INFO) << "QNX_INPUT: source shutdown summary pointer_polls_seen="
++            << pointer_polls_seen_
++            << " synth_moved=" << synth_moved_
++            << " synth_pressed=" << synth_pressed_
++            << " synth_released=" << synth_released_
++            << " synth_wheel_v=" << synth_wheel_v_
++            << " synth_wheel_h=" << synth_wheel_h_
++            << " es_dispatch_none=" << es_dispatch_none_
++            << " es_dispatch_perform_default=" << es_dispatch_perform_default_
++            << " es_dispatch_stop_propagation="
++            << es_dispatch_stop_propagation_;
++  Stop();
++  if (screen_event_) {
++    screen_destroy_event(screen_event_);
++    DLOG(INFO) << "QnxPlatformEventSource: screen_event destroyed";
++    screen_event_ = nullptr;
++  }
++}
++
++void QnxPlatformEventSource::Start() {
++  if (!context_ || !screen_event_) {
++    LOG(ERROR) << "QnxPlatformEventSource::Start: no context or event handle";
++    return;
++  }
++
++  DLOG(INFO) << "QnxPlatformEventSource: starting event polling";
++
++  // Schedule the first poll. Subsequent polls are rescheduled from the
++  // callback itself to avoid drift. GetCurrentDefault() is safe here because
++  // InitializeUI() runs on the main UI thread after the task runner is set up.
++  scoped_refptr<base::SequencedTaskRunner> task_runner =
++      base::SequencedTaskRunner::GetCurrentDefault();
++  if (!task_runner) {
++    LOG(ERROR) << "QnxPlatformEventSource::Start: no task runner available";
++    return;
++  }
++  task_runner->PostTask(FROM_HERE,
++                       base::BindOnce(&QnxPlatformEventSource::OnTimerTick,
++                                      weak_factory_.GetWeakPtr()));
++  // QNX_INPUT: Release-visible confirmation that the event source
++  // reached the post-PostTask state. Pairs with the "first poll running"
++  // marker emitted by OnTimerTick on its first invocation.
++  LOG(INFO) << "QNX_INPUT: event polling scheduled";
++}
++
++void QnxPlatformEventSource::Stop() {
++  weak_factory_.InvalidateWeakPtrs();
++  DLOG(INFO) << "QnxPlatformEventSource: stopped";
++}
++
++bool QnxPlatformEventSource::IsRunning() const {
++  return weak_factory_.HasWeakPtrs();
++}
++
++void QnxPlatformEventSource::OnTimerTick() {
++  // QNX_INPUT: one-shot Release-visible marker. Confirms that the
++  // polling task is actually running on the UI thread without
++  // polluting every 16 ms tick with log spam.
++  if (first_poll_marker_) {
++    first_poll_marker_ = false;
++    LOG(INFO) << "QNX_INPUT: first poll running";
++  }
++  // Poll for one Screen event with a short non-blocking timeout.
++  // screen_get_event returns 0 on success; -1 on error.
++  if (!context_ || !screen_event_)
++    return;
++
++  int rc = screen_get_event(context_, screen_event_, kScreenEventTimeoutNs);
++  if (rc < 0) {
++    LogScreenError("QnxPlatformEventSource: screen_get_event", errno);
++    // Still schedule next tick even on error.
++  } else {
++    // Translate and dispatch if we got an event. screen_get_event succeeds
++    // even for SCREEN_EVENT_NONE (timeout); we check the event type.
++    int event_type = SCREEN_EVENT_NONE;
++    screen_get_event_property_iv(screen_event_, SCREEN_PROPERTY_TYPE,
++                                &event_type);
++
++    if (event_type != SCREEN_EVENT_NONE) {
++      TranslateScreenEvent();
++    }
++  }
++
++  // Schedule the next poll if not stopped.
++  if (weak_factory_.HasWeakPtrs()) {
++    scoped_refptr<base::SequencedTaskRunner> task_runner =
++        base::SequencedTaskRunner::GetCurrentDefault();
++    if (task_runner) {
++      task_runner->PostDelayedTask(
++          FROM_HERE,
++          base::BindOnce(&QnxPlatformEventSource::OnTimerTick,
++                         weak_factory_.GetWeakPtr()),
++          base::Milliseconds(kPollingIntervalMs));
++    }  // if (task_runner)
++  }  // if (weak_factory_.HasWeakPtrs())
++}
++
++uint32_t QnxPlatformEventSource::DispatchEvent(PlatformEvent platform_event) {
++  // QNX_INPUT Phase 3: bucket the PlatformEventSource return value so the
++  // shutdown summary can prove which POST_DISPATCH_* branch the registered
++  // dispatcher chain actually selected.
++  uint32_t result = PlatformEventSource::DispatchEvent(platform_event);
++  // Diagnostic only: log the first PlatformEventSource return value so we
++  // can prove which POST_DISPATCH_* branch dominates without waiting for
++  // shutdown. Existing behaviour and the bucketing counters are unchanged.
++  if (es_dispatch_first_marker_) {
++    es_dispatch_first_marker_ = false;
++    const char* bucket = "OTHER";
++    switch (result) {
++      case POST_DISPATCH_NONE:            bucket = "NONE";            break;
++      case POST_DISPATCH_PERFORM_DEFAULT: bucket = "PERFORM_DEFAULT"; break;
++      case POST_DISPATCH_STOP_PROPAGATION: bucket = "STOP_PROPAGATION"; break;
++      default: break;
++    }
++    LOG(INFO) << "QNX_INPUT: source dispatch first result=" << result
++              << " bucket=" << bucket;
++  }
++  switch (result) {
++    case POST_DISPATCH_NONE:
++      es_dispatch_none_++;
++      break;
++    case POST_DISPATCH_PERFORM_DEFAULT:
++      es_dispatch_perform_default_++;
++      break;
++    case POST_DISPATCH_STOP_PROPAGATION:
++      es_dispatch_stop_propagation_++;
++      break;
++    default:
++      es_dispatch_none_++;
++      break;
++  }
++  // Delegate to the base class to notify observers and dispatch to
++  // registered dispatchers.
++  return result;
++}
++
++bool QnxPlatformEventSource::TranslateScreenEvent() {
++  int event_type = SCREEN_EVENT_NONE;
++  screen_get_event_property_iv(screen_event_, SCREEN_PROPERTY_TYPE,
++                              &event_type);
++
++  // Retrieve the source window, if any.
++  screen_window_t win = nullptr;
++  screen_get_event_property_pv(screen_event_, SCREEN_PROPERTY_WINDOW,
++                              reinterpret_cast<void**>(&win));
++
++  // Log all events for Phase 4 debugging; this helps trace input behavior.
++  if (VLOG_IS_ON(1)) {
++    DumpScreenEvent(event_type, win);
++  }
++
++  // Phase 4 conservative approach: only fully dispatch a subset of events.
++  // Events that are not yet handled are logged but silently dropped.
++  switch (event_type) {
++    case SCREEN_EVENT_CLOSE: {
++      // Window close: find the QnxWindow and notify its delegate.
++      // QnxWindowManager maps screen_window_t -> QnxWindow.
++      if (win && window_manager_) {
++        // Scan windows to find the one matching this screen_window_t.
++        // QnxWidgetRecord.screen_win holds the raw pointer.
++        // This is a simplified close handler for Phase 4 smoke.
++        DLOG(INFO) << "QnxPlatformEventSource: SCREEN_EVENT_CLOSE "
++                      "for window="
++                   << win;
++        // The actual close propagation will be implemented in Phase 4
++        // subsequent substeps when window-to-widget mapping is extended.
++      }
++      break;
++    }
++
++    case SCREEN_EVENT_KEYBOARD: {
++      // Phase 4: keyboard events are logged but not yet dispatched.
++      // Full keyboard translation requires KeyboardLayoutEngine and IME wiring.
++      int flags = 0;
++      int sym = 0;
++      screen_get_event_property_iv(screen_event_, SCREEN_PROPERTY_FLAGS, &flags);
++      screen_get_event_property_iv(screen_event_, SCREEN_PROPERTY_SYM, &sym);
++      DLOG(INFO) << "QnxPlatformEventSource: KEYBOARD sym=0x" << std::hex << sym
++                 << " flags=0x" << flags << std::dec;
++      // TODO(qnx): Translate to ui::KeyEvent and dispatch.
++      break;
++    }
++
++    case SCREEN_EVENT_POINTER: {
++      // QNX_INPUT Phase 3: count raw SCREEN_EVENT_POINTER arrivals for the
++      // balance check against synth_moved/pressed/released.
++      pointer_polls_seen_++;
++      // Translate the QNX Screen pointer state into Chromium ui::MouseEvent
++      // move/press/release events and dispatch through the registered
++      // PlatformEventDispatchers (QnxWindow). See DispatchPointerEvent() for
++      // details on button-mask tracking and coordinate transforms.
++      DispatchPointerEvent(win);
++      break;
++    }
++
++    case SCREEN_EVENT_MTOUCH_TOUCH:
++    case SCREEN_EVENT_MTOUCH_MOVE:
++    case SCREEN_EVENT_MTOUCH_RELEASE: {
++      DLOG(INFO) << "QnxPlatformEventSource: MTOUCH event type="
++                 << ScreenEventTypeName(event_type);
++      // TODO(qnx): Translate to ui::TouchEvent and dispatch.
++      break;
++    }
++
++    case SCREEN_EVENT_DISPLAY: {
++      DLOG(INFO) << "QnxPlatformEventSource: DISPLAY event";
++      // TODO(qnx): Trigger display re-enumeration in QnxScreen.
++      break;
++    }
++
++    case SCREEN_EVENT_IDLE: {
++      DLOG(INFO) << "QnxPlatformEventSource: IDLE event";
++      // TODO(qnx): Update idle state tracking.
++      break;
++    }
++
++    case SCREEN_EVENT_NONE:
++      // Timeout: no event to process.
++      break;
++
++    default:
++      DLOG(INFO) << "QnxPlatformEventSource: unhandled event type="
++                 << ScreenEventTypeName(event_type);
++      break;
++  }
++
++  return true;  // Event was processed (logged or dispatched).
++}
++
++void QnxPlatformEventSource::DumpScreenEvent(int event_type,
++                                            screen_window_t win) {
++  // Retrieve additional event properties for verbose logging.
++  char name_buf[kMaxEventNameLen] = {0};
++  int rc = screen_get_event_property_cv(screen_event_, SCREEN_PROPERTY_NAME,
++                                        sizeof(name_buf), name_buf);
++  if (rc != 0) {
++    name_buf[0] = '\0';
++  } else if (strlen(name_buf) >= kMaxEventNameLen) {
++    // Ensure null termination if the Screen API fills the buffer completely.
++    name_buf[kMaxEventNameLen - 1] = '\0';
++  }
++
++  long long timestamp_ns = 0;
++  screen_get_event_property_llv(screen_event_, SCREEN_PROPERTY_TIMESTAMP,
++                                &timestamp_ns);
++
++  VLOG(1) << "Screen event: type=" << ScreenEventTypeName(event_type)
++          << " (" << event_type << ") window=" << win
++          << " name='" << (name_buf[0] ? name_buf : "(null)") << "' ts_ns=" << timestamp_ns;
++}
++
++bool QnxPlatformEventSource::DispatchPointerEvent(screen_window_t win) {
++  // QNX_INPUT: one-shot Release-visible marker at entry, BEFORE the
++  // window_manager_/win guard. Confirms that SCREEN_EVENT_POINTER
++  // reached the dispatcher even when Screen delivered a pointer event
++  // without a source window (e.g. a virtual/offscreen device) which
++  // would otherwise fall through the guard and never emit a marker.
++  // Separates "pointer events arrive" from "target window resolves".
++  if (first_pointer_marker_) {
++    first_pointer_marker_ = false;
++    LOG(INFO) << "QNX_INPUT: first pointer event win=" << win;
++  }
++
++  if (!window_manager_ || !win) {
++    // No source window recorded by Screen; cannot resolve a target. This
++    // typically means the event came from a non-window context (e.g. a
++    // virtual device) and needs screen-point hit testing, which is out of
++    // scope for the pointer MVP.
++    VLOG(1) << "QnxPlatformEventSource: POINTER skipped (no source window="
++            << win << " or no window_manager)";
++    return false;
++  }
++
++  // Read the current pointer position and button mask from the Screen event.
++  int pos[2] = {0, 0};
++  int buttons = 0;
++  if (screen_get_event_property_iv(screen_event_, SCREEN_PROPERTY_POSITION,
++                                  pos) != 0) {
++    // Property read failure is unusual; warn so the missing log under
++    // --ozone-qnx-gpu-trace is not mistaken for "no pointer events".
++    int saved_errno = errno;
++    LOG(WARNING) << "QnxPlatformEventSource: POINTER "
++                    "SCREEN_PROPERTY_POSITION read failed errno="
++                 << saved_errno << " (" << SafeStrError(saved_errno) << ")";
++    return false;
++  }
++  if (screen_get_event_property_iv(screen_event_, SCREEN_PROPERTY_BUTTONS,
++                                  &buttons) != 0) {
++    int saved_errno = errno;
++    LOG(WARNING) << "QnxPlatformEventSource: POINTER "
++                    "SCREEN_PROPERTY_BUTTONS read failed errno="
++                 << saved_errno << " (" << SafeStrError(saved_errno) << ")";
++    return false;
++  }
++
++  // Property-read success: detailed pointer state is always VLOG(1) so
++  // first and subsequent events look the same and Release logs stay
++  // readable.
++  VLOG(1) << "QNX_INPUT: POINTER win=" << win << " pos=(" << pos[0] << ","
++          << pos[1] << ") buttons=0x" << std::hex << buttons << std::dec;
++
++  // Resolve the target QnxWindow. The Screen event's source window is the
++  // browser-owned QnxWindow under the cursor.
++  QnxWindow* window = window_manager_->LookupWindowByScreenWin(win);
++  if (!window) {
++    LOG(WARNING) << "QnxPlatformEventSource: POINTER for unknown "
++                    "screen_win="
++                 << win << " pos=(" << pos[0] << "," << pos[1] << ")";
++    return false;
++  }
++
++  // Compute local coordinates relative to the window bounds; root location
++  // stays in screen coordinates.
++  gfx::Rect bounds = window->GetBoundsInPixels();
++  gfx::PointF location(pos[0] - bounds.x(), pos[1] - bounds.y());
++  gfx::PointF root_location(static_cast<float>(pos[0]),
++                            static_cast<float>(pos[1]));
++
++  // SCREEN_PROPERTY_TIMESTAMP is the realtime clock in milliseconds since
++  // epoch (per screen.h); fall back to Now() if the property is not
++  // populated.
++  long long timestamp_ms = 0;
++  screen_get_event_property_llv(screen_event_, SCREEN_PROPERTY_TIMESTAMP,
++                               &timestamp_ms);
++  base::TimeTicks timestamp = timestamp_ms > 0
++      ? base::TimeTicks::UnixEpoch() +
++            base::Milliseconds(static_cast<int64_t>(timestamp_ms))
++      : base::TimeTicks::Now();
++
++  // Translate QNX button bits to Chromium EventFlags. The QNX layout is
++  // contiguous bits 0/1/2 while Chromium places them at bits 11/12/13.
++  int flags = 0;
++  if (buttons & SCREEN_LEFT_MOUSE_BUTTON)
++    flags |= EF_LEFT_MOUSE_BUTTON;
++  if (buttons & SCREEN_MIDDLE_MOUSE_BUTTON)
++    flags |= EF_MIDDLE_MOUSE_BUTTON;
++  if (buttons & SCREEN_RIGHT_MOUSE_BUTTON)
++    flags |= EF_RIGHT_MOUSE_BUTTON;
++
++  bool any_dispatched = false;
++
++  // Emit a move event whenever the position changes or any button changed
++  // state (a press/release always implies a position update worth
++  // recording). On the very first POINTER sample we also emit a move so
++  // downstream targets start with a coherent cursor position.
++  if (!has_pointer_state_ || pos[0] != last_pointer_x_ ||
++      pos[1] != last_pointer_y_ || buttons != last_pointer_buttons_) {
++    MouseEvent move_event(EventType::kMouseMoved, location, root_location,
++                          timestamp, flags, /*changed_button_flags=*/0);
++    Event::DispatcherApi(&move_event).set_target(window);
++    synth_moved_++;
++    DispatchEvent(&move_event);
++    any_dispatched = true;
++  }
++
++  // Emit one press or release per transitioned button. Tracking the previous
++  // mask ensures exactly one edge event per physical transition even if
++  // Screen coalesces updates.
++  struct ButtonTransition {
++    int qnx_bit;
++    int chromium_flag;
++  };
++  const ButtonTransition kButtons[] = {
++      {SCREEN_LEFT_MOUSE_BUTTON, EF_LEFT_MOUSE_BUTTON},
++      {SCREEN_MIDDLE_MOUSE_BUTTON, EF_MIDDLE_MOUSE_BUTTON},
++      {SCREEN_RIGHT_MOUSE_BUTTON, EF_RIGHT_MOUSE_BUTTON},
++  };
++  for (const auto& b : kButtons) {
++    bool was_down =
++        has_pointer_state_ && (last_pointer_buttons_ & b.qnx_bit) != 0;
++    bool is_down = (buttons & b.qnx_bit) != 0;
++    if (was_down == is_down)
++      continue;
++    EventType type =
++        is_down ? EventType::kMousePressed : EventType::kMouseReleased;
++    // Both press and release edge events include the transitioned button in
++    // the MouseEvent flags. This matches the Linux/evdev contract where
++    // |flags| reports "the button is currently in this state during this
++    // event" for one cycle; the explicitly-tracked |changed_button_flags|
++    // argument tells consumers which edge fired.
++    int button_flags = flags | b.chromium_flag;
++    MouseEvent button_event(type, location, root_location, timestamp,
++                            button_flags, /*changed_button_flags=*/b.chromium_flag);
++    Event::DispatcherApi(&button_event).set_target(window);
++    if (is_down)
++      synth_pressed_++;
++    else
++      synth_released_++;
++    DispatchEvent(&button_event);
++    any_dispatched = true;
++  }
++
++  // ---- Phase 5: SCREEN_PROPERTY_MOUSE_WHEEL / MOUSE_HORIZONTAL_WHEEL ----
++  // QNX semantics (per screen.h): vertical raw up = negative / down = positive;
++  // horizontal raw left = negative / right = positive. Chromium offset
++  // convention (event.h:655-656): y_offset > 0 / x_offset > 0 means scroll
++  // up / left. Translation rule: Chromium_offset = -raw * kWheelDelta.
++  // Wheel=0 path leaves the existing MouseEvent sequence untouched.
++  int wheel_v = 0;
++  int wheel_h = 0;
++  if (screen_get_event_property_iv(
++          screen_event_, SCREEN_PROPERTY_MOUSE_WHEEL, &wheel_v) != 0) {
++    wheel_v = 0;
++  }
++  if (screen_get_event_property_iv(
++          screen_event_, SCREEN_PROPERTY_MOUSE_HORIZONTAL_WHEEL,
++          &wheel_h) != 0) {
++    wheel_h = 0;
++  }
++  if (wheel_v != 0 || wheel_h != 0) {
++    if (first_wheel_marker_) {
++      first_wheel_marker_ = false;
++      LOG(INFO) << "QNX_INPUT: first wheel event raw_v=" << wheel_v
++                << " raw_h=" << wheel_h
++                << " (Chromium offset = -raw * MouseWheelEvent::kWheelDelta)";
++    }
++    gfx::Vector2d offset(-wheel_v * MouseWheelEvent::kWheelDelta,
++                          -wheel_h * MouseWheelEvent::kWheelDelta);
++    MouseWheelEvent wheel_event(
++        offset, location, root_location, timestamp, /*flags=*/0,
++        /*changed_button_flags=*/0);
++    Event::DispatcherApi(&wheel_event).set_target(window);
++    if (offset.y() != 0)
++      synth_wheel_v_++;
++    if (offset.x() != 0)
++      synth_wheel_h_++;
++    DispatchEvent(&wheel_event);
++    any_dispatched = true;
++  }
++
++  // Update tracked state for the next transition.
++  last_pointer_buttons_ = buttons;
++  last_pointer_x_ = pos[0];
++  last_pointer_y_ = pos[1];
++  has_pointer_state_ = true;
++
++  return any_dispatched;
++}
++
++}  // namespace ui
+diff --git ui/ozone/platform/qnx/qnx_platform_event_source.h ui/ozone/platform/qnx/qnx_platform_event_source.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..7e4bd22da44dd8d736662f0fbbc0d16943fa1df7
+--- /dev/null
++++ ui/ozone/platform/qnx/qnx_platform_event_source.h
+@@ -0,0 +1,135 @@
++// Copyright 2026 The Chromium Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef UI_OZONE_PLATFORM_QNX_QNX_PLATFORM_EVENT_SOURCE_H_
++#define UI_OZONE_PLATFORM_QNX_QNX_PLATFORM_EVENT_SOURCE_H_
++
++#include <screen/screen.h>
++
++#include "base/component_export.h"
++#include "base/memory/raw_ptr.h"
++#include "ui/events/platform/platform_event_source.h"
++
++// Phase 4, second substep: minimal QNX Screen event source.
++// Owns the screen_context_t and polls for QNX Screen events using
++// screen_get_event() with a short non-blocking timeout. Translates and
++// dispatches events to registered PlatformEventDispatchers.
++//
++// Scope: compile-safe polling skeleton. Close/keyboard/pointer events are
++// logged or partially translated. Full IME, display enumeration via events,
++// and GPU producer input are deferred.
++namespace ui {
++
++class QnxWindowManager;
++
++class COMPONENT_EXPORT(OZONE_BASE) QnxPlatformEventSource
++    : public PlatformEventSource {
++ public:
++  // Returns the thread-local singleton, or nullptr if not yet created.
++  static QnxPlatformEventSource* GetInstance();
++
++  explicit QnxPlatformEventSource(screen_context_t ctx,
++                                  QnxWindowManager* window_manager);
++  ~QnxPlatformEventSource() override;
++
++  QnxPlatformEventSource(const QnxPlatformEventSource&) = delete;
++  QnxPlatformEventSource& operator=(const QnxPlatformEventSource&) = delete;
++
++  // Start polling for Screen events. Called after the message pump is running.
++  void Start();
++
++  // Stop polling. Called during shutdown.
++  void Stop();
++
++  // Returns true if polling is active.
++  bool IsRunning() const;
++
++ protected:
++  // PlatformEventSource override: dispatch a native event to registered
++  // dispatchers. QNX Screen events are dispatched through this path.
++  uint32_t DispatchEvent(PlatformEvent platform_event) override;
++
++ private:
++  // Callback invoked by the timer to poll for one Screen event.
++  void OnTimerTick();
++
++  // Translate a Screen event into a PlatformEvent and dispatch it.
++  // Returns true if a meaningful event was dispatched.
++  bool TranslateScreenEvent();
++
++  // Translate a SCREEN_EVENT_POINTER into one ui::MouseEvent per change
++  // (move, press, release) and dispatch them through the registered
++  // PlatformEventDispatchers. The QNX screen_window_t in |win| is used
++  // to resolve the target QnxWindow via QnxWindowManager. Returns true
++  // if at least one event was dispatched.
++  bool DispatchPointerEvent(screen_window_t win);
++
++  // Log a Screen event with its type and key window properties for debugging.
++  void DumpScreenEvent(int event_type, screen_window_t win);
++
++  // QNX Screen context. Not wrapped in raw_ptr because screen_context_t is
++  // an opaque pointer type (struct _screen_context*) and wrapping it in
++  // raw_ptr triggers a build error due to incomplete-type issues.
++  screen_context_t context_ = nullptr;
++  raw_ptr<QnxWindowManager> window_manager_;
++
++  // Reused screen_event_t handle for polling. Allocated once at construction.
++  screen_event_t screen_event_ = nullptr;
++
++  // Last seen QNX Screen button mask. Used to derive press/release
++  // transitions when consecutive SCREEN_EVENT_POINTER events arrive.
++  // Bits match the QNX Screen API (SCREEN_LEFT_MOUSE_BUTTON = 1 << 0,
++  // SCREEN_MIDDLE_MOUSE_BUTTON = 1 << 1, SCREEN_RIGHT_MOUSE_BUTTON = 1 << 2).
++  int last_pointer_buttons_ = 0;
++
++  // Last seen pointer position in screen coordinates. Used to compute
++  // root vs local coordinates and to track move deltas.
++  int last_pointer_x_ = 0;
++  int last_pointer_y_ = 0;
++
++  // True once the first SCREEN_EVENT_POINTER has populated the
++  // last_pointer_buttons_ / last_pointer_x_ / last_pointer_y_ fields.
++  bool has_pointer_state_ = false;
++
++  // QNX_INPUT diagnostics: set to false after the first OnTimerTick
++  // emits its one-shot Release-visible marker. Lets us confirm that
++  // the polling task actually runs on the UI thread without injecting
++  // per-tick log noise in Release.
++  bool first_poll_marker_ = true;
++
++  // QNX_INPUT diagnostics: set to false after the first successful
++  // pointer property read in DispatchPointerEvent. Confirms that
++  // SCREEN_PROPERTY_POSITION / BUTTONS were readable from the polled
++  // Screen event at least once.
++  bool first_pointer_marker_ = true;
++
++  // QNX_INPUT Phase 3 diagnostics: translator + dispatch counters, printed
++  // once from ~QnxPlatformEventSource. Existing predicate, target, and
++  // event-spec behaviour remain unchanged.
++  uint32_t pointer_polls_seen_ = 0;
++  uint32_t synth_moved_ = 0;
++  uint32_t synth_pressed_ = 0;
++  uint32_t synth_released_ = 0;
++  // Phase 5 wheel counters: number of ui::MouseWheelEvent instances
++  // emitted by DispatchPointerEvent when SCREEN_PROPERTY_MOUSE_WHEEL
++  // or SCREEN_PROPERTY_MOUSE_HORIZONTAL_WHEEL are non-zero. Wheel=0
++  // never changes the existing MouseEvent path.
++  uint32_t synth_wheel_v_ = 0;
++  uint32_t synth_wheel_h_ = 0;
++  // First-time wheel marker: log once when a non-zero wheel is observed.
++  bool first_wheel_marker_ = true;
++  uint32_t es_dispatch_none_ = 0;
++  uint32_t es_dispatch_perform_default_ = 0;
++  uint32_t es_dispatch_stop_propagation_ = 0;
++  // First-time marker for the QNX_INPUT: source dispatch first result log.
++  // Counters above remain unchanged; only the one-shot log is gated.
++  bool es_dispatch_first_marker_ = true;
++
++  // Timer for periodic polling. Uses MessagePump scheduling.
++  base::WeakPtrFactory<QnxPlatformEventSource> weak_factory_{this};
++};
++
++}  // namespace ui
++
++#endif  // UI_OZONE_PLATFORM_QNX_QNX_PLATFORM_EVENT_SOURCE_H_
+diff --git ui/ozone/platform/qnx/qnx_window.cc ui/ozone/platform/qnx/qnx_window.cc
+new file mode 100644
+index 0000000000000000000000000000000000000000..eec18f2d3b13df3bab50b0d8ef8ef5b6d7d1af27
+--- /dev/null
++++ ui/ozone/platform/qnx/qnx_window.cc
+@@ -0,0 +1,500 @@
++// Copyright 2026 The Chromium Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "ui/ozone/platform/qnx/qnx_window.h"
++
++#include <errno.h>
++#include <memory>
++#include <string.h>
++
++#include "base/logging.h"
++#include "base/notimplemented.h"
++#include "base/notreached.h"
++#include "base/strings/utf_string_conversions.h"
++#include "ui/base/cursor/platform_cursor.h"
++#include "ui/display/screen.h"
++#include "ui/display/types/display_constants.h"
++#include "ui/events/event.h"
++#include "ui/events/event_target.h"
++#include "ui/events/event_targeter.h"
++#include "ui/events/event_target_iterator.h"
++#include "ui/events/platform/platform_event_source.h"
++#include "ui/ozone/platform/qnx/qnx_platform_event_source.h"
++#include "ui/ozone/platform/qnx/qnx_screen_context.h"
++#include "ui/ozone/platform/qnx/qnx_window_manager.h"
++
++namespace ui {
++
++namespace {
++
++// QNX Screen usage flags for the Chromium browser window.
++// SCREEN_USAGE_OPENGL_ES2 enables GL rendering on this window.
++constexpr int kScreenUsageFlags = SCREEN_USAGE_OPENGL_ES2;
++
++// QNX Screen sensitivity values for input capture.
++// SCREEN_SENSITIVITY_ALWAYS = 1 means the window receives input regardless
++// of focus. SCREEN_SENSITIVITY_NO_FOCUS = 3 means no input.
++constexpr int kSensitivityCapture = SCREEN_SENSITIVITY_ALWAYS;
++constexpr int kSensitivityRelease = SCREEN_SENSITIVITY_NO_FOCUS;
++
++}  // namespace
++
++QnxWindow::QnxWindow(PlatformWindowDelegate* delegate,
++                     QnxWindowManager* manager,
++                     QnxScreenContext* screen_context,
++                     const gfx::Rect& bounds)
++    : delegate_(delegate),
++      manager_(manager),
++      screen_context_(screen_context),
++      bounds_(bounds) {
++  LOG(INFO) << "[QNX-TRACE] QnxWindow::QnxWindow: bounds="
++            << bounds_.ToString();
++  if (!screen_context_->is_valid()) {
++    LOG(ERROR) << "QnxWindow: cannot create window: invalid Screen context";
++    return;
++  }
++
++  if (!CreateScreenWindow(bounds)) {
++    LOG(ERROR) << "QnxWindow: CreateScreenWindow failed";
++    return;
++  }
++
++  // Register with the window manager. This allocates the stable widget ID.
++  // Register with the window manager. This allocates the stable widget ID.
++  // Pass the initial size so the GPU side gets a non-zero AttachWidget size
++  // when AttachNewWidget fires (e.g., content_shell's about:blank window
++  // created after the GPU service has already connected).
++  widget_ = manager_->AddWindow(this, bounds.size());
++  // Push the raw screen_window_t handle into the widget record so that
++  // QnxFrameImporter::GetOrCreateWindowState (called later when the GPU
++  // submits a frame for this widget) can hand it to
++  // eglCreateWindowSurface. Without this, the record's screen_win stays
++  // nullptr and ImportAndDisplayFrame bails out with "scaffold: no
++  // screen_window_t for widget". AddWindow fires AttachNewWidget if the
++  // GPU is already connected, so this must run before AddWindow returns.
++  if (screen_win_) {
++    manager_->SetScreenWindow(widget_, screen_win_);
++  }
++  delegate_->OnAcceleratedWidgetAvailable(widget_);
++  LOG(INFO) << "[QNX-TRACE] QnxWindow::QnxWindow: widget=" << widget_
++            << " screen_win=" << screen_win_;
++
++  // Register as a PlatformEventDispatcher so translated Screen pointer
++  // events can be routed here. No-op if the event source has not been
++  // created yet (rare; InitializeUI creates both in sequence).
++  RegisterWithEventSource();
++
++  DLOG(INFO) << "QnxWindow: created widget=" << widget_
++             << " screen_win=" << screen_win_ << " bounds=" << bounds_.ToString();
++}
++
++QnxWindow::~QnxWindow() {
++  // QNX_INPUT Phase 3 shutdown summary: print counter totals for this
++  // window once. Pair with QnxPlatformEventSource's destructor summary
++  // for the cross-window view.
++  LOG(INFO) << "QNX_INPUT: window shutdown summary widget=" << widget_
++            << " registration_ok=" << registration_ok_
++            << " registration_failed=" << registration_failed_
++            << " can_dispatch_calls=" << can_dispatch_calls_
++            << " can_dispatch_accept=" << can_dispatch_accept_
++            << " can_dispatch_reject=" << can_dispatch_reject_
++            << " dispatch_entry=" << dispatch_entry_
++            << " delegate_dispatch_called=" << delegate_dispatch_called_
++            << " null_delegate=" << null_delegate_;
++  UnregisterFromEventSource();
++  DestroyScreenWindow();
++  if (widget_ != gfx::kNullAcceleratedWidget) {
++    manager_->RemoveWindow(widget_, this);
++  }
++}
++
++bool QnxWindow::CreateScreenWindow(const gfx::Rect& bounds) {
++  // Step 1: Create the raw screen window.
++  int rc = screen_create_window(&screen_win_, screen_context_->context());
++  if (rc != 0) {
++    PLOG(ERROR) << "QnxWindow: screen_create_window failed";
++    return false;
++  }
++
++  // Step 2: Set window size (in pixels).
++  int size[2] = {bounds.width(), bounds.height()};
++  rc = screen_set_window_property_iv(screen_win_, SCREEN_PROPERTY_SIZE, size);
++  if (rc != 0) {
++    PLOG(ERROR) << "QnxWindow: screen_set SCREEN_PROPERTY_SIZE failed";
++    screen_destroy_window(screen_win_);
++    screen_win_ = nullptr;
++    return false;
++  }
++
++  // Step 3: Set window position.
++  int pos[2] = {bounds.x(), bounds.y()};
++  rc = screen_set_window_property_iv(screen_win_, SCREEN_PROPERTY_POSITION, pos);
++  if (rc != 0) {
++    PLOG(WARNING) << "QnxWindow: screen_set SCREEN_PROPERTY_POSITION failed";
++    // Non-fatal; default to 0,0.
++  }
++
++  // Step 4: Set usage flags (enable GLES2 rendering on this window).
++  rc = screen_set_window_property_iv(screen_win_, SCREEN_PROPERTY_USAGE,
++                                     &kScreenUsageFlags);
++  if (rc != 0) {
++    PLOG(ERROR) << "QnxWindow: screen_set SCREEN_PROPERTY_USAGE failed";
++    screen_destroy_window(screen_win_);
++    screen_win_ = nullptr;
++    return false;
++  }
++
++  // Step 5: Set initial visibility — visible from creation.
++  int visible = 1;
++  rc = screen_set_window_property_iv(screen_win_, SCREEN_PROPERTY_VISIBLE,
++                                    &visible);
++  if (rc != 0) {
++    PLOG(WARNING) << "QnxWindow: screen_set SCREEN_PROPERTY_VISIBLE failed";
++    // Non-fatal; window may still be visible by default.
++  }
++
++  // Step 6: Create the window buffer(s). SCREEN_USAGE_OPENGL_ES2 requires at
++  // least one buffer for rendering.
++  rc = screen_create_window_buffers(screen_win_, 1);
++  if (rc != 0) {
++    PLOG(ERROR)
++        << "QnxWindow: screen_create_window_buffers failed";
++    screen_destroy_window(screen_win_);
++    screen_win_ = nullptr;
++    return false;
++  }
++
++  // Step 7: Force pointer intersection to be delivered to this window
++  // regardless of focus. The QNX Screen default sensitivity (referenced
++  // by the screen.h mapping used at runtime) does forward pointer
++  // intersection events, but requesting ALWAYS explicitly is defensive
++  // against any host compositor / window-manager setting that might
++  // otherwise gate input on focus.
++  int sensitivity = SCREEN_SENSITIVITY_ALWAYS;
++  rc = screen_set_window_property_iv(screen_win_, SCREEN_PROPERTY_SENSITIVITY,
++                                     &sensitivity);
++  if (rc != 0) {
++    PLOG(WARNING)
++        << "QnxWindow: set SCREEN_PROPERTY_SENSITIVITY=ALWAYS failed";
++    // Non-fatal; pointer events may still arrive via the Screen default.
++  }
++
++  return true;
++}
++
++void QnxWindow::DestroyScreenWindow() {
++  if (screen_win_) {
++    screen_destroy_window(screen_win_);
++    DLOG(INFO) << "QnxWindow: screen_destroy_window done";
++    screen_win_ = nullptr;
++  }
++}
++
++void QnxWindow::Show(bool inactive) {
++  if (!screen_win_)
++    return;
++  int visible = 1;
++  screen_set_window_property_iv(screen_win_, SCREEN_PROPERTY_VISIBLE, &visible);
++  visible_ = true;
++  // Notify delegate. Aura/WindowTreeHost uses OnActivationChanged.
++  Activate();
++}
++
++void QnxWindow::Hide() {
++  if (!screen_win_)
++    return;
++  int visible = 0;
++  screen_set_window_property_iv(screen_win_, SCREEN_PROPERTY_VISIBLE, &visible);
++  visible_ = false;
++}
++
++void QnxWindow::Close() {
++  DestroyScreenWindow();
++  delegate_->OnClosed();
++}
++
++bool QnxWindow::IsVisible() const {
++  return visible_;
++}
++
++void QnxWindow::PrepareForShutdown() {}
++
++void QnxWindow::SetBoundsInPixels(const gfx::Rect& bounds) {
++  bounds_ = bounds;
++  if (!screen_win_)
++    return;
++
++  int size[2] = {bounds.width(), bounds.height()};
++  int rc = screen_set_window_property_iv(screen_win_, SCREEN_PROPERTY_SIZE, size);
++  if (rc != 0) {
++    PLOG(WARNING) << "QnxWindow: resize failed";
++  }
++
++  int pos[2] = {bounds.x(), bounds.y()};
++  rc = screen_set_window_property_iv(screen_win_, SCREEN_PROPERTY_POSITION, pos);
++  if (rc != 0) {
++    PLOG(WARNING) << "QnxWindow: reposition failed";
++  }
++
++  bool origin_changed = bounds_.origin() != bounds.origin();
++  delegate_->OnBoundsChanged({origin_changed});
++}
++
++gfx::Rect QnxWindow::GetBoundsInPixels() const {
++  return bounds_;
++}
++
++void QnxWindow::SetBoundsInDIP(const gfx::Rect& bounds) {
++  SetBoundsInPixels(delegate_->ConvertRectToPixels(bounds));
++}
++
++gfx::Rect QnxWindow::GetBoundsInDIP() const {
++  return delegate_->ConvertRectToDIP(bounds_);
++}
++
++void QnxWindow::SetTitle(const std::u16string& title) {
++  if (!screen_win_)
++    return;
++  // QNX Screen uses SCREEN_PROPERTY_ID_STRING for window title/name.
++  std::string title_utf8 = base::UTF16ToUTF8(title);
++  int rc = screen_set_window_property_cv(
++      screen_win_, SCREEN_PROPERTY_ID_STRING, title_utf8.size(),
++      title_utf8.c_str());
++  if (rc != 0) {
++    PLOG(WARNING) << "QnxWindow: screen_set SCREEN_PROPERTY_ID_STRING failed";
++  }
++}
++
++void QnxWindow::SetCapture() {
++  // QNX Screen uses SCREEN_PROPERTY_SENSITIVITY for input capture.
++  if (!screen_win_)
++    return;
++  int rc = screen_set_window_property_iv(
++      screen_win_, SCREEN_PROPERTY_SENSITIVITY, &kSensitivityCapture);
++  if (rc != 0) {
++    PLOG(WARNING) << "QnxWindow: SetCapture failed";
++  }
++}
++
++void QnxWindow::ReleaseCapture() {
++  if (!screen_win_)
++    return;
++  int rc = screen_set_window_property_iv(
++      screen_win_, SCREEN_PROPERTY_SENSITIVITY, &kSensitivityRelease);
++  if (rc != 0) {
++    PLOG(WARNING) << "QnxWindow: ReleaseCapture failed";
++  }
++}
++
++bool QnxWindow::HasCapture() const {
++  // Phase 4: no way to query QNX Screen sensitivity state from here.
++  NOTREACHED();
++  return false;
++}
++
++void QnxWindow::SetFullscreen(bool fullscreen, int64_t target_display_id) {
++  // QNX Screen does not have SCREEN_PROPERTY_FULLSCREEN.
++  // Simulate fullscreen by updating window state.
++  // Phase 5 may use SCREEN_PROPERTY_DISPLAY + display bounds for proper
++  // fullscreen implementation.
++  if (fullscreen) {
++    if (window_state_ != PlatformWindowState::kMaximized &&
++        window_state_ != PlatformWindowState::kFullScreen) {
++      restored_bounds_ = bounds_;
++    }
++    // For now, just update state without actual fullscreen (Phase 5 fix).
++    UpdateWindowState(PlatformWindowState::kFullScreen);
++  } else {
++    if (window_state_ != PlatformWindowState::kFullScreen)
++      return;
++    RestoreWindowBounds();
++    UpdateWindowState(PlatformWindowState::kNormal);
++  }
++}
++
++void QnxWindow::Maximize() {
++  // QNX Screen does not have a maximize property.
++  // Simulate by updating state. Full implementation in Phase 5+.
++  if (window_state_ != PlatformWindowState::kMaximized &&
++      window_state_ != PlatformWindowState::kFullScreen) {
++    restored_bounds_ = bounds_;
++    UpdateWindowState(PlatformWindowState::kMaximized);
++  }
++}
++
++void QnxWindow::Minimize() {
++  if (window_state_ != PlatformWindowState::kMinimized) {
++    if (window_state_ == PlatformWindowState::kMaximized ||
++        window_state_ == PlatformWindowState::kFullScreen) {
++      RestoreWindowBounds();
++    }
++    // QNX: minimize means hide the window.
++    Hide();
++    UpdateWindowState(PlatformWindowState::kMinimized);
++    Deactivate();
++  }
++}
++
++void QnxWindow::Restore() {
++  if (window_state_ != PlatformWindowState::kNormal) {
++    RestoreWindowBounds();
++    UpdateWindowState(PlatformWindowState::kNormal);
++  }
++}
++
++PlatformWindowState QnxWindow::GetPlatformWindowState() const {
++  return window_state_;
++}
++
++void QnxWindow::Activate() {
++  if (activation_state_ != ActivationState::kActive) {
++    activation_state_ = ActivationState::kActive;
++    delegate_->OnActivationChanged(/*active=*/true);
++  }
++}
++
++void QnxWindow::Deactivate() {
++  if (activation_state_ != ActivationState::kInactive) {
++    activation_state_ = ActivationState::kInactive;
++    delegate_->OnActivationChanged(/*active=*/false);
++  }
++}
++
++void QnxWindow::SetUseNativeFrame(bool use_native_frame) {}
++
++bool QnxWindow::ShouldUseNativeFrame() const {
++  return false;
++}
++
++void QnxWindow::SetCursor(scoped_refptr<PlatformCursor> cursor) {}
++
++void QnxWindow::MoveCursorTo(const gfx::Point& location) {}
++
++void QnxWindow::ConfineCursorToBounds(const gfx::Rect& bounds) {}
++
++void QnxWindow::SetRestoredBoundsInDIP(const gfx::Rect& bounds) {
++  restored_bounds_ = delegate_->ConvertRectToPixels(bounds);
++}
++
++gfx::Rect QnxWindow::GetRestoredBoundsInDIP() const {
++  return delegate_->ConvertRectToDIP(restored_bounds_.value_or(bounds_));
++}
++
++void QnxWindow::SetWindowIcons(const gfx::ImageSkia& window_icon,
++                                const gfx::ImageSkia& app_icon) {}
++
++void QnxWindow::SizeConstraintsChanged() {}
++
++void QnxWindow::RestoreWindowBounds() {
++  if (restored_bounds_) {
++    gfx::Rect restored = *restored_bounds_;
++    restored_bounds_.reset();
++    SetBoundsInPixels(restored);
++  }
++}
++
++void QnxWindow::UpdateWindowState(PlatformWindowState new_window_state) {
++  if (window_state_ == new_window_state)
++    return;
++  auto old_state = window_state_;
++  window_state_ = new_window_state;
++  delegate_->OnWindowStateChanged(old_state, new_window_state);
++}
++
++// PlatformEventDispatcher:
++bool QnxWindow::CanDispatchEvent(const PlatformEvent& event) {
++  can_dispatch_calls_++;
++  if (!event)
++    return false;
++  if (!event->IsMouseEvent() || !CanAcceptEvent(*event)) {
++    can_dispatch_reject_++;
++    if (can_dispatch_reject_marker_) {
++      can_dispatch_reject_marker_ = false;
++      LOG(INFO) << "QNX_INPUT: can_dispatch first reject widget=" << widget_
++                << " (event->IsMouseEvent()="
++                << (event->IsMouseEvent() ? "true" : "false")
++                << " CanAcceptEvent(*event)="
++                << (CanAcceptEvent(*event) ? "true" : "false") << ")";
++    }
++    return false;
++  }
++  can_dispatch_accept_++;
++  if (can_dispatch_accept_marker_) {
++    can_dispatch_accept_marker_ = false;
++    LOG(INFO) << "QNX_INPUT: can_dispatch first accept widget=" << widget_;
++  }
++  // Only pointer events go through this path in the pointer MVP. Touch /
++  // wheel / keyboard / IME remain with their future handlers.
++  return true;
++}
++
++uint32_t QnxWindow::DispatchEvent(const PlatformEvent& event) {
++  dispatch_entry_++;
++  if (dispatch_entry_marker_) {
++    dispatch_entry_marker_ = false;
++    LOG(INFO) << "QNX_INPUT: dispatch entry widget=" << widget_;
++  }
++  Event* e = static_cast<Event*>(event);
++  if (!e) {
++    return POST_DISPATCH_NONE;
++  }
++  if (!delegate_) {
++    null_delegate_++;
++    if (null_delegate_marker_) {
++      null_delegate_marker_ = false;
++      LOG(INFO) << "QNX_INPUT: delegate null widget=" << widget_;
++    }
++    return POST_DISPATCH_NONE;
++  }
++  delegate_->DispatchEvent(e);
++  delegate_dispatch_called_++;
++  if (delegate_dispatch_called_marker_) {
++    delegate_dispatch_called_marker_ = false;
++    LOG(INFO) << "QNX_INPUT: delegate dispatched widget=" << widget_;
++  }
++  return POST_DISPATCH_STOP_PROPAGATION;
++}
++
++// EventTarget:
++bool QnxWindow::CanAcceptEvent(const Event& event) {
++  return this == event.target();
++}
++
++EventTarget* QnxWindow::GetParentTarget() {
++  return nullptr;
++}
++
++std::unique_ptr<EventTargetIterator> QnxWindow::GetChildIterator() const {
++  return nullptr;
++}
++
++EventTargeter* QnxWindow::GetEventTargeter() {
++  return nullptr;
++}
++
++void QnxWindow::RegisterWithEventSource() {
++  if (QnxPlatformEventSource* source = QnxPlatformEventSource::GetInstance()) {
++    source->AddPlatformEventDispatcher(this);
++    registration_ok_++;
++    if (registration_marker_) {
++      registration_marker_ = false;
++      LOG(INFO) << "QNX_INPUT: registration ok widget=" << widget_;
++    }
++  } else {
++    registration_failed_++;
++    if (registration_marker_) {
++      registration_marker_ = false;
++      LOG(INFO) << "QNX_INPUT: registration failed (no event source) widget="
++                << widget_;
++    }
++  }
++}
++
++void QnxWindow::UnregisterFromEventSource() {
++  if (QnxPlatformEventSource* source = QnxPlatformEventSource::GetInstance()) {
++    source->RemovePlatformEventDispatcher(this);
++  }
++}
++
++}  // namespace ui
+diff --git ui/ozone/platform/qnx/qnx_window.h ui/ozone/platform/qnx/qnx_window.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..090b84f26e12b7dc6408f240d1c091106f8847f9
+--- /dev/null
++++ ui/ozone/platform/qnx/qnx_window.h
+@@ -0,0 +1,165 @@
++// Copyright 2026 The Chromium Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef UI_OZONE_PLATFORM_QNX_QNX_WINDOW_H_
++#define UI_OZONE_PLATFORM_QNX_QNX_WINDOW_H_
++
++#include <optional>
++#include <screen/screen.h>
++
++#include "base/memory/raw_ptr.h"
++#include "ui/events/event_target.h"
++#include "ui/events/platform/platform_event_dispatcher.h"
++#include "ui/events/platform/platform_event_source.h"
++#include "ui/gfx/geometry/point.h"
++#include "ui/gfx/geometry/rect.h"
++#include "ui/gfx/image/image_skia.h"
++#include "ui/gfx/native_ui_types.h"
++#include "ui/platform_window/platform_window.h"
++#include "ui/platform_window/platform_window_delegate.h"
++
++namespace ui {
++
++class QnxWindowManager;
++class QnxScreenContext;
++
++// QnxWindow wraps a QNX Screen window (screen_window_t) and implements the
++// Chromium PlatformWindow interface.
++//
++// This class owns the visible screen_window_t. The stable gfx::AcceleratedWidget
++// ID is allocated by QnxWindowManager and stored here. The raw screen_window_t
++// pointer is never exposed outside the browser process.
++//
++// Phase 4 scope: create/destroy visible screen_window_t, set bounds/visibility,
++// allocate stable widget ID. EGL display/composition surface setup is deferred
++// to Phase 5.
++//
++// Pointer input MVP: also implements PlatformEventDispatcher + EventTarget so
++// QnxPlatformEventSource can route translated mouse events through this
++// window into its PlatformWindowDelegate.
++class QnxWindow : public PlatformWindow,
++                  public PlatformEventDispatcher,
++                  public EventTarget {
++ public:
++  QnxWindow(PlatformWindowDelegate* delegate,
++            QnxWindowManager* manager,
++            QnxScreenContext* screen_context,
++            const gfx::Rect& bounds);
++
++  QnxWindow(const QnxWindow&) = delete;
++  QnxWindow& operator=(const QnxWindow&) = delete;
++
++  ~QnxWindow() override;
++
++  // Returns the stable widget ID allocated by QnxWindowManager.
++  gfx::AcceleratedWidget widget() const { return widget_; }
++
++  // Returns the raw QNX Screen window handle (browser-process-only).
++  screen_window_t screen_window() const { return screen_win_; }
++
++  // PlatformWindow:
++  void Show(bool inactive) override;
++  void Hide() override;
++  void Close() override;
++  bool IsVisible() const override;
++  void PrepareForShutdown() override;
++  void SetBoundsInPixels(const gfx::Rect& bounds) override;
++  gfx::Rect GetBoundsInPixels() const override;
++  void SetBoundsInDIP(const gfx::Rect& bounds) override;
++  gfx::Rect GetBoundsInDIP() const override;
++  void SetTitle(const std::u16string& title) override;
++  void SetCapture() override;
++  void ReleaseCapture() override;
++  bool HasCapture() const override;
++  void SetFullscreen(bool fullscreen, int64_t target_display_id) override;
++  void Maximize() override;
++  void Minimize() override;
++  void Restore() override;
++  PlatformWindowState GetPlatformWindowState() const override;
++  void Activate() override;
++  void Deactivate() override;
++  void SetUseNativeFrame(bool use_native_frame) override;
++  bool ShouldUseNativeFrame() const override;
++  void SetCursor(scoped_refptr<PlatformCursor> cursor) override;
++  void MoveCursorTo(const gfx::Point& location) override;
++  void ConfineCursorToBounds(const gfx::Rect& bounds) override;
++  void SetRestoredBoundsInDIP(const gfx::Rect& bounds) override;
++  gfx::Rect GetRestoredBoundsInDIP() const override;
++  void SetWindowIcons(const gfx::ImageSkia& window_icon,
++                      const gfx::ImageSkia& app_icon) override;
++  void SizeConstraintsChanged() override;
++
++  // PlatformEventDispatcher:
++  bool CanDispatchEvent(const PlatformEvent& event) override;
++  uint32_t DispatchEvent(const PlatformEvent& event) override;
++
++  // EventTarget:
++  bool CanAcceptEvent(const Event& event) override;
++  EventTarget* GetParentTarget() override;
++  std::unique_ptr<EventTargetIterator> GetChildIterator() const override;
++  EventTargeter* GetEventTargeter() override;
++
++ protected:
++  PlatformWindowDelegate* delegate() { return delegate_; }
++
++ private:
++  enum class ActivationState { kUnknown, kActive, kInactive };
++
++  // Create the underlying QNX Screen window.
++  bool CreateScreenWindow(const gfx::Rect& bounds);
++
++  // Restore window bounds from saved restored_bounds_.
++  void RestoreWindowBounds();
++
++  // Update the window_state_ and notify the delegate.
++  void UpdateWindowState(PlatformWindowState new_window_state);
++
++  // Destroy the QNX Screen window.
++  void DestroyScreenWindow();
++
++  // Register / unregister this window as a PlatformEventDispatcher on the
++  // active QnxPlatformEventSource so translated Screen pointer events can
++  // reach this window. Best-effort: silently no-op when no event source
++  // exists yet (e.g. during early construction or late shutdown).
++  void RegisterWithEventSource();
++  void UnregisterFromEventSource();
++
++  raw_ptr<PlatformWindowDelegate> delegate_ = nullptr;
++  raw_ptr<QnxWindowManager> manager_ = nullptr;
++  raw_ptr<QnxScreenContext> screen_context_ = nullptr;
++
++  screen_window_t screen_win_ = nullptr;
++  gfx::AcceleratedWidget widget_ = gfx::kNullAcceleratedWidget;
++
++  gfx::Rect bounds_;
++  bool visible_ = false;
++  std::optional<gfx::Rect> restored_bounds_;
++  PlatformWindowState window_state_ = PlatformWindowState::kUnknown;
++  ActivationState activation_state_ = ActivationState::kUnknown;
++
++  // QNX_INPUT Phase 3 diagnostics: counters for the pointer dispatch path.
++  // Printed once from ~QnxWindow; the existing predicate and target-setting
++  // behaviour are intentionally unchanged.
++  uint32_t registration_ok_ = 0;
++  uint32_t registration_failed_ = 0;
++  bool registration_marker_ = true;
++  uint32_t can_dispatch_calls_ = 0;
++  uint32_t can_dispatch_accept_ = 0;
++  uint32_t can_dispatch_reject_ = 0;
++  uint32_t dispatch_entry_ = 0;
++  bool dispatch_entry_marker_ = true;
++  // First-time markers for the accept / reject / null-delegate /
++  // delegate-dispatched LOG(INFO) lines emitted by CanDispatchEvent and
++  // DispatchEvent. Counters themselves remain unchanged.
++  bool can_dispatch_accept_marker_ = true;
++  bool can_dispatch_reject_marker_ = true;
++  bool null_delegate_marker_ = true;
++  bool delegate_dispatch_called_marker_ = true;
++  uint32_t delegate_dispatch_called_ = 0;
++  uint32_t null_delegate_ = 0;
++};
++
++}  // namespace ui
++
++#endif  // UI_OZONE_PLATFORM_QNX_QNX_WINDOW_H_
+diff --git ui/ozone/platform/qnx/qnx_window_manager.cc ui/ozone/platform/qnx/qnx_window_manager.cc
+new file mode 100644
+index 0000000000000000000000000000000000000000..59f1c6bbd61fd948eafb660a4447019a490e1450
+--- /dev/null
++++ ui/ozone/platform/qnx/qnx_window_manager.cc
+@@ -0,0 +1,174 @@
++// Copyright 2026 The Chromium Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "ui/ozone/platform/qnx/qnx_window_manager.h"
++
++#include "base/check.h"
++#include "base/logging.h"
++#include "ui/gfx/geometry/rect.h"
++#include "ui/ozone/platform/qnx/qnx_gpu_platform_support_host.h"
++#include "ui/ozone/platform/qnx/qnx_window.h"
++
++namespace ui {
++
++// static
++QnxWindowManager* QnxWindowManager::instance_ = nullptr;
++
++// static
++QnxWindowManager* QnxWindowManager::GetInstance() {
++  return instance_;
++}
++
++QnxWindowManager::QnxWindowManager() {
++  // There is only one QnxWindowManager per OzonePlatform instance.
++  // It is constructed in InitializeUI() and destroyed when the platform exits.
++  instance_ = this;
++}
++
++QnxWindowManager::~QnxWindowManager() {
++  DCHECK(thread_checker_.CalledOnValidThread());
++  instance_ = nullptr;
++}
++
++gfx::AcceleratedWidget QnxWindowManager::AddWindow(
++    QnxWindow* window,
++    const gfx::Size& initial_size) {
++  DCHECK(thread_checker_.CalledOnValidThread());
++  gfx::AcceleratedWidget widget = windows_.Add(window);
++
++  QnxWidgetRecord record;
++  record.id = widget;
++  record.window = window;
++  record.size = initial_size;
++  records_[widget] = record;
++
++  DLOG(INFO) << "QnxWindowManager: AddWindow widget=" << widget;
++
++  // If the GPU service has already connected, the initial
++  // AttachExistingWidgets() pass missed this widget (it didn't exist yet).
++  // Forward AttachWidget so the GPU process can create its producer for the
++  // newly-created screen_window_t. No-op if the GPU isn't connected yet.
++  if (gpu_platform_support_host_) {
++    gpu_platform_support_host_->AttachNewWidget(widget);
++  }
++
++  return widget;
++}
++
++void QnxWindowManager::SetGpuPlatformSupportHost(
++    QnxGpuPlatformSupportHost* gpu_platform_support_host) {
++  DCHECK(thread_checker_.CalledOnValidThread());
++  gpu_platform_support_host_ = gpu_platform_support_host;
++}
++
++void QnxWindowManager::RemoveWindow(gfx::AcceleratedWidget widget,
++                                    QnxWindow* window) {
++  DCHECK(thread_checker_.CalledOnValidThread());
++  DCHECK_EQ(window, windows_.Lookup(widget));
++  windows_.Remove(widget);
++  records_.erase(widget);
++  DLOG(INFO) << "QnxWindowManager: RemoveWindow widget=" << widget;
++}
++
++QnxWindow* QnxWindowManager::GetWindow(gfx::AcceleratedWidget widget) {
++  return windows_.Lookup(widget);
++}
++
++QnxWindow* QnxWindowManager::LookupWindowByScreenWin(void* screen_win) {
++  DCHECK(thread_checker_.CalledOnValidThread());
++  if (!screen_win)
++    return nullptr;
++  for (const auto& [widget, record] : records_) {
++    if (record.screen_win == screen_win) {
++      return record.window;
++    }
++  }
++  return nullptr;
++}
++
++const QnxWidgetRecord* QnxWindowManager::GetWidgetRecord(
++    gfx::AcceleratedWidget widget) const {
++  auto it = records_.find(widget);
++  if (it == records_.end())
++    return nullptr;
++  return &it->second;
++}
++
++gfx::AcceleratedWidget QnxWindowManager::GetAcceleratedWidgetAtScreenPoint(
++    const gfx::Point& point) {
++  for (base::IDMap<QnxWindow*>::const_iterator it(&windows_);
++       !it.IsAtEnd(); it.Advance()) {
++    const QnxWindow* window = it.GetCurrentValue();
++    gfx::Rect bounds = window->GetBoundsInPixels();
++    if (bounds.Contains(point)) {
++      return window->widget();
++    }
++  }
++  return gfx::kNullAcceleratedWidget;
++}
++
++void QnxWindowManager::SetGpuAttached(gfx::AcceleratedWidget widget,
++                                      bool attached,
++                                      int gpu_pid) {
++  auto it = records_.find(widget);
++  if (it == records_.end())
++    return;
++  it->second.gpu_attached = attached;
++  it->second.gpu_pid = attached ? gpu_pid : 0;
++  DLOG(INFO) << "QnxWindowManager: SetGpuAttached widget=" << widget
++             << " attached=" << attached;
++}
++
++void QnxWindowManager::IncrementGeneration(gfx::AcceleratedWidget widget) {
++  auto it = records_.find(widget);
++  if (it == records_.end())
++    return;
++  it->second.generation++;
++  DLOG(INFO) << "QnxWindowManager: IncrementGeneration widget=" << widget
++             << " new_gen=" << it->second.generation;
++}
++
++void QnxWindowManager::UpdateWidgetSize(gfx::AcceleratedWidget widget,
++                                        const gfx::Size& size) {
++  auto it = records_.find(widget);
++  if (it == records_.end())
++    return;
++  it->second.size = size;
++}
++
++void QnxWindowManager::SetScreenWindow(gfx::AcceleratedWidget widget,
++                                       void* screen_win) {
++  auto it = records_.find(widget);
++  if (it == records_.end())
++    return;
++  it->second.screen_win = screen_win;
++}
++
++void QnxWindowManager::DetachAllWidgets() {
++  auto it = records_.begin();
++  while (it != records_.end()) {
++    if (it->second.gpu_attached) {
++      uint32_t old_gen = it->second.generation;
++      it->second.gpu_attached = false;
++      it->second.gpu_pid = 0;
++      it->second.generation++;
++      DLOG(INFO) << "QnxWindowManager::DetachAllWidgets: widget="
++                 << it->first << " gen " << old_gen << " -> "
++                 << it->second.generation << " (GPU detached)";
++    }
++    ++it;
++  }
++}
++
++std::vector<QnxWidgetRecord> QnxWindowManager::
++    GetWidgetRecordsForTestingOrGpuAttach() const {
++  std::vector<QnxWidgetRecord> result;
++  result.reserve(records_.size());
++  for (const auto& [widget, record] : records_) {
++    result.push_back(record);
++  }
++  return result;
++}
++
++}  // namespace ui
+diff --git ui/ozone/platform/qnx/qnx_window_manager.h ui/ozone/platform/qnx/qnx_window_manager.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..ce3ca87dbb268c65cdd0cb92239d45718cbd0dc9
+--- /dev/null
++++ ui/ozone/platform/qnx/qnx_window_manager.h
+@@ -0,0 +1,138 @@
++// Copyright 2026 The Chromium Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef UI_OZONE_PLATFORM_QNX_QNX_WINDOW_MANAGER_H_
++#define UI_OZONE_PLATFORM_QNX_QNX_WINDOW_MANAGER_H_
++
++#include <stdint.h>
++
++#include <map>
++#include <vector>
++
++#include "base/containers/id_map.h"
++#include "base/threading/thread_checker.h"
++#include "ui/gfx/geometry/point.h"
++#include "ui/gfx/geometry/size.h"
++#include "ui/gfx/native_ui_types.h"
++
++namespace ui {
++
++class QnxGpuPlatformSupportHost;
++class QnxWindow;
++
++// Per-widget record tracking GPU attachment and generation.
++// This is the stable widget ID model described in the Phase 2 design:
++// gfx::AcceleratedWidget is a uint32_t, not a screen_window_t pointer.
++struct QnxWidgetRecord {
++  // Stable numeric widget ID (1..N), managed entirely in the browser process.
++  gfx::AcceleratedWidget id = gfx::kNullAcceleratedWidget;
++
++  // Incremented each time the GPU process reconnects.
++  uint32_t generation = 0;
++
++  // Last confirmed pixel size of the widget.
++  gfx::Size size;
++
++  // Raw screen_window_t pointer — browser-process-only, never sent over IPC.
++  // Set to nullptr once the window has been destroyed.
++  void* screen_win = nullptr;
++
++  // True when the GPU process is currently connected and has attached to this
++  // widget.
++  bool gpu_attached = false;
++
++  // GPU process PID when attached, 0 when detached.
++  int gpu_pid = 0;
++
++  // Pointer back to the QnxWindow for this widget (non-owning).
++  QnxWindow* window = nullptr;
++};
++
++class QnxWindowManager {
++ public:
++  QnxWindowManager();
++  ~QnxWindowManager();
++
++  static QnxWindowManager* GetInstance();
++
++  QnxWindowManager(const QnxWindowManager&) = delete;
++  QnxWindowManager& operator=(const QnxWindowManager&) = delete;
++
++  // Register a new QnxWindow. Returns the stable widget ID.
++  // Register a new QnxWindow with its initial size. Returns the stable widget ID.
++  // The initial_size is stored in the widget record so AttachWidget (or
++  // AttachNewWidget) can ship a non-zero size to the GPU process; without
++  // it the GPU side CreateExportFrame would receive a 0x0 size and fail
++  // eglCreateDRMImageMESA on QEMU virgl.
++  gfx::AcceleratedWidget AddWindow(QnxWindow* window,
++                                  const gfx::Size& initial_size);
++
++  // Unregister a window.
++  void RemoveWindow(gfx::AcceleratedWidget widget, QnxWindow* window);
++
++  // Look up a window by widget ID.
++  QnxWindow* GetWindow(gfx::AcceleratedWidget widget);
++
++  // Look up a QnxWindow by its raw screen_window_t pointer. Returns
++  // nullptr if no widget record matches. Browser-process-only; the
++  // screen_window_t pointer is never sent over IPC.
++  QnxWindow* LookupWindowByScreenWin(void* screen_win);
++
++  // Return the widget record by widget ID.
++  const QnxWidgetRecord* GetWidgetRecord(gfx::AcceleratedWidget widget) const;
++
++  // Return a widget at a given screen point (if any).
++  gfx::AcceleratedWidget GetAcceleratedWidgetAtScreenPoint(
++      const gfx::Point& point);
++
++  // Mark a widget as GPU-attached or GPU-detached.
++  void SetGpuAttached(gfx::AcceleratedWidget widget,
++                      bool attached,
++                      int gpu_pid);
++
++  // Increment the generation for a widget (called on GPU reconnect).
++  void IncrementGeneration(gfx::AcceleratedWidget widget);
++
++  // Update the stored size for a widget.
++  void UpdateWidgetSize(gfx::AcceleratedWidget widget, const gfx::Size& size);
++
++  // Update the screen_win pointer for a widget (set after window creation).
++  void SetScreenWindow(gfx::AcceleratedWidget widget, void* screen_win);
++
++  // Increment generation and mark GPU-detached for ALL widgets.
++  // Called when the GPU channel is destroyed so any stale frames
++  // from the old GPU process are discarded.
++  void DetachAllWidgets();
++
++  // Return a snapshot of all widget records for iteration.
++  // Useful for GPU attach/detach operations that need to traverse
++  // all widgets atomically.  The returned vector is a copy; records_
++  // can be modified during iteration.
++  std::vector<QnxWidgetRecord> GetWidgetRecordsForTestingOrGpuAttach() const;
++
++  // Wire up the QNX GPU platform support host so AddWindow can notify it of
++  // new widgets created AFTER the GPU service connects. Set once from
++  // OzonePlatformQnxImpl after both members are constructed.
++  void SetGpuPlatformSupportHost(
++      QnxGpuPlatformSupportHost* gpu_platform_support_host);
++
++ private:
++  // Singleton instance pointer. Set in constructor, cleared in destructor.
++  // This is safe because there is only one OzonePlatform per process and
++  // QnxWindowManager is created/destroyed with it.
++  static QnxWindowManager* instance_;
++
++  base::IDMap<QnxWindow*> windows_;
++  std::map<gfx::AcceleratedWidget, QnxWidgetRecord> records_;
++  base::ThreadChecker thread_checker_;
++
++  // Non-owning pointer to the browser-side GPU support host. Set by
++  // OzonePlatformQnxImpl after both members are constructed; reset to null
++  // before destruction so AddWindow no longer fires after teardown begins.
++  raw_ptr<QnxGpuPlatformSupportHost> gpu_platform_support_host_ = nullptr;
++};
++
++}  // namespace ui
++
++#endif  // UI_OZONE_PLATFORM_QNX_QNX_WINDOW_MANAGER_H_

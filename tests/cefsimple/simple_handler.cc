@@ -61,6 +61,7 @@ void SimpleHandler::OnTitleChange(CefRefPtr<CefBrowser> browser,
 
 void SimpleHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
   CEF_REQUIRE_UI_THREAD();
+  LOG(INFO) << "[QNX_BLACKSCREEN] OnAfterCreated browser_id=" << browser->GetIdentifier();
 
   // Sanity-check the configured runtime style.
   CHECK_EQ(is_alloy_style_ ? CEF_RUNTIME_STYLE_ALLOY : CEF_RUNTIME_STYLE_CHROME,
@@ -104,12 +105,58 @@ void SimpleHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
   }
 }
 
+void SimpleHandler::OnLoadingStateChange(CefRefPtr<CefBrowser> browser,
+                                          bool isLoading,
+                                          bool canGoBack,
+                                          bool canGoForward) {
+  CEF_REQUIRE_UI_THREAD();
+  LOG(INFO) << "[QNX_BLACKSCREEN] OnLoadingStateChange browser_id=" << browser->GetIdentifier()
+            << " loading=" << isLoading;
+}
+
+void SimpleHandler::OnLoadStart(CefRefPtr<CefBrowser> browser,
+                                CefRefPtr<CefFrame> frame,
+                                TransitionType transition_type) {
+  CEF_REQUIRE_UI_THREAD();
+  LOG(INFO) << "[QNX_BLACKSCREEN] OnLoadStart browser_id=" << browser->GetIdentifier()
+            << " url=" << frame->GetURL().ToString();
+}
+
+void SimpleHandler::OnLoadEnd(CefRefPtr<CefBrowser> browser,
+                              CefRefPtr<CefFrame> frame,
+                              int httpStatusCode) {
+  CEF_REQUIRE_UI_THREAD();
+  LOG(INFO) << "[QNX_BLACKSCREEN] OnLoadEnd browser_id=" << browser->GetIdentifier()
+            << " status=" << httpStatusCode << " url=" << frame->GetURL().ToString();
+}
+
+bool SimpleHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser,
+                                     cef_log_severity_t level,
+                                     const CefString& message,
+                                     const CefString& source,
+                                     int line) {
+  CEF_REQUIRE_UI_THREAD();
+  // QNX_PROBE tag makes every console.log() from the page observable in
+  // the cefsimple stderr log. Boundary marker for:
+  //   QNX Screen -> Aura -> CEF Views -> WebContents -> JS
+  // If [QNX_PROBE] beacons fire but mouse/wheel events do not, the JS
+  // engine is alive but events are not reaching the DOM (Views hit-test
+  // or target-window issue). If no [QNX_PROBE] beacon fires, the page
+  // has not finished loading or JS is suspended.
+  LOG(INFO) << "[QNX_PROBE_CONSOLE] level=" << level
+            << " source=" << source.ToString() << ":" << line
+            << " msg=" << message.ToString();
+  return false;  // let Chromium also log to stderr.
+}
+
 void SimpleHandler::OnLoadError(CefRefPtr<CefBrowser> browser,
                                 CefRefPtr<CefFrame> frame,
                                 ErrorCode errorCode,
                                 const CefString& errorText,
                                 const CefString& failedUrl) {
   CEF_REQUIRE_UI_THREAD();
+  LOG(INFO) << "[QNX_BLACKSCREEN] OnLoadError browser_id=" << browser->GetIdentifier()
+            << " error=" << errorCode << " url=" << failedUrl.ToString();
 
   // Allow Chrome to show the error page.
   if (!is_alloy_style_) {
