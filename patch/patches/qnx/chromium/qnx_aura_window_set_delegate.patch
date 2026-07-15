@@ -1,0 +1,47 @@
+diff --git ui/aura/window.cc ui/aura/window.cc
+index 6b239942c0cf8c6dd720ef8f51ef39af5f8b8e1e..c8986f1e87289409fc57141ed8cfff2953d06b1e 100644
+--- ui/aura/window.cc
++++ ui/aura/window.cc
+@@ -308,6 +308,19 @@ void Window::SetName(const std::string& name) {
+   TriggerChangedCallback(client::kNameKey);
+ }
+ 
++void Window::SetDelegate(WindowDelegate* delegate) {
++  // Replaces the WindowDelegate after construction. Used by QNX's
++  // BrowserNativeWidgetAuraQnx to attach itself as the delegate of the
++  // root aura::Window (the one constructed with delegate=nullptr by
++  // WindowTreeHostPlatform::Create), so events flowing through
++  // Window::CanAcceptEvent/OnEvent reach a handler instead of being
++  // silently dropped (Phase 6 QNX input fix).
++  if (delegate_ == delegate)
++    return;
++  delegate_ = delegate;
++  SetTargetHandler(delegate);
++}
++
+ const std::u16string& Window::GetTitle() const {
+   std::u16string* title = GetProperty(client::kTitleKey);
+   return title ? *title : base::EmptyString16();
+diff --git ui/aura/window.h ui/aura/window.h
+index 7329105f765b7bf341dffe94a58eee0423299bd4..b74fd7f4d7b2c35e3219394427342bba2630e09c 100644
+--- ui/aura/window.h
++++ ui/aura/window.h
+@@ -193,6 +193,17 @@ class AURA_EXPORT Window : public ui::LayerDelegate,
+   const std::string& GetName() const override;
+   void SetName(const std::string& name);
+ 
++  // Replaces the WindowDelegate after construction. The window's
++  // delegate_ is normally set only in the constructor's member
++  // initializer list; this method allows a platform layer that built
++  // the Window with delegate=nullptr (e.g. QNX's
++  // WindowTreeHostPlatform::Create path) to attach a delegate before
++  // dispatching events. Sets both delegate_ and the EventTarget
++  // target_handler_ so the Aura event flow (CanAcceptEvent -> OnEvent
++  // -> delegate) can reach the new handler. Idempotent for the same
++  // delegate pointer.
++  void SetDelegate(WindowDelegate* delegate);
++
+   const std::u16string& GetTitle() const;
+   void SetTitle(const std::u16string& title);
+ 
+

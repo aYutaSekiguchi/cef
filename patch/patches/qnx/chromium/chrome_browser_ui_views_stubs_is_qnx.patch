@@ -9,6 +9,8 @@ diff --git chrome/browser/ui/BUILD.gn chrome/browser/ui/BUILD.gn
 +      sources += [
 +        "views/chrome_views_delegate_qnx.cc",
 +        "views/frame/browser_desktop_window_tree_host_qnx.cc",
++        "views/frame/browser_native_widget_aura_qnx.cc",
++        "views/frame/browser_native_widget_aura_qnx.h",
 +        "views/frame/browser_native_widget_factory_qnx.cc",
 +      ]
      }
