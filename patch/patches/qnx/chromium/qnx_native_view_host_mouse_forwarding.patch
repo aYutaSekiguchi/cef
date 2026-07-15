@@ -1,0 +1,138 @@
+diff --git ui/views/controls/native/native_view_host.cc ui/views/controls/native/native_view_host.cc
+index a4fa2ca7fb04c6d88b834a7796011acb567e894a..75d41a13ae4fee90db8f605bd9c0f279aa27231b 100644
+--- ui/views/controls/native/native_view_host.cc
++++ ui/views/controls/native/native_view_host.cc
+@@ -9,6 +9,8 @@
+ #include "base/check.h"
+ #include "build/buildflag.h"
+ #include "ui/accessibility/ax_enums.mojom.h"
++#include "ui/aura/window.h"
++#include "ui/aura/window_delegate.h"
+ #include "ui/base/cursor/cursor.h"
+ #include "ui/base/metadata/metadata_impl_macros.h"
+ #include "ui/gfx/canvas.h"
+@@ -262,18 +264,95 @@ void NativeViewHost::SetVisible(bool visible) {
+   View::SetVisible(visible);
+ }
+ 
+-bool NativeViewHost::OnMousePressed(const ui::MouseEvent& event) {
+-  // In the typical case the attached NativeView receives the events directly
+-  // from the system and this function is not called. There are scenarios
+-  // where that may not happen. For example, if the NativeView is configured
+-  // not to receive events, then this function will be called. An additional
+-  // scenario is if the WidgetDelegate overrides
+-  // ShouldDescendIntoChildForEventHandling(). In that case the NativeView
+-  // will not receive the events, and this function will be called. Regardless,
+-  // this function does not need to forward to the NativeView, because it is
+-  // expected to be done by the system, and the only cases where this is called
+-  // is if the NativeView should not receive events.
+-  return View::OnMousePressed(event);
++#if BUILDFLAG(IS_QNX)
++// QNX input fix (Phase 6): forward mouse events from NativeViewHost to the
++// hosted aura::Window children (e.g. RWHVA). On QNX the hosted NativeView
++// is not reachable by WED hit-test, so the events stop at NativeViewHost.
++// We dispatch the event (with coordinates converted to each child's space)
++// to every child's delegate. Children that have an OnMouseEvent override
++// (RWHVA does) will process the event and send it to the renderer.
++//
++// Press/release of mouse buttons other than left (e.g. right-click
++// button=2 or middle button=1) are NOT forwarded. Forwarding the
++// right-click contextmenu to the renderer caused Chromium/CEF to create a
++// native context-menu QnxWindow, which then hit a QNX Screen API
++// ENOENT in `change_new_window_visibility` and crashed the cefsimple
++// process with `trace trap` (exit 133, SIGTRAP) after a few seconds of
++// continuous GPU frame submissions. Skipping non-left press/release
++// keeps the input-routing fix but avoids that crash.
++void NativeViewHost::ForwardMouseEventToHostedViews(
++    const ui::MouseEvent& event) {
++  if (!native_view_)
++    return;
++  const ui::EventType type = event.type();
++  if (type == ui::EventType::kMousePressed ||
++      type == ui::EventType::kMouseReleased) {
++    if (event.changed_button_flags() != ui::EF_LEFT_MOUSE_BUTTON) {
++      return;
++    }
++  }
++  // QNX: event.location() is local to this NativeViewHost. Use local bounds
++  // for the safety check; bounds() is in the parent coordinate system and
++  // would incorrectly reject valid events when the host is offset.
++  if (!GetLocalBounds().Contains(event.location())) {
++    return;
++  }
++
++  bool forwarded_handled = false;
++  int child_count = 0;
++  gfx::Point last_child_location = event.location();
++  for (aura::Window* child : native_view_->children()) {
++    auto* child_delegate = child->delegate();
++    if (!child_delegate) {
++      continue;
++    }
++
++    // Preserve the dynamic MouseWheelEvent type. Copying it as MouseEvent
++    // would slice off wheel offsets and produce invalid DOM delta values.
++    std::unique_ptr<ui::MouseEvent> forwarded;
++    if (event.IsMouseWheelEvent()) {
++      forwarded =
++          std::make_unique<ui::MouseWheelEvent>(*event.AsMouseWheelEvent());
++    } else {
++      forwarded = std::make_unique<ui::MouseEvent>(event);
++    }
++
++    gfx::Point child_location = event.location();
++    aura::Window::ConvertPointToTarget(native_view_, child, &child_location);
++    forwarded->set_location(child_location);
++    forwarded->set_root_location(child_location);
++    child_delegate->OnEvent(forwarded.get());
++    forwarded_handled |= forwarded->handled();
++    last_child_location = child_location;
++    child_count++;
++  }
++
++  static int qnx_nvh_forward_count = 0;
++  if (qnx_nvh_forward_count < 5) {
++    qnx_nvh_forward_count++;
++    LOG(INFO) << "[QNX_INPUT_BOUNDARY] NativeViewHost forward done"
++              << " type=" << static_cast<int>(event.type())
++              << " flags=" << event.changed_button_flags()
++              << " fwd_handled=" << forwarded_handled
++              << " fwd_loc=" << last_child_location.ToString()
++              << " children_count=" << child_count;
++  }
++}
++#endif
++
++void NativeViewHost::OnMouseEvent(ui::MouseEvent* event) {
++#if BUILDFLAG(IS_QNX)
++  // QNX input fix (Phase 6): forward to hosted view BEFORE View::OnMouseEvent
++  // processes the event, so the renderer gets the event. We then call the
++  // base class implementation so the View hierarchy (and the Widget above
++  // it) still sees the event normally. This is critical for right-clicks
++  // where the BrowserWidget needs to set mouse capture to coordinate
++  // native popup windows (context menus) -- returning true from a typed
++  // handler override causes the Widget to call SetCapture(), which would
++  // prevent the context-menu QnxWindow from receiving mouse events.
++  ForwardMouseEventToHostedViews(*event);
++#endif
++  View::OnMouseEvent(event);
+ }
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+diff --git ui/views/controls/native/native_view_host.h ui/views/controls/native/native_view_host.h
+index 6894470ec4d32793104e380e2599bd0c54b856b9..4a6eedd3c4c729721428b92bb68601800b504c2e 100644
+--- ui/views/controls/native/native_view_host.h
++++ ui/views/controls/native/native_view_host.h
+@@ -114,7 +114,11 @@ class VIEWS_EXPORT NativeViewHost : public View {
+   gfx::NativeViewAccessible GetNativeViewAccessible() override;
+   ui::Cursor GetCursor(const ui::MouseEvent& event) override;
+   void SetVisible(bool visible) override;
+-  bool OnMousePressed(const ui::MouseEvent& event) override;
++  void OnMouseEvent(ui::MouseEvent* event) override;
++#if BUILDFLAG(IS_QNX)
++ private:
++  void ForwardMouseEventToHostedViews(const ui::MouseEvent& event);
++#endif
+ 
+  protected:
+   bool GetNeedsNotificationWhenVisibleBoundsChange() const override;

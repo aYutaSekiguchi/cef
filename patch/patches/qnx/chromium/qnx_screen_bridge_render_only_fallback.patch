@@ -1,11 +1,11 @@
 diff --git ui/ozone/platform/qnx/qnx_frame_importer.cc ui/ozone/platform/qnx/qnx_frame_importer.cc
-index 35f7a394256cf8e88d70056d4f17c9e8fd18de4e..5623e44c17c08d4cf9f72d7445de60dc4058dd99 100644
+index fd90877d47cfe9e7e3665589a3cbcae176c5bc92..399f4172c865ac57073df3166ac6ec492521a4c7 100644
 --- ui/ozone/platform/qnx/qnx_frame_importer.cc
 +++ ui/ozone/platform/qnx/qnx_frame_importer.cc
 @@ -131,21 +131,8 @@ bool CheckGL(const char* expr, const char* file, int line) {
    return true;
  }
-
+ 
 -// Checks an EGL error and logs it.  Returns true if no error.
 -bool CheckEGL(const char* expr, EGLDisplay display, const char* file, int line) {
 -  EGLint err = eglGetError();
@@ -22,7 +22,7 @@ index 35f7a394256cf8e88d70056d4f17c9e8fd18de4e..5623e44c17c08d4cf9f72d7445de60dc
 +// Macro to wrap GL error checks.
  #define CHECK_GLEXR(expr) CheckGL(#expr, __FILE__, __LINE__)
 -#define CHECK_EGLERR(expr, display) CheckEGL(#expr, display, __FILE__, __LINE__)
-
+ 
  }  // namespace
  
 @@ -212,7 +199,8 @@ std::string QnxFrameImporter::ExtensionReport() const {
@@ -44,23 +44,15 @@ index 35f7a394256cf8e88d70056d4f17c9e8fd18de4e..5623e44c17c08d4cf9f72d7445de60dc
    }
  
    egl_initialized_ = true;
-@@ -281,11 +269,11 @@ bool QnxFrameImporter::InitializeEGLDisplay() {
-   // GL-side presence is checked lazily in ImportAndDisplayFrame via
-   // EnsureGLExtensionsResolved(); at this point we cannot query the GL
-   // extension string safely.
--  bool can_import = has_egl_ext_image_dma_buf_import_ &&
--                    egl_create_image_khr_ != nullptr &&
--                    egl_destroy_image_khr_ != nullptr;
-+  can_import_dma_buf_ = has_egl_ext_image_dma_buf_import_ &&
-+                        egl_create_image_khr_ != nullptr &&
-+                        egl_destroy_image_khr_ != nullptr;
- 
--  if (!can_import) {
-+  if (!can_import_dma_buf_) {
-     LOG(ERROR) << "QnxFrameImporter: missing required extensions or function "
-                   "pointers for DMAbuf import:\n"
-                << ExtensionReport();
-@@ -669,9 +657,59 @@ GLuint QnxFrameImporter::CompileShaderProgram() {
+@@ -318,7 +306,6 @@ void QnxFrameImporter::EnsureGLExtensionsResolved() {
+                   << ExtensionReport();
+   }
+ }
+-
+ template <typename Fn>
+ Fn QnxFrameImporter::Resolve(const char* name) {
+   auto proc = reinterpret_cast<__eglMustCastToProperFunctionPointerType>(
+@@ -658,9 +645,59 @@ GLuint QnxFrameImporter::CompileShaderProgram() {
  }
  
  // ======================================================================
@@ -121,7 +113,7 @@ index 35f7a394256cf8e88d70056d4f17c9e8fd18de4e..5623e44c17c08d4cf9f72d7445de60dc
  bool QnxFrameImporter::BuildDmaBufAttrs(
      const qnx::QnxDmaBufFrame& frame,
      const std::vector<base::ScopedFD>& fds,
-@@ -863,6 +901,8 @@ void QnxFrameImporter::CleanupGLResources(WindowEGLState* state) {
+@@ -852,6 +889,8 @@ void QnxFrameImporter::CleanupGLResources(WindowEGLState* state) {
  std::pair<bool, std::string> QnxFrameImporter::ImportAndDisplayFrame(
      gfx::AcceleratedWidget widget,
      const qnx::QnxDmaBufFrame& frame) {
@@ -130,7 +122,7 @@ index 35f7a394256cf8e88d70056d4f17c9e8fd18de4e..5623e44c17c08d4cf9f72d7445de60dc
    DLOG(INFO) << "QnxFrameImporter::ImportAndDisplayFrame: widget="
               << widget << " size=" << frame.width << "x" << frame.height
               << " fourcc=0x" << std::hex << frame.fourcc
-@@ -870,6 +910,27 @@ std::pair<bool, std::string> QnxFrameImporter::ImportAndDisplayFrame(
+@@ -859,6 +898,27 @@ std::pair<bool, std::string> QnxFrameImporter::ImportAndDisplayFrame(
               << " modifier=0x" << frame.modifier << std::dec
               << " planes=" << frame.planes.size();
  
@@ -158,11 +150,20 @@ index 35f7a394256cf8e88d70056d4f17c9e8fd18de4e..5623e44c17c08d4cf9f72d7445de60dc
    // ---- Get widget record ----
    const QnxWidgetRecord* record = nullptr;
    if (window_manager_) {
+@@ -943,6 +1003,8 @@ std::pair<bool, std::string> QnxFrameImporter::ImportAndDisplayFrame(
+   }
+ 
+   // ---- Draw fullscreen quad with imported texture ----
++  glViewport(0, 0, static_cast<GLsizei>(frame.width),
++             static_cast<GLsizei>(frame.height));
+   DrawFullscreenQuad(state->program, state->texture);
+   CHECK_GLEXR(glDrawArrays);
+ 
 diff --git ui/ozone/platform/qnx/qnx_frame_importer.h ui/ozone/platform/qnx/qnx_frame_importer.h
-index af50aed3f3e26147e3d091b8f5b9df3378c35962..0a1cec8f4d77273ee9c309545467e1aff3398b33 100644
+index 18947dda71c4da781adc758fb88fffe5296c01dd..274e8e971701e564fd91c18bc3e8a3e9529fd16f 100644
 --- ui/ozone/platform/qnx/qnx_frame_importer.h
 +++ ui/ozone/platform/qnx/qnx_frame_importer.h
-@@ -143,6 +143,16 @@ class QnxFrameImporter {
+@@ -142,6 +142,16 @@ class QnxFrameImporter {
                                           const qnx::QnxDmaBufFrame& frame,
                                           std::string* out_diagnostic);
  
@@ -179,7 +180,7 @@ index af50aed3f3e26147e3d091b8f5b9df3378c35962..0a1cec8f4d77273ee9c309545467e1af
    // Builds the EGL_LINUX_DMA_BUF_EXT attribute list for single-plane ARGB
    // frames.  |frame| provides width/height/fourcc/modifier.
    // |fds| must have at least one element (the plane fd).
-@@ -243,7 +253,7 @@ class QnxFrameImporter {
+@@ -241,7 +251,7 @@ class QnxFrameImporter {
      )";
  
    // Thread check: all methods must be called from the browser UI thread.
@@ -189,13 +190,13 @@ index af50aed3f3e26147e3d091b8f5b9df3378c35962..0a1cec8f4d77273ee9c309545467e1af
  
  }  // namespace ui
 diff --git ui/ozone/platform/qnx/qnx_gpu_service.cc ui/ozone/platform/qnx/qnx_gpu_service.cc
-index bd641091b10fadeec6348fc46cb9bca01773c138..1d2b4ca42e1e9203b7b4b5936bf6410f90e5c9aa 100644
+index 5ad8ce0deb997dd2cdb60d63abc3407c605e178b..c0f7c453e257922a91d71ac597aa3429ecddd2a7 100644
 --- ui/ozone/platform/qnx/qnx_gpu_service.cc
 +++ ui/ozone/platform/qnx/qnx_gpu_service.cc
-@@ -13,13 +13,16 @@
+@@ -12,13 +12,16 @@
+ 
  #include "ui/ozone/platform/qnx/qnx_gpu_service.h"
  
- #include <csignal>
 +#include <iomanip>
  #include <memory>
  #include <string>
@@ -209,10 +210,11 @@ index bd641091b10fadeec6348fc46cb9bca01773c138..1d2b4ca42e1e9203b7b4b5936bf6410f
  #include "mojo/public/cpp/platform/platform_handle.h"
  #include "ui/ozone/platform/qnx/qnx_render_producer.h"
  
-@@ -56,6 +59,23 @@ bool IsQnxTestCrashAfterSubmitEnabled() {
-       kOzoneQnxTestCrashAfterSubmitSwitch);
+@@ -39,6 +42,24 @@ bool IsQnxGpuTraceEnabled() {
+   return base::CommandLine::ForCurrentProcess()->HasSwitch(
+       kOzoneQnxGpuTraceSwitch);
  }
- 
++
 +const char* ProducerPathTag(const QnxRenderProducer& producer) {
 +  return producer.ExportPathName();
 +}
@@ -233,7 +235,7 @@ index bd641091b10fadeec6348fc46cb9bca01773c138..1d2b4ca42e1e9203b7b4b5936bf6410f
  }  // namespace
  
  QnxGpuService::QnxGpuService(QnxSurfaceFactoryOzone* surface_factory)
-@@ -68,6 +88,8 @@ QnxGpuService::QnxGpuService(QnxSurfaceFactoryOzone* surface_factory)
+@@ -51,6 +72,8 @@ QnxGpuService::QnxGpuService(QnxSurfaceFactoryOzone* surface_factory)
  }
  
  QnxGpuService::~QnxGpuService() {
@@ -242,16 +244,20 @@ index bd641091b10fadeec6348fc46cb9bca01773c138..1d2b4ca42e1e9203b7b4b5936bf6410f
    DLOG(INFO) << "QnxGpuService: destroyed (GPU process)";
    // Destroy all GPU-side producer resources before the GPU process exits.
    // This removes all QnxRenderProducer instances managed by producer_manager_.
-@@ -136,6 +158,20 @@ void QnxGpuService::Initialize(
+@@ -111,14 +134,24 @@ void QnxGpuService::Initialize(
+   DLOG(INFO) << "QnxGpuService::Initialize: gpu_host_remote bound; "
+                 "GPU can now call SubmitFrame / ReportProducerLost; "
+                 "QnxGpuControl receiver bound via binder in AddInterfaces";
+-  // Phase 6: run the ack reply so the browser's pending BindOnce fires.
+-  if (callback)
+-    std::move(callback).Run();
+   if (IsQnxGpuTraceEnabled()) {
+     LOG(INFO) << "QNX_OZONE_GPU_TRACE QnxGpuService::Initialize: gpu_host_remote"
                   " bound; GPU process is ready to call SubmitFrame";
    }
  
-+  // Capture at the viz compositor pre-swap point while the framebuffer is
-+  // current. The post-swap hook remains a completion marker, and the
-+  // attach-time test method remains a separate diagnostic path.
 +  viz::SetQnxPreSwapHook(base::BindRepeating(
-+      &QnxGpuService::OnCompositorPreSwap,
-+      weak_ptr_factory_.GetWeakPtr()));
++      &QnxGpuService::OnCompositorPreSwap, weak_ptr_factory_.GetWeakPtr()));
 +  viz::SetQnxPostSwapHook(base::BindRepeating([](const gfx::Size& size) {
 +    LOG(INFO) << "[QNX-TRACE] QnxGpuService::OnCompositorSwapPresented: "
 +                 "completion size="
@@ -260,10 +266,13 @@ index bd641091b10fadeec6348fc46cb9bca01773c138..1d2b4ca42e1e9203b7b4b5936bf6410f
 +  LOG(INFO) << "[QNX-TRACE] QnxGpuService::Initialize: compositor pre-swap "
 +               "capture hook and post-swap completion marker installed";
 +
-   // Phase 6: Ack to the browser so it can safely call AttachExistingWidgets.
-   // This serializes the QnxGpuService pipe (Initialize) and the
-   // QnxGpuControl pipe (AttachWidget) on the browser side.  Without
-@@ -172,6 +208,8 @@ void QnxGpuService::AttachWidget(gfx::AcceleratedWidget widget,
++  if (callback)
++    std::move(callback).Run();
++
+ }
+ 
+ // ======================================================================
+@@ -148,6 +181,8 @@ void QnxGpuService::AttachWidget(gfx::AcceleratedWidget widget,
    // generation), GetOrCreateProducer returns the existing one.
    QnxRenderProducer* producer = producer_manager_->GetOrCreateProducer(
        widget, generation, size);
@@ -272,7 +281,7 @@ index bd641091b10fadeec6348fc46cb9bca01773c138..1d2b4ca42e1e9203b7b4b5936bf6410f
    if (!producer) {
      DLOG(ERROR) << "QnxGpuService::AttachWidget: GetOrCreateProducer "
                     "returned null for widget=" << widget
-@@ -187,17 +225,33 @@ void QnxGpuService::AttachWidget(gfx::AcceleratedWidget widget,
+@@ -163,17 +198,33 @@ void QnxGpuService::AttachWidget(gfx::AcceleratedWidget widget,
          producer->Initialize() ? "success" : "failed: " + producer->init_error();
      DLOG(INFO) << "QnxGpuService::AttachWidget: producer->Initialize() "
                    "result for widget="
@@ -310,7 +319,7 @@ index bd641091b10fadeec6348fc46cb9bca01773c138..1d2b4ca42e1e9203b7b4b5936bf6410f
  
    // ---- Phase 5: bounded SubmitFrame trigger ----
    // After producer is created and (re-)initialized, exercise the GPU->Browser
-@@ -259,6 +313,8 @@ void QnxGpuService::ResizeWidget(gfx::AcceleratedWidget widget,
+@@ -235,6 +286,8 @@ void QnxGpuService::ResizeWidget(gfx::AcceleratedWidget widget,
    producer_manager_->RemoveProducer(widget, generation);
    QnxRenderProducer* producer = producer_manager_->GetOrCreateProducer(
        widget, generation, size);
@@ -319,7 +328,7 @@ index bd641091b10fadeec6348fc46cb9bca01773c138..1d2b4ca42e1e9203b7b4b5936bf6410f
    if (!producer) {
      DLOG(ERROR) << "QnxGpuService::ResizeWidget: GetOrCreateProducer "
                     "returned null for widget=" << widget
-@@ -271,12 +327,29 @@ void QnxGpuService::ResizeWidget(gfx::AcceleratedWidget widget,
+@@ -247,12 +300,29 @@ void QnxGpuService::ResizeWidget(gfx::AcceleratedWidget widget,
          producer->Initialize() ? "success" : "failed: " + producer->init_error();
      DLOG(INFO) << "QnxGpuService::ResizeWidget: producer->Initialize() "
                    "result for widget="
@@ -351,7 +360,7 @@ index bd641091b10fadeec6348fc46cb9bca01773c138..1d2b4ca42e1e9203b7b4b5936bf6410f
  
    // ---- Phase 5: bounded SubmitFrame trigger on ResizeWidget ----
    // After the producer is re-created at the new size, submit a test frame
-@@ -323,10 +396,71 @@ void QnxGpuService::DetachWidget(gfx::AcceleratedWidget widget,
+@@ -299,10 +369,71 @@ void QnxGpuService::DetachWidget(gfx::AcceleratedWidget widget,
    }
  
    producer_manager_->RemoveProducer(widget, generation);
@@ -423,7 +432,7 @@ index bd641091b10fadeec6348fc46cb9bca01773c138..1d2b4ca42e1e9203b7b4b5936bf6410f
  // ======================================================================
  // SubmitFrame exercise path (export-only)
  // ======================================================================
-@@ -408,7 +542,11 @@ void QnxGpuService::SubmitTestFrameForWidget(gfx::AcceleratedWidget widget,
+@@ -384,7 +515,11 @@ void QnxGpuService::SubmitTestFrameForWidget(gfx::AcceleratedWidget widget,
    if (!error.empty()) {
      DLOG(ERROR) << "QnxGpuService::SubmitTestFrameForWidget: "
                     "CreateExportFrame failed for widget="
@@ -436,7 +445,7 @@ index bd641091b10fadeec6348fc46cb9bca01773c138..1d2b4ca42e1e9203b7b4b5936bf6410f
      return;
    }
  
-@@ -422,14 +560,20 @@ void QnxGpuService::SubmitTestFrameForWidget(gfx::AcceleratedWidget widget,
+@@ -398,14 +533,20 @@ void QnxGpuService::SubmitTestFrameForWidget(gfx::AcceleratedWidget widget,
    if (IsQnxGpuTraceEnabled()) {
      LOG(INFO) << "QNX_OZONE_GPU_TRACE QnxGpuService::SubmitTestFrameForWidget: "
                   "widget=" << widget << " generation=" << generation
@@ -458,7 +467,7 @@ index bd641091b10fadeec6348fc46cb9bca01773c138..1d2b4ca42e1e9203b7b4b5936bf6410f
  
    // Convert the native frame to mojom and submit.  NativeFrameToMojomFrame
 diff --git ui/ozone/platform/qnx/qnx_gpu_service.h ui/ozone/platform/qnx/qnx_gpu_service.h
-index 7208fa3c91d861b91b7c882504579a2b6c20506a..06abaf86965a62b78613c79448372e8870c7f4eb 100644
+index 257b4a19a34d31a9fad5790e5cd9590a0227ac18..da2dcc2130c9bf932bf92ae0a9d977f3a2066118 100644
 --- ui/ozone/platform/qnx/qnx_gpu_service.h
 +++ ui/ozone/platform/qnx/qnx_gpu_service.h
 @@ -8,6 +8,7 @@
@@ -469,7 +478,7 @@ index 7208fa3c91d861b91b7c882504579a2b6c20506a..06abaf86965a62b78613c79448372e88
  #include "mojo/public/cpp/bindings/receiver.h"
  #include "mojo/public/cpp/bindings/remote.h"
  #include "ui/gfx/geometry/size.h"
-@@ -113,6 +114,10 @@ class QnxGpuService : public qnx::QnxGpuService,
+@@ -114,6 +115,10 @@ class QnxGpuService : public qnx::QnxGpuService,
    void SubmitTestFrameForWidget(gfx::AcceleratedWidget widget,
                                  uint32_t generation);
  
@@ -480,7 +489,7 @@ index 7208fa3c91d861b91b7c882504579a2b6c20506a..06abaf86965a62b78613c79448372e88
   private:
    // Converts a native QnxDmaBufFrame (with base::ScopedFD fds) to a
    // mojom QnxDmaBufFramePtr (with mojo::PlatformHandle fds) for Mojo
-@@ -148,11 +153,17 @@ class QnxGpuService : public qnx::QnxGpuService,
+@@ -149,11 +154,17 @@ class QnxGpuService : public qnx::QnxGpuService,
    // to clean up all GPU-side producer resources.
    std::unique_ptr<QnxRenderProducerManager> producer_manager_;
  
@@ -504,31 +513,31 @@ index 7208fa3c91d861b91b7c882504579a2b6c20506a..06abaf86965a62b78613c79448372e88
  
  }  // namespace ui
 diff --git ui/ozone/platform/qnx/qnx_render_producer.cc ui/ozone/platform/qnx/qnx_render_producer.cc
-index 6db4e14302df52836b8ca6520afe62457002d442..a2b013c37dcce431cfc07508b4f7a824c07ec819 100644
+index c50a41dae0d9a2ba5616d5ce56bedbb7e910a4f0..0173476138e75cd7cbced49c9346ced5275a232a 100644
 --- ui/ozone/platform/qnx/qnx_render_producer.cc
 +++ ui/ozone/platform/qnx/qnx_render_producer.cc
-@@ -15,14 +15,19 @@
+@@ -15,7 +15,11 @@
  #include "ui/ozone/platform/qnx/qnx_render_producer.h"
  
  #include <dlfcn.h>
 +#include <unistd.h>
  
++#include <algorithm>
 +#include <cerrno>
 +#include <cstring>
  #include <memory>
-+#include <sstream>
  #include <vector>
  
--#include "base/logging.h"
+@@ -23,6 +27,8 @@
  #include <GLES2/gl2.h>
  
-+#include "base/logging.h"
  #include "base/notreached.h"
 +#include "base/posix/eintr_wrapper.h"
- #include "ui/gl/gl_context.h"
++#include "ui/gl/gl_context.h"
  #include "ui/ozone/platform/qnx/qnx_surface_factory.h"
  
-@@ -92,24 +97,6 @@ const char* EglErrorName(EGLint err) {
+ // EGL function pointer typedefs (mirrored in header for clarity).
+@@ -86,24 +92,6 @@ const char* EglErrorName(EGLint err) {
    }
  }
  
@@ -553,7 +562,7 @@ index 6db4e14302df52836b8ca6520afe62457002d442..a2b013c37dcce431cfc07508b4f7a824
  // Returns a FourCC string for logging.
  std::string FourccToString(uint32_t fourcc) {
    std::string s;
-@@ -120,6 +107,8 @@ std::string FourccToString(uint32_t fourcc) {
+@@ -114,6 +102,8 @@ std::string FourccToString(uint32_t fourcc) {
    return s;
  }
  
@@ -562,7 +571,7 @@ index 6db4e14302df52836b8ca6520afe62457002d442..a2b013c37dcce431cfc07508b4f7a824
  }  // namespace
  
  // ======================================================================
-@@ -177,10 +166,42 @@ QnxRenderProducer::QnxRenderProducer(QnxSurfaceFactoryOzone* surface_factory,
+@@ -171,10 +161,42 @@ QnxRenderProducer::QnxRenderProducer(QnxSurfaceFactoryOzone* surface_factory,
  }
  
  QnxRenderProducer::~QnxRenderProducer() {
@@ -605,7 +614,7 @@ index 6db4e14302df52836b8ca6520afe62457002d442..a2b013c37dcce431cfc07508b4f7a824
  bool QnxRenderProducer::Initialize() {
    if (!init_error_.empty()) {
      DLOG(ERROR) << "QnxRenderProducer::Initialize: skipped due to "
-@@ -188,10 +209,237 @@ bool QnxRenderProducer::Initialize() {
+@@ -182,10 +204,237 @@ bool QnxRenderProducer::Initialize() {
      return false;
    }
  
@@ -844,54 +853,17 @@ index 6db4e14302df52836b8ca6520afe62457002d442..a2b013c37dcce431cfc07508b4f7a824
    egl_create_drm_image_mesa_ =
        ResolveEGL<EglCreateDRMImageMESAFn*>("eglCreateDRMImageMESA");
    egl_export_dma_buf_image_mesa_ =
-@@ -199,67 +447,261 @@ bool QnxRenderProducer::Initialize() {
-   egl_export_dma_buf_image_query_mesa_ =
-       ResolveEGL<EglExportDMABUFImageQueryMESAFn*>(
-           "eglExportDMABUFImageQueryMESA");
--  egl_destroy_image_khr_ =
--      ResolveEGL<EglDestroyImageKHRFn*>("eglDestroyImageKHR");
--
--  // ---- Resolve GL extension function pointers (FBO render-to-DMAbuf) ----
--  // glEGLImageTargetTexture2DOES lets us bind an EGLImage (the DRM image
--  // backing our DMAbuf) as a texture so we can render into it via an FBO.
--  // This is the missing piece that lets Phase 5 paint a known-good solid
--  // color into the DMAbuf instead of leaving it uninitialized (black).
--  // The extension is GL_OES_EGL_image, which is exposed via
--  // glGetString(GL_EXTENSIONS) — not eglQueryString — so we use the
--  // resolution itself as the presence probe.  QEMU virgl's Mesa driver
--  // advertises this extension; the Phase 1B probes already exercised it.
-+  egl_destroy_image_khr_ = ResolveEGL<EglDestroyImageKHRFn*>("eglDestroyImageKHR");
-+
-   gl_egl_image_target_texture_2d_oes_ =
--      ResolveEGL<GlEGLImageTargetTexture2DOESFn>(
--          "glEGLImageTargetTexture2DOES");
--  if (gl_egl_image_target_texture_2d_oes_) {
--    has_gl_oes_egl_image_ = true;
--    DLOG(INFO) << "QnxRenderProducer::Initialize: GL_OES_EGL_image "
--                  "available; PaintSolidColorToDmaBuf will paint sky blue";
--  } else {
--    DLOG(WARNING) << "QnxRenderProducer::Initialize: GL_OES_EGL_image "
--                     "unavailable; PaintSolidColorToDmaBuf will be a no-op "
--                     "(DMAbuf will be uninitialized / black)";
--  }
-+      ResolveEGL<GlEGLImageTargetTexture2DOESFn>("glEGLImageTargetTexture2DOES");
-+  has_gl_oes_egl_image_ = (gl_egl_image_target_texture_2d_oes_ != nullptr);
- 
-   if (!CanExportDmaBuf()) {
--    init_error_ =
--        "QnxRenderProducer::Initialize: required DMAbuf export extensions "
--        "or function pointers are missing. See ExtensionReport() for details.";
+@@ -200,8 +449,7 @@ bool QnxRenderProducer::Initialize() {
+     init_error_ =
+         "QnxRenderProducer::Initialize: required DMAbuf export extensions "
+         "or function pointers are missing. See ExtensionReport() for details.";
 -    LOG(ERROR) << "[QNX-TRACE] " << init_error_ << "\n"
 -               << ExtensionReport();
-+    if (out_error) {
-+      *out_error = "required Mesa DMAbuf export extensions/function pointers "
-+                   "are missing";
-+    }
++    LOG(ERROR) << init_error_;
      return false;
    }
  
--  is_valid_ = true;
--  DLOG(INFO) << "QnxRenderProducer::Initialize: success for widget=" << widget_;
+@@ -210,28 +458,150 @@ bool QnxRenderProducer::Initialize() {
    return true;
  }
  
@@ -911,17 +883,11 @@ index 6db4e14302df52836b8ca6520afe62457002d442..a2b013c37dcce431cfc07508b4f7a824
 -  return oss.str();
 +QnxRenderProducer::ExportPath QnxRenderProducer::SelectExportPath(
 +    std::string* out_reason) {
-+  if (out_reason) {
-+    out_reason->clear();
-+  }
-+
 +  if (egl_display_ == EGL_NO_DISPLAY) {
-+    if (out_reason) {
++    if (out_reason)
 +      *out_reason = "EGL display unavailable";
-+    }
 +    return ExportPath::kUnavailable;
 +  }
-+
 +  if (out_reason) {
 +    *out_reason =
 +        "preferring kScreenBridge primary path; Mesa kept as fallback";
@@ -939,51 +905,35 @@ index 6db4e14302df52836b8ca6520afe62457002d442..a2b013c37dcce431cfc07508b4f7a824
 +    const gfx::Size& size,
 +    ScreenBufferDescriptor* out_desc,
 +    std::string* out_error) {
-+  if (out_error) {
-+    out_error->clear();
-+  }
-+
-+  if (!out_desc) {
-+    if (out_error) {
-+      *out_error = "out_desc is null";
-+    }
++  if (!out_desc || !screen_buffer_) {
++    if (out_error)
++      *out_error = "screen bridge descriptor or buffer is unavailable";
 +    return false;
 +  }
 +
-+  if (!screen_buffer_) {
-+    if (out_error) {
-+      *out_error = "screen bridge buffer is not initialized";
-+    }
-+    return false;
-+  }
-+
-+  int fd = -1;
 +  out_desc->fd.reset();
++  int fd = -1;
 +  errno = 0;
 +  const int fd_rc =
 +      screen_get_buffer_property_iv(screen_buffer_, SCREEN_PROPERTY_FD, &fd);
 +  if (fd_rc != 0 && errno == ENOTSUP) {
 +    out_desc->fd_unsupported = true;
 +    DLOG(INFO) << "QnxRenderProducer::BuildScreenBufferDescriptor: "
-+                  "SCREEN_PROPERTY_FD not exposed by screen; Mesa fallback "
-+                  "may provide a shareable frame";
++                  "SCREEN_PROPERTY_FD not exposed by screen; using "
++                  "render-only frame";
 +  } else if (fd_rc != 0 || fd < 0) {
-+    if (out_error) {
++    if (out_error)
 +      *out_error = "SCREEN_PROPERTY_FD unavailable";
-+    }
-+    PLOG(ERROR) << "QnxRenderProducer::BuildScreenBufferDescriptor: "
-+                << "failed to read SCREEN_PROPERTY_FD";
++    PLOG(ERROR) << "QnxRenderProducer::BuildScreenBufferDescriptor: failed "
++                   "to read SCREEN_PROPERTY_FD";
 +    return false;
 +  }
 +
 +  if (fd >= 0) {
 +    const int dup_fd = HANDLE_EINTR(dup(fd));
 +    if (dup_fd < 0) {
-+      if (out_error) {
++      if (out_error)
 +        *out_error = "dup(SCREEN_PROPERTY_FD) failed";
-+      }
-+      PLOG(ERROR)
-+          << "QnxRenderProducer::BuildScreenBufferDescriptor: dup failed";
 +      return false;
 +    }
 +    out_desc->fd.reset(dup_fd);
@@ -995,14 +945,12 @@ index 6db4e14302df52836b8ca6520afe62457002d442..a2b013c37dcce431cfc07508b4f7a824
 +      stride > 0) {
 +    out_desc->stride = static_cast<uint32_t>(stride);
 +  }
-+
 +  int buffer_size = 0;
 +  if (screen_get_buffer_property_iv(screen_buffer_, SCREEN_PROPERTY_BUFFER_SIZE,
 +                                    &buffer_size) == 0 &&
 +      buffer_size > 0) {
 +    out_desc->size = static_cast<uint64_t>(buffer_size);
 +  }
-+
 +  int screen_format = 0;
 +  if (screen_get_buffer_property_iv(screen_buffer_, SCREEN_PROPERTY_FORMAT,
 +                                    &screen_format) == 0 &&
@@ -1011,27 +959,16 @@ index 6db4e14302df52836b8ca6520afe62457002d442..a2b013c37dcce431cfc07508b4f7a824
 +  } else {
 +    out_desc->fourcc = kDrmFormatArgb8888;
 +  }
-+
 +  out_desc->modifier = 0;
 +  out_desc->offset = 0;
-+
 +  if (out_desc->size == 0 && out_desc->stride > 0) {
 +    out_desc->size = static_cast<uint64_t>(out_desc->stride) *
 +                     static_cast<uint64_t>(size.height());
 +  }
-+
-+  void* native_image = nullptr;
-+  if (screen_get_buffer_property_pv(screen_buffer_, SCREEN_PROPERTY_NATIVE_IMAGE,
-+                                    &native_image) == 0) {
-+    out_desc->native_image = native_image;
-+  }
-+
-+  void* egl_handle = nullptr;
-+  if (screen_get_buffer_property_pv(screen_buffer_, SCREEN_PROPERTY_EGL_HANDLE,
-+                                    &egl_handle) == 0) {
-+    out_desc->egl_handle = egl_handle;
-+  }
-+
++  screen_get_buffer_property_pv(screen_buffer_, SCREEN_PROPERTY_NATIVE_IMAGE,
++                                &out_desc->native_image);
++  screen_get_buffer_property_pv(screen_buffer_, SCREEN_PROPERTY_EGL_HANDLE,
++                                &out_desc->egl_handle);
 +  return true;
 +}
 +
@@ -1039,45 +976,24 @@ index 6db4e14302df52836b8ca6520afe62457002d442..a2b013c37dcce431cfc07508b4f7a824
 +    ScreenBufferDescriptor* desc,
 +    QnxDmaBufFrame* out_frame,
 +    std::string* out_error) {
-+  if (out_error) {
-+    out_error->clear();
-+  }
-+
-+  if (!desc || !out_frame) {
-+    if (out_error) {
-+      *out_error = "invalid output arguments";
-+    }
++  if (!desc || !out_frame || !desc->fd.is_valid()) {
++    if (out_error)
++      *out_error = "screen descriptor has no shareable fd";
 +    return false;
 +  }
-+
-+  if (!desc->fd.is_valid()) {
-+    if (out_error) {
-+      *out_error = "descriptor fd is invalid";
-+    }
-+    return false;
-+  }
-+
 +  out_frame->widget = widget_;
 +  out_frame->generation = generation_;
 +  out_frame->width = static_cast<uint32_t>(size_.width());
 +  out_frame->height = static_cast<uint32_t>(size_.height());
 +  out_frame->fourcc = desc->fourcc ? desc->fourcc : kDrmFormatArgb8888;
 +  out_frame->modifier = desc->modifier;
-+
 +  QnxDmaBufPlane plane;
 +  plane.fd = std::move(desc->fd);
 +  plane.stride = desc->stride;
 +  plane.offset = desc->offset;
 +  plane.size = desc->size;
-+
-+  if (plane.size == 0 && plane.stride > 0) {
-+    plane.size = static_cast<uint64_t>(plane.stride) *
-+                 static_cast<uint64_t>(size_.height());
-+  }
-+
 +  out_frame->planes.clear();
 +  out_frame->planes.push_back(std::move(plane));
-+
 +  return true;
 +}
 +
@@ -1085,78 +1001,40 @@ index 6db4e14302df52836b8ca6520afe62457002d442..a2b013c37dcce431cfc07508b4f7a824
 +    const ScreenBufferDescriptor& desc,
 +    const gfx::Size& size,
 +    std::string* out_error) {
-+  if (out_error) {
-+    out_error->clear();
-+  }
-+
-+  if (!desc.native_image) {
-+    if (out_error) {
-+      *out_error = "native_image is null";
-+    }
++  if (!desc.native_image || !gl_egl_image_target_texture_2d_oes_ ||
++      !gl::GLContext::GetCurrent()) {
++    if (out_error)
++      *out_error = "Screen native image or current GL context unavailable";
 +    return false;
 +  }
-+
-+  if (!gl_egl_image_target_texture_2d_oes_) {
-+    if (out_error) {
-+      *out_error = "glEGLImageTargetTexture2DOES not resolved";
-+    }
-+    return false;
-+  }
-+
-+  if (!gl::GLContext::GetCurrent()) {
-+    if (out_error) {
-+      *out_error = "no current GL context";
-+    }
-+    return false;
-+  }
-+
 +  GLuint texture = 0;
-+  glGenTextures(1, &texture);
-+  if (texture == 0) {
-+    if (out_error) {
-+      *out_error = "glGenTextures returned 0";
-+    }
-+    return false;
-+  }
-+
-+  glBindTexture(GL_TEXTURE_2D, texture);
-+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-+  gl_egl_image_target_texture_2d_oes_(GL_TEXTURE_2D, desc.native_image);
-+
 +  GLuint fbo = 0;
++  glGenTextures(1, &texture);
++  glBindTexture(GL_TEXTURE_2D, texture);
++  gl_egl_image_target_texture_2d_oes_(GL_TEXTURE_2D, desc.native_image);
 +  glGenFramebuffers(1, &fbo);
 +  glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 +  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
 +                         texture, 0);
-+
-+  const GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-+  if (status != GL_FRAMEBUFFER_COMPLETE) {
-+    if (out_error) {
-+      *out_error = "FBO incomplete";
-+    }
-+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
++  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
++    if (out_error)
++      *out_error = "Screen bridge FBO incomplete";
 +    glDeleteFramebuffers(1, &fbo);
-+    glBindTexture(GL_TEXTURE_2D, 0);
 +    glDeleteTextures(1, &texture);
 +    return false;
 +  }
-+
 +  glViewport(0, 0, size.width(), size.height());
-+  glClearColor(0.2f, 0.4f, 0.6f, 1.0f);  // #336699
++  glClearColor(0.2f, 0.4f, 0.6f, 1.0f);
 +  glClear(GL_COLOR_BUFFER_BIT);
 +  glFlush();
-+
 +  glBindFramebuffer(GL_FRAMEBUFFER, 0);
 +  glDeleteFramebuffers(1, &fbo);
-+  glBindTexture(GL_TEXTURE_2D, 0);
 +  glDeleteTextures(1, &texture);
-+
 +  return true;
  }
  
  void QnxRenderProducer::ProbeExtensions() {
-@@ -584,6 +1026,124 @@ bool QnxRenderProducer::PaintSolidColorToDmaBuf(EGLImageKHR image,
+@@ -447,6 +817,183 @@ bool QnxRenderProducer::ExportDmaBufImage(EGLImageKHR image,
    return true;
  }
  
@@ -1198,6 +1076,28 @@ index 6db4e14302df52836b8ca6520afe62457002d442..a2b013c37dcce431cfc07508b4f7a824
 +               GL_UNSIGNED_BYTE, pixels.data());
 +  GLenum error = glGetError();
 +  glPixelStorei(GL_PACK_ALIGNMENT, previous_pack_alignment);
++
++  static bool logged_capture_pixels = false;
++  if (!logged_capture_pixels && error == GL_NO_ERROR) {
++    size_t nonzero_bytes = 0;
++    uint64_t byte_sum = 0;
++    uint8_t min_byte = 0xff;
++    uint8_t max_byte = 0;
++    for (const uint8_t byte : pixels) {
++      nonzero_bytes += byte != 0;
++      byte_sum += byte;
++      min_byte = std::min(min_byte, byte);
++      max_byte = std::max(max_byte, byte);
++    }
++    LOG(INFO) << "[QNX-TRACE] QnxRenderProducer::"
++                 "CaptureCurrentFramebufferToDmaBuf: pixel_stats "
++              << "bytes=" << pixels.size()
++              << " nonzero_bytes=" << nonzero_bytes
++              << " byte_sum=" << byte_sum
++              << " min=" << static_cast<int>(min_byte)
++              << " max=" << static_cast<int>(max_byte);
++    logged_capture_pixels = true;
++  }
 +  if (error != GL_NO_ERROR) {
 +    if (out_error)
 +      *out_error = "glReadPixels failed";
@@ -1222,8 +1122,7 @@ index 6db4e14302df52836b8ca6520afe62457002d442..a2b013c37dcce431cfc07508b4f7a824
 +  glBindTexture(GL_TEXTURE_2D, texture);
 +  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 +  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-+  gl_egl_image_target_texture_2d_oes_(GL_TEXTURE_2D,
-+                                      static_cast<GLeglImageOES>(image));
++  gl_egl_image_target_texture_2d_oes_(GL_TEXTURE_2D, image);
 +  glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, size.width(), size.height(), GL_RGBA,
 +                  GL_UNSIGNED_BYTE, pixels.data());
 +  error = glGetError();
@@ -1247,6 +1146,44 @@ index 6db4e14302df52836b8ca6520afe62457002d442..a2b013c37dcce431cfc07508b4f7a824
 +            << widget_ << " generation=" << generation_ << " size="
 +            << size.width() << "x" << size.height();
 +  return true;
++}
++
++bool QnxRenderProducer::PaintSolidColorToDmaBuf(EGLImageKHR image,
++                                                const gfx::Size& size) {
++  if (!gl::GLContext::GetCurrent() ||
++      !gl_egl_image_target_texture_2d_oes_) {
++    return false;
++  }
++  GLint old_texture = 0;
++  GLint old_framebuffer = 0;
++  GLint old_viewport[4] = {};
++  glGetIntegerv(GL_TEXTURE_BINDING_2D, &old_texture);
++  glGetIntegerv(GL_FRAMEBUFFER_BINDING, &old_framebuffer);
++  glGetIntegerv(GL_VIEWPORT, old_viewport);
++  GLuint texture = 0;
++  GLuint framebuffer = 0;
++  glGenTextures(1, &texture);
++  glBindTexture(GL_TEXTURE_2D, texture);
++  gl_egl_image_target_texture_2d_oes_(GL_TEXTURE_2D, image);
++  glGenFramebuffers(1, &framebuffer);
++  glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
++  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
++                         GL_TEXTURE_2D, texture, 0);
++  const bool complete =
++      glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
++  if (complete) {
++    glViewport(0, 0, size.width(), size.height());
++    glClearColor(0.0f, 0.498f, 1.0f, 1.0f);
++    glClear(GL_COLOR_BUFFER_BIT);
++    glFlush();
++  }
++  glBindFramebuffer(GL_FRAMEBUFFER, static_cast<GLuint>(old_framebuffer));
++  glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(old_texture));
++  glViewport(old_viewport[0], old_viewport[1], old_viewport[2],
++             old_viewport[3]);
++  glDeleteFramebuffers(1, &framebuffer);
++  glDeleteTextures(1, &texture);
++  return complete;
 +}
 +
 +std::pair<QnxDmaBufFrame, std::string>
@@ -1281,7 +1218,7 @@ index 6db4e14302df52836b8ca6520afe62457002d442..a2b013c37dcce431cfc07508b4f7a824
  std::pair<QnxDmaBufFrame, std::string> QnxRenderProducer::CreateExportFrame() {
    QnxDmaBufFrame frame;
    frame.widget = widget_;
-@@ -598,40 +1158,112 @@ std::pair<QnxDmaBufFrame, std::string> QnxRenderProducer::CreateExportFrame() {
+@@ -461,24 +1008,56 @@ std::pair<QnxDmaBufFrame, std::string> QnxRenderProducer::CreateExportFrame() {
      return std::make_pair(std::move(frame), err);
    }
  
@@ -1303,11 +1240,9 @@ index 6db4e14302df52836b8ca6520afe62457002d442..a2b013c37dcce431cfc07508b4f7a824
 +    ScreenBufferDescriptor descriptor;
 +    std::string error;
 +    if (!BuildScreenBufferDescriptor(size_, &descriptor, &error)) {
-+      return std::make_pair(std::move(frame),
-+                            "BuildScreenBufferDescriptor failed: " + error);
++      return {std::move(frame),
++              "BuildScreenBufferDescriptor failed: " + error};
 +    }
- 
--  std::string error;
 +    if (!descriptor.fd.is_valid()) {
 +      if (descriptor.fd_unsupported) {
 +        std::string mesa_error;
@@ -1315,67 +1250,34 @@ index 6db4e14302df52836b8ca6520afe62457002d442..a2b013c37dcce431cfc07508b4f7a824
 +          active_export_path_ = ExportPath::kMesaFallback;
 +          export_path_reason_ =
 +              "SCREEN_PROPERTY_FD ENOTSUP; selected kMesaFallback";
-+          LOG(INFO) << "[QNX-TRACE] QnxRenderProducer::CreateExportFrame: "
-+                       "SCREEN_PROPERTY_FD ENOTSUP -> kMesaFallback; "
-+                       "starting Mesa DMAbuf export";
 +          return CreateMesaExportFrame(false);
 +        }
-+        LOG(INFO) << "[QNX-TRACE] QnxRenderProducer::CreateExportFrame: "
-+                     "SCREEN_PROPERTY_FD ENOTSUP and Mesa fallback unavailable; "
-+                     "using render-only";
-+        DLOG(WARNING) << "QnxRenderProducer::CreateExportFrame: Mesa fallback "
-+                         "initialization failed: " << mesa_error;
++        DLOG(WARNING) << "Mesa fallback unavailable: " << mesa_error;
 +      }
-+
 +      std::string render_error;
-+      if (!RenderSolidIntoScreenBuffer(descriptor, size_, &render_error)) {
-+        DLOG(WARNING) << "QnxRenderProducer::CreateExportFrame[kScreenBridge]: "
-+                         "render-only frame render skipped: "
-+                      << render_error;
-+      }
++      if (!RenderSolidIntoScreenBuffer(descriptor, size_, &render_error))
++        DLOG(WARNING) << "Render-only frame skipped: " << render_error;
 +      frame.fourcc = descriptor.fourcc;
 +      frame.modifier = descriptor.modifier;
-+      if (gl::GLContext::GetCurrent()) {
-+        glFlush();
-+      }
-+      DLOG(INFO) << "QnxRenderProducer::CreateExportFrame[kScreenBridge]: "
-+                    "render-only frame; no DMAbuf fd to submit";
-+      return std::make_pair(std::move(frame), std::string());
++      DLOG(INFO) << "render-only frame; no DMAbuf fd to submit";
++      return {std::move(frame), std::string()};
 +    }
-+
 +    std::string render_error;
-+    if (!RenderSolidIntoScreenBuffer(descriptor, size_, &render_error)) {
-+      DLOG(WARNING) << "QnxRenderProducer::CreateExportFrame[kScreenBridge]: "
-+                       "metadata-only export (render skipped): "
-+                    << render_error;
-+    }
-+
++    if (!RenderSolidIntoScreenBuffer(descriptor, size_, &render_error))
++      DLOG(WARNING) << "Screen bridge render skipped: " << render_error;
 +    if (!PopulateFrameFromScreenDescriptor(&descriptor, &frame, &error)) {
-+      return std::make_pair(
-+          std::move(frame),
-+          "PopulateFrameFromScreenDescriptor failed: " + error);
++      return {std::move(frame),
++              "PopulateFrameFromScreenDescriptor failed: " + error};
 +    }
-+
-+    if (gl::GLContext::GetCurrent()) {
-+      glFlush();
-+    }
- 
--  // Create a DRM image for export.
-+    DLOG(INFO) << "QnxRenderProducer::CreateExportFrame[kScreenBridge]: "
-+               << "widget=" << widget_ << " size=" << size_.width() << "x"
-+               << size_.height() << " fourcc=0x" << std::hex << frame.fourcc
-+               << " modifier=0x" << frame.modifier << std::dec
-+               << " planes=" << frame.planes.size();
-+    return std::make_pair(std::move(frame), std::string());
++    return {std::move(frame), std::string()};
 +  }
 +
-+  if (active_export_path_ != ExportPath::kMesaFallback) {
-+    return std::make_pair(std::move(frame), "no export path selected");
-+  }
-+
++  if (active_export_path_ != ExportPath::kMesaFallback)
++    return {std::move(frame), "no export path selected"};
 +  return CreateMesaExportFrame(false);
 +}
-+
+ 
+-  std::string error;
 +std::pair<QnxDmaBufFrame, std::string>
 +QnxRenderProducer::CreateMesaExportFrame(bool capture_compositor) {
 +  QnxDmaBufFrame frame;
@@ -1383,44 +1285,31 @@ index 6db4e14302df52836b8ca6520afe62457002d442..a2b013c37dcce431cfc07508b4f7a824
 +  frame.generation = generation_;
 +  frame.width = static_cast<uint32_t>(size_.width());
 +  frame.height = static_cast<uint32_t>(size_.height());
-+
+ 
+-  // Create a DRM image for export.
 +  std::string error;
    EGLImageKHR img = CreateDRMImage(size_, &error);
    if (img == EGL_NO_IMAGE_KHR) {
--    DLOG(ERROR) << "QnxRenderProducer::CreateExportFrame: CreateDRMImage failed: "
-+    DLOG(ERROR) << "QnxRenderProducer::CreateMesaExportFrame: "
-+                   "CreateDRMImage failed: "
-                 << error;
--    return std::make_pair(std::move(frame),
--                          "CreateDRMImage failed: " + error);
-+    return std::make_pair(std::move(frame), "CreateDRMImage failed: " + error);
+     DLOG(ERROR) << "QnxRenderProducer::CreateExportFrame: CreateDRMImage failed: "
+@@ -487,6 +1066,17 @@ std::pair<QnxDmaBufFrame, std::string> QnxRenderProducer::CreateExportFrame() {
+                           "CreateDRMImage failed: " + error);
    }
  
--  // Phase 5: paint a known-good solid color (sky blue) into the DMAbuf so
--  // the user can see the frame on the QEMU virgl screen during Phase 5
--  // acceptance.  This is a scaffold step; real Skia/Viz rendering will
--  // replace it.  Failures here are non-fatal: the DMAbuf is just left
--  // uninitialized (which is what the Phase 1B-exportonly probe did).
--  PaintSolidColorToDmaBuf(img, size_);
 +  if (capture_compositor) {
 +    std::string capture_error;
 +    if (!CaptureCurrentFramebufferToDmaBuf(img, size_, &capture_error)) {
 +      DestroyDRMImage(img);
-+      return std::make_pair(
-+          std::move(frame),
-+          "CaptureCurrentFramebufferToDmaBuf failed: " + capture_error);
++      return {std::move(frame),
++              "CaptureCurrentFramebufferToDmaBuf failed: " + capture_error};
 +    }
 +  } else {
-+    // Phase 1 diagnostic path: keep the bounded solid-color producer for
-+    // attach-time capability/display validation.
 +    PaintSolidColorToDmaBuf(img, size_);
 +  }
- 
--  // Query DMAbuf metadata.
++
+   // Query DMAbuf metadata.
    uint32_t fourcc = 0;
    int n_planes = 0;
-   uint64_t modifier = 0;
-@@ -644,39 +1276,32 @@ std::pair<QnxDmaBufFrame, std::string> QnxRenderProducer::CreateExportFrame() {
+@@ -500,39 +1090,32 @@ std::pair<QnxDmaBufFrame, std::string> QnxRenderProducer::CreateExportFrame() {
    frame.fourcc = fourcc;
    frame.modifier = modifier;
  
@@ -1468,7 +1357,7 @@ index 6db4e14302df52836b8ca6520afe62457002d442..a2b013c37dcce431cfc07508b4f7a824
  }
  
 diff --git ui/ozone/platform/qnx/qnx_render_producer.h ui/ozone/platform/qnx/qnx_render_producer.h
-index 0a3db236a2c0f3c464f84bf96f1c90afa4d4f164..1a538bb24b20c39bf9270b9de6b584d4ed15aa7b 100644
+index 95b9dfff5b0a36fa41100c48d1f8f58c4f353f4f..3432827d8777dbe9c99796004f123b3e51334fb8 100644
 --- ui/ozone/platform/qnx/qnx_render_producer.h
 +++ ui/ozone/platform/qnx/qnx_render_producer.h
 @@ -17,6 +17,8 @@
@@ -1477,10 +1366,10 @@ index 0a3db236a2c0f3c464f84bf96f1c90afa4d4f164..1a538bb24b20c39bf9270b9de6b584d4
  
 +#include <screen/screen.h>
 +
- // GL types needed for the PaintSolidColorToDmaBuf FBO path.  Kept
- // scoped to this header to avoid leaking GLES2 includes into the
- // wider ozone QNX platform (which does not otherwise need GLES2).
-@@ -133,6 +135,28 @@ class QnxRenderProducer {
+ // Include EGL base types before EGL extension types.
+ // This matches the pattern used by ui/gl/gl_surface_egl.h and
+ // ui/ozone/platform/drm/gpu/gbm_surfaceless.h: include egl.h first,
+@@ -128,6 +130,28 @@ class QnxRenderProducer {
    bool is_valid() const { return is_valid_; }
    const std::string& init_error() const { return init_error_; }
  
@@ -1509,20 +1398,17 @@ index 0a3db236a2c0f3c464f84bf96f1c90afa4d4f164..1a538bb24b20c39bf9270b9de6b584d4
    // ---- EGL extension probing ----
  
    // Returns a human-readable summary of which DMAbuf/EGL extensions are
-@@ -191,6 +215,12 @@ class QnxRenderProducer {
+@@ -186,6 +210,9 @@ class QnxRenderProducer {
    //   4. Return via Mojo SubmitFrame once binding is wired.
    std::pair<QnxDmaBufFrame, std::string> CreateExportFrame();
  
-+  // Exports the current compositor framebuffer from the pre-swap capture
-+  // callback. Unlike CreateExportFrame(), this never paints a synthetic
-+  // synthetic color; it captures the actual compositor render target.
 +  std::pair<QnxDmaBufFrame, std::string>
 +  CreateExportFrameFromCompositor();
 +
-   // Phase 5 acceptance helper: paints a solid color (sky blue, RGBA
-   // (0, 0.498, 1.0, 1.0)) into the backing DMAbuf of an EGLImage created
-   // by CreateDRMImage() by binding the image to a texture via
-@@ -219,18 +249,43 @@ class QnxRenderProducer {
+   // Returns the GPU-side EGL display used by this producer.
+   EGLDisplay egl_display() const { return egl_display_; }
+ 
+@@ -198,18 +225,44 @@ class QnxRenderProducer {
    // Probe EGL extensions and log the report.
    void ProbeExtensions();
  
@@ -1544,6 +1430,7 @@ index 0a3db236a2c0f3c464f84bf96f1c90afa4d4f164..1a538bb24b20c39bf9270b9de6b584d4
 +  bool CaptureCurrentFramebufferToDmaBuf(EGLImageKHR image,
 +                                         const gfx::Size& size,
 +                                         std::string* out_error);
++  bool PaintSolidColorToDmaBuf(EGLImageKHR image, const gfx::Size& size);
 +
 +  std::pair<QnxDmaBufFrame, std::string>
 +  CreateMesaExportFrame(bool capture_compositor);
@@ -1569,7 +1456,17 @@ index 0a3db236a2c0f3c464f84bf96f1c90afa4d4f164..1a538bb24b20c39bf9270b9de6b584d4
    bool is_valid_ = false;
  
    // Human-readable error from initialization (empty on success).
-@@ -288,6 +343,11 @@ class QnxRenderProducer {
+@@ -239,6 +292,9 @@ class QnxRenderProducer {
+   using EglDestroyImageKHRFn = EGLBoolean(EGLDisplay dpy, EGLImageKHR image);
+   EglDestroyImageKHRFn* egl_destroy_image_khr_ = nullptr;
+ 
++  using GlEGLImageTargetTexture2DOESFn = void (*)(unsigned int, void*);
++  GlEGLImageTargetTexture2DOESFn gl_egl_image_target_texture_2d_oes_ = nullptr;
++
+   // ---- Extension presence flags ----
+ 
+   bool has_egl_mesa_drm_image_ = false;
+@@ -249,6 +305,11 @@ class QnxRenderProducer {
    bool has_khr_surfaceless_context_ = false;
    bool has_gl_oes_egl_image_ = false;
  
@@ -1581,13 +1478,3 @@ index 0a3db236a2c0f3c464f84bf96f1c90afa4d4f164..1a538bb24b20c39bf9270b9de6b584d4
    // Raw pointer to the owning surface factory (non-owning).
    raw_ptr<QnxSurfaceFactoryOzone> surface_factory_;
  };
-diff --git ui/ozone/platform/qnx/qnx_frame_importer.cc ui/ozone/platform/qnx/qnx_frame_importer.cc
-index 0c588fbff0f607f82c5724253641780fe14802a3..399f4172c865ac57073df3166ac6ec492521a4c7 100644
---- ui/ozone/platform/qnx/qnx_frame_importer.cc
-+++ ui/ozone/platform/qnx/qnx_frame_importer.cc
-@@ -1005,3 +1005,5 @@ std::pair<bool, std::string> QnxFrameImporter::ImportAndDisplayFrame(
-   // ---- Draw fullscreen quad with imported texture ----
-+  glViewport(0, 0, static_cast<GLsizei>(frame.width),
-+             static_cast<GLsizei>(frame.height));
-   DrawFullscreenQuad(state->program, state->texture);
-   CHECK_GLEXR(glDrawArrays);
