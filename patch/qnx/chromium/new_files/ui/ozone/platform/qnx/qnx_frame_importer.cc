@@ -267,7 +267,27 @@ bool QnxFrameImporter::InitializeEGLDisplay() {
   egl_destroy_image_khr_ =
       Resolve<EglDestroyImageKHRFn*>("eglDestroyImageKHR");
 
-  // ---- Probe GL extensions ----
+  // NOTE: glGetString(GL_EXTENSIONS) and glEGLImageTargetTexture2DOES
+  // resolution are intentionally deferred to EnsureGLExtensionsResolved()
+  // which runs after the first eglMakeCurrent in GetOrCreateWindowState.
+  // Calling glGetString here would crash Mesa virgl because no GL context
+  // is current at this point.
+  can_import_dma_buf_ = has_egl_ext_image_dma_buf_import_ &&
+                         egl_create_image_khr_ != nullptr &&
+                         egl_destroy_image_khr_ != nullptr;
+  DLOG(INFO) << "QnxFrameImporter: EGL display initialized; "
+                "GL extension resolution deferred until first eglMakeCurrent";
+  return true;
+}
+
+void QnxFrameImporter::EnsureGLExtensionsResolved() {
+  if (gl_extensions_resolved_) {
+    return;
+  }
+  // Safe to call glGetString now: caller has just made an EGL context
+  // current via eglMakeCurrent. The Khronos spec says glGetString must
+  // return NULL + GL_INVALID_OPERATION when no context is current, but
+  // Mesa virgl dereferences loader state and segfaults.
   const char* gl_exts =
       reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
   if (gl_exts) {
@@ -275,32 +295,28 @@ bool QnxFrameImporter::InitializeEGLDisplay() {
   } else {
     DLOG(INFO) << "GL_EXTENSIONS: glGetString returned null";
   }
-
   has_gl_oes_egl_image_ =
       gl_exts && strstr(gl_exts, "GL_OES_EGL_image") != nullptr;
   has_khr_gl_texture_2d_ =
       gl_exts && strstr(gl_exts, "GL_KHR_gl_texture_2d") != nullptr;
-
-  // ---- Resolve GL function pointers ----
   gl_egl_image_target_texture_2d_oes_ =
       Resolve<GlEGLImageTargetTexture2DOESFn*>("glEGLImageTargetTexture2DOES");
-
-  // ---- Check minimum requirements ----
-  bool can_import = has_egl_ext_image_dma_buf_import_ &&
-                    has_gl_oes_egl_image_ &&
-                    egl_create_image_khr_ != nullptr &&
-                    egl_destroy_image_khr_ != nullptr &&
-                    gl_egl_image_target_texture_2d_oes_ != nullptr;
-
-  if (!can_import) {
-    LOG(ERROR) << "QnxFrameImporter: missing required extensions or function "
-                  "pointers for DMAbuf import:\n"
-               << ExtensionReport();
-    return false;
+  gl_extensions_resolved_ = true;
+  // Re-evaluate the import capability now that GL extensions are known.
+  if (!can_import_dma_buf_ && has_egl_ext_image_dma_buf_import_ &&
+      has_gl_oes_egl_image_ && egl_create_image_khr_ != nullptr &&
+      egl_destroy_image_khr_ != nullptr &&
+      gl_egl_image_target_texture_2d_oes_ != nullptr) {
+    can_import_dma_buf_ = true;
   }
-
-  DLOG(INFO) << "QnxFrameImporter: EGL display ready for DMAbuf import";
-  return true;
+  if (can_import_dma_buf_) {
+    DLOG(INFO) << "QnxFrameImporter: GL extensions resolved; "
+                  "EGL display ready for DMAbuf import";
+  } else {
+    DLOG(WARNING) << "QnxFrameImporter: GL extensions resolved but "
+                     "DMAbuf import still incomplete:\n"
+                  << ExtensionReport();
+  }
 }
 
 template <typename Fn>
@@ -474,7 +490,13 @@ QnxFrameImporter::GetOrCreateWindowState(
   }
 
   DLOG(INFO) << "QnxFrameImporter::GetOrCreateWindowState: "
-                 "eglMakeCurrent OK";
+                "eglMakeCurrent OK";
+
+  // ---- Step 4b: Resolve GL extensions now that a context is current ----
+  // Safe to call glGetString(GL_EXTENSIONS) and resolve
+  // glEGLImageTargetTexture2DOES only after eglMakeCurrent; calling them
+  // earlier (in InitializeEGLDisplay) crashes Mesa virgl.
+  EnsureGLExtensionsResolved();
 
   // ---- Step 5: Create GLES2 texture ----
   GLuint texture = 0;

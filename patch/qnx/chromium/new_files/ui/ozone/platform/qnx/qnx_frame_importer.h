@@ -126,6 +126,14 @@ class QnxFrameImporter {
   // Returns true on success.
   bool InitializeEGLDisplay();
 
+  // Resolves the GL extension string (glGetString(GL_EXTENSIONS)) and the
+  // glEGLImageTargetTexture2DOES function pointer. Must be called only after
+  // an EGL context has been made current via eglMakeCurrent, since Mesa
+  // virgl crashes when glGetString(GL_EXTENSIONS) is invoked without a
+  // current context (the Khronos spec mandates NULL+error, but Mesa virgl
+  // dereferences loader state).
+  void EnsureGLExtensionsResolved();
+
   // Ensures a WindowEGLState exists for |widget| and its EGL surface
   // is current.  Lazily creates display/context/surface for the window.
   // Returns nullptr with diagnostic on failure.
@@ -169,6 +177,12 @@ class QnxFrameImporter {
 
   // True if the minimum EGL/GL extensions for DMAbuf import are present.
   bool can_import_dma_buf_ = false;
+
+  // True once EnsureGLExtensionsResolved() has run successfully. The
+  // glGetString + glEGLImageTargetTexture2DOES resolution is deferred to
+  // the first eglMakeCurrent in GetOrCreateWindowState, not the EGL
+  // display init.
+  bool gl_extensions_resolved_ = false;
 
   // EGL display used for all browser-side EGL operations.
   // Initialized once in InitializeEGLDisplay().
