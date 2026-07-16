@@ -17,6 +17,7 @@ The wire protocol is identical to the historical implementation:
 
 from __future__ import annotations
 
+import ipaddress
 import os
 import re
 import socket
@@ -39,6 +40,60 @@ EXIT_RE = re.compile(rb"__PI_QNX_EXIT__:(\d+)")
 def q(s: str) -> str:
     """Single-quote a string for embedding inside ``sh -c '...'``."""
     return "'" + s.replace("'", "'\\''") + "'"
+
+
+def validate_dns_server(value: str) -> str:
+    """Validate a guest nameserver address and return it unchanged."""
+    if not value:
+        return ""
+    try:
+        address = ipaddress.ip_address(value)
+    except ValueError as exc:
+        raise ValueError(
+            f"QNX DNS server must be a valid IP literal (got: {value})"
+        ) from exc
+    if (address.is_loopback or address.is_unspecified or
+            address.is_multicast or address.is_link_local):
+        raise ValueError(
+            f"QNX DNS server must be a reachable non-loopback address (got: {value})"
+        )
+    return value
+
+
+def discover_dns_server() -> str:
+    """Return the first usable host resolver, or an empty string.
+
+    The host's /etc/resolv.conf may point at the local systemd-resolved stub
+    (127.0.0.53), which is not reachable from the QNX guest. Prefer the
+    link-specific addresses reported by resolvectl and skip unusable values.
+    """
+    candidates = []
+    try:
+        result = subprocess.run(
+            ["resolvectl", "dns"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        candidates.extend(result.stdout.split())
+    except OSError:
+        pass
+    try:
+        with open("/etc/resolv.conf", encoding="utf-8") as fp:
+            for line in fp:
+                fields = line.split()
+                if fields and fields[0] == "nameserver":
+                    candidates.extend(fields[1:2])
+    except OSError:
+        pass
+    for candidate in candidates:
+        if not re.search(r"[.:]", candidate):
+            continue
+        try:
+            return validate_dns_server(candidate)
+        except ValueError:
+            continue
+    return ""
 
 
 def looks_like_shell_prompt(buf: bytes) -> bool:
@@ -69,6 +124,7 @@ class QNXConfig:
     boot_timeout: int = 120
     cmd_timeout: int = 1800
     keep_qemu: bool = False
+    dns_server: str = ""
     kill_existing: bool = False
     tap_required: bool = True
 
@@ -86,6 +142,9 @@ class QNXConfig:
         qemu_dir = os.environ.get(
             "QEMU_DIR", os.path.join(qnx_dir, "images", "qemu", "qemu")
         )
+        dns_server = os.environ.get("QNX_DNS_SERVER", "")
+        if not dns_server:
+            dns_server = discover_dns_server()
         return cls(
             chromium_src=chromium_src,
             build_dir=build_dir,
@@ -94,6 +153,7 @@ class QNXConfig:
             serial_port=int(os.environ.get("SERIAL_PORT", "10024")),
             boot_timeout=int(os.environ.get("BOOT_TIMEOUT", "120")),
             cmd_timeout=int(os.environ.get("CMD_TIMEOUT", "1800")),
+            dns_server=validate_dns_server(dns_server),
         )
 
     def guest_build_dir(self) -> str:
@@ -241,6 +301,7 @@ class QNXSerial:
         guest_build_dir: str,
         main_binary: str,
         extra_env: Sequence[str] = (),
+        dns_server: str = "",
     ) -> None:
         """Mount NFS and export the usual guest environment."""
         setup_lines = [
@@ -253,6 +314,12 @@ class QNXSerial:
             "fs-nfs3 10.0.2.1:/export/chromium-src /mnt/nfs",
             f"cd {guest_build_dir}",
         ]
+        dns_server = validate_dns_server(dns_server)
+        if dns_server:
+            setup_lines.insert(
+                5,
+                f"printf 'nameserver %s\\n' {q(dns_server)} > /etc/resolv.conf",
+            )
         env_lines = [
             f"export LD_LIBRARY_PATH={guest_build_dir}",
             "unset CHROME_EXE_PATH",

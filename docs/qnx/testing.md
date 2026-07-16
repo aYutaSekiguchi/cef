@@ -21,7 +21,40 @@ cd <CHROMIUM_SRC_ROOT>
 sudo ./cef/tools/qnx_setup_env.sh
 ```
 
-This prepares the host-side requirements used by the QEMU runner, including `tap0` and NFS export support.
+This prepares the host-side requirements used by the QEMU runner, including `tap0`, NFS export support, IPv4 forwarding, and idempotent TAP NAT/FORWARD rules. The forwarding flag and firewall rules are runtime state; rerun this command after a host reboot or firewall reload.
+
+### Guest DNS and external network
+
+The runner uses TAP networking rather than QEMU user networking. After
+`qnx_setup_env.sh` has run, `qnx_run.sh` and `qnx_run_test.sh` automatically
+select the first non-loopback DNS server reported by `resolvectl`. Override
+that choice when required by the host network or VPN:
+
+```bash
+QNX_DNS_SERVER=192.168.0.1 ./cef/tools/qnx_run.sh --virgl -- \
+  ./cefsimple --use-native --ozone-platform=qnx --no-sandbox
+```
+
+The equivalent explicit option is `--dns-server 192.168.0.1`. Loopback,
+multicast, link-local, and unspecified addresses are rejected because the
+QNX guest cannot use the host's `127.0.0.53` systemd-resolved stub directly.
+The guest resolver file is populated after the static address and default
+route are configured.
+
+Before diagnosing Chromium, verify the independent network layers:
+
+```bash
+./cef/tools/qnx_run.sh --timeout 30 -- \
+  'ifconfig vtnet0; netstat -rn; cat /etc/resolv.conf; \
+   ping -c1 -W2 10.0.2.1; ping -c1 -W2 8.8.8.8; \
+   timeout 15 getent hosts google.com'
+```
+
+`10.0.2.1` tests the TAP link, the literal external address tests host
+forwarding/NAT, and `getent` tests the QNX resolver path. The QNX image does
+not contain a guest `timeout` utility; bound application runs with the
+runner's host-side `--timeout` option instead of prefixing the guest command
+with `timeout`.
 
 ### 2. Build the target
 
@@ -178,6 +211,7 @@ If you are not using `cef/tools/qnx_run.sh`, set up the guest manually:
 ```bash
 ifconfig vtnet0 10.0.2.2 netmask 255.255.255.0 up
 route add default 10.0.2.1
+printf 'nameserver %s\n' 192.168.0.1 > /etc/resolv.conf
 fs-nfs3 10.0.2.1:/export/chromium-src /mnt/nfs
 cd /mnt/nfs/out/qnx_release
 export LD_LIBRARY_PATH=/mnt/nfs/out/qnx_release
@@ -194,6 +228,7 @@ export CR_SOURCE_ROOT=/mnt/nfs
 | run one base test | `./cef/tools/qnx_run_test.sh --base --timeout 600 'ProcessTest.Create'` |
 | run one CEF API group | `./cef/tools/qnx_run_test.sh --ceftests --timeout 600 'DownloadTest.*'` |
 | run list-tests | `./cef/tools/qnx_run_test.sh --cmd './base_unittests --gtest_list_tests'` |
+| override guest DNS | `./cef/tools/qnx_run.sh --dns-server 192.168.0.1 -- true` |
 | run V8 per-test module | `./cef/tools/qnx_run_test.sh --v8 --timeout 7200 --kill-existing` |
 | run ANGLE group | `./cef/tools/qnx_run_test.sh --angle --timeout 7200 --kill-existing` |
 | inspect QEMU interactively | `tmux attach -t <session>` when running inside tmux |

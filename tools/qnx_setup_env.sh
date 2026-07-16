@@ -71,7 +71,7 @@ else
 fi
 
 # 3. Setup TAP.
-echo "[3/5] Setup tap0"
+echo "[3/6] Setup tap0"
 if ! ip link show tap0 >/dev/null 2>&1; then
   ip tuntap add dev tap0 mode tap user "$TAP_USER"
 fi
@@ -84,16 +84,63 @@ ip addr show tap0 | grep -q '10.0.2.1/24' || {
   exit 1
 }
 
-# 4. Restart NFS server.
-echo "[4/5] Restart NFS server"
+# 4. Enable guest-to-host forwarding and NAT. Use the host's iptables
+# command so this integrates with the active iptables-nft/ufw FORWARD chain.
+# Rules are checked before insertion and therefore remain idempotent.
+echo "[4/6] Configure IPv4 forwarding + TAP NAT"
+if command -v iptables >/dev/null 2>&1; then
+  IPTABLES_CMD="iptables"
+elif command -v iptables-nft >/dev/null 2>&1; then
+  IPTABLES_CMD="iptables-nft"
+else
+  echo "ERROR: iptables or iptables-nft is required for QNX TAP NAT" >&2
+  exit 1
+fi
+sysctl -w net.ipv4.ip_forward=1 >/dev/null
+
+FORWARD_OUT_RULE=(
+  -i tap0 ! -o tap0 -s 10.0.2.0/24
+  -m conntrack --ctstate NEW,ESTABLISHED,RELATED
+  -m comment --comment qnx-cef-forward-out
+  -j ACCEPT
+)
+FORWARD_IN_RULE=(
+  -o tap0 -d 10.0.2.0/24
+  -m conntrack --ctstate ESTABLISHED,RELATED
+  -m comment --comment qnx-cef-forward-in
+  -j ACCEPT
+)
+NAT_RULE=(
+  -s 10.0.2.0/24 ! -d 10.0.2.0/24
+  -m comment --comment qnx-cef-tap-masquerade
+  -j MASQUERADE
+)
+
+if ! "$IPTABLES_CMD" -C FORWARD "${FORWARD_OUT_RULE[@]}" 2>/dev/null; then
+  "$IPTABLES_CMD" -I FORWARD 1 "${FORWARD_OUT_RULE[@]}"
+fi
+if ! "$IPTABLES_CMD" -C FORWARD "${FORWARD_IN_RULE[@]}" 2>/dev/null; then
+  "$IPTABLES_CMD" -I FORWARD 1 "${FORWARD_IN_RULE[@]}"
+fi
+if ! "$IPTABLES_CMD" -t nat -C POSTROUTING "${NAT_RULE[@]}" 2>/dev/null; then
+  "$IPTABLES_CMD" -t nat -A POSTROUTING "${NAT_RULE[@]}"
+fi
+
+"$IPTABLES_CMD" -C FORWARD "${FORWARD_OUT_RULE[@]}"
+"$IPTABLES_CMD" -C FORWARD "${FORWARD_IN_RULE[@]}"
+"$IPTABLES_CMD" -t nat -C POSTROUTING "${NAT_RULE[@]}"
+echo "  Firewall backend: $($IPTABLES_CMD -V)"
+
+# 5. Restart NFS server.
+echo "[5/6] Restart NFS server"
 systemctl restart nfs-kernel-server
 ps aux | grep -q '[n]fsd' || {
   echo "ERROR: nfs-kernel-server restart failed" >&2
   exit 1
 }
 
-# 5. Verify.
-echo "[5/5] Verify"
+# 6. Verify.
+echo "[6/6] Verify"
 showmount -e localhost | grep -q "$EXPORT_DIR" || {
   echo "ERROR: export missing from showmount" >&2
   exit 1
@@ -106,4 +153,9 @@ ip link show tap0 | grep -q 'UP' || {
 echo
 echo "=== Setup Complete ==="
 echo "QEMU guest network: ifconfig vtnet0 10.0.2.2 netmask 255.255.255.0 up"
+echo "QEMU guest DNS:     qnx_run.sh discovers host DNS (or use --dns-server IP)"
 echo "NFS mount:          fs-nfs3 10.0.2.1:$EXPORT_DIR /mnt/nfs"
+echo "TAP NAT:            10.0.2.0/24 via $IPTABLES_CMD"
+if command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -q '^Status: active'; then
+  echo "UFW:                active; rerun setup after any UFW reload/enable" >&2
+fi

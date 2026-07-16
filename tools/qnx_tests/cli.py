@@ -37,7 +37,7 @@ if _TOOLS not in sys.path:
     sys.path.insert(0, _TOOLS)
 
 from qnx_tests.common import (  # noqa: E402
-    QNXConfig, QNXSerial, boot_qemu, kill_qemu,
+    QNXConfig, QNXSerial, boot_qemu, kill_qemu, validate_dns_server,
 )
 from qnx_tests.modules import MODULES  # noqa: E402
 from qnx_tests.registry import TestModule  # noqa: E402
@@ -126,6 +126,10 @@ def build_parser() -> argparse.ArgumentParser:
                    help="kill any stale qemu-system-x86_64 first")
     p.add_argument("--cmd",
                    help="run an arbitrary guest command (legacy qnx_run.sh UX)")
+    p.add_argument(
+        "--dns-server", default=None,
+        help="guest resolver address; defaults to host DNS discovery",
+    )
 
     # Per-module options
     p.add_argument("--binary", default="",
@@ -172,7 +176,12 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
 
     # Build config from env
-    cfg = QNXConfig.from_env(tools)
+    try:
+        cfg = QNXConfig.from_env(tools)
+        if args.dns_server is not None:
+            cfg.dns_server = validate_dns_server(args.dns_server)
+    except ValueError as exc:
+        parser.error(str(exc))
     if args.serial_port is not None:
         cfg.serial_port = args.serial_port
     if args.boot_timeout is not None:
@@ -228,7 +237,9 @@ def main(argv=None) -> int:
                 modules[0].binary
                 or modules[0].effective_binaries()[0].name
             )
-            serial.setup_env(cfg.guest_build_dir(), primary)
+            serial.setup_env(
+                cfg.guest_build_dir(), primary, dns_server=cfg.dns_server
+            )
             print("\n=== QEMU kept running; NFS mounted. ===")
             print(f"Attach serial: socat -,raw,echo=0 TCP:127.0.0.1:{cfg.serial_port}")
             print(f"Stop QEMU: kill {qemu_pid}")
@@ -255,7 +266,9 @@ def main(argv=None) -> int:
             modules[0].binary
             or modules[0].effective_binaries()[0].name
         )
-        serial.setup_env(cfg.guest_build_dir(), primary)
+        serial.setup_env(
+            cfg.guest_build_dir(), primary, dns_server=cfg.dns_server
+        )
 
         for m in modules:
             # --skip-death-tests (per_test only)

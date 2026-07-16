@@ -40,6 +40,9 @@ DETACH=0
 # guest shell as a background job. Reuses an already-listening qconn on
 # the same port if present. Default port 8000.
 QCONN_PORT=""
+# Guest DNS server. When unset, discover the first non-loopback host
+# resolver; QNX_DNS_SERVER or --dns-server overrides discovery.
+DNS_SERVER="${QNX_DNS_SERVER:-}"
 
 usage() {
   cat <<EOF
@@ -75,6 +78,8 @@ Options:
                        (default: $QEMU_DISPLAY_BACKEND; e.g. gtk, sdl)
   --preload-system-egl Preload QNX system EGL (/usr/lib/libEGL.so.1)
   --env NAME=VALUE     Extra guest environment variable (may repeat)
+  --dns-server IP      Guest resolver address; defaults to host DNS discovery
+                       (non-loopback IPv4/IPv6 literal)
   --with-input         Add -device virtio-tablet-pci and a unix QMP socket
                        ($QNX_QMP_SOCK, default $QNX_QMP_SOCK) so a host
                        tool can inject SCREEN_EVENT_POINTER via
@@ -102,6 +107,49 @@ EOF
 
 check_file() {
   [[ -e "$1" ]] || { echo "ERROR: missing $1" >&2; exit 1; }
+}
+
+is_valid_dns_server() {
+  local candidate="$1"
+  [[ "$candidate" =~ ^[0-9A-Fa-f:.]+$ ]] || return 1
+  QNX_DNS_SERVER_CANDIDATE="$candidate" python3 - <<'PY' >/dev/null 2>&1
+import ipaddress
+import os
+
+address = ipaddress.ip_address(os.environ["QNX_DNS_SERVER_CANDIDATE"])
+if (address.is_loopback or address.is_unspecified or
+        address.is_multicast or address.is_link_local):
+    raise SystemExit(1)
+PY
+}
+
+validate_dns_server() {
+  local candidate="$1"
+  if ! is_valid_dns_server "$candidate"; then
+    echo "ERROR: --dns-server must be a valid non-loopback IP literal (got: $candidate)" >&2
+    exit 2
+  fi
+}
+
+discover_dns_server() {
+  local candidate
+  if command -v resolvectl >/dev/null 2>&1; then
+    while read -r candidate; do
+      if is_valid_dns_server "$candidate"; then
+        printf '%s\n' "$candidate"
+        return 0
+      fi
+    done < <(resolvectl dns 2>/dev/null | awk '{ for (i = 1; i <= NF; ++i) if ($i ~ /^[0-9A-Fa-f:.]*[.:][0-9A-Fa-f:.]*$/) print $i }')
+  fi
+  if [[ -r /etc/resolv.conf ]]; then
+    while read -r keyword candidate _; do
+      if [[ "$keyword" == nameserver ]] && is_valid_dns_server "$candidate"; then
+        printf '%s\n' "$candidate"
+        return 0
+      fi
+    done < /etc/resolv.conf
+  fi
+  return 1
 }
 
 # Parse options until -- or first positional.
@@ -184,6 +232,14 @@ while [[ $# -gt 0 ]]; do
       fi
       shift
       ;;
+    --dns-server)
+      DNS_SERVER="${2:?--dns-server requires an IP address}"
+      shift 2
+      ;;
+    --dns-server=*)
+      DNS_SERVER="${1#*=}"
+      shift
+      ;;
     --env)
       EXTRA_ENV+=("${2:?--env requires NAME=VALUE}")
       shift 2
@@ -217,6 +273,15 @@ while [[ $# -gt 0 ]]; do
   POSITIONAL+=("$1")
   shift
 done
+
+if [[ -z "$DNS_SERVER" ]]; then
+  DNS_SERVER="$(discover_dns_server || true)"
+fi
+if [[ -n "$DNS_SERVER" ]]; then
+  validate_dns_server "$DNS_SERVER"
+else
+  echo "WARNING: no non-loopback host DNS server found; pass --dns-server IP" >&2
+fi
 
 if [[ "$PRELOAD_SYSTEM_EGL" == 1 ]]; then
   for envvar in "${EXTRA_ENV[@]}"; do
@@ -348,6 +413,11 @@ echo "Build dir: $BUILD_DIR"
 echo "Guest dir: $GUEST_BUILD_DIR"
 echo "Serial:    127.0.0.1:$SERIAL_PORT"
 echo "Graphics:  $QEMU_GRAPHICS"
+if [[ -n "$DNS_SERVER" ]]; then
+  echo "DNS:       $DNS_SERVER"
+else
+  echo "DNS:       (unset)"
+fi
 if [[ "$QEMU_GRAPHICS" != "headless" ]]; then
   echo "Display:   $QEMU_DISPLAY_BACKEND"
 fi
@@ -437,6 +507,7 @@ export QNX_GUEST_MAIN_BINARY="$GUEST_MAIN_BINARY"
 export QNX_EXTRA_ENV="${EXTRA_ENV[*]:+${EXTRA_ENV[*]}}"
 export QNX_DETACH="$DETACH"
 export QNX_QCONN_PORT="$QCONN_PORT"
+export QNX_DNS_SERVER="$DNS_SERVER"
 # --detach: pass BOTH host-side path (where the host tails the file) and
 # guest-side path (where the in-guest shell writes via `>`). The guest
 # path is on the NFS-mounted BUILD_DIR so the redirect is writable and
@@ -516,6 +587,11 @@ setup_lines = [
     'fs-nfs3 10.0.2.1:/export/chromium-src /mnt/nfs',
     f'cd {guest_build_dir}',
 ]
+dns_server = os.environ.get('QNX_DNS_SERVER', '')
+if dns_server:
+    setup_lines.insert(
+        5, f"printf 'nameserver %s\\n' {q(dns_server)} > /etc/resolv.conf"
+    )
 
 env_lines = [
     f'export LD_LIBRARY_PATH={guest_build_dir}',
