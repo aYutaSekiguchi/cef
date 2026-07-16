@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include "ui/ozone/platform/qnx/qnx_window.h"
+#include "ui/ozone/platform/qnx/qnx_gpu_trace.h"
 
 #include <errno.h>
 #include <string.h>
@@ -55,7 +56,7 @@ QnxWindow::QnxWindow(PlatformWindowDelegate* delegate,
   widget_ = manager_->AddWindow(this);
   delegate_->OnAcceleratedWidgetAvailable(widget_);
 
-  DLOG(INFO) << "QnxWindow: created widget=" << widget_
+  QNX_GPU_TRACE_LOG(INFO) << "QnxWindow: created widget=" << widget_
              << " screen_win=" << screen_win_ << " bounds=" << bounds_.ToString();
 }
 
@@ -128,7 +129,7 @@ bool QnxWindow::CreateScreenWindow(const gfx::Rect& bounds) {
 void QnxWindow::DestroyScreenWindow() {
   if (screen_win_) {
     screen_destroy_window(screen_win_);
-    DLOG(INFO) << "QnxWindow: screen_destroy_window done";
+    QNX_GPU_TRACE_LOG(INFO) << "QnxWindow: screen_destroy_window done";
     screen_win_ = nullptr;
   }
 }

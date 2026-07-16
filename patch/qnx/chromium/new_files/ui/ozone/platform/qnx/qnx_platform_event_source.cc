@@ -13,6 +13,7 @@
 // - Non-blocking short-timeout polling avoids busy loops.
 
 #include "ui/ozone/platform/qnx/qnx_platform_event_source.h"
+#include "ui/ozone/platform/qnx/qnx_gpu_trace.h"
 
 #include <errno.h>
 #include <iomanip>
@@ -136,7 +137,7 @@ QnxPlatformEventSource::QnxPlatformEventSource(
       LogScreenError("QnxPlatformEventSource: screen_create_event", errno);
       screen_event_ = nullptr;
     } else {
-      DLOG(INFO) << "QnxPlatformEventSource: created (event=" << screen_event_
+      QNX_GPU_TRACE_LOG(INFO) << "QnxPlatformEventSource: created (event=" << screen_event_
                  << ")";
     }
   }
@@ -146,7 +147,7 @@ QnxPlatformEventSource::~QnxPlatformEventSource() {
   Stop();
   if (screen_event_) {
     screen_destroy_event(screen_event_);
-    DLOG(INFO) << "QnxPlatformEventSource: screen_event destroyed";
+    QNX_GPU_TRACE_LOG(INFO) << "QnxPlatformEventSource: screen_event destroyed";
     screen_event_ = nullptr;
   }
 }
@@ -157,7 +158,7 @@ void QnxPlatformEventSource::Start() {
     return;
   }
 
-  DLOG(INFO) << "QnxPlatformEventSource: starting event polling";
+  QNX_GPU_TRACE_LOG(INFO) << "QnxPlatformEventSource: starting event polling";
 
   // Schedule the first poll. Subsequent polls are rescheduled from the
   // callback itself to avoid drift. GetCurrentDefault() is safe here because
@@ -175,7 +176,7 @@ void QnxPlatformEventSource::Start() {
 
 void QnxPlatformEventSource::Stop() {
   weak_factory_.InvalidateWeakPtrs();
-  DLOG(INFO) << "QnxPlatformEventSource: stopped";
+  QNX_GPU_TRACE_LOG(INFO) << "QnxPlatformEventSource: stopped";
 }
 
 bool QnxPlatformEventSource::IsRunning() const {
@@ -249,7 +250,7 @@ bool QnxPlatformEventSource::TranslateScreenEvent() {
         // Scan windows to find the one matching this screen_window_t.
         // QnxWidgetRecord.screen_win holds the raw pointer.
         // This is a simplified close handler for Phase 4 smoke.
-        DLOG(INFO) << "QnxPlatformEventSource: SCREEN_EVENT_CLOSE "
+        QNX_GPU_TRACE_LOG(INFO) << "QnxPlatformEventSource: SCREEN_EVENT_CLOSE "
                       "for window="
                    << win;
         // The actual close propagation will be implemented in Phase 4
@@ -265,7 +266,7 @@ bool QnxPlatformEventSource::TranslateScreenEvent() {
       int sym = 0;
       screen_get_event_property_iv(screen_event_, SCREEN_PROPERTY_FLAGS, &flags);
       screen_get_event_property_iv(screen_event_, SCREEN_PROPERTY_SYM, &sym);
-      DLOG(INFO) << "QnxPlatformEventSource: KEYBOARD sym=0x" << std::hex << sym
+      QNX_GPU_TRACE_LOG(INFO) << "QnxPlatformEventSource: KEYBOARD sym=0x" << std::hex << sym
                  << " flags=0x" << flags << std::dec;
       // TODO(qnx): Translate to ui::KeyEvent and dispatch.
       break;
@@ -279,7 +280,7 @@ bool QnxPlatformEventSource::TranslateScreenEvent() {
       screen_get_event_property_iv(screen_event_, SCREEN_PROPERTY_BUTTONS,
                                   &buttons);
       screen_get_event_property_iv(screen_event_, SCREEN_PROPERTY_POSITION, pos);
-      DLOG(INFO) << "QnxPlatformEventSource: POINTER pos=(" << pos[0] << ","
+      QNX_GPU_TRACE_LOG(INFO) << "QnxPlatformEventSource: POINTER pos=(" << pos[0] << ","
                  << pos[1] << ") buttons=0x" << std::hex << buttons << std::dec;
       // TODO(qnx): Translate to ui::MouseEvent and dispatch.
       break;
@@ -288,20 +289,20 @@ bool QnxPlatformEventSource::TranslateScreenEvent() {
     case SCREEN_EVENT_MTOUCH_TOUCH:
     case SCREEN_EVENT_MTOUCH_MOVE:
     case SCREEN_EVENT_MTOUCH_RELEASE: {
-      DLOG(INFO) << "QnxPlatformEventSource: MTOUCH event type="
+      QNX_GPU_TRACE_LOG(INFO) << "QnxPlatformEventSource: MTOUCH event type="
                  << ScreenEventTypeName(event_type);
       // TODO(qnx): Translate to ui::TouchEvent and dispatch.
       break;
     }
 
     case SCREEN_EVENT_DISPLAY: {
-      DLOG(INFO) << "QnxPlatformEventSource: DISPLAY event";
+      QNX_GPU_TRACE_LOG(INFO) << "QnxPlatformEventSource: DISPLAY event";
       // TODO(qnx): Trigger display re-enumeration in QnxScreen.
       break;
     }
 
     case SCREEN_EVENT_IDLE: {
-      DLOG(INFO) << "QnxPlatformEventSource: IDLE event";
+      QNX_GPU_TRACE_LOG(INFO) << "QnxPlatformEventSource: IDLE event";
       // TODO(qnx): Update idle state tracking.
       break;
     }
@@ -311,7 +312,7 @@ bool QnxPlatformEventSource::TranslateScreenEvent() {
       break;
 
     default:
-      DLOG(INFO) << "QnxPlatformEventSource: unhandled event type="
+      QNX_GPU_TRACE_LOG(INFO) << "QnxPlatformEventSource: unhandled event type="
                  << ScreenEventTypeName(event_type);
       break;
   }

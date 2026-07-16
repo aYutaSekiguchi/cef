@@ -40,7 +40,7 @@ index 5f54db994ed1fc86017432993bc6aa082f535fed..eb36b64abd4dcc1939af1ee95d9f9fa8
 +          &QnxGpuPlatformSupportHost::AttachExistingWidgets,
 +          base::Unretained(this), host_id));
  
-   DLOG(INFO) << "QnxGpuPlatformSupportHost::OnGpuServiceLaunched: "
+   QNX_GPU_TRACE_LOG(INFO) << "QnxGpuPlatformSupportHost::OnGpuServiceLaunched: "
                  "QnxGpuService::Initialize() called; GPU can now call "
                  "SubmitFrame and receive QnxGpuControl via AddInterfaces";
 -
@@ -59,11 +59,11 @@ index 5f54db994ed1fc86017432993bc6aa082f535fed..eb36b64abd4dcc1939af1ee95d9f9fa8
 +          &QnxGpuPlatformSupportHost::AttachExistingWidgets,
 +          base::Unretained(this), host_id));
 +
-+  DLOG(INFO) << "QnxGpuPlatformSupportHost::OnGpuServiceLaunched: "
++  QNX_GPU_TRACE_LOG(INFO) << "QnxGpuPlatformSupportHost::OnGpuServiceLaunched: "
 +                "QnxGpuService::Initialize() called; GPU can now call "
 +                "SubmitFrame and receive QnxGpuControl via AddInterfaces";
  
-   DLOG(INFO) << "QnxGpuPlatformSupportHost::OnGpuServiceLaunched: "
+   QNX_GPU_TRACE_LOG(INFO) << "QnxGpuPlatformSupportHost::OnGpuServiceLaunched: "
                  "QnxGpuService::Initialize() called; GPU can now call "
 diff --git ui/ozone/platform/qnx/qnx_gpu_service.cc ui/ozone/platform/qnx/qnx_gpu_service.cc
 index 3e36bc564175748d69626b73094d15bd4297ca0d..ec12a68949b9726c0c1a765dfb6bf0047d38b649 100644
@@ -84,7 +84,7 @@ index 3e36bc564175748d69626b73094d15bd4297ca0d..ec12a68949b9726c0c1a765dfb6bf004
    }
  
 @@ -109,6 +112,9 @@ void QnxGpuService::Initialize(
-   DLOG(INFO) << "QnxGpuService::Initialize: gpu_host_remote bound; "
+   QNX_GPU_TRACE_LOG(INFO) << "QnxGpuService::Initialize: gpu_host_remote bound; "
                  "GPU can now call SubmitFrame / ReportProducerLost; "
                  "QnxGpuControl receiver bound via binder in AddInterfaces";
 +  // Phase 6: run the ack reply so the browser's pending BindOnce fires.

@@ -47,7 +47,7 @@
 @@ -43,9 +44,24 @@
    records_[widget] = record;
  
-   DLOG(INFO) << "QnxWindowManager: AddWindow widget=" << widget;
+   QNX_GPU_TRACE_LOG(INFO) << "QnxWindowManager: AddWindow widget=" << widget;
 +
 +  // If the GPU service has already connected, the initial
 +  // AttachExistingWidgets() pass missed this widget (it didn't exist yet).
@@ -127,7 +127,7 @@
 +  // will pick this widget up when the GPU launches
 +  // fires. This is the common early-boot case.
 +  if (!gpu_control_remote_) {
-+    DLOG(INFO) << "AttachNewWidget: widget=" << widget
++    QNX_GPU_TRACE_LOG(INFO) << "AttachNewWidget: widget=" << widget
 +               << " GPU not connected yet; AttachExistingWidgets will handle";
 +    return;
 +  }
@@ -158,7 +158,7 @@
 +
 +  gpu_control_remote_->AttachWidget(widget, new_gen, record->size);
 +
-+  DLOG(INFO) << "AttachNewWidget: widget=" << widget
++  QNX_GPU_TRACE_LOG(INFO) << "AttachNewWidget: widget=" << widget
 +             << " generation=0 -> " << new_gen
 +             << " GPU-attached; AttachWidget(size=" << record->size.width()
 +             << "x" << record->size.height() << ") sent to GPU";

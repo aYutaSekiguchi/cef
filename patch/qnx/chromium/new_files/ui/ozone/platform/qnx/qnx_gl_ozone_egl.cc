@@ -6,6 +6,7 @@
 // See docs/qnx/ozone-screen-dmabuf-oop-gpu-design.md.
 
 #include "ui/ozone/platform/qnx/qnx_gl_ozone_egl.h"
+#include "ui/ozone/platform/qnx/qnx_gpu_trace.h"
 
 #include <memory>
 
@@ -34,7 +35,7 @@ bool QnxGLOzoneEGL::LoadGLES2Bindings(
     return false;
   }
   initialized_ = true;
-  DLOG(INFO) << "QnxGLOzoneEGL: GL bindings loaded";
+  QNX_GPU_TRACE_LOG(INFO) << "QnxGLOzoneEGL: GL bindings loaded";
   return true;
 }
 

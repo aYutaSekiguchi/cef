@@ -1,11 +1,11 @@
 --- /tmp/intermediate_qnx3/ui/ozone/platform/qnx/qnx_gpu_host.cc	2026-07-08 17:40:27.902020090 +0900
 +++ ui/ozone/platform/qnx/qnx_gpu_host.cc	2026-07-08 17:18:55.237562402 +0900
 @@ -247,6 +247,10 @@
-     DLOG(INFO) << "QnxGpuHost::SubmitFrame: creating QnxFrameImporter";
+     QNX_GPU_TRACE_LOG(INFO) << "QnxGpuHost::SubmitFrame: creating QnxFrameImporter";
      frame_importer_ = std::make_unique<QnxFrameImporter>(window_manager_);
    }
 +  if (IsQnxGpuTraceEnabled()) {
-+    LOG(INFO) << "QNX_OZONE_GPU_TRACE QnxGpuHost::SubmitFrame: about to "
++    QNX_GPU_TRACE_LOG(INFO) << "QNX_OZONE_GPU_TRACE QnxGpuHost::SubmitFrame: about to "
 +                 "call ImportAndDisplayFrame widget=" << frame->widget;
 +  }
  

@@ -34,7 +34,7 @@
 +  record.size = initial_size;
    records_[widget] = record;
  
-   DLOG(INFO) << "QnxWindowManager: AddWindow widget=" << widget;
+   QNX_GPU_TRACE_LOG(INFO) << "QnxWindowManager: AddWindow widget=" << widget;
 --- /tmp/intermediate_qnx/ui/ozone/platform/qnx/qnx_window.cc	2026-07-08 16:37:54.041014388 +0900
 +++ ui/ozone/platform/qnx/qnx_window.cc	2026-07-08 16:31:36.504608822 +0900
 @@ -52,7 +52,11 @@
@@ -49,4 +49,4 @@
 +  widget_ = manager_->AddWindow(this, bounds.size());
    delegate_->OnAcceleratedWidgetAvailable(widget_);
  
-   DLOG(INFO) << "QnxWindow: created widget=" << widget_
+   QNX_GPU_TRACE_LOG(INFO) << "QnxWindow: created widget=" << widget_

@@ -119,7 +119,7 @@ index fd90877d47cfe9e7e3665589a3cbcae176c5bc92..399f4172c865ac57073df3166ac6ec49
      const qnx::QnxDmaBufFrame& frame) {
 +  DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
 +
-   DLOG(INFO) << "QnxFrameImporter::ImportAndDisplayFrame: widget="
+   QNX_GPU_TRACE_LOG(INFO) << "QnxFrameImporter::ImportAndDisplayFrame: widget="
               << widget << " size=" << frame.width << "x" << frame.height
               << " fourcc=0x" << std::hex << frame.fourcc
 @@ -859,6 +898,27 @@ std::pair<bool, std::string> QnxFrameImporter::ImportAndDisplayFrame(
@@ -131,7 +131,7 @@ index fd90877d47cfe9e7e3665589a3cbcae176c5bc92..399f4172c865ac57073df3166ac6ec49
 +      (frame.planes.size() == 1 && frame.planes[0] &&
 +       !frame.planes[0]->fd.is_valid());
 +  if (render_only) {
-+    DLOG(INFO) << "QnxFrameImporter::ImportAndDisplayFrame: render-only frame; "
++    QNX_GPU_TRACE_LOG(INFO) << "QnxFrameImporter::ImportAndDisplayFrame: render-only frame; "
 +                  "deferring to local Screen buffer presentation";
 +    return {true, std::string()};
 +  }
@@ -241,11 +241,11 @@ index 5ad8ce0deb997dd2cdb60d63abc3407c605e178b..c0f7c453e257922a91d71ac597aa3429
  QnxGpuService::~QnxGpuService() {
 +  viz::SetQnxPreSwapHook({});
 +  viz::SetQnxPostSwapHook({});
-   DLOG(INFO) << "QnxGpuService: destroyed (GPU process)";
+   QNX_GPU_TRACE_LOG(INFO) << "QnxGpuService: destroyed (GPU process)";
    // Destroy all GPU-side producer resources before the GPU process exits.
    // This removes all QnxRenderProducer instances managed by producer_manager_.
 @@ -111,14 +134,24 @@ void QnxGpuService::Initialize(
-   DLOG(INFO) << "QnxGpuService::Initialize: gpu_host_remote bound; "
+   QNX_GPU_TRACE_LOG(INFO) << "QnxGpuService::Initialize: gpu_host_remote bound; "
                  "GPU can now call SubmitFrame / ReportProducerLost; "
                  "QnxGpuControl receiver bound via binder in AddInterfaces";
 -  // Phase 6: run the ack reply so the browser's pending BindOnce fires.
@@ -259,11 +259,11 @@ index 5ad8ce0deb997dd2cdb60d63abc3407c605e178b..c0f7c453e257922a91d71ac597aa3429
 +  viz::SetQnxPreSwapHook(base::BindRepeating(
 +      &QnxGpuService::OnCompositorPreSwap, weak_ptr_factory_.GetWeakPtr()));
 +  viz::SetQnxPostSwapHook(base::BindRepeating([](const gfx::Size& size) {
-+    LOG(INFO) << "[QNX-TRACE] QnxGpuService::OnCompositorSwapPresented: "
++    QNX_GPU_TRACE_LOG(INFO) << "[QNX-TRACE] QnxGpuService::OnCompositorSwapPresented: "
 +                 "completion size="
 +              << size.width() << "x" << size.height();
 +  }));
-+  LOG(INFO) << "[QNX-TRACE] QnxGpuService::Initialize: compositor pre-swap "
++  QNX_GPU_TRACE_LOG(INFO) << "[QNX-TRACE] QnxGpuService::Initialize: compositor pre-swap "
 +               "capture hook and post-swap completion marker installed";
 +
 +  if (callback)
@@ -283,14 +283,14 @@ index 5ad8ce0deb997dd2cdb60d63abc3407c605e178b..c0f7c453e257922a91d71ac597aa3429
                     "returned null for widget=" << widget
 @@ -163,17 +198,33 @@ void QnxGpuService::AttachWidget(gfx::AcceleratedWidget widget,
          producer->Initialize() ? "success" : "failed: " + producer->init_error();
-     DLOG(INFO) << "QnxGpuService::AttachWidget: producer->Initialize() "
+     QNX_GPU_TRACE_LOG(INFO) << "QnxGpuService::AttachWidget: producer->Initialize() "
                    "result for widget="
 -               << widget << ": " << init_result;
 +               << widget << ": " << init_result << " "
 +               << ProducerPathDiagnostic(*producer);
    }
  
-   DLOG(INFO) << "QnxGpuService::AttachWidget: widget=" << widget
+   QNX_GPU_TRACE_LOG(INFO) << "QnxGpuService::AttachWidget: widget=" << widget
               << " generation=" << generation
               << " producer=" << static_cast<void*>(producer)
               << " valid=" << producer->is_valid()
@@ -307,7 +307,7 @@ index 5ad8ce0deb997dd2cdb60d63abc3407c605e178b..c0f7c453e257922a91d71ac597aa3429
 +                                                : producer->init_error());
 +
 +  if (IsQnxGpuTraceEnabled()) {
-+    LOG(INFO) << "QNX_OZONE_GPU_TRACE QnxGpuService::AttachWidget: widget="
++    QNX_GPU_TRACE_LOG(INFO) << "QNX_OZONE_GPU_TRACE QnxGpuService::AttachWidget: widget="
 +              << widget << " generation=" << generation
 +              << " path=" << ProducerPathTag(*producer)
 +              << " init_ok=" << producer->is_valid()
@@ -330,14 +330,14 @@ index 5ad8ce0deb997dd2cdb60d63abc3407c605e178b..c0f7c453e257922a91d71ac597aa3429
                     "returned null for widget=" << widget
 @@ -247,12 +300,29 @@ void QnxGpuService::ResizeWidget(gfx::AcceleratedWidget widget,
          producer->Initialize() ? "success" : "failed: " + producer->init_error();
-     DLOG(INFO) << "QnxGpuService::ResizeWidget: producer->Initialize() "
+     QNX_GPU_TRACE_LOG(INFO) << "QnxGpuService::ResizeWidget: producer->Initialize() "
                    "result for widget="
 -               << widget << ": " << init_result;
 +               << widget << ": " << init_result << " "
 +               << ProducerPathDiagnostic(*producer);
    }
  
-   DLOG(INFO) << "QnxGpuService::ResizeWidget: widget=" << widget
+   QNX_GPU_TRACE_LOG(INFO) << "QnxGpuService::ResizeWidget: widget=" << widget
               << " generation=" << generation
 -             << " resized to " << size.width() << "x" << size.height();
 +             << " resized to " << size.width() << "x" << size.height()
@@ -348,7 +348,7 @@ index 5ad8ce0deb997dd2cdb60d63abc3407c605e178b..c0f7c453e257922a91d71ac597aa3429
 +                     : producer->export_path_reason());
 +
 +  if (IsQnxGpuTraceEnabled()) {
-+    LOG(INFO) << "QNX_OZONE_GPU_TRACE QnxGpuService::ResizeWidget: widget="
++    QNX_GPU_TRACE_LOG(INFO) << "QNX_OZONE_GPU_TRACE QnxGpuService::ResizeWidget: widget="
 +              << widget << " generation=" << generation
 +              << " path=" << ProducerPathTag(*producer)
 +              << " init_ok=" << producer->is_valid()
@@ -368,12 +368,12 @@ index 5ad8ce0deb997dd2cdb60d63abc3407c605e178b..c0f7c453e257922a91d71ac597aa3429
 +    compositor_widget_ = gfx::kNullAcceleratedWidget;
 +    compositor_generation_ = 0;
 +  }
-   DLOG(INFO) << "QnxGpuService::DetachWidget: widget=" << widget
+   QNX_GPU_TRACE_LOG(INFO) << "QnxGpuService::DetachWidget: widget=" << widget
               << " generation=" << generation << " producer removed";
  }
  
 +void QnxGpuService::OnCompositorPreSwap(const gfx::Size& size) {
-+  LOG(INFO) << "[QNX-TRACE] QnxGpuService::OnCompositorPreSwap: entered "
++  QNX_GPU_TRACE_LOG(INFO) << "[QNX-TRACE] QnxGpuService::OnCompositorPreSwap: entered "
 +               "size="
 +            << size.width() << "x" << size.height();
 +  if (!gpu_host_remote_ || !producer_manager_ ||
@@ -382,7 +382,7 @@ index 5ad8ce0deb997dd2cdb60d63abc3407c605e178b..c0f7c453e257922a91d71ac597aa3429
 +    return;
 +  }
 +  if (compositor_frame_in_flight_) {
-+    LOG(INFO) << "[QNX-TRACE] QnxGpuService::OnCompositorPreSwap: dropping "
++    QNX_GPU_TRACE_LOG(INFO) << "[QNX-TRACE] QnxGpuService::OnCompositorPreSwap: dropping "
 +                 "frame while previous submission is in flight";
 +    return;
 +  }
@@ -396,7 +396,7 @@ index 5ad8ce0deb997dd2cdb60d63abc3407c605e178b..c0f7c453e257922a91d71ac597aa3429
 +  auto [frame, error] = producer->CreateExportFrameFromCompositor();
 +  if (!error.empty()) {
 +    compositor_frame_in_flight_ = false;
-+    LOG(INFO) << "[QNX-TRACE] QnxGpuService::OnCompositorPreSwap: widget="
++    QNX_GPU_TRACE_LOG(INFO) << "[QNX-TRACE] QnxGpuService::OnCompositorPreSwap: widget="
 +                 << compositor_widget_ << " generation="
 +                 << compositor_generation_ << " capture deferred: " << error;
 +    return;
@@ -406,7 +406,7 @@ index 5ad8ce0deb997dd2cdb60d63abc3407c605e178b..c0f7c453e257922a91d71ac597aa3429
 +    return;
 +  }
 +
-+  LOG(INFO) << "[QNX-TRACE] QnxGpuService::OnCompositorPreSwap: "
++  QNX_GPU_TRACE_LOG(INFO) << "[QNX-TRACE] QnxGpuService::OnCompositorPreSwap: "
 +               "submitting compositor frame widget="
 +            << compositor_widget_ << " generation=" << compositor_generation_
 +            << " size=" << size.width() << "x" << size.height();
@@ -419,7 +419,7 @@ index 5ad8ce0deb997dd2cdb60d63abc3407c605e178b..c0f7c453e257922a91d71ac597aa3429
 +             const std::string& diagnostic) {
 +            if (service)
 +              service->compositor_frame_in_flight_ = false;
-+            LOG(INFO) << "[QNX-TRACE] QnxGpuService::OnCompositorPreSwap: "
++            QNX_GPU_TRACE_LOG(INFO) << "[QNX-TRACE] QnxGpuService::OnCompositorPreSwap: "
 +                         "completion widget="
 +                      << widget << " generation=" << generation
 +                      << " accepted=" << accepted << " diagnostic="
@@ -456,7 +456,7 @@ index 5ad8ce0deb997dd2cdb60d63abc3407c605e178b..c0f7c453e257922a91d71ac597aa3429
 +              << " modifier=0x" << std::hex << frame.modifier << std::dec
                << "; calling gpu_host_remote_->SubmitFrame";
    }
-   DLOG(INFO) << "QnxGpuService::SubmitTestFrameForWidget: widget=" << widget
+   QNX_GPU_TRACE_LOG(INFO) << "QnxGpuService::SubmitTestFrameForWidget: widget=" << widget
               << " generation=" << generation
 +             << " path=" << ProducerPathTag(*producer)
               << " frame has " << frame.planes.size() << " plane(s)"
@@ -596,7 +596,7 @@ index c50a41dae0d9a2ba5616d5ce56bedbb7e910a4f0..0173476138e75cd7cbced49c9346ced5
 +  }
 +
    // EGL display is shared and owned by GLOzoneEGL; do not terminate here.
-   DLOG(INFO) << "QnxRenderProducer: destroyed for widget=" << widget_;
+   QNX_GPU_TRACE_LOG(INFO) << "QnxRenderProducer: destroyed for widget=" << widget_;
  }
  
 +const char* QnxRenderProducer::ExportPathName() const {
@@ -840,7 +840,7 @@ index c50a41dae0d9a2ba5616d5ce56bedbb7e910a4f0..0173476138e75cd7cbced49c9346ced5
 +  screen_pixmap_ = new_pixmap;
 +  screen_buffer_ = new_buffer;
 +
-+  DLOG(INFO) << "QnxRenderProducer::InitializeScreenBridge: ready for widget="
++  QNX_GPU_TRACE_LOG(INFO) << "QnxRenderProducer::InitializeScreenBridge: ready for widget="
 +             << widget_ << " size=" << size_.width() << "x" << size_.height();
 +  return true;
 +}
@@ -918,7 +918,7 @@ index c50a41dae0d9a2ba5616d5ce56bedbb7e910a4f0..0173476138e75cd7cbced49c9346ced5
 +      screen_get_buffer_property_iv(screen_buffer_, SCREEN_PROPERTY_FD, &fd);
 +  if (fd_rc != 0 && errno == ENOTSUP) {
 +    out_desc->fd_unsupported = true;
-+    DLOG(INFO) << "QnxRenderProducer::BuildScreenBufferDescriptor: "
++    QNX_GPU_TRACE_LOG(INFO) << "QnxRenderProducer::BuildScreenBufferDescriptor: "
 +                  "SCREEN_PROPERTY_FD not exposed by screen; using "
 +                  "render-only frame";
 +  } else if (fd_rc != 0 || fd < 0) {
@@ -1045,13 +1045,13 @@ index c50a41dae0d9a2ba5616d5ce56bedbb7e910a4f0..0173476138e75cd7cbced49c9346ced5
 +  if (out_error)
 +    out_error->clear();
 +
-+  LOG(INFO) << "[QNX-TRACE] QnxRenderProducer::CaptureCurrentFramebufferToDmaBuf: "
++  QNX_GPU_TRACE_LOG(INFO) << "[QNX-TRACE] QnxRenderProducer::CaptureCurrentFramebufferToDmaBuf: "
 +               "begin widget="
 +            << widget_ << " generation=" << generation_;
 +  if (!gl::GLContext::GetCurrent()) {
 +    if (out_error)
 +      *out_error = "no current GL context at compositor completion";
-+    LOG(INFO) << "[QNX-TRACE] QnxRenderProducer::CaptureCurrentFramebufferToDmaBuf: "
++    QNX_GPU_TRACE_LOG(INFO) << "[QNX-TRACE] QnxRenderProducer::CaptureCurrentFramebufferToDmaBuf: "
 +                 "no current GL context";
 +    return false;
 +  }
@@ -1089,7 +1089,7 @@ index c50a41dae0d9a2ba5616d5ce56bedbb7e910a4f0..0173476138e75cd7cbced49c9346ced5
 +      min_byte = std::min(min_byte, byte);
 +      max_byte = std::max(max_byte, byte);
 +    }
-+    LOG(INFO) << "[QNX-TRACE] QnxRenderProducer::"
++    QNX_GPU_TRACE_LOG(INFO) << "[QNX-TRACE] QnxRenderProducer::"
 +                 "CaptureCurrentFramebufferToDmaBuf: pixel_stats "
 +              << "bytes=" << pixels.size()
 +              << " nonzero_bytes=" << nonzero_bytes
@@ -1101,7 +1101,7 @@ index c50a41dae0d9a2ba5616d5ce56bedbb7e910a4f0..0173476138e75cd7cbced49c9346ced5
 +  if (error != GL_NO_ERROR) {
 +    if (out_error)
 +      *out_error = "glReadPixels failed";
-+    LOG(INFO) << "[QNX-TRACE] QnxRenderProducer::CaptureCurrentFramebufferToDmaBuf: "
++    QNX_GPU_TRACE_LOG(INFO) << "[QNX-TRACE] QnxRenderProducer::CaptureCurrentFramebufferToDmaBuf: "
 +                 "glReadPixels failed";
 +    DLOG(WARNING) << "QnxRenderProducer::CaptureCurrentFramebufferToDmaBuf: "
 +                     "glReadPixels error=0x"
@@ -1132,7 +1132,7 @@ index c50a41dae0d9a2ba5616d5ce56bedbb7e910a4f0..0173476138e75cd7cbced49c9346ced5
 +  if (error != GL_NO_ERROR) {
 +    if (out_error)
 +      *out_error = "glTexSubImage2D into Mesa EGLImage failed";
-+    LOG(INFO) << "[QNX-TRACE] QnxRenderProducer::CaptureCurrentFramebufferToDmaBuf: "
++    QNX_GPU_TRACE_LOG(INFO) << "[QNX-TRACE] QnxRenderProducer::CaptureCurrentFramebufferToDmaBuf: "
 +                 "glTexSubImage2D failed";
 +    DLOG(WARNING) << "QnxRenderProducer::CaptureCurrentFramebufferToDmaBuf: "
 +                     "upload error=0x"
@@ -1141,7 +1141,7 @@ index c50a41dae0d9a2ba5616d5ce56bedbb7e910a4f0..0173476138e75cd7cbced49c9346ced5
 +  }
 +
 +  glFlush();
-+  LOG(INFO) << "[QNX-TRACE] QnxRenderProducer::CaptureCurrentFramebufferToDmaBuf: "
++  QNX_GPU_TRACE_LOG(INFO) << "[QNX-TRACE] QnxRenderProducer::CaptureCurrentFramebufferToDmaBuf: "
 +               "captured compositor framebuffer widget="
 +            << widget_ << " generation=" << generation_ << " size="
 +            << size.width() << "x" << size.height();
@@ -1199,14 +1199,14 @@ index c50a41dae0d9a2ba5616d5ce56bedbb7e910a4f0..0173476138e75cd7cbced49c9346ced5
 +
 +    std::string mesa_error;
 +    if (!InitializeMesaFallback(&mesa_error)) {
-+      LOG(INFO) << "[QNX-TRACE] QnxRenderProducer::CreateExportFrameFromCompositor: "
++      QNX_GPU_TRACE_LOG(INFO) << "[QNX-TRACE] QnxRenderProducer::CreateExportFrameFromCompositor: "
 +                   "Mesa fallback unavailable; retaining render-only safety net";
 +      return {{}, "Mesa fallback unavailable: " + mesa_error};
 +    }
 +    active_export_path_ = ExportPath::kMesaFallback;
 +    export_path_reason_ =
 +        "SCREEN_PROPERTY_FD ENOTSUP; compositor completion uses Mesa";
-+    LOG(INFO) << "[QNX-TRACE] QnxRenderProducer::CreateExportFrameFromCompositor: "
++    QNX_GPU_TRACE_LOG(INFO) << "[QNX-TRACE] QnxRenderProducer::CreateExportFrameFromCompositor: "
 +                 "selected kMesaFallback from compositor completion";
 +  }
 +
@@ -1259,7 +1259,7 @@ index c50a41dae0d9a2ba5616d5ce56bedbb7e910a4f0..0173476138e75cd7cbced49c9346ced5
 +        DLOG(WARNING) << "Render-only frame skipped: " << render_error;
 +      frame.fourcc = descriptor.fourcc;
 +      frame.modifier = descriptor.modifier;
-+      DLOG(INFO) << "render-only frame; no DMAbuf fd to submit";
++      QNX_GPU_TRACE_LOG(INFO) << "render-only frame; no DMAbuf fd to submit";
 +      return {std::move(frame), std::string()};
 +    }
 +    std::string render_error;
@@ -1340,14 +1340,14 @@ index c50a41dae0d9a2ba5616d5ce56bedbb7e910a4f0..0173476138e75cd7cbced49c9346ced5
 -  // Clean up the DRM image.  The DMAbuf fd has been transferred to the frame.
    DestroyDRMImage(img);
  
--  DLOG(INFO) << "QnxRenderProducer::CreateExportFrame: widget=" << widget_
+-  QNX_GPU_TRACE_LOG(INFO) << "QnxRenderProducer::CreateExportFrame: widget=" << widget_
 -             << " size=" << size_.width() << "x" << size_.height()
 -             << " fourcc=0x" << std::hex << fourcc << " (" << FourccToString(fourcc) << ")"
 -             << " planes=" << n_planes
 -             << " modifier=0x" << modifier
 -             << " frame ready for Mojo SubmitFrame";
 -
-+  LOG(INFO) << "[QNX-TRACE] QnxRenderProducer::CreateMesaExportFrame: "
++  QNX_GPU_TRACE_LOG(INFO) << "[QNX-TRACE] QnxRenderProducer::CreateMesaExportFrame: "
 +               "path=kMesaFallback source="
 +            << (capture_compositor ? "compositor" : "solid-color")
 +            << " widget=" << widget_ << " generation=" << generation_

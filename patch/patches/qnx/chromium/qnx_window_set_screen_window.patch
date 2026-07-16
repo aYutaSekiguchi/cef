@@ -16,4 +16,4 @@
 +  }
    delegate_->OnAcceleratedWidgetAvailable(widget_);
  
-   DLOG(INFO) << "QnxWindow: created widget=" << widget_
+   QNX_GPU_TRACE_LOG(INFO) << "QnxWindow: created widget=" << widget_

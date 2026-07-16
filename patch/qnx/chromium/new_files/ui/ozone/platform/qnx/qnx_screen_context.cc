@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include "ui/ozone/platform/qnx/qnx_screen_context.h"
+#include "ui/ozone/platform/qnx/qnx_gpu_trace.h"
 
 #include <errno.h>
 #include <string.h>
@@ -31,13 +32,13 @@ QnxScreenContext::QnxScreenContext() {
     context_ = nullptr;
     return;
   }
-  DLOG(INFO) << "QnxScreenContext: initialized (context=" << context_ << ")";
+  QNX_GPU_TRACE_LOG(INFO) << "QnxScreenContext: initialized (context=" << context_ << ")";
 }
 
 QnxScreenContext::~QnxScreenContext() {
   if (context_) {
     screen_destroy_context(context_);
-    DLOG(INFO) << "QnxScreenContext: destroyed";
+    QNX_GPU_TRACE_LOG(INFO) << "QnxScreenContext: destroyed";
   }
 }
 

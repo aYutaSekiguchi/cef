@@ -8,6 +8,7 @@
 // Pattern follows WaylandBufferManagerConnector.
 
 #include "ui/ozone/platform/qnx/qnx_gpu_platform_support_host.h"
+#include "ui/ozone/platform/qnx/qnx_gpu_trace.h"
 
 #include <utility>
 #include <vector>
@@ -23,12 +24,12 @@ namespace qnx = ui::ozone::qnx::mojom;
 QnxGpuPlatformSupportHost::QnxGpuPlatformSupportHost(
     QnxWindowManager* window_manager)
     : window_manager_(window_manager) {
-  DLOG(INFO) << "QnxGpuPlatformSupportHost: constructed (browser process)";
+  QNX_GPU_TRACE_LOG(INFO) << "QnxGpuPlatformSupportHost: constructed (browser process)";
 }
 
 QnxGpuPlatformSupportHost::~QnxGpuPlatformSupportHost() {
   // DLOG to capture destruction even if the window manager is already gone.
-  DLOG(INFO) << "QnxGpuPlatformSupportHost: destroyed (browser process)";
+  QNX_GPU_TRACE_LOG(INFO) << "QnxGpuPlatformSupportHost: destroyed (browser process)";
   // Explicitly reset the service remote and detach widgets before destruction.
   ResetGpuServiceAndDetach();
 }
@@ -43,7 +44,7 @@ void QnxGpuPlatformSupportHost::OnGpuServiceLaunched(
     GpuHostTerminateCallback terminate_callback) {
   DCHECK_CALLED_ON_VALID_THREAD(ui_thread_checker_);
 
-  DLOG(INFO) << "QnxGpuPlatformSupportHost::OnGpuServiceLaunched: host_id="
+  QNX_GPU_TRACE_LOG(INFO) << "QnxGpuPlatformSupportHost::OnGpuServiceLaunched: host_id="
              << host_id;
 
   // Reset any previous GPU connection before establishing a new one.
@@ -93,7 +94,7 @@ void QnxGpuPlatformSupportHost::OnGpuServiceLaunched(
 
   // Set disconnect handler to log GPU-side service pipe closure.
   gpu_service_remote_.set_disconnect_handler(base::BindOnce([]() {
-    DLOG(INFO) << "QnxGpuPlatformSupportHost: GPU QnxGpuService pipe "
+    QNX_GPU_TRACE_LOG(INFO) << "QnxGpuPlatformSupportHost: GPU QnxGpuService pipe "
                   "disconnected";
   }));
 
@@ -125,7 +126,7 @@ void QnxGpuPlatformSupportHost::OnGpuServiceLaunched(
   // The QnxGpuControl pipe is bound to the GPU via the binder in Step 3.
   gpu_service_remote_->Initialize(std::move(host_remote));
 
-  DLOG(INFO) << "QnxGpuPlatformSupportHost::OnGpuServiceLaunched: "
+  QNX_GPU_TRACE_LOG(INFO) << "QnxGpuPlatformSupportHost::OnGpuServiceLaunched: "
                 "QnxGpuService::Initialize() called; GPU can now call "
                 "SubmitFrame and receive QnxGpuControl via AddInterfaces";
 
@@ -139,7 +140,7 @@ void QnxGpuPlatformSupportHost::OnGpuServiceLaunched(
 void QnxGpuPlatformSupportHost::OnChannelDestroyed(int host_id) {
   DCHECK_CALLED_ON_VALID_THREAD(ui_thread_checker_);
 
-  DLOG(INFO) << "QnxGpuPlatformSupportHost::OnChannelDestroyed: host_id="
+  QNX_GPU_TRACE_LOG(INFO) << "QnxGpuPlatformSupportHost::OnChannelDestroyed: host_id="
              << host_id;
 
   if (host_id_ != host_id) {
@@ -177,7 +178,7 @@ void QnxGpuPlatformSupportHost::MarkAllWidgetsGpuDetached() {
   // GPU process are discarded.  Uses DetachAllWidgets() which atomically
   // marks all widgets GPU-detached and increments their generation.
   window_manager_->DetachAllWidgets();
-  DLOG(INFO) << "QnxGpuPlatformSupportHost::MarkAllWidgetsGpuDetached: done; "
+  QNX_GPU_TRACE_LOG(INFO) << "QnxGpuPlatformSupportHost::MarkAllWidgetsGpuDetached: done; "
                 "all widgets detached, generations incremented";
 }
 
@@ -203,11 +204,11 @@ void QnxGpuPlatformSupportHost::AttachExistingWidgets(int host_id) {
       window_manager_->GetWidgetRecordsForTestingOrGpuAttach();
 
   if (records.empty()) {
-    DLOG(INFO) << "AttachExistingWidgets: no existing widgets";
+    QNX_GPU_TRACE_LOG(INFO) << "AttachExistingWidgets: no existing widgets";
     return;
   }
 
-  DLOG(INFO) << "AttachExistingWidgets: " << records.size()
+  QNX_GPU_TRACE_LOG(INFO) << "AttachExistingWidgets: " << records.size()
              << " existing widget(s)";
 
   for (const auto& record : records) {
@@ -231,7 +232,7 @@ void QnxGpuPlatformSupportHost::AttachExistingWidgets(int host_id) {
     // QnxGpuControl receiver (implemented by QnxGpuService).
     gpu_control_remote_->AttachWidget(record.id, new_gen, record.size);
 
-    DLOG(INFO) << "AttachExistingWidgets: widget=" << record.id
+    QNX_GPU_TRACE_LOG(INFO) << "AttachExistingWidgets: widget=" << record.id
                << " generation=0 -> " << new_gen
                << " GPU-attached; AttachWidget(size=" << record.size.width()
                << "x" << record.size.height() << ") sent to GPU";
@@ -246,14 +247,14 @@ void QnxGpuPlatformSupportHost::AttachExistingWidgets(int host_id) {
 void QnxGpuPlatformSupportHost::ResetGpuServiceAndDetach() {
   // Reset the GPU-side QnxGpuService remote first (GPU process exit path).
   if (gpu_service_remote_) {
-    DLOG(INFO) << "QnxGpuPlatformSupportHost::ResetGpuServiceAndDetach: "
+    QNX_GPU_TRACE_LOG(INFO) << "QnxGpuPlatformSupportHost::ResetGpuServiceAndDetach: "
                   "resetting GPU service remote";
     gpu_service_remote_.reset();
   }
 
   // Reset the GPU-side QnxGpuControl remote.
   if (gpu_control_remote_) {
-    DLOG(INFO) << "QnxGpuPlatformSupportHost::ResetGpuServiceAndDetach: "
+    QNX_GPU_TRACE_LOG(INFO) << "QnxGpuPlatformSupportHost::ResetGpuServiceAndDetach: "
                   "resetting GPU control remote";
     gpu_control_remote_.reset();
   }
@@ -266,7 +267,7 @@ void QnxGpuPlatformSupportHost::ResetGpuServiceAndDetach() {
   // for the next GPU connection (OnGpuServiceLaunched).
   qnx_gpu_host_.reset();
 
-  DLOG(INFO) << "QnxGpuPlatformSupportHost::ResetGpuServiceAndDetach: done; "
+  QNX_GPU_TRACE_LOG(INFO) << "QnxGpuPlatformSupportHost::ResetGpuServiceAndDetach: done; "
                 "widgets detached, host destroyed";
 }
 

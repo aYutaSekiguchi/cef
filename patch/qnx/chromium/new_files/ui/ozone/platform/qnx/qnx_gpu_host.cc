@@ -8,6 +8,7 @@
 // EGL/Screen import and display.
 
 #include "ui/ozone/platform/qnx/qnx_gpu_host.h"
+#include "ui/ozone/platform/qnx/qnx_gpu_trace.h"
 
 #include <string>
 
@@ -37,11 +38,11 @@ bool IsQnxGpuTraceEnabled() {
 
 QnxGpuHost::QnxGpuHost(QnxWindowManager* window_manager)
     : window_manager_(window_manager) {
-  DLOG(INFO) << "QnxGpuHost: constructed";
+  QNX_GPU_TRACE_LOG(INFO) << "QnxGpuHost: constructed";
 }
 
 QnxGpuHost::~QnxGpuHost() {
-  DLOG(INFO) << "QnxGpuHost: destroyed";
+  QNX_GPU_TRACE_LOG(INFO) << "QnxGpuHost: destroyed";
 }
 
 mojo::PendingRemote<qnx::QnxGpuHost> QnxGpuHost::GetPendingRemote() {
@@ -49,13 +50,13 @@ mojo::PendingRemote<qnx::QnxGpuHost> QnxGpuHost::GetPendingRemote() {
   // connected to this receiver.  If the receiver is already bound, the
   // existing pipe is replaced (QnxGpuPlatformSupportHost resets the old
   // host before calling this on GPU restart).
-  DLOG(INFO) << "QnxGpuHost::GetPendingRemote: creating pending remote";
+  QNX_GPU_TRACE_LOG(INFO) << "QnxGpuHost::GetPendingRemote: creating pending remote";
   return receiver_.BindNewPipeAndPassRemote();
 }
 
 void QnxGpuHost::Bind(
     mojo::PendingReceiver<qnx::QnxGpuHost> pending_receiver) {
-  DLOG(INFO) << "QnxGpuHost::Bind: binding pending receiver";
+  QNX_GPU_TRACE_LOG(INFO) << "QnxGpuHost::Bind: binding pending receiver";
   receiver_.Bind(std::move(pending_receiver));
 }
 
@@ -142,7 +143,7 @@ std::pair<bool, std::string> QnxGpuHost::ValidateFrameMetadata(
   // ---- FourCC check (advisory only) ----
   // We don't reject unknown fourcc codes since the GPU may use formats we
   // haven't enumerated.  Log it for diagnostics.
-  DLOG(INFO) << "QnxGpuHost::ValidateFrameMetadata: widget=" << frame.widget
+  QNX_GPU_TRACE_LOG(INFO) << "QnxGpuHost::ValidateFrameMetadata: widget=" << frame.widget
              << " generation=" << frame.generation
              << " size=" << frame.width << "x" << frame.height
              << " fourcc=0x" << std::hex << frame.fourcc
@@ -244,7 +245,7 @@ void QnxGpuHost::SubmitFrame(qnx::QnxDmaBufFramePtr frame,
 
   // ---- Step 6: Lazy-initialize frame importer ----
   if (!frame_importer_) {
-    DLOG(INFO) << "QnxGpuHost::SubmitFrame: creating QnxFrameImporter";
+    QNX_GPU_TRACE_LOG(INFO) << "QnxGpuHost::SubmitFrame: creating QnxFrameImporter";
     frame_importer_ = std::make_unique<QnxFrameImporter>(window_manager_);
   }
 
@@ -269,7 +270,7 @@ void QnxGpuHost::SubmitFrame(qnx::QnxDmaBufFramePtr frame,
                 << " generation=" << frame->generation
                 << " accepted=true display_ok=true; eglSwapBuffers reached";
     }
-    DLOG(INFO) << "QnxGpuHost::SubmitFrame: widget=" << frame->widget
+    QNX_GPU_TRACE_LOG(INFO) << "QnxGpuHost::SubmitFrame: widget=" << frame->widget
                << " generation=" << frame->generation
                << " import/display scaffold reached eglSwapBuffers; "
                   "display confirmed";
@@ -289,7 +290,7 @@ void QnxGpuHost::SubmitFrame(qnx::QnxDmaBufFramePtr frame,
 
 void QnxGpuHost::ReportProducerLost(gfx::AcceleratedWidget widget,
                                     uint32_t generation) {
-  DLOG(INFO) << "QnxGpuHost::ReportProducerLost: widget=" << widget
+  QNX_GPU_TRACE_LOG(INFO) << "QnxGpuHost::ReportProducerLost: widget=" << widget
              << " generation=" << generation;
 
   if (!window_manager_) {
@@ -329,7 +330,7 @@ void QnxGpuHost::ReportProducerLost(gfx::AcceleratedWidget widget,
   window_manager_->SetGpuAttached(widget, false, 0);
   window_manager_->IncrementGeneration(widget);
 
-  DLOG(INFO) << "QnxGpuHost::ReportProducerLost: widget=" << widget
+  QNX_GPU_TRACE_LOG(INFO) << "QnxGpuHost::ReportProducerLost: widget=" << widget
              << " marked GPU-detached; generation incremented from "
              << old_generation << " to " << record->generation;
 }

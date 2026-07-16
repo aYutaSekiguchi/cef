@@ -24,7 +24,7 @@ index ea1c19cad59b2c9dcedab655a31328510654076d..c8f3401b220846bbfc4cbcd96304e152
 +  // counters once. Pairs with the per-window summary emitted by
 +  // ~QnxWindow. No AtExitManager dependency; this runs from the
 +  // existing destructor.
-+  LOG(INFO) << "QNX_INPUT: source shutdown summary pointer_polls_seen="
++  QNX_GPU_TRACE_LOG(INFO) << "QNX_INPUT: source shutdown summary pointer_polls_seen="
 +            << pointer_polls_seen_
 +            << " synth_moved=" << synth_moved_
 +            << " synth_pressed=" << synth_pressed_
@@ -45,7 +45,7 @@ index ea1c19cad59b2c9dcedab655a31328510654076d..c8f3401b220846bbfc4cbcd96304e152
 +  // QNX_INPUT: Release-visible confirmation that the event source
 +  // reached the post-PostTask state. Pairs with the "first poll running"
 +  // marker emitted by OnTimerTick on its first invocation.
-+  LOG(INFO) << "QNX_INPUT: event polling scheduled";
++  QNX_GPU_TRACE_LOG(INFO) << "QNX_INPUT: event polling scheduled";
  }
  
  void QnxPlatformEventSource::Stop() {
@@ -58,7 +58,7 @@ index ea1c19cad59b2c9dcedab655a31328510654076d..c8f3401b220846bbfc4cbcd96304e152
 +  // polluting every 16 ms tick with log spam.
 +  if (first_poll_marker_) {
 +    first_poll_marker_ = false;
-+    LOG(INFO) << "QNX_INPUT: first poll running";
++    QNX_GPU_TRACE_LOG(INFO) << "QNX_INPUT: first poll running";
 +  }
    // Poll for one Screen event with a short non-blocking timeout.
    // screen_get_event returns 0 on success; -1 on error.
@@ -83,7 +83,7 @@ index ea1c19cad59b2c9dcedab655a31328510654076d..c8f3401b220846bbfc4cbcd96304e152
 +      case POST_DISPATCH_STOP_PROPAGATION: bucket = "STOP_PROPAGATION"; break;
 +      default: break;
 +    }
-+    LOG(INFO) << "QNX_INPUT: source dispatch first result=" << result
++    QNX_GPU_TRACE_LOG(INFO) << "QNX_INPUT: source dispatch first result=" << result
 +              << " bucket=" << bucket;
 +  }
 +  switch (result) {
@@ -118,7 +118,7 @@ index ea1c19cad59b2c9dcedab655a31328510654076d..c8f3401b220846bbfc4cbcd96304e152
 -      screen_get_event_property_iv(screen_event_, SCREEN_PROPERTY_BUTTONS,
 -                                  &buttons);
 -      screen_get_event_property_iv(screen_event_, SCREEN_PROPERTY_POSITION, pos);
--      DLOG(INFO) << "QnxPlatformEventSource: POINTER pos=(" << pos[0] << ","
+-      QNX_GPU_TRACE_LOG(INFO) << "QnxPlatformEventSource: POINTER pos=(" << pos[0] << ","
 -                 << pos[1] << ") buttons=0x" << std::hex << buttons << std::dec;
 -      // TODO(qnx): Translate to ui::MouseEvent and dispatch.
 +      // QNX_INPUT Phase 3: count raw SCREEN_EVENT_POINTER arrivals for the
@@ -145,7 +145,7 @@ index ea1c19cad59b2c9dcedab655a31328510654076d..c8f3401b220846bbfc4cbcd96304e152
 +  // Separates "pointer events arrive" from "target window resolves".
 +  if (first_pointer_marker_) {
 +    first_pointer_marker_ = false;
-+    LOG(INFO) << "QNX_INPUT: first pointer event win=" << win;
++    QNX_GPU_TRACE_LOG(INFO) << "QNX_INPUT: first pointer event win=" << win;
 +  }
 +
 +  if (!window_manager_ || !win) {
@@ -297,7 +297,7 @@ index ea1c19cad59b2c9dcedab655a31328510654076d..c8f3401b220846bbfc4cbcd96304e152
 +  if (wheel_v != 0 || wheel_h != 0) {
 +    if (first_wheel_marker_) {
 +      first_wheel_marker_ = false;
-+      LOG(INFO) << "QNX_INPUT: first wheel event raw_v=" << wheel_v
++      QNX_GPU_TRACE_LOG(INFO) << "QNX_INPUT: first wheel event raw_v=" << wheel_v
 +                << " raw_h=" << wheel_h
 +                << " (Chromium offset = -raw * MouseWheelEvent::kWheelDelta)";
 +    }
@@ -433,7 +433,7 @@ index b3617422be09acd18cc2aea78ec0d222890e510b..eec18f2d3b13df3bab50b0d8ef8ef5b6
 +  // created yet (rare; InitializeUI creates both in sequence).
 +  RegisterWithEventSource();
 +
-   DLOG(INFO) << "QnxWindow: created widget=" << widget_
+   QNX_GPU_TRACE_LOG(INFO) << "QnxWindow: created widget=" << widget_
               << " screen_win=" << screen_win_ << " bounds=" << bounds_.ToString();
  }
  
@@ -441,7 +441,7 @@ index b3617422be09acd18cc2aea78ec0d222890e510b..eec18f2d3b13df3bab50b0d8ef8ef5b6
 +  // QNX_INPUT Phase 3 shutdown summary: print counter totals for this
 +  // window once. Pair with QnxPlatformEventSource's destructor summary
 +  // for the cross-window view.
-+  LOG(INFO) << "QNX_INPUT: window shutdown summary widget=" << widget_
++  QNX_GPU_TRACE_LOG(INFO) << "QNX_INPUT: window shutdown summary widget=" << widget_
 +            << " registration_ok=" << registration_ok_
 +            << " registration_failed=" << registration_failed_
 +            << " can_dispatch_calls=" << can_dispatch_calls_
@@ -489,7 +489,7 @@ index b3617422be09acd18cc2aea78ec0d222890e510b..eec18f2d3b13df3bab50b0d8ef8ef5b6
 +    can_dispatch_reject_++;
 +    if (can_dispatch_reject_marker_) {
 +      can_dispatch_reject_marker_ = false;
-+      LOG(INFO) << "QNX_INPUT: can_dispatch first reject widget=" << widget_
++      QNX_GPU_TRACE_LOG(INFO) << "QNX_INPUT: can_dispatch first reject widget=" << widget_
 +                << " (event->IsMouseEvent()="
 +                << (event->IsMouseEvent() ? "true" : "false")
 +                << " CanAcceptEvent(*event)="
@@ -500,7 +500,7 @@ index b3617422be09acd18cc2aea78ec0d222890e510b..eec18f2d3b13df3bab50b0d8ef8ef5b6
 +  can_dispatch_accept_++;
 +  if (can_dispatch_accept_marker_) {
 +    can_dispatch_accept_marker_ = false;
-+    LOG(INFO) << "QNX_INPUT: can_dispatch first accept widget=" << widget_;
++    QNX_GPU_TRACE_LOG(INFO) << "QNX_INPUT: can_dispatch first accept widget=" << widget_;
 +  }
 +  // Only pointer events go through this path in the pointer MVP. Touch /
 +  // wheel / keyboard / IME remain with their future handlers.
@@ -511,7 +511,7 @@ index b3617422be09acd18cc2aea78ec0d222890e510b..eec18f2d3b13df3bab50b0d8ef8ef5b6
 +  dispatch_entry_++;
 +  if (dispatch_entry_marker_) {
 +    dispatch_entry_marker_ = false;
-+    LOG(INFO) << "QNX_INPUT: dispatch entry widget=" << widget_;
++    QNX_GPU_TRACE_LOG(INFO) << "QNX_INPUT: dispatch entry widget=" << widget_;
 +  }
 +  Event* e = static_cast<Event*>(event);
 +  if (!e) {
@@ -521,7 +521,7 @@ index b3617422be09acd18cc2aea78ec0d222890e510b..eec18f2d3b13df3bab50b0d8ef8ef5b6
 +    null_delegate_++;
 +    if (null_delegate_marker_) {
 +      null_delegate_marker_ = false;
-+      LOG(INFO) << "QNX_INPUT: delegate null widget=" << widget_;
++      QNX_GPU_TRACE_LOG(INFO) << "QNX_INPUT: delegate null widget=" << widget_;
 +    }
 +    return POST_DISPATCH_NONE;
 +  }
@@ -529,7 +529,7 @@ index b3617422be09acd18cc2aea78ec0d222890e510b..eec18f2d3b13df3bab50b0d8ef8ef5b6
 +  delegate_dispatch_called_++;
 +  if (delegate_dispatch_called_marker_) {
 +    delegate_dispatch_called_marker_ = false;
-+    LOG(INFO) << "QNX_INPUT: delegate dispatched widget=" << widget_;
++    QNX_GPU_TRACE_LOG(INFO) << "QNX_INPUT: delegate dispatched widget=" << widget_;
 +  }
 +  return POST_DISPATCH_STOP_PROPAGATION;
 +}
@@ -557,13 +557,13 @@ index b3617422be09acd18cc2aea78ec0d222890e510b..eec18f2d3b13df3bab50b0d8ef8ef5b6
 +    registration_ok_++;
 +    if (registration_marker_) {
 +      registration_marker_ = false;
-+      LOG(INFO) << "QNX_INPUT: registration ok widget=" << widget_;
++      QNX_GPU_TRACE_LOG(INFO) << "QNX_INPUT: registration ok widget=" << widget_;
 +    }
 +  } else {
 +    registration_failed_++;
 +    if (registration_marker_) {
 +      registration_marker_ = false;
-+      LOG(INFO) << "QNX_INPUT: registration failed (no event source) widget="
++      QNX_GPU_TRACE_LOG(INFO) << "QNX_INPUT: registration failed (no event source) widget="
 +                << widget_;
 +    }
 +  }
@@ -653,7 +653,7 @@ index 79d8432028b02a8bd042d3492a415a1cda06542b..090b84f26e12b7dc6408f240d1c09110
 +  uint32_t dispatch_entry_ = 0;
 +  bool dispatch_entry_marker_ = true;
 +  // First-time markers for the accept / reject / null-delegate /
-+  // delegate-dispatched LOG(INFO) lines emitted by CanDispatchEvent and
++  // delegate-dispatched QNX_GPU_TRACE_LOG(INFO) lines emitted by CanDispatchEvent and
 +  // DispatchEvent. Counters themselves remain unchanged.
 +  bool can_dispatch_accept_marker_ = true;
 +  bool can_dispatch_reject_marker_ = true;

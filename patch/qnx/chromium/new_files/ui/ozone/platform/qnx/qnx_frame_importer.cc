@@ -27,6 +27,7 @@
 //   - Full-screen damage tracking or frame-rate pacing.
 
 #include "ui/ozone/platform/qnx/qnx_frame_importer.h"
+#include "ui/ozone/platform/qnx/qnx_gpu_trace.h"
 
 #include <dlfcn.h>
 
@@ -158,22 +159,22 @@ QnxFrameImporter::WindowEGLState::~WindowEGLState() {
   if (context != EGL_NO_CONTEXT) {
     if (display != EGL_NO_DISPLAY) {
       eglDestroyContext(display, context);
-      DLOG(INFO) << "~WindowEGLState: eglDestroyContext done";
+      QNX_GPU_TRACE_LOG(INFO) << "~WindowEGLState: eglDestroyContext done";
     }
   }
   if (surface != EGL_NO_SURFACE) {
     if (display != EGL_NO_DISPLAY) {
       eglDestroySurface(display, surface);
-      DLOG(INFO) << "~WindowEGLState: eglDestroySurface done";
+      QNX_GPU_TRACE_LOG(INFO) << "~WindowEGLState: eglDestroySurface done";
     }
   }
   if (texture != 0) {
     glDeleteTextures(1, &texture);
-    DLOG(INFO) << "~WindowEGLState: glDeleteTextures done";
+    QNX_GPU_TRACE_LOG(INFO) << "~WindowEGLState: glDeleteTextures done";
   }
   if (program != 0) {
     glDeleteProgram(program);
-    DLOG(INFO) << "~WindowEGLState: glDeleteProgram done";
+    QNX_GPU_TRACE_LOG(INFO) << "~WindowEGLState: glDeleteProgram done";
   }
 }
 
@@ -183,11 +184,11 @@ QnxFrameImporter::WindowEGLState::~WindowEGLState() {
 
 QnxFrameImporter::QnxFrameImporter(QnxWindowManager* window_manager)
     : window_manager_(window_manager) {
-  DLOG(INFO) << "QnxFrameImporter: constructed";
+  QNX_GPU_TRACE_LOG(INFO) << "QnxFrameImporter: constructed";
 }
 
 QnxFrameImporter::~QnxFrameImporter() {
-  DLOG(INFO) << "QnxFrameImporter: destroyed; cleaning up window states";
+  QNX_GPU_TRACE_LOG(INFO) << "QnxFrameImporter: destroyed; cleaning up window states";
   window_states_.clear();
 }
 
@@ -246,17 +247,17 @@ bool QnxFrameImporter::InitializeEGLDisplay() {
     return false;
   }
 
-  DLOG(INFO) << "QnxFrameImporter: EGL " << maj << "." << min
+  QNX_GPU_TRACE_LOG(INFO) << "QnxFrameImporter: EGL " << maj << "." << min
              << " initialized (display=" << static_cast<void*>(egl_display_)
              << ")";
 
   // ---- Probe EGL extensions ----
   const char* egl_exts = eglQueryString(egl_display_, EGL_EXTENSIONS);
   if (egl_exts) {
-    DLOG(INFO) << "EGL_EXTENSIONS (" << strlen(egl_exts)
+    QNX_GPU_TRACE_LOG(INFO) << "EGL_EXTENSIONS (" << strlen(egl_exts)
                << " chars): " << egl_exts;
   } else {
-    DLOG(INFO) << "EGL_EXTENSIONS: eglQueryString returned null";
+    QNX_GPU_TRACE_LOG(INFO) << "EGL_EXTENSIONS: eglQueryString returned null";
   }
 
   has_egl_ext_image_dma_buf_import_ =
@@ -275,7 +276,7 @@ bool QnxFrameImporter::InitializeEGLDisplay() {
   can_import_dma_buf_ = has_egl_ext_image_dma_buf_import_ &&
                          egl_create_image_khr_ != nullptr &&
                          egl_destroy_image_khr_ != nullptr;
-  DLOG(INFO) << "QnxFrameImporter: EGL display initialized; "
+  QNX_GPU_TRACE_LOG(INFO) << "QnxFrameImporter: EGL display initialized; "
                 "GL extension resolution deferred until first eglMakeCurrent";
   return true;
 }
@@ -291,9 +292,9 @@ void QnxFrameImporter::EnsureGLExtensionsResolved() {
   const char* gl_exts =
       reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
   if (gl_exts) {
-    DLOG(INFO) << "GL_EXTENSIONS: " << gl_exts;
+    QNX_GPU_TRACE_LOG(INFO) << "GL_EXTENSIONS: " << gl_exts;
   } else {
-    DLOG(INFO) << "GL_EXTENSIONS: glGetString returned null";
+    QNX_GPU_TRACE_LOG(INFO) << "GL_EXTENSIONS: glGetString returned null";
   }
   has_gl_oes_egl_image_ =
       gl_exts && strstr(gl_exts, "GL_OES_EGL_image") != nullptr;
@@ -310,7 +311,7 @@ void QnxFrameImporter::EnsureGLExtensionsResolved() {
     can_import_dma_buf_ = true;
   }
   if (can_import_dma_buf_) {
-    DLOG(INFO) << "QnxFrameImporter: GL extensions resolved; "
+    QNX_GPU_TRACE_LOG(INFO) << "QnxFrameImporter: GL extensions resolved; "
                   "EGL display ready for DMAbuf import";
   } else {
     DLOG(WARNING) << "QnxFrameImporter: GL extensions resolved but "
@@ -328,7 +329,7 @@ Fn QnxFrameImporter::Resolve(const char* name) {
                   << "\") returned null";
     return nullptr;
   }
-  DLOG(INFO) << "QnxFrameImporter: resolved " << name;
+  QNX_GPU_TRACE_LOG(INFO) << "QnxFrameImporter: resolved " << name;
   return reinterpret_cast<Fn>(proc);
 }
 
@@ -359,7 +360,7 @@ QnxFrameImporter::GetOrCreateWindowState(
                        "eglMakeCurrent failed: " << EglErrorName(eglGetError());
         return nullptr;
       }
-      DLOG(INFO) << "QnxFrameImporter::GetOrCreateWindowState: reusing "
+      QNX_GPU_TRACE_LOG(INFO) << "QnxFrameImporter::GetOrCreateWindowState: reusing "
                     "existing state for widget="
                  << widget;
       return state;
@@ -451,7 +452,7 @@ QnxFrameImporter::GetOrCreateWindowState(
     return nullptr;
   }
 
-  DLOG(INFO) << "QnxFrameImporter::GetOrCreateWindowState: "
+  QNX_GPU_TRACE_LOG(INFO) << "QnxFrameImporter::GetOrCreateWindowState: "
                  "eglCreateWindowSurface OK (surface="
               << static_cast<void*>(surface) << ")";
 
@@ -472,7 +473,7 @@ QnxFrameImporter::GetOrCreateWindowState(
     return nullptr;
   }
 
-  DLOG(INFO) << "QnxFrameImporter::GetOrCreateWindowState: "
+  QNX_GPU_TRACE_LOG(INFO) << "QnxFrameImporter::GetOrCreateWindowState: "
                  "eglCreateContext OK (context="
               << static_cast<void*>(context) << ")";
 
@@ -489,7 +490,7 @@ QnxFrameImporter::GetOrCreateWindowState(
     return nullptr;
   }
 
-  DLOG(INFO) << "QnxFrameImporter::GetOrCreateWindowState: "
+  QNX_GPU_TRACE_LOG(INFO) << "QnxFrameImporter::GetOrCreateWindowState: "
                 "eglMakeCurrent OK";
 
   // ---- Step 4b: Resolve GL extensions now that a context is current ----
@@ -519,7 +520,7 @@ QnxFrameImporter::GetOrCreateWindowState(
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   CHECK_GLEXR(glBindTexture);
 
-  DLOG(INFO) << "QnxFrameImporter::GetOrCreateWindowState: "
+  QNX_GPU_TRACE_LOG(INFO) << "QnxFrameImporter::GetOrCreateWindowState: "
                  "GL texture created: "
               << texture;
 
@@ -552,7 +553,7 @@ QnxFrameImporter::GetOrCreateWindowState(
   WindowEGLState* raw = state.get();
   window_states_.emplace(widget, std::move(state));
 
-  DLOG(INFO) << "QnxFrameImporter::GetOrCreateWindowState: created state "
+  QNX_GPU_TRACE_LOG(INFO) << "QnxFrameImporter::GetOrCreateWindowState: created state "
                  "for widget="
               << widget << " surface=" << static_cast<void*>(surface)
               << " texture=" << texture << " program=" << program;
@@ -651,7 +652,7 @@ GLuint QnxFrameImporter::CompileShaderProgram() {
   glDeleteShader(vs);
   glDeleteShader(fs);
 
-  DLOG(INFO) << "QnxFrameImporter::CompileShaderProgram: "
+  QNX_GPU_TRACE_LOG(INFO) << "QnxFrameImporter::CompileShaderProgram: "
                 "program="
              << program << " linked OK";
   return program;
@@ -747,7 +748,7 @@ EGLImageKHR QnxFrameImporter::ImportDmaBufToTexture(
     return EGL_NO_IMAGE_KHR;
   }
 
-  DLOG(INFO) << "QnxFrameImporter::ImportDmaBufToTexture: "
+  QNX_GPU_TRACE_LOG(INFO) << "QnxFrameImporter::ImportDmaBufToTexture: "
                 "EGLImage created: "
              << static_cast<void*>(egl_image);
 
@@ -772,7 +773,7 @@ EGLImageKHR QnxFrameImporter::ImportDmaBufToTexture(
     return EGL_NO_IMAGE_KHR;
   }
 
-  DLOG(INFO) << "QnxFrameImporter::ImportDmaBufToTexture: "
+  QNX_GPU_TRACE_LOG(INFO) << "QnxFrameImporter::ImportDmaBufToTexture: "
                 "DMAbuf imported to texture="
              << texture;
   return egl_image;
@@ -834,13 +835,13 @@ void QnxFrameImporter::CleanupGLResources(WindowEGLState* state) {
   if (state->texture != 0) {
     glDeleteTextures(1, &state->texture);
     state->texture = 0;
-    DLOG(INFO) << "QnxFrameImporter::CleanupGLResources: "
+    QNX_GPU_TRACE_LOG(INFO) << "QnxFrameImporter::CleanupGLResources: "
                   "texture deleted";
   }
   if (state->program != 0) {
     glDeleteProgram(state->program);
     state->program = 0;
-    DLOG(INFO) << "QnxFrameImporter::CleanupGLResources: "
+    QNX_GPU_TRACE_LOG(INFO) << "QnxFrameImporter::CleanupGLResources: "
                   "program deleted";
   }
 }
@@ -852,7 +853,7 @@ void QnxFrameImporter::CleanupGLResources(WindowEGLState* state) {
 std::pair<bool, std::string> QnxFrameImporter::ImportAndDisplayFrame(
     gfx::AcceleratedWidget widget,
     const qnx::QnxDmaBufFrame& frame) {
-  DLOG(INFO) << "QnxFrameImporter::ImportAndDisplayFrame: widget="
+  QNX_GPU_TRACE_LOG(INFO) << "QnxFrameImporter::ImportAndDisplayFrame: widget="
              << widget << " size=" << frame.width << "x" << frame.height
              << " fourcc=0x" << std::hex << frame.fourcc
              << " (" << FourccToString(frame.fourcc) << ")"
@@ -969,12 +970,12 @@ std::pair<bool, std::string> QnxFrameImporter::ImportAndDisplayFrame(
                     << EglErrorName(eglGetError());
       // Non-fatal: EGL will clean up on display destruction.
     } else {
-      DLOG(INFO) << "QnxFrameImporter::ImportAndDisplayFrame: "
+      QNX_GPU_TRACE_LOG(INFO) << "QnxFrameImporter::ImportAndDisplayFrame: "
                     "EGLImage destroyed";
     }
   }
 
-  DLOG(INFO) << "QnxFrameImporter::ImportAndDisplayFrame: widget="
+  QNX_GPU_TRACE_LOG(INFO) << "QnxFrameImporter::ImportAndDisplayFrame: widget="
              << widget << " size=" << frame.width << "x" << frame.height
              << " displayed on Screen window; "
                 "import/display scaffold reached display code";

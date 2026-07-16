@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include "ui/ozone/platform/qnx/qnx_window_manager.h"
+#include "ui/ozone/platform/qnx/qnx_gpu_trace.h"
 
 #include "base/check.h"
 #include "base/logging.h"
@@ -39,7 +40,7 @@ gfx::AcceleratedWidget QnxWindowManager::AddWindow(QnxWindow* window) {
   record.window = window;
   records_[widget] = record;
 
-  DLOG(INFO) << "QnxWindowManager: AddWindow widget=" << widget;
+  QNX_GPU_TRACE_LOG(INFO) << "QnxWindowManager: AddWindow widget=" << widget;
   return widget;
 }
 
@@ -49,7 +50,7 @@ void QnxWindowManager::RemoveWindow(gfx::AcceleratedWidget widget,
   DCHECK_EQ(window, windows_.Lookup(widget));
   windows_.Remove(widget);
   records_.erase(widget);
-  DLOG(INFO) << "QnxWindowManager: RemoveWindow widget=" << widget;
+  QNX_GPU_TRACE_LOG(INFO) << "QnxWindowManager: RemoveWindow widget=" << widget;
 }
 
 QnxWindow* QnxWindowManager::GetWindow(gfx::AcceleratedWidget widget) {
@@ -85,7 +86,7 @@ void QnxWindowManager::SetGpuAttached(gfx::AcceleratedWidget widget,
     return;
   it->second.gpu_attached = attached;
   it->second.gpu_pid = attached ? gpu_pid : 0;
-  DLOG(INFO) << "QnxWindowManager: SetGpuAttached widget=" << widget
+  QNX_GPU_TRACE_LOG(INFO) << "QnxWindowManager: SetGpuAttached widget=" << widget
              << " attached=" << attached;
 }
 
@@ -94,7 +95,7 @@ void QnxWindowManager::IncrementGeneration(gfx::AcceleratedWidget widget) {
   if (it == records_.end())
     return;
   it->second.generation++;
-  DLOG(INFO) << "QnxWindowManager: IncrementGeneration widget=" << widget
+  QNX_GPU_TRACE_LOG(INFO) << "QnxWindowManager: IncrementGeneration widget=" << widget
              << " new_gen=" << it->second.generation;
 }
 
@@ -122,7 +123,7 @@ void QnxWindowManager::DetachAllWidgets() {
       it->second.gpu_attached = false;
       it->second.gpu_pid = 0;
       it->second.generation++;
-      DLOG(INFO) << "QnxWindowManager::DetachAllWidgets: widget="
+      QNX_GPU_TRACE_LOG(INFO) << "QnxWindowManager::DetachAllWidgets: widget="
                  << it->first << " gen " << old_gen << " -> "
                  << it->second.generation << " (GPU detached)";
     }

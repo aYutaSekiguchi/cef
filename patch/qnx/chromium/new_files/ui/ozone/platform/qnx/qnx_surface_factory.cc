@@ -6,6 +6,7 @@
 // See docs/qnx/ozone-screen-dmabuf-oop-gpu-design.md.
 
 #include "ui/ozone/platform/qnx/qnx_surface_factory.h"
+#include "ui/ozone/platform/qnx/qnx_gpu_trace.h"
 
 #include <memory>
 
@@ -21,7 +22,7 @@ std::unique_ptr<QnxSurfaceFactoryOzone> QnxSurfaceFactoryOzone::CreateForGpu() {
 }
 
 QnxSurfaceFactoryOzone::QnxSurfaceFactoryOzone() {
-  DLOG(INFO) << "QnxSurfaceFactoryOzone: constructed";
+  QNX_GPU_TRACE_LOG(INFO) << "QnxSurfaceFactoryOzone: constructed";
 }
 
 std::unique_ptr<SurfaceOzoneCanvas> QnxSurfaceFactoryOzone::CreateCanvasForWidget(
@@ -49,7 +50,7 @@ GLOzone* QnxSurfaceFactoryOzone::GetGLOzone(
   // because InitializeGPU has not run, so gl_ozone_ stays null.
   if (!gl_ozone_) {
     gl_ozone_ = std::make_unique<QnxGLOzoneEGL>();
-    DLOG(INFO) << "QnxSurfaceFactoryOzone::GetGLOzone: lazily created "
+    QNX_GPU_TRACE_LOG(INFO) << "QnxSurfaceFactoryOzone::GetGLOzone: lazily created "
                   "gl_ozone_ (GPU process)";
   }
   switch (implementation.gl) {
@@ -71,7 +72,7 @@ scoped_refptr<gfx::NativePixmap> QnxSurfaceFactoryOzone::CreateNativePixmap(
   // Phase 5: DMAbuf-backed NativePixmap via QnxRenderProducer is deferred.
   // Return a null-handle stub so that GN deps resolve; runtime creation
   // requires the full QnxRenderProducer pipeline.
-  DLOG(INFO) << "QnxSurfaceFactoryOzone::CreateNativePixmap: deferred to "
+  QNX_GPU_TRACE_LOG(INFO) << "QnxSurfaceFactoryOzone::CreateNativePixmap: deferred to "
                 "QnxRenderProducer (widget="
              << widget << ", size=" << size.ToString()
              << ", usage=" << static_cast<int>(usage) << ")";

@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include "ui/ozone/platform/qnx/qnx_surface_ozone_canvas.h"
+#include "ui/ozone/platform/qnx/qnx_gpu_trace.h"
 
 #include <algorithm>
 #include <cstring>
@@ -44,7 +45,7 @@ QnxSurfaceOzoneCanvas::QnxSurfaceOzoneCanvas(gfx::AcceleratedWidget widget)
       screen_win_ = static_cast<screen_window_t>(record->screen_win);
     }
   }
-  DLOG(INFO) << "QnxSurfaceOzoneCanvas: widget=" << widget_
+  QNX_GPU_TRACE_LOG(INFO) << "QnxSurfaceOzoneCanvas: widget=" << widget_
              << " screen_win=" << static_cast<void*>(screen_win_);
 }
 
@@ -71,7 +72,7 @@ void QnxSurfaceOzoneCanvas::ResizeCanvas(const gfx::Size& viewport_size,
   surface_ = SkSurfaces::Raster(info);
   last_size_ = viewport_size;
 
-  DLOG(INFO) << "QnxSurfaceOzoneCanvas::ResizeCanvas: " << viewport_size.ToString();
+  QNX_GPU_TRACE_LOG(INFO) << "QnxSurfaceOzoneCanvas::ResizeCanvas: " << viewport_size.ToString();
 }
 
 void QnxSurfaceOzoneCanvas::PresentCanvas(const gfx::Rect& damage) {

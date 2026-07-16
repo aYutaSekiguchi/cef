@@ -11,6 +11,7 @@
 // SubmitTestFrameForWidget().  No browser EGL import/display.
 
 #include "ui/ozone/platform/qnx/qnx_gpu_service.h"
+#include "ui/ozone/platform/qnx/qnx_gpu_trace.h"
 
 #include <memory>
 #include <string>
@@ -46,13 +47,13 @@ QnxGpuService::QnxGpuService(QnxSurfaceFactoryOzone* surface_factory)
     : surface_factory_(surface_factory),
       producer_manager_(std::make_unique<QnxRenderProducerManager>(
           surface_factory)) {
-  DLOG(INFO) << "QnxGpuService: constructed (GPU process) "
+  QNX_GPU_TRACE_LOG(INFO) << "QnxGpuService: constructed (GPU process) "
                 "surface_factory="
              << static_cast<void*>(surface_factory_);
 }
 
 QnxGpuService::~QnxGpuService() {
-  DLOG(INFO) << "QnxGpuService: destroyed (GPU process)";
+  QNX_GPU_TRACE_LOG(INFO) << "QnxGpuService: destroyed (GPU process)";
   // Destroy all GPU-side producer resources before the GPU process exits.
   // This removes all QnxRenderProducer instances managed by producer_manager_.
   if (producer_manager_) {
@@ -64,15 +65,15 @@ QnxGpuService::~QnxGpuService() {
 
 void QnxGpuService::Bind(
     mojo::PendingReceiver<qnx::QnxGpuService> pending_receiver) {
-  DLOG(INFO) << "QnxGpuService::Bind: binding pending receiver";
+  QNX_GPU_TRACE_LOG(INFO) << "QnxGpuService::Bind: binding pending receiver";
   receiver_.Bind(std::move(pending_receiver));
 }
 
 void QnxGpuService::BindQnxGpuControl(
     mojo::PendingReceiver<qnx::QnxGpuControl> pending_receiver) {
-  DLOG(INFO) << "QnxGpuService::BindQnxGpuControl: binding pending receiver";
+  QNX_GPU_TRACE_LOG(INFO) << "QnxGpuService::BindQnxGpuControl: binding pending receiver";
   gpu_control_receiver_.Bind(std::move(pending_receiver));
-  DLOG(INFO) << "QnxGpuService::BindQnxGpuControl: gpu_control_receiver_ bound; "
+  QNX_GPU_TRACE_LOG(INFO) << "QnxGpuService::BindQnxGpuControl: gpu_control_receiver_ bound; "
                 "browser can now call AttachWidget/ResizeWidget/DetachWidget";
 }
 
@@ -97,7 +98,7 @@ void QnxGpuService::Initialize(
   // Set a disconnect handler to log when the browser-owned QnxGpuHost
   // pipe is closed (e.g., browser shutdown or GPU process crash).
   gpu_host_remote_.set_disconnect_handler(base::BindOnce([]() {
-    DLOG(INFO) << "QnxGpuService: browser QnxGpuHost pipe disconnected";
+    QNX_GPU_TRACE_LOG(INFO) << "QnxGpuService: browser QnxGpuHost pipe disconnected";
   }));
 
   // Note: QnxGpuControl receiver (gpu_control_receiver_) is bound separately
@@ -106,7 +107,7 @@ void QnxGpuService::Initialize(
   // arrives at the GPU-side QnxGpuService::Initialize() via the
   // browser's gpu_control_remote_.Pipe().get() handle.
 
-  DLOG(INFO) << "QnxGpuService::Initialize: gpu_host_remote bound; "
+  QNX_GPU_TRACE_LOG(INFO) << "QnxGpuService::Initialize: gpu_host_remote bound; "
                 "GPU can now call SubmitFrame / ReportProducerLost; "
                 "QnxGpuControl receiver bound via binder in AddInterfaces";
   if (IsQnxGpuTraceEnabled()) {
@@ -123,7 +124,7 @@ void QnxGpuService::Initialize(
 void QnxGpuService::AttachWidget(gfx::AcceleratedWidget widget,
                                  uint32_t generation,
                                  const gfx::Size& size) {
-  DLOG(INFO) << "QnxGpuService::AttachWidget: widget=" << widget
+  QNX_GPU_TRACE_LOG(INFO) << "QnxGpuService::AttachWidget: widget=" << widget
              << " generation=" << generation
              << " size=" << size.width() << "x" << size.height();
   if (IsQnxGpuTraceEnabled()) {
@@ -156,12 +157,12 @@ void QnxGpuService::AttachWidget(gfx::AcceleratedWidget widget,
   if (!producer->is_valid()) {
     std::string init_result =
         producer->Initialize() ? "success" : "failed: " + producer->init_error();
-    DLOG(INFO) << "QnxGpuService::AttachWidget: producer->Initialize() "
+    QNX_GPU_TRACE_LOG(INFO) << "QnxGpuService::AttachWidget: producer->Initialize() "
                   "result for widget="
                << widget << ": " << init_result;
   }
 
-  DLOG(INFO) << "QnxGpuService::AttachWidget: widget=" << widget
+  QNX_GPU_TRACE_LOG(INFO) << "QnxGpuService::AttachWidget: widget=" << widget
              << " generation=" << generation
              << " producer=" << static_cast<void*>(producer)
              << " valid=" << producer->is_valid()
@@ -184,7 +185,7 @@ void QnxGpuService::AttachWidget(gfx::AcceleratedWidget widget,
                 << " TRIGGER SubmitTestFrameForWidget (remote_bound=true "
                    "producer_valid=true)";
     }
-    DLOG(INFO) << "QnxGpuService::AttachWidget: trigger: calling "
+    QNX_GPU_TRACE_LOG(INFO) << "QnxGpuService::AttachWidget: trigger: calling "
                   "SubmitTestFrameForWidget(widget="
                << widget << ", generation=" << generation << ")";
     SubmitTestFrameForWidget(widget, generation);
@@ -213,7 +214,7 @@ void QnxGpuService::AttachWidget(gfx::AcceleratedWidget widget,
 void QnxGpuService::ResizeWidget(gfx::AcceleratedWidget widget,
                                  uint32_t generation,
                                  const gfx::Size& size) {
-  DLOG(INFO) << "QnxGpuService::ResizeWidget: widget=" << widget
+  QNX_GPU_TRACE_LOG(INFO) << "QnxGpuService::ResizeWidget: widget=" << widget
              << " generation=" << generation
              << " size=" << size.width() << "x" << size.height();
 
@@ -240,12 +241,12 @@ void QnxGpuService::ResizeWidget(gfx::AcceleratedWidget widget,
   if (!producer->is_valid()) {
     std::string init_result =
         producer->Initialize() ? "success" : "failed: " + producer->init_error();
-    DLOG(INFO) << "QnxGpuService::ResizeWidget: producer->Initialize() "
+    QNX_GPU_TRACE_LOG(INFO) << "QnxGpuService::ResizeWidget: producer->Initialize() "
                   "result for widget="
                << widget << ": " << init_result;
   }
 
-  DLOG(INFO) << "QnxGpuService::ResizeWidget: widget=" << widget
+  QNX_GPU_TRACE_LOG(INFO) << "QnxGpuService::ResizeWidget: widget=" << widget
              << " generation=" << generation
              << " resized to " << size.width() << "x" << size.height();
 
@@ -259,7 +260,7 @@ void QnxGpuService::ResizeWidget(gfx::AcceleratedWidget widget,
                 << " TRIGGER SubmitTestFrameForWidget (remote_bound=true "
                    "producer_valid=true)";
     }
-    DLOG(INFO) << "QnxGpuService::ResizeWidget: trigger: calling "
+    QNX_GPU_TRACE_LOG(INFO) << "QnxGpuService::ResizeWidget: trigger: calling "
                   "SubmitTestFrameForWidget(widget="
                << widget << ", generation=" << generation << ")";
     SubmitTestFrameForWidget(widget, generation);
@@ -284,7 +285,7 @@ void QnxGpuService::ResizeWidget(gfx::AcceleratedWidget widget,
 
 void QnxGpuService::DetachWidget(gfx::AcceleratedWidget widget,
                                   uint32_t generation) {
-  DLOG(INFO) << "QnxGpuService::DetachWidget: widget=" << widget
+  QNX_GPU_TRACE_LOG(INFO) << "QnxGpuService::DetachWidget: widget=" << widget
              << " generation=" << generation;
 
   if (!producer_manager_) {
@@ -294,7 +295,7 @@ void QnxGpuService::DetachWidget(gfx::AcceleratedWidget widget,
   }
 
   producer_manager_->RemoveProducer(widget, generation);
-  DLOG(INFO) << "QnxGpuService::DetachWidget: widget=" << widget
+  QNX_GPU_TRACE_LOG(INFO) << "QnxGpuService::DetachWidget: widget=" << widget
              << " generation=" << generation << " producer removed";
 }
 
@@ -397,7 +398,7 @@ void QnxGpuService::SubmitTestFrameForWidget(gfx::AcceleratedWidget widget,
               << " size=" << frame.width << "x" << frame.height
               << "; calling gpu_host_remote_->SubmitFrame";
   }
-  DLOG(INFO) << "QnxGpuService::SubmitTestFrameForWidget: widget=" << widget
+  QNX_GPU_TRACE_LOG(INFO) << "QnxGpuService::SubmitTestFrameForWidget: widget=" << widget
              << " generation=" << generation
              << " frame has " << frame.planes.size() << " plane(s)"
              << " size=" << frame.width << "x" << frame.height
@@ -421,7 +422,7 @@ void QnxGpuService::SubmitTestFrameForWidget(gfx::AcceleratedWidget widget,
                         << " accepted=" << accepted
                         << " diagnostic=" << diagnostic;
             }
-            DLOG(INFO) << "QnxGpuService::SubmitTestFrameForWidget: "
+            QNX_GPU_TRACE_LOG(INFO) << "QnxGpuService::SubmitTestFrameForWidget: "
                           "widget="
                        << widget << " generation=" << generation
                        << " accepted=" << accepted

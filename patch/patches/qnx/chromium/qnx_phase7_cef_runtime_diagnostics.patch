@@ -16,7 +16,7 @@
        manager_(manager),
        screen_context_(screen_context),
        bounds_(bounds) {
-+  LOG(INFO) << "[QNX-TRACE] QnxWindow::QnxWindow: bounds="
++  QNX_GPU_TRACE_LOG(INFO) << "[QNX-TRACE] QnxWindow::QnxWindow: bounds="
 +            << bounds_.ToString();
    if (!screen_context_->is_valid()) {
      LOG(ERROR) << "QnxWindow: cannot create window: invalid Screen context";
@@ -25,10 +25,10 @@
      manager_->SetScreenWindow(widget_, screen_win_);
    }
    delegate_->OnAcceleratedWidgetAvailable(widget_);
-+  LOG(INFO) << "[QNX-TRACE] QnxWindow::QnxWindow: widget=" << widget_
++  QNX_GPU_TRACE_LOG(INFO) << "[QNX-TRACE] QnxWindow::QnxWindow: widget=" << widget_
 +            << " screen_win=" << screen_win_;
  
-   DLOG(INFO) << "QnxWindow: created widget=" << widget_
+   QNX_GPU_TRACE_LOG(INFO) << "QnxWindow: created widget=" << widget_
               << " screen_win=" << screen_win_ << " bounds=" << bounds_.ToString();
 --- ui/ozone/platform/qnx/ozone_platform_qnx.cc
 +++ ui/ozone/platform/qnx/ozone_platform_qnx.cc
@@ -36,7 +36,7 @@
                      "Screen context is invalid";
        return nullptr;
      }
-+    LOG(INFO) << "[QNX-TRACE] OzonePlatformQnx::CreatePlatformWindow: "
++    QNX_GPU_TRACE_LOG(INFO) << "[QNX-TRACE] OzonePlatformQnx::CreatePlatformWindow: "
 +              << "bounds=" << properties.bounds.ToString();
      return std::make_unique<QnxWindow>(delegate, window_manager_.get(),
                                         screen_context_.get(),

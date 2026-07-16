@@ -14,6 +14,7 @@
 //   GPU-side QnxGpuService receiver (receives browser host remote on launch).
 
 #include "ui/ozone/platform/qnx/ozone_platform_qnx.h"
+#include "ui/ozone/platform/qnx/qnx_gpu_trace.h"
 
 #include <memory>
 #include <utility>
@@ -192,7 +193,7 @@ class OzonePlatformQnxImpl : public OzonePlatform {
     // not needed here.
     browser_surface_factory_ = std::make_unique<QnxSurfaceFactoryOzone>();
 
-    DLOG(INFO) << "OzonePlatformQnx::InitializeUI: success";
+    QNX_GPU_TRACE_LOG(INFO) << "OzonePlatformQnx::InitializeUI: success";
     return true;
   }
 
@@ -252,7 +253,7 @@ class OzonePlatformQnxImpl : public OzonePlatform {
               gpu_service_.get()),
           gpu_task_runner);
 
-      DLOG(INFO) << "OzonePlatformQnx::AddInterfaces: QnxGpuService and "
+      QNX_GPU_TRACE_LOG(INFO) << "OzonePlatformQnx::AddInterfaces: QnxGpuService and "
                     "QnxGpuControl binders registered on GPU process; "
                     "QnxGpuService owns QnxRenderProducerManager with "
                     "access to gpu_surface_factory_="
@@ -267,7 +268,7 @@ class OzonePlatformQnxImpl : public OzonePlatform {
 
     // ---- GPU-side QnxSurfaceFactoryOzone ----
     if (gpu_surface_factory_) {
-      DLOG(INFO) << "OzonePlatformQnx::InitializeGPU: already initialized";
+      QNX_GPU_TRACE_LOG(INFO) << "OzonePlatformQnx::InitializeGPU: already initialized";
       return;
     }
 
@@ -287,7 +288,7 @@ class OzonePlatformQnxImpl : public OzonePlatform {
     gpu_service_ = std::make_unique<QnxGpuService>(
         gpu_surface_factory_.get());
 
-    DLOG(INFO) << "OzonePlatformQnx::InitializeGPU: QnxSurfaceFactoryOzone "
+    QNX_GPU_TRACE_LOG(INFO) << "OzonePlatformQnx::InitializeGPU: QnxSurfaceFactoryOzone "
                   "and QnxGpuService (with QnxRenderProducerManager) created; "
                   "gpu_surface_factory_="
                << static_cast<void*>(gpu_surface_factory_.get())

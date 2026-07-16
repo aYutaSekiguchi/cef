@@ -13,6 +13,7 @@
 // Mojo QnxGpuHost.SubmitFrame once binding is wired.
 
 #include "ui/ozone/platform/qnx/qnx_render_producer.h"
+#include "ui/ozone/platform/qnx/qnx_gpu_trace.h"
 
 #include <dlfcn.h>
 
@@ -153,7 +154,7 @@ QnxRenderProducer::QnxRenderProducer(QnxSurfaceFactoryOzone* surface_factory,
       LOG(ERROR) << init_error_;
       return;
     }
-    DLOG(INFO) << "QnxRenderProducer: EGL " << maj << "." << min
+    QNX_GPU_TRACE_LOG(INFO) << "QnxRenderProducer: EGL " << maj << "." << min
                << " initialized from eglGetDisplay fallback";
   } else {
     egl_display_ = gl_display_egl->GetDisplay();
@@ -165,14 +166,14 @@ QnxRenderProducer::QnxRenderProducer(QnxSurfaceFactoryOzone* surface_factory,
     return;
   }
 
-  DLOG(INFO) << "QnxRenderProducer: created for widget=" << widget_
+  QNX_GPU_TRACE_LOG(INFO) << "QnxRenderProducer: created for widget=" << widget_
              << " generation=" << generation_
              << " size=" << size_.ToString();
 }
 
 QnxRenderProducer::~QnxRenderProducer() {
   // EGL display is shared and owned by GLOzoneEGL; do not terminate here.
-  DLOG(INFO) << "QnxRenderProducer: destroyed for widget=" << widget_;
+  QNX_GPU_TRACE_LOG(INFO) << "QnxRenderProducer: destroyed for widget=" << widget_;
 }
 
 bool QnxRenderProducer::Initialize() {
@@ -205,7 +206,7 @@ bool QnxRenderProducer::Initialize() {
   }
 
   is_valid_ = true;
-  DLOG(INFO) << "QnxRenderProducer::Initialize: success for widget=" << widget_;
+  QNX_GPU_TRACE_LOG(INFO) << "QnxRenderProducer::Initialize: success for widget=" << widget_;
   return true;
 }
 
@@ -237,10 +238,10 @@ void QnxRenderProducer::ProbeExtensions() {
   const char* egl_exts =
       eglQueryString(egl_display_, EGL_EXTENSIONS);
   if (egl_exts) {
-    DLOG(INFO) << "EGL_EXTENSIONS (" << strlen(egl_exts)
+    QNX_GPU_TRACE_LOG(INFO) << "EGL_EXTENSIONS (" << strlen(egl_exts)
                << " chars): " << egl_exts;
   } else {
-    DLOG(INFO) << "EGL_EXTENSIONS: eglQueryString returned null";
+    QNX_GPU_TRACE_LOG(INFO) << "EGL_EXTENSIONS: eglQueryString returned null";
   };
 
   has_egl_mesa_drm_image_ =
@@ -268,7 +269,7 @@ Fn QnxRenderProducer::ResolveEGL(const char* name) {
                   << "\") returned null";
     return nullptr;
   }
-  DLOG(INFO) << "QnxRenderProducer: resolved " << name;
+  QNX_GPU_TRACE_LOG(INFO) << "QnxRenderProducer: resolved " << name;
   return reinterpret_cast<Fn>(proc);
 }
 
@@ -313,7 +314,7 @@ EGLImageKHR QnxRenderProducer::CreateDRMImage(const gfx::Size& size,
     return EGL_NO_IMAGE_KHR;
   }
 
-  DLOG(INFO) << "QnxRenderProducer::CreateDRMImage: created " << img
+  QNX_GPU_TRACE_LOG(INFO) << "QnxRenderProducer::CreateDRMImage: created " << img
              << " size=" << size.width() << "x" << size.height();
   return img;
 }
@@ -336,7 +337,7 @@ bool QnxRenderProducer::DestroyDRMImage(EGLImageKHR image) {
     return false;
   }
 
-  DLOG(INFO) << "QnxRenderProducer::DestroyDRMImage: destroyed " << image;
+  QNX_GPU_TRACE_LOG(INFO) << "QnxRenderProducer::DestroyDRMImage: destroyed " << image;
   return true;
 }
 
@@ -376,7 +377,7 @@ bool QnxRenderProducer::QueryDmaBufMetadata(EGLImageKHR image,
   if (modifier)
     *modifier = static_cast<uint64_t>(egModifier);
 
-  DLOG(INFO) << "QnxRenderProducer::QueryDmaBufMetadata: fourcc=0x" << std::hex
+  QNX_GPU_TRACE_LOG(INFO) << "QnxRenderProducer::QueryDmaBufMetadata: fourcc=0x" << std::hex
              << egFourcc << " (" << FourccToString(static_cast<uint32_t>(egFourcc))
              << ") planes=" << egPlanes << " modifier=0x" << egModifier;
   return true;
@@ -426,7 +427,7 @@ bool QnxRenderProducer::ExportDmaBufImage(EGLImageKHR image,
         offsets_out[i] = export_offsets[i];
       planes_exported++;
 
-      DLOG(INFO) << "QnxRenderProducer::ExportDmaBufImage: plane " << i
+      QNX_GPU_TRACE_LOG(INFO) << "QnxRenderProducer::ExportDmaBufImage: plane " << i
                  << " fd=" << export_fds[i]
                  << " stride=" << export_strides[i]
                  << " offset=" << export_offsets[i];
@@ -441,7 +442,7 @@ bool QnxRenderProducer::ExportDmaBufImage(EGLImageKHR image,
     return false;
   }
 
-  DLOG(INFO) << "QnxRenderProducer::ExportDmaBufImage: exported " << planes_exported
+  QNX_GPU_TRACE_LOG(INFO) << "QnxRenderProducer::ExportDmaBufImage: exported " << planes_exported
              << " planes for widget=" << widget_;
   return true;
 }
@@ -525,7 +526,7 @@ std::pair<QnxDmaBufFrame, std::string> QnxRenderProducer::CreateExportFrame() {
   // Clean up the DRM image.  The DMAbuf fd has been transferred to the frame.
   DestroyDRMImage(img);
 
-  DLOG(INFO) << "QnxRenderProducer::CreateExportFrame: widget=" << widget_
+  QNX_GPU_TRACE_LOG(INFO) << "QnxRenderProducer::CreateExportFrame: widget=" << widget_
              << " size=" << size_.width() << "x" << size_.height()
              << " fourcc=0x" << std::hex << fourcc << " (" << FourccToString(fourcc) << ")"
              << " planes=" << n_planes
@@ -542,7 +543,7 @@ std::pair<QnxDmaBufFrame, std::string> QnxRenderProducer::CreateExportFrame() {
 QnxRenderProducerManager::QnxRenderProducerManager(
     QnxSurfaceFactoryOzone* surface_factory)
     : surface_factory_(surface_factory) {
-  DLOG(INFO) << "QnxRenderProducerManager: constructed with surface_factory="
+  QNX_GPU_TRACE_LOG(INFO) << "QnxRenderProducerManager: constructed with surface_factory="
              << static_cast<void*>(surface_factory_);
 }
 
@@ -557,7 +558,7 @@ QnxRenderProducer* QnxRenderProducerManager::GetOrCreateProducer(
   ProducerKey key{widget, generation};
   auto it = producers_.find(key);
   if (it != producers_.end()) {
-    DLOG(INFO) << "QnxRenderProducerManager: returning existing producer "
+    QNX_GPU_TRACE_LOG(INFO) << "QnxRenderProducerManager: returning existing producer "
                   "for widget="
                << widget << " generation=" << generation;
     return it->second.get();
@@ -570,7 +571,7 @@ QnxRenderProducer* QnxRenderProducerManager::GetOrCreateProducer(
       surface_factory_, widget, generation, size);
   QnxRenderProducer* raw = producer.get();
   producers_.emplace(key, std::move(producer));
-  DLOG(INFO) << "QnxRenderProducerManager: created producer for widget="
+  QNX_GPU_TRACE_LOG(INFO) << "QnxRenderProducerManager: created producer for widget="
              << widget << " generation=" << generation
              << " using surface_factory=" << static_cast<void*>(surface_factory_);
   return raw;
@@ -580,7 +581,7 @@ void QnxRenderProducerManager::RemoveProducer(gfx::AcceleratedWidget widget,
                                               uint32_t generation) {
   ProducerKey key{widget, generation};
   producers_.erase(key);
-  DLOG(INFO) << "QnxRenderProducerManager: removed producer for widget="
+  QNX_GPU_TRACE_LOG(INFO) << "QnxRenderProducerManager: removed producer for widget="
              << widget << " generation=" << generation;
 }
 
@@ -596,7 +597,7 @@ QnxRenderProducer* QnxRenderProducerManager::GetProducer(
 
 void QnxRenderProducerManager::RemoveAllProducers() {
   producers_.clear();
-  DLOG(INFO) << "QnxRenderProducerManager: removed all producers";
+  QNX_GPU_TRACE_LOG(INFO) << "QnxRenderProducerManager: removed all producers";
 }
 
 }  // namespace ui
