@@ -132,7 +132,17 @@ environment-specific failures:
 
 `cef/tools/qnx_run.sh` defaults to headless QEMU (`-nographic`) for normal unit
 and API test runs.  For Ozone, Screen, EGL, or GLES validation, opt in to a GUI
-QEMU launch with virtio/virgl enabled:
+QEMU launch with virtio/virgl enabled. For agent-driven screenshots and input,
+use `--gui`; the complete QMP workflow is documented in
+[`gui-testing.md`](gui-testing.md):
+
+```bash
+./cef/tools/qnx_run.sh --gui --keep-qemu --mount-only
+./cef/tools/qnx_gui.py --json screenshot \\
+  --output out/qnx_release/gui-artifacts/boot.png
+```
+
+The lower-level graphics-only form remains available:
 
 ```bash
 cd <CHROMIUM_SRC_ROOT>
@@ -173,6 +183,8 @@ out/qnx_release/qnx-gles2-gears.bmp
 
 Notes:
 
+- `--gui` is shorthand for `--qemu-graphics virgl --with-input`; it also
+  prints the QMP socket used by `cef/tools/qnx_gui.py`.
 - `--virgl` uses `-vga none -device virtio-vga-gl -display <backend>,gl=on`.
 - The default display backend is `gtk`; use `--qemu-display sdl` if SDL works
   better on the host.

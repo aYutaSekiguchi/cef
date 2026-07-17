@@ -341,10 +341,18 @@ class QNXSerial:
 
     # ----- command execution ----------------------------------------------
 
-    def run_command(self, cmd: str, timeout: float) -> Tuple[int, bytes]:
+    def run_command(
+        self,
+        cmd: str,
+        timeout: float,
+        *,
+        stream_output: bool = True,
+    ) -> Tuple[int, bytes]:
         """Run a shell command on the guest; return ``(exit_code, raw_output)``.
 
-        ``-1`` indicates that the per-command timeout elapsed.
+        ``-1`` indicates that the per-command timeout elapsed.  Callers that
+        need a machine-readable stdout stream can disable terminal streaming;
+        the serial transcript is still retained in ``log_path``.
         """
         self._send(f"sh -c {q(cmd)}; echo {EXIT_MARKER}:$?")
         raw = b""
@@ -358,8 +366,9 @@ class QNXSerial:
             if data:
                 raw += data
                 self.serial_fp.write(data)
-                sys.stdout.buffer.write(data)
-                sys.stdout.buffer.flush()
+                if stream_output:
+                    sys.stdout.buffer.write(data)
+                    sys.stdout.buffer.flush()
                 idx = raw.rfind(marker)
                 if idx >= 0:
                     rest = raw[idx + len(marker):]

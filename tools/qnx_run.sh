@@ -20,6 +20,7 @@ KILL_EXISTING=0
 PRELOAD_SYSTEM_EGL=0
 QEMU_GRAPHICS="${QEMU_GRAPHICS:-headless}"
 QEMU_DISPLAY_BACKEND="${QEMU_DISPLAY_BACKEND:-gtk}"
+GUI_MODE=0
 
 # Phase 5 input-injection helper. Default 0 (no input device / no QMP),
 # so render-only flows are unchanged. When set, qnx_run.sh adds
@@ -55,7 +56,7 @@ Examples:
   $0 --mount-only
   $0 --qemu-graphics virgl -- egl-configs
   $0 --virgl --preload-system-egl -- ./cefsimple --use-native --use-gl=egl
-  $0 --virgl --preload-system-egl --with-input --kill-existing \\
+  $0 --gui --preload-system-egl --kill-existing \\
       --detach --qconn-port 8000 -- ./cefsimple --use-gl=egl \\
       --use-native --ozone-platform=qnx --no-sandbox
 
@@ -76,6 +77,8 @@ Options:
   --virgl              Alias for --qemu-graphics virgl
   --qemu-display NAME  QEMU display backend for window/virgl modes
                        (default: $QEMU_DISPLAY_BACKEND; e.g. gtk, sdl)
+  --gui                Alias for virgl + --with-input.  Use with
+                       --detach/--keep-qemu for agent-driven GUI tests.
   --preload-system-egl Preload QNX system EGL (/usr/lib/libEGL.so.1)
   --env NAME=VALUE     Extra guest environment variable (may repeat)
   --dns-server IP      Guest resolver address; defaults to host DNS discovery
@@ -85,6 +88,7 @@ Options:
                        tool can inject SCREEN_EVENT_POINTER via
                        input-send-event. Off by default; failures are
                        non-fatal and the render-only path is preserved.
+  --qmp-socket PATH    Override the QMP Unix socket used by --with-input.
   --detach             Run the post-"--" QNX command in the guest shell as
                        a background job; do not wait for it; exit the
                        wrapper cleanly. Implicitly keeps QEMU alive.
@@ -194,6 +198,12 @@ while [[ $# -gt 0 ]]; do
       QEMU_GRAPHICS="virgl"
       shift
       ;;
+    --gui)
+      GUI_MODE=1
+      QEMU_GRAPHICS="virgl"
+      WITH_INPUT=1
+      shift
+      ;;
     --qemu-display)
       QEMU_DISPLAY_BACKEND="${2:?--qemu-display requires a backend name}"
       shift 2
@@ -208,6 +218,14 @@ while [[ $# -gt 0 ]]; do
       ;;
     --with-input)
       WITH_INPUT=1
+      shift
+      ;;
+    --qmp-socket)
+      QNX_QMP_SOCK="${2:?--qmp-socket requires a path}"
+      shift 2
+      ;;
+    --qmp-socket=*)
+      QNX_QMP_SOCK="${1#*=}"
       shift
       ;;
     --detach)
@@ -413,6 +431,12 @@ echo "Build dir: $BUILD_DIR"
 echo "Guest dir: $GUEST_BUILD_DIR"
 echo "Serial:    127.0.0.1:$SERIAL_PORT"
 echo "Graphics:  $QEMU_GRAPHICS"
+if [[ "$GUI_MODE" == 1 ]]; then
+  echo "GUI input: enabled"
+  echo "QMP:       $QNX_QMP_SOCK"
+elif [[ "$WITH_INPUT" == 1 ]]; then
+  echo "QMP:       $QNX_QMP_SOCK"
+fi
 if [[ -n "$DNS_SERVER" ]]; then
   echo "DNS:       $DNS_SERVER"
 else
@@ -833,5 +857,9 @@ echo "Boot log: $BOOT_LOG"
 if [[ "$KEEP_QEMU" == 1 || -z "$QNX_CMD" ]]; then
   echo "QEMU kept running: PID=$QEMU_PID serial=tcp://127.0.0.1:$SERIAL_PORT"
   echo "Attach serial: socat -,raw,echo=0 TCP:127.0.0.1:$SERIAL_PORT"
+  if [[ "$WITH_INPUT" == 1 ]]; then
+    echo "QMP socket: $QNX_QMP_SOCK"
+    echo "GUI tool: ./cef/tools/qnx_gui.py --socket $QNX_QMP_SOCK --json screenshot --output out/qnx_release/gui.png"
+  fi
   echo "Stop QEMU: kill $QEMU_PID"
 fi

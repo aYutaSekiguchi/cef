@@ -1,0 +1,10 @@
+{
+  "name": "open-and-capture",
+  "screen_size": "1280x720",
+  "actions": [
+    {"action": "screenshot", "path": "01-before.png"},
+    {"action": "click", "x": 640, "y": 360},
+    {"action": "sleep", "seconds": 1},
+    {"action": "screenshot", "path": "02-after.png"}
+  ]
+}
