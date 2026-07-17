@@ -132,6 +132,7 @@ void QnxWindow::DestroyScreenWindow() {
     QNX_GPU_TRACE_LOG(INFO) << "QnxWindow: screen_destroy_window done";
     screen_win_ = nullptr;
   }
+  capture_state_ = false;
 }
 
 void QnxWindow::Show(bool inactive) {
@@ -217,7 +218,9 @@ void QnxWindow::SetCapture() {
       screen_win_, SCREEN_PROPERTY_SENSITIVITY, &kSensitivityCapture);
   if (rc != 0) {
     PLOG(WARNING) << "QnxWindow: SetCapture failed";
+    return;
   }
+  capture_state_ = true;
 }
 
 void QnxWindow::ReleaseCapture() {
@@ -227,13 +230,13 @@ void QnxWindow::ReleaseCapture() {
       screen_win_, SCREEN_PROPERTY_SENSITIVITY, &kSensitivityRelease);
   if (rc != 0) {
     PLOG(WARNING) << "QnxWindow: ReleaseCapture failed";
+    return;
   }
+  capture_state_ = false;
 }
 
 bool QnxWindow::HasCapture() const {
-  // Phase 4: no way to query QNX Screen sensitivity state from here.
-  NOTREACHED();
-  return false;
+  return capture_state_;
 }
 
 void QnxWindow::SetFullscreen(bool fullscreen, int64_t target_display_id) {

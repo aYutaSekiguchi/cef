@@ -108,6 +108,7 @@ class QnxWindow : public PlatformWindow {
 
   gfx::Rect bounds_;
   bool visible_ = false;
+  bool capture_state_ = false;
   std::optional<gfx::Rect> restored_bounds_;
   PlatformWindowState window_state_ = PlatformWindowState::kUnknown;
   ActivationState activation_state_ = ActivationState::kUnknown;
