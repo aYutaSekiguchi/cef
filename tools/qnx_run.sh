@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Run an arbitrary command on QNX inside full-system QEMU.
-# Boots QEMU, logs in on the serial console, mounts the Chromium tree via NFS,
-# changes into the requested build directory, exports runtime env vars, then
-# streams the command output back to the host in real time.
+# Boots QEMU, logs in on the serial console, mounts the Chromium tree via NFS
+# (legacy mode) or downloads a tar payload over rootless passt, then
+# changes into the requested build directory, exports runtime env vars,
+# and streams the command output back to the host in real time.
 
 set -euo pipefail
 
@@ -21,6 +22,26 @@ PRELOAD_SYSTEM_EGL=0
 QEMU_GRAPHICS="${QEMU_GRAPHICS:-headless}"
 QEMU_DISPLAY_BACKEND="${QEMU_DISPLAY_BACKEND:-gtk}"
 GUI_MODE=0
+
+# Rootless defaults. The legacy TAP+NFS path is kept for compatibility
+# and selected by --net-backend=tap --payload-mode=nfs. The rootless
+# default is passt (QEMU 10.1+ spawns passt itself, no sudo) plus a
+# HTTP-served tar.gz payload (avoids the QEMU 2nd-IDE mount issues
+# observed with QNX6/ext2/FAT images on this QNX 8 image).
+NET_BACKEND="${NET_BACKEND:-passt}"   # tap | passt
+PAYLOAD_MODE="${PAYLOAD_MODE:-http}"   # nfs | http
+PASST_ADDRESS="${PASST_ADDRESS:-}"     # guest IPv4 (auto from passt if empty)
+PASST_GATEWAY="${PASST_GATEWAY:-}"     # guest default route
+PASST_NETMASK="${PASST_NETMASK:-}"     # guest netmask
+# HTTP payload mode settings. We bind the host python3 http.server on
+# the next free port in [18080, 18100]; the guest fetches the tarball
+# via passt's host IP (default 192.168.0.1) and extracts into /data.
+HTTP_PAYLOAD_IMAGE="${HTTP_PAYLOAD_IMAGE:-}"    # output tar.gz path
+HTTP_PAYLOAD_SRC="${HTTP_PAYLOAD_SRC:-$BUILD_DIR}"  # src dir for manifest
+HTTP_PAYLOAD_PORT="${HTTP_PAYLOAD_PORT:-}"        # 0 = pick next free
+HTTP_PAYLOAD_PREFIX="${HTTP_PAYLOAD_PREFIX:-payload}"  # tar internal dir
+declare -a HTTP_PAYLOAD_EXTRA=()                   # extra --http-payload-file
+HTTP_PAYLOAD_MANIFEST="${HTTP_PAYLOAD_MANIFEST:-}" # auto-derived when empty
 
 # Phase 5 input-injection helper. Default 0 (no input device / no QMP),
 # so render-only flows are unchanged. When set, qnx_run.sh adds
@@ -70,7 +91,7 @@ Options:
   --boot-timeout SEC   Boot/login timeout (default: $BOOT_TIMEOUT)
   --serial-port PORT   TCP serial port (default: $SERIAL_PORT)
   --keep-qemu          Leave QEMU running after the command finishes
-  --mount-only         Boot QNX, mount NFS, and leave QEMU running
+  --mount-only         Boot QNX, prepare the selected payload, and leave QEMU running
   --kill-existing      Kill any stale qemu-system-x86_64 first
   --qemu-graphics MODE QEMU display mode: headless, window, or virgl
                        (default: $QEMU_GRAPHICS)
@@ -82,7 +103,28 @@ Options:
   --preload-system-egl Preload QNX system EGL (/usr/lib/libEGL.so.1)
   --env NAME=VALUE     Extra guest environment variable (may repeat)
   --dns-server IP      Guest resolver address; defaults to host DNS discovery
-                       (non-loopback IPv4/IPv6 literal)
+                       (non-loopback IPv4/IPv6 literal). Also used as the
+                       passt-side resolver in --net-backend=passt mode.
+  --net-backend MODE   Network backend: passt (rootless default) or tap
+                       (legacy; needs sudo qnx_setup_env.sh)
+  --payload-mode MODE  Payload delivery: http (rootless default; builds a
+                       tar.gz and serves it via python3 -m http.server
+                       from the host, fetched in the guest over passt)
+                       or nfs (legacy; needs sudo)
+  --passt-address IP   passt: guest IPv4 (defaults to passt-advertised)
+  --passt-gateway IP   passt: guest default route
+  --passt-netmask MASK passt: guest netmask (e.g. 255.255.255.0 or /24)
+  --http-payload-image  PATH  http mode: payload tar.gz path
+                          (default: $BUILD_DIR/qnx_payload.tar.gz)
+  --http-payload-src    DIR   http mode: source dir for manifest
+                          (default: $BUILD_DIR)
+  --http-payload-file   P     http mode: extra host file to add (repeatable)
+  --http-payload-manifest NAME http mode: preset manifest; auto-derived
+                          from the first command token (cefsimple =>
+                          cefsimple manifest; anything else => single
+                          binary payload). Pass explicitly to override.
+  --http-payload-port   PORT  http mode: port to bind (0 = pick first
+                          free port in [18080, 18100]).
   --with-input         Add -device virtio-tablet-pci and a unix QMP socket
                        ($QNX_QMP_SOCK, default $QNX_QMP_SOCK) so a host
                        tool can inject SCREEN_EVENT_POINTER via
@@ -105,7 +147,9 @@ Options:
   -h, --help           Show help
 
 Prerequisite:
-  sudo ${SCRIPT_DIR}/qnx_setup_env.sh
+  - passt, python3, curl/tar in the guest (rootless default)
+  - sudo ${SCRIPT_DIR}/qnx_setup_env.sh (only for --net-backend=tap
+    --payload-mode=nfs, the legacy path)
 EOF
 }
 
@@ -254,6 +298,57 @@ while [[ $# -gt 0 ]]; do
       DNS_SERVER="${2:?--dns-server requires an IP address}"
       shift 2
       ;;
+    --net-backend)
+      NET_BACKEND="${2:?--net-backend requires tap or passt}"
+      shift 2
+      ;;
+    --net-backend=*)
+      NET_BACKEND="${1#*=}"
+      shift
+      ;;
+    --payload-mode)
+      PAYLOAD_MODE="${2:?--payload-mode requires nfs or http}"
+      shift 2
+      ;;
+    --payload-mode=*)
+      PAYLOAD_MODE="${1#*=}"
+      shift
+      ;;
+    --passt-address)
+      PASST_ADDRESS="${2:?--passt-address requires an IP}"
+      shift 2
+      ;;
+    --passt-gateway)
+      PASST_GATEWAY="${2:?--passt-gateway requires an IP}"
+      shift 2
+      ;;
+    --passt-netmask)
+      PASST_NETMASK="${2:?--passt-netmask requires a mask}"
+      shift 2
+      ;;
+    --http-payload-image)
+      HTTP_PAYLOAD_IMAGE="${2:?--http-payload-image requires a path}"
+      shift 2
+      ;;
+    --http-payload-src)
+      HTTP_PAYLOAD_SRC="${2:?--http-payload-src requires a directory}"
+      shift 2
+      ;;
+    --http-payload-file)
+      HTTP_PAYLOAD_EXTRA+=("${2:?--http-payload-file requires a path}")
+      shift 2
+      ;;
+    --http-payload-manifest)
+      HTTP_PAYLOAD_MANIFEST="${2:?--http-payload-manifest requires a name}"
+      shift 2
+      ;;
+    --http-payload-port)
+      HTTP_PAYLOAD_PORT="${2:?--http-payload-port requires a port number}"
+      if ! [[ "$HTTP_PAYLOAD_PORT" =~ ^[0-9]+$ ]] || (( HTTP_PAYLOAD_PORT < 0 || HTTP_PAYLOAD_PORT > 65535 )); then
+        echo "ERROR: --http-payload-port must be 0..65535" >&2; exit 2
+      fi
+      shift 2
+      ;;
     --dns-server=*)
       DNS_SERVER="${1#*=}"
       shift
@@ -331,8 +426,18 @@ case "$QEMU_GRAPHICS" in
   *)
     echo "ERROR: unsupported --qemu-graphics mode: $QEMU_GRAPHICS" >&2
     echo "       Supported modes: headless, window, virgl" >&2
-    exit 2
-    ;;
+      exit 2
+      ;;
+esac
+
+case "$NET_BACKEND" in
+  tap|passt) ;;
+  *) echo "ERROR: --net-backend must be 'tap' or 'passt' (got: $NET_BACKEND)" >&2; exit 2 ;;
+esac
+
+case "$PAYLOAD_MODE" in
+  nfs|http) ;;
+  *) echo "ERROR: --payload-mode must be 'nfs' or 'http' (got: $PAYLOAD_MODE)" >&2; exit 2 ;;
 esac
 
 if [[ "$MOUNT_ONLY" == 1 ]]; then
@@ -341,6 +446,31 @@ elif [[ ${#POSITIONAL[@]} -gt 0 ]]; then
   QNX_CMD="${POSITIONAL[*]}"
 else
   QNX_CMD=""
+fi
+
+# Boot-only and mount-only HTTP sessions still need a non-empty archive.
+if [[ "$PAYLOAD_MODE" == http && -z "$HTTP_PAYLOAD_MANIFEST" && ${#HTTP_PAYLOAD_EXTRA[@]} -eq 0 && ( -z "$QNX_CMD" || "$QNX_CMD" == "true" ) ]]; then
+  HTTP_PAYLOAD_MANIFEST="common"
+fi
+
+# HTTP payload auto-selection. When the user did not pick a manifest
+# explicitly, decide based on the first command token so that
+#   ./qnx_run.sh -- ./cefsimple ...
+# pulls in libcef.so + resources, but
+#   ./qnx_run.sh -- ./base_unittests ...
+# only ships base_unittests (no 1.5 GiB libcef.so). Explicit
+# --http-payload-manifest overrides this logic. If the user already passed
+# --http-payload-file, do not auto-add: the user is supplying their own
+# payload and the auto-add would mix in the host BUILD_DIR path which
+# may not exist.
+if [[ "$PAYLOAD_MODE" == http && -z "$HTTP_PAYLOAD_MANIFEST" && ${#HTTP_PAYLOAD_EXTRA[@]} -eq 0 && -n "$QNX_CMD" && "$QNX_CMD" != "true" ]]; then
+  first_token="${QNX_CMD%% *}"
+  first_token="${first_token##*/}"
+  case "$first_token" in
+    cefsimple) HTTP_PAYLOAD_MANIFEST="cefsimple" ;;
+    *)         HTTP_PAYLOAD_MANIFEST="common"
+               HTTP_PAYLOAD_EXTRA+=("$HTTP_PAYLOAD_SRC/$first_token") ;;
+  esac
 fi
 
 for cmd in qemu-system-x86_64 python3; do
@@ -356,12 +486,32 @@ else
   QNX_DISK="$QEMU_DIR/output/disk-qemu.vmdk"
   check_file "$QNX_DISK"
 fi
-check_file /export/chromium-src
 check_file "$BUILD_DIR"
-ip link show tap0 >/dev/null 2>&1 || {
-  echo "ERROR: tap0 not found. Run: sudo ${SCRIPT_DIR}/qnx_setup_env.sh" >&2
-  exit 1
-}
+
+# Backend- and mode-specific precondition checks. The rootless
+# passt+http path does not need tap0 or /export/chromium-src; only the
+# legacy tap+nfs path does.
+if [[ "$NET_BACKEND" == tap ]]; then
+  ip link show tap0 >/dev/null 2>&1 || {
+    echo "ERROR: tap0 not found. Run: sudo ${SCRIPT_DIR}/qnx_setup_env.sh" >&2
+    exit 1
+  }
+fi
+if [[ "$PAYLOAD_MODE" == nfs ]]; then
+  check_file /export/chromium-src
+fi
+if [[ "$NET_BACKEND" == passt ]]; then
+  command -v passt >/dev/null 2>&1 || {
+    echo "ERROR: passt not found. Install passt (apt: passt)." >&2
+    exit 1
+  }
+fi
+if [[ "$PAYLOAD_MODE" == http ]]; then
+  "${SCRIPT_DIR}/qnx_payload_http.sh" --help >/dev/null 2>&1 || {
+    echo "ERROR: qnx_payload_http.sh is not executable" >&2
+    exit 1
+  }
+fi
 
 case "$BUILD_DIR" in
   "$CHROMIUM_SRC") BUILD_DIR_REL="." ;;
@@ -373,7 +523,13 @@ case "$BUILD_DIR" in
     exit 1
     ;;
 esac
-GUEST_BUILD_DIR="/mnt/nfs/$BUILD_DIR_REL"
+# nfs mode: guest path is /mnt/nfs/<build_rel>.
+# http mode: guest path is /data/qnx_payload/payload (no build subpath).
+if [[ "$PAYLOAD_MODE" == http ]]; then
+  GUEST_BUILD_DIR="/data/qnx_payload/$HTTP_PAYLOAD_PREFIX"
+else
+  GUEST_BUILD_DIR="/mnt/nfs/$BUILD_DIR_REL"
+fi
 
 if [[ "$KILL_EXISTING" == 1 ]]; then
   pkill -9 -f qemu-system-x86_64 2>/dev/null || true
@@ -420,6 +576,10 @@ cleanup() {
     kill "$QEMU_PID" 2>/dev/null || true
     wait "$QEMU_PID" 2>/dev/null || true
   fi
+  if [[ -n "${HTTP_SERVER_PID:-}" && "$KEEP_QEMU" != 1 ]]; then
+    kill "$HTTP_SERVER_PID" 2>/dev/null || true
+    wait "$HTTP_SERVER_PID" 2>/dev/null || true
+  fi
   exit "$status"
 }
 trap cleanup EXIT INT TERM
@@ -459,6 +619,44 @@ else
   QEMU_DISK_ARGS=(-drive "file=$QNX_DISK,if=ide,id=drv0")
 fi
 
+# Build and serve the tar payload. QEMU's passt backend exposes the host at
+# 192.168.0.1 by default, so no privileged listener or TAP setup is needed.
+if [[ "$PAYLOAD_MODE" == http ]]; then
+  [[ -z "$HTTP_PAYLOAD_IMAGE" ]] && HTTP_PAYLOAD_IMAGE="$BUILD_DIR/qnx_payload.tar.gz"
+  HTTP_HELPER_ARGS=(--src "$HTTP_PAYLOAD_SRC" --out "$HTTP_PAYLOAD_IMAGE" --prefix "$HTTP_PAYLOAD_PREFIX")
+  [[ -n "$HTTP_PAYLOAD_MANIFEST" ]] && HTTP_HELPER_ARGS+=(--manifest "$HTTP_PAYLOAD_MANIFEST")
+  for p in "${HTTP_PAYLOAD_EXTRA[@]}"; do
+    HTTP_HELPER_ARGS+=(--payload-file "$p")
+  done
+  echo "--- building HTTP payload ---"
+  "${SCRIPT_DIR}/qnx_payload_http.sh" "${HTTP_HELPER_ARGS[@]}"
+  if [[ -z "$HTTP_PAYLOAD_PORT" || "$HTTP_PAYLOAD_PORT" == 0 ]]; then
+    HTTP_PAYLOAD_PORT="$(python3 - <<'PY'
+import socket
+for port in range(18080, 18101):
+    with socket.socket() as s:
+        try:
+            s.bind(('0.0.0.0', port))
+        except OSError:
+            continue
+        print(port)
+        break
+else:
+    raise SystemExit('no free HTTP payload port in 18080..18100')
+PY
+)"
+  fi
+  HTTP_SERVER_LOG="${BOOT_LOG%.log}_http.log"
+  python3 -m http.server "$HTTP_PAYLOAD_PORT" --bind 0.0.0.0 \
+    --directory "$(dirname "$HTTP_PAYLOAD_IMAGE")" >"$HTTP_SERVER_LOG" 2>&1 &
+  HTTP_SERVER_PID=$!
+  sleep 0.2
+  kill -0 "$HTTP_SERVER_PID" 2>/dev/null || {
+    echo "ERROR: payload HTTP server failed; see $HTTP_SERVER_LOG" >&2
+    exit 1
+  }
+fi
+
 case "$QEMU_GRAPHICS" in
   headless)
     QEMU_GRAPHICS_ARGS=(-nographic)
@@ -471,11 +669,29 @@ case "$QEMU_GRAPHICS" in
     ;;
 esac
 
+# Network device args: passt (rootless, QEMU 10.1+ spawns passt itself)
+# vs tap (legacy). The passt -netdev must be specified exactly once;
+# all options are assembled into a single comma-separated string.
+case "$NET_BACKEND" in
+  tap)
+    QEMU_NET_ARGS=(-netdev tap,id=net0,ifname=tap0,script=no,downscript=no
+                   -device virtio-net-pci,netdev=net0)
+    ;;
+  passt)
+    PASST_OPTS="id=net0,ipv4=on,ipv6=off,quiet=off"
+    [[ -n "$PASST_ADDRESS" ]] && PASST_OPTS="${PASST_OPTS},address=${PASST_ADDRESS}"
+    [[ -n "$PASST_GATEWAY" ]] && PASST_OPTS="${PASST_OPTS},gateway=${PASST_GATEWAY}"
+    [[ -n "$PASST_NETMASK" ]] && PASST_OPTS="${PASST_OPTS},netmask=${PASST_NETMASK}"
+    [[ -n "$DNS_SERVER"     ]] && PASST_OPTS="${PASST_OPTS},dns=${DNS_SERVER}"
+    QEMU_NET_ARGS=(-netdev "passt,${PASST_OPTS}"
+                   -device virtio-net-pci,netdev=net0)
+    ;;
+esac
+
 QEMU_ARGS=(
   --enable-kvm
   "${QEMU_DISK_ARGS[@]}"
-  -netdev tap,id=net0,ifname=tap0,script=no,downscript=no
-  -device virtio-net-pci,netdev=net0
+  "${QEMU_NET_ARGS[@]}"
   -kernel "$QEMU_DIR/output/ifs.bin"
   "${QEMU_GRAPHICS_ARGS[@]}"
   -monitor none
@@ -532,14 +748,23 @@ export QNX_EXTRA_ENV="${EXTRA_ENV[*]:+${EXTRA_ENV[*]}}"
 export QNX_DETACH="$DETACH"
 export QNX_QCONN_PORT="$QCONN_PORT"
 export QNX_DNS_SERVER="$DNS_SERVER"
+export QNX_NET_BACKEND="$NET_BACKEND"
+export QNX_PAYLOAD_MODE="$PAYLOAD_MODE"
+export QNX_PASST_ADDRESS="$PASST_ADDRESS"
+export QNX_PASST_GATEWAY="$PASST_GATEWAY"
+export QNX_PASST_NETMASK="$PASST_NETMASK"
+if [[ "$PAYLOAD_MODE" == http ]]; then
+  export QNX_HTTP_PAYLOAD_URL="http://${PASST_GATEWAY:-192.168.0.1}:${HTTP_PAYLOAD_PORT}/$(basename "$HTTP_PAYLOAD_IMAGE")"
+  export QNX_GUEST_PAYLOAD_DIR="$GUEST_BUILD_DIR"
+fi
 # --detach: pass BOTH host-side path (where the host tails the file) and
-# guest-side path (where the in-guest shell writes via `>`). The guest
-# path is on the NFS-mounted BUILD_DIR so the redirect is writable and
-# the file is visible to the host. They differ only in the
-# /home/yuta/... -> /mnt/nfs/... prefix.
+# guest-side path (where the in-guest shell writes via `>`). The host
+# path is always the on-host BUILD_DIR. The guest path is
+#   - /data/qnx_payload/<prefix>/<log> for http mode
+#   - /mnt/nfs/<build_rel>/<log> for nfs mode (writable NFS mount)
 HOST_DETACH_APP_LOG="$BUILD_DIR/${RESULT_NAME%.log}_app.log"
-GUEST_DETACH_APP_LOG="$GUEST_BUILD_DIR/${RESULT_NAME%.log}_app.log"
 HOST_DETACH_QCONN_LOG="$BUILD_DIR/${RESULT_NAME%.log}_qconn.log"
+GUEST_DETACH_APP_LOG="$GUEST_BUILD_DIR/${RESULT_NAME%.log}_app.log"
 GUEST_DETACH_QCONN_LOG="$GUEST_BUILD_DIR/${RESULT_NAME%.log}_qconn.log"
 export QNX_DETACH_APP_LOG_HOST="$HOST_DETACH_APP_LOG"
 export QNX_DETACH_APP_LOG_GUEST="$GUEST_DETACH_APP_LOG"
@@ -559,6 +784,13 @@ serial_log = os.environ['QNX_SERIAL_LOG']
 guest_build_dir = os.environ['QNX_GUEST_BUILD_DIR']
 guest_main_binary = os.environ['QNX_GUEST_MAIN_BINARY']
 extra_env = os.environ.get('QNX_EXTRA_ENV', '')
+net_backend = os.environ.get('QNX_NET_BACKEND', 'passt')
+payload_mode = os.environ.get('QNX_PAYLOAD_MODE', 'http')
+passt_address = os.environ.get('QNX_PASST_ADDRESS', '')
+passt_gateway = os.environ.get('QNX_PASST_GATEWAY', '')
+passt_netmask = os.environ.get('QNX_PASST_NETMASK', '')
+guest_payload_dir = os.environ.get('QNX_GUEST_PAYLOAD_DIR', '/data/qnx_payload/payload')
+http_payload_url = os.environ.get('QNX_HTTP_PAYLOAD_URL', '')
 READY = '__PI_QNX_READY__'
 EXIT_RE = re.compile(rb'__PI_QNX_EXIT__:(\d+)')
 
@@ -602,25 +834,77 @@ def wait_prompt(sock, timeout=30):
     return False
 
 setup_lines = [
+    'umount /tmp/qnx_payload 2>/dev/null',
     'umount /mnt/nfs 2>/dev/null',
-    'umount /mnt 2>/dev/null',
-    'mkdir -p /mnt',
-    'ifconfig vtnet0 10.0.2.2 netmask 255.255.255.0 up',
-    'route add default 10.0.2.1',
-    'mkdir -p /mnt/nfs',
-    'fs-nfs3 10.0.2.1:/export/chromium-src /mnt/nfs',
-    f'cd {guest_build_dir}',
 ]
+# Network setup. With the passt backend the integrated QEMU passt hands
+# the guest an IPv4 lease via DHCP as soon as vtnet0 is up, so we just
+# poll for it (bounded). Static --passt-* overrides skip DHCP and apply
+# the values directly. The tap backend uses the legacy 10.0.2.x.
+# Setup commands NEVER use exit/logout; failure modes write a
+# QNX_SETUP_FAIL=<reason> marker that the Python runner inspects.
+if net_backend == 'tap':
+    setup_lines += [
+        'ifconfig vtnet0 10.0.2.2 netmask 255.255.255.0 up',
+        'route add default 10.0.2.1',
+    ]
+elif passt_address:
+    setup_lines += [
+        f'ifconfig vtnet0 {q(passt_address)} netmask {q(passt_netmask or "255.255.255.0")} up',
+    ]
+    if passt_gateway:
+        setup_lines += [f'route add default {q(passt_gateway)}']
+else:
+    # Wait up to 60s for passt's DHCP lease to land on vtnet0. We
+    # grep for an IPv4 "inet <digit>" line, which excludes inet6
+    # (the link-local fe80 line uses inet6). On failure we dump
+    # the full ifconfig so the operator can see the state and write
+    # a marker. The pattern is intentionally a simple substring
+    # match (no POSIX class, no ^ anchor) to keep the shell-quoted
+    # form predictable across bash versions.
+    setup_lines += [
+        'i=0; while [ $i -lt 120 ]; do '
+        'ifconfig vtnet0 2>/dev/null | grep -q "inet [0-9]" && break; '
+        'sleep 0.5; i=$((i+1)); done',
+        'if ! ifconfig vtnet0 2>/dev/null | grep -q "inet [0-9]"; then '
+        'echo "QNX_SETUP_DBG_NO_IPV4:"; ifconfig vtnet0 2>&1; '
+        'echo "QNX_SETUP_FAIL=passt-dhcp-no-ipv4-after-60s"; fi',
+    ]
+if payload_mode == 'nfs':
+    setup_lines += [
+        'mkdir -p /mnt/nfs',
+        'fs-nfs3 10.0.2.1:/export/chromium-src /mnt/nfs',
+    ]
+else:  # http
+    # /data is a large writable QNX6 partition. Fetching from passt's host
+    # address avoids TAP, NFS exports, and all second-disk filesystem issues.
+    setup_lines += [
+        'mkdir -p /data/qnx_payload',
+        f'rm -rf {q(guest_payload_dir)}',
+        f'curl -fsS --connect-timeout 15 --max-time 1800 -o /data/qnx_payload/payload.tar.gz {q(http_payload_url)} '
+        '|| echo "QNX_SETUP_FAIL=http-payload-download"',
+        'cd /data/qnx_payload',
+        'tar -xzf payload.tar.gz || echo "QNX_SETUP_FAIL=http-payload-extract"',
+    ]
+# The guest build dir is build_dir-relative under the active mount.
+# nfs mode: /mnt/nfs/<build_rel>. http mode: /data/qnx_payload/<prefix>.
+if payload_mode == 'nfs':
+    setup_lines += [f'cd {guest_build_dir}']
+    env_setup_root = '/mnt/nfs'
+else:
+    setup_lines += [f'cd {guest_payload_dir}']
+    env_setup_root = guest_payload_dir
+
 dns_server = os.environ.get('QNX_DNS_SERVER', '')
 if dns_server:
-    setup_lines.insert(
-        5, f"printf 'nameserver %s\\n' {q(dns_server)} > /etc/resolv.conf"
+    setup_lines.append(
+        f"printf 'nameserver %s\\n' {q(dns_server)} > /etc/resolv.conf"
     )
 
 env_lines = [
-    f'export LD_LIBRARY_PATH={guest_build_dir}',
-    f'export CHROME_EXE_PATH={guest_build_dir}/{guest_main_binary}',
-    'export CR_SOURCE_ROOT=/mnt/nfs',
+    f'export LD_LIBRARY_PATH={env_setup_root if payload_mode == "http" else guest_build_dir}',
+    f'export CHROME_EXE_PATH={env_setup_root if payload_mode == "http" else guest_build_dir}/{guest_main_binary}',
+    f'export CR_SOURCE_ROOT={env_setup_root if payload_mode == "http" else "/mnt/nfs"}',
 ]
 if extra_env:
     for envvar in extra_env.split():
@@ -636,6 +920,41 @@ def log_live(data):
     serial_fp.write(data)
     sys.stdout.buffer.write(data)
     sys.stdout.buffer.flush()
+
+def wait_until_marker(sock, marker, timeout):
+    """Block up to `timeout` seconds waiting for `marker` to appear in
+    the guest's serial output. Every byte received is forwarded to
+    log_live so the operator sees the output in real time. Returns
+    the captured bytes on hit, or None on timeout. The caller is
+    responsible for scanning the returned bytes for failure markers
+    such as `QNX_SETUP_FAIL=...`.
+    """
+    end = time.time() + timeout
+    buf = b''
+    while time.time() < end:
+        try:
+            data = sock.recv(4096)
+        except (BlockingIOError, socket.timeout):
+            data = b''
+        if data:
+            log_live(data)
+            buf += data
+            if marker in buf:
+                # Drain a tiny bit more so the rest of the line
+                # is visible in the log.
+                end_quiet = time.time() + 0.3
+                while time.time() < end_quiet:
+                    try:
+                        more = sock.recv(4096)
+                    except (BlockingIOError, socket.timeout):
+                        more = b''
+                    if not more:
+                        break
+                    log_live(more)
+                    buf += more
+                return buf
+        time.sleep(0.02)
+    return None
 
 sock = connect()
 print('=== Connected to QNX serial; waiting for login/shell ===')
@@ -698,11 +1017,68 @@ if not ready:
 
 print('\n=== QNX shell ready; running setup ===')
 sys.stdout.flush()
-for line in setup_lines:
-    send_line(sock, line)
-    time.sleep(0.05)
-    if not wait_prompt(sock, timeout=30):
-        print(f'WARNING: no prompt after: {line}')
+# Run the entire setup as ONE shell invocation joined with ' && '.
+# This avoids the race where a fast loop (e.g. the DHCP poll) returns
+# a prompt before the next setup_lines element is sent, leaving that
+# next element queued in the shell's stdin and counted as part of the
+# previous command's "prompt". The trailing marker is required to
+# appear on its own line in the output; the runner scans for it and
+# also for any QNX_SETUP_FAIL=<reason> marker.
+SETUP_DONE_MARKER = b'__QNX_SETUP_DONE__'
+SETUP_OUTPUT = b''
+if setup_lines:
+    # Semicolon-chain setup commands. Critical failures are signalled
+    # by the `QNX_SETUP_FAIL=<reason>` marker (written instead of
+    # calling exit, which would tear the shell down). Non-zero
+    # individual returns (umount of a path that isn't mounted, etc.)
+    # are tolerated so the rest of the setup still runs.
+    joined = ' ; '.join(setup_lines) + f' ; echo {SETUP_DONE_MARKER.decode()}'
+    # The serial tty normally echoes the command line. Since the command
+    # itself contains both DONE and FAIL marker text, scanning that echo
+    # would produce an immediate false success/failure before execution.
+    # Disable tty echo while setup runs so only command output is parsed.
+    send_line(sock, 'stty -echo')
+    wait_prompt(sock, timeout=5)
+    send_line(sock, joined)
+    setup_timeout = max(90, cmd_timeout + 120) if payload_mode == 'http' else 90
+    SETUP_OUTPUT = wait_until_marker(sock, SETUP_DONE_MARKER, timeout=setup_timeout)
+    send_line(sock, 'stty echo')
+    wait_prompt(sock, timeout=5)
+    if SETUP_OUTPUT is None:
+        raise RuntimeError(
+            f'qnx_run.sh: setup did not complete within {setup_timeout}s; '
+            'check guest setup output above'
+        )
+    fail = re.search(rb'QNX_SETUP_FAIL=([A-Za-z0-9_.-]+)', SETUP_OUTPUT)
+    if fail:
+        raise RuntimeError(f'qnx_run.sh: setup failed: {fail.group(1).decode()}')
+
+# In http mode, verify the extracted payload contains the command binary.
+# We add this as a separate single-shot command so the FAIL marker
+# path above is not coupled to the mount-content check.
+if payload_mode == 'http' and command and command != 'true':
+    first_token = command.split()[0].rsplit('/', 1)[-1]
+    if first_token:
+        check_done = b'__QNX_PAYLOAD_CHECK_DONE__'
+        chk = (
+            f'cd {q(guest_payload_dir)} && '
+            f'[ -f ./{q(first_token)} ] && echo "QNX_SETUP_OK=payload-{q(first_token)}" '
+            f'|| echo "QNX_SETUP_FAIL=payload-missing-{q(first_token)}"; '
+            f'echo {check_done.decode()}'
+        )
+        send_line(sock, 'stty -echo')
+        wait_prompt(sock, timeout=5)
+        send_line(sock, chk)
+        captured = wait_until_marker(sock, check_done, timeout=15)
+        send_line(sock, 'stty echo')
+        wait_prompt(sock, timeout=5)
+        if captured is None or b'QNX_SETUP_FAIL=' in captured:
+            raise RuntimeError(
+                f'qnx_run.sh: payload at {guest_payload_dir} does not contain '
+                f'./{first_token} (image build skipped it or wrong src)'
+            )
+        wait_prompt(sock, timeout=5)
+
 for line in env_lines:
     send_line(sock, line)
     time.sleep(0.05)
@@ -862,4 +1238,8 @@ if [[ "$KEEP_QEMU" == 1 || -z "$QNX_CMD" ]]; then
     echo "GUI tool: ./cef/tools/qnx_gui.py --socket $QNX_QMP_SOCK --json screenshot --output out/qnx_release/gui.png"
   fi
   echo "Stop QEMU: kill $QEMU_PID"
+  if [[ -n "${HTTP_SERVER_PID:-}" ]]; then
+    echo "Payload HTTP server: PID=$HTTP_SERVER_PID port=$HTTP_PAYLOAD_PORT"
+    echo "Stop payload server: kill $HTTP_SERVER_PID"
+  fi
 fi

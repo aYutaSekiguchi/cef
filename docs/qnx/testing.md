@@ -9,24 +9,34 @@
 
 ## Recommended flow
 
-`cef/tools/qnx_run_test.sh` is a module dispatcher.  Recognized module flags
+`cef/tools/qnx_run_test.sh` remains the legacy TAP+NFS module dispatcher. Recognized module flags
 are `--base`, `--ceftests`, `--v8`, `--swiftshader`, `--angle`, `--all`, and
 `--list`.  If no module flag is provided, the runner defaults to `--base` for
 backward compatibility.
 
-### 1. Prepare host networking and NFS
+### 1. Rootless QEMU setup (default)
 
 ```bash
 cd <CHROMIUM_SRC_ROOT>
-sudo ./cef/tools/qnx_setup_env.sh
+./cef/tools/qnx_run.sh -- ./base_unittests --gtest_filter=ProcessTest.Create
 ```
 
-This prepares the host-side requirements used by the QEMU runner, including `tap0`, NFS export support, IPv4 forwarding, and idempotent TAP NAT/FORWARD rules. The forwarding flag and firewall rules are runtime state; rerun this command after a host reboot or firewall reload.
+`qnx_run.sh` now uses QEMU's native `passt` backend and an unprivileged local
+HTTP server. It packages the requested binary (or the `cefsimple` runtime
+manifest), the guest downloads it through passt, and extracts it under
+`/data/qnx_payload`. No TAP device, NFS export, forwarding rule, or `sudo` is
+required. Install the host `passt` package and ensure the user can access KVM.
+
+The old TAP+NFS path remains available explicitly:
+
+```bash
+sudo ./cef/tools/qnx_setup_env.sh
+./cef/tools/qnx_run.sh --net-backend tap --payload-mode nfs -- ./base_unittests
+```
 
 ### Guest DNS and external network
 
-The runner uses TAP networking rather than QEMU user networking. After
-`qnx_setup_env.sh` has run, `qnx_run.sh` and `qnx_run_test.sh` automatically
+The rootless runner uses passt networking. `qnx_run.sh` automatically
 select the first non-loopback DNS server reported by `resolvectl`. Override
 that choice when required by the host network or VPN:
 
@@ -46,12 +56,11 @@ Before diagnosing Chromium, verify the independent network layers:
 ```bash
 ./cef/tools/qnx_run.sh --timeout 30 -- \
   'ifconfig vtnet0; netstat -rn; cat /etc/resolv.conf; \
-   ping -c1 -W2 10.0.2.1; ping -c1 -W2 8.8.8.8; \
+   ping -c1 -W2 192.168.0.1; ping -c1 -W2 8.8.8.8; \
    timeout 15 getent hosts google.com'
 ```
 
-`10.0.2.1` tests the TAP link, the literal external address tests host
-forwarding/NAT, and `getent` tests the QNX resolver path. The QNX image does
+`192.168.0.1` is passt's default guest-visible host/gateway address. The QNX image does
 not contain a guest `timeout` utility; bound application runs with the
 runner's host-side `--timeout` option instead of prefixing the guest command
 with `timeout`.
@@ -84,7 +93,7 @@ Base broad run:
 
 ```bash
 cd <CHROMIUM_SRC_ROOT>
-./cef/tools/qnx_run_test.sh --base --timeout 7200 --kill-existing "*"
+./cef/tools/qnx_run.sh --timeout 7200 -- ./base_unittests
 ```
 
 Base focused run:
