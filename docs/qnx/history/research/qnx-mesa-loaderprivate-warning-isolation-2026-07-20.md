@@ -58,16 +58,19 @@ Mesa honors `EGL_LOG_LEVEL=fatal`. With that environment variable:
 - `cefsimple` loaded `about:blank` (`OnLoadEnd`, status 0 and `loading=0`);
 - `cefsimple` warning count was 0.
 
-Use:
+`qnx_run.sh` now applies this setting by default. Use:
 
 ```sh
 ./tools/qnx_run.sh --virgl --preload-system-egl \
-  --env EGL_LOG_LEVEL=fatal -- \
+  -- \
   ./cefsimple --ozone-platform=qnx --use-gl=egl --use-native --no-sandbox
 ```
 
 This suppresses every Mesa EGL warning, not only this message. It is suitable
-for keeping routine runtime logs readable, but diagnostic runs should omit it.
+for keeping routine runtime logs readable. Pass `--show-egl-warnings` to
+restore Mesa's warning-level output for a
+diagnostic run. An explicit `--env EGL_LOG_LEVEL=<level>` remains available as
+an advanced override.
 
 ## Evidence
 
@@ -85,3 +88,7 @@ for keeping routine runtime logs readable, but diagnostic runs should omit it.
   `out/qnx_release/qnx_run_20260720_192900_qnx_dmabuf_export_only_probe.log.serial`
 - `cefsimple` about:blank load plus suppression, no warning:
   `out/qnx_release/qnx_run_20260720_193256_cefsimple.log.serial`
+- runner default after making suppression automatic, no warning:
+  `out/qnx_release/qnx_run_20260720_210545_qnx_dmabuf_export_only_probe.log.serial`
+- runner `--show-egl-warnings`, one warning restored:
+  `out/qnx_release/qnx_run_20260720_210620_qnx_dmabuf_export_only_probe.log.serial`

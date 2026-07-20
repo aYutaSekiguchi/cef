@@ -55,6 +55,9 @@ For a GUI application started in the guest and left running:
   --ozone-platform=qnx --no-sandbox
 ```
 
+Mesa EGL warnings are suppressed by default. Add `--show-egl-warnings` when
+collecting graphics-provider diagnostics.
+
 `--gui` is shorthand for `--qemu-graphics virgl --with-input`. The existing
 render-only and headless paths are unchanged. The runner prints the QMP socket
 path and the serial/app log paths.

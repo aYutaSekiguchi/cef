@@ -68,6 +68,19 @@ QNX system EGL implementation for a bounded runtime check:
 This is equivalent to `--env LD_PRELOAD=/usr/lib/libEGL.so.1`. Do not combine
 the two forms; the runner rejects conflicting `LD_PRELOAD` configuration.
 
+`qnx_run.sh` sets `EGL_LOG_LEVEL=fatal` by default because the QNX Mesa EGL
+provider otherwise repeats its loader-private cleanup warning for every image.
+Normal image destruction is unchanged. To include Mesa EGL warnings in a
+debugging run, pass `--show-egl-warnings`:
+
+```bash
+./cef/tools/qnx_run.sh --virgl --show-egl-warnings -- \
+  ./qnx_dmabuf_export_only_probe
+```
+
+An explicit `--env EGL_LOG_LEVEL=<level>` overrides the default. Do not combine
+that override with `--show-egl-warnings`.
+
 ## Module overview
 
 | Flag | Binary | Strategy | Notes |

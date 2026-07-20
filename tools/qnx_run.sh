@@ -19,6 +19,7 @@ KEEP_QEMU=0
 MOUNT_ONLY=0
 KILL_EXISTING=0
 PRELOAD_SYSTEM_EGL=0
+SHOW_EGL_WARNINGS=0
 QEMU_GRAPHICS="${QEMU_GRAPHICS:-headless}"
 QEMU_DISPLAY_BACKEND="${QEMU_DISPLAY_BACKEND:-gtk}"
 GUI_MODE=0
@@ -101,6 +102,8 @@ Options:
   --gui                Alias for virgl + --with-input.  Use with
                        --detach/--keep-qemu for agent-driven GUI tests.
   --preload-system-egl Preload QNX system EGL (/usr/lib/libEGL.so.1)
+  --show-egl-warnings Show Mesa EGL warning messages for debugging
+                       (default: suppress warnings with EGL_LOG_LEVEL=fatal)
   --env NAME=VALUE     Extra guest environment variable (may repeat)
   --dns-server IP      Guest resolver address; defaults to host DNS discovery
                        (non-loopback IPv4/IPv6 literal). Also used as the
@@ -260,6 +263,10 @@ while [[ $# -gt 0 ]]; do
       PRELOAD_SYSTEM_EGL=1
       shift
       ;;
+    --show-egl-warnings)
+      SHOW_EGL_WARNINGS=1
+      shift
+      ;;
     --with-input)
       WITH_INPUT=1
       shift
@@ -404,6 +411,25 @@ if [[ "$PRELOAD_SYSTEM_EGL" == 1 ]]; then
     fi
   done
   EXTRA_ENV+=("LD_PRELOAD=/usr/lib/libEGL.so.1")
+fi
+
+# QNX Mesa emits a warning for every loader-private EGLImage state it cleans
+# up. Keep routine logs readable by default while retaining an explicit debug
+# mode. An explicit --env EGL_LOG_LEVEL=... remains the advanced override.
+HAS_EGL_LOG_LEVEL=0
+for envvar in "${EXTRA_ENV[@]}"; do
+  if [[ "$envvar" == EGL_LOG_LEVEL=* ]]; then
+    HAS_EGL_LOG_LEVEL=1
+  fi
+done
+if [[ "$SHOW_EGL_WARNINGS" == 1 && "$HAS_EGL_LOG_LEVEL" == 1 ]]; then
+  echo "ERROR: --show-egl-warnings cannot be combined with --env EGL_LOG_LEVEL=..." >&2
+  exit 2
+fi
+if [[ "$SHOW_EGL_WARNINGS" == 1 ]]; then
+  EXTRA_ENV+=("EGL_LOG_LEVEL=warning")
+elif [[ "$HAS_EGL_LOG_LEVEL" == 0 ]]; then
+  EXTRA_ENV+=("EGL_LOG_LEVEL=fatal")
 fi
 
 # --detach requires a command; --qconn-port requires --detach
