@@ -561,12 +561,20 @@ rm -f "$HOST_LOG" "$BOOT_LOG" "$SERIAL_LOG"
 # Prefer the basename of the first command token for CHROME_EXE_PATH, but
 # allow callers to override via --env CHROME_EXE_PATH=...
 GUEST_MAIN_BINARY="base_unittests"
+VERIFY_HTTP_PAYLOAD_BINARY=0
 if [[ -n "$QNX_CMD" ]]; then
   first_token="${QNX_CMD%% *}"
   first_token="${first_token%%;*}"
   first_token="${first_token##*/}"
   if [[ -n "$first_token" ]]; then
     GUEST_MAIN_BINARY="$first_token"
+    # Only preflight commands expected to come from the payload.  Explicit
+    # manifest users may run guest-provided commands such as ifconfig/curl;
+    # those must be resolved by the guest PATH, not found in the archive.
+    if [[ "$PAYLOAD_MODE" == http && ( -e "$HTTP_PAYLOAD_SRC/$first_token" ||
+          ( "$HTTP_PAYLOAD_MANIFEST" == cefsimple && "$first_token" == cefsimple ) ) ]]; then
+      VERIFY_HTTP_PAYLOAD_BINARY=1
+    fi
   fi
 fi
 
@@ -744,6 +752,7 @@ export QNX_SERIAL_LOG="$SERIAL_LOG"
 export QNX_KEEP_QEMU="$KEEP_QEMU"
 export QNX_GUEST_BUILD_DIR="$GUEST_BUILD_DIR"
 export QNX_GUEST_MAIN_BINARY="$GUEST_MAIN_BINARY"
+export QNX_VERIFY_HTTP_PAYLOAD_BINARY="$VERIFY_HTTP_PAYLOAD_BINARY"
 export QNX_EXTRA_ENV="${EXTRA_ENV[*]:+${EXTRA_ENV[*]}}"
 export QNX_DETACH="$DETACH"
 export QNX_QCONN_PORT="$QCONN_PORT"
@@ -902,6 +911,10 @@ if dns_server:
     )
 
 env_lines = [
+    # Accept both `cefsimple` and `./cefsimple`.  Payload auto-selection
+    # already treats those spellings identically, so command lookup must do
+    # the same after the archive is extracted (and in legacy NFS mode).
+    f'export PATH={env_setup_root if payload_mode == "http" else guest_build_dir}:$PATH',
     f'export LD_LIBRARY_PATH={env_setup_root if payload_mode == "http" else guest_build_dir}',
     f'export CHROME_EXE_PATH={env_setup_root if payload_mode == "http" else guest_build_dir}/{guest_main_binary}',
     f'export CR_SOURCE_ROOT={env_setup_root if payload_mode == "http" else "/mnt/nfs"}',
@@ -1056,13 +1069,14 @@ if setup_lines:
 # In http mode, verify the extracted payload contains the command binary.
 # We add this as a separate single-shot command so the FAIL marker
 # path above is not coupled to the mount-content check.
-if payload_mode == 'http' and command and command != 'true':
+if (payload_mode == 'http' and command and command != 'true' and
+        os.environ.get('QNX_VERIFY_HTTP_PAYLOAD_BINARY', '0') == '1'):
     first_token = command.split()[0].rsplit('/', 1)[-1]
     if first_token:
         check_done = b'__QNX_PAYLOAD_CHECK_DONE__'
         chk = (
             f'cd {q(guest_payload_dir)} && '
-            f'[ -f ./{q(first_token)} ] && echo "QNX_SETUP_OK=payload-{q(first_token)}" '
+            f'[ -x ./{q(first_token)} ] && echo "QNX_SETUP_OK=payload-{q(first_token)}" '
             f'|| echo "QNX_SETUP_FAIL=payload-missing-{q(first_token)}"; '
             f'echo {check_done.decode()}'
         )
@@ -1075,7 +1089,8 @@ if payload_mode == 'http' and command and command != 'true':
         if captured is None or b'QNX_SETUP_FAIL=' in captured:
             raise RuntimeError(
                 f'qnx_run.sh: payload at {guest_payload_dir} does not contain '
-                f'./{first_token} (image build skipped it or wrong src)'
+                f'./{first_token} as an executable (image build skipped it, '
+                'wrong src, or executable mode was lost)'
             )
         wait_prompt(sock, timeout=5)
 
