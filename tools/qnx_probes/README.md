@@ -93,6 +93,24 @@ qcc -Wall -Wextra -Vgcc_ntox86_64 \
 ./tools/qnx_run.sh --virgl --kill-existing -- ./qnx_dmabuf_export_only_probe
 ```
 
+The export-only probe also has bounded cleanup diagnostics for the QNX Mesa
+loader warning. These deliberately leak resources and are for one-shot process
+isolation only:
+
+```sh
+./tools/qnx_run.sh --virgl --kill-existing -- \
+  ./qnx_dmabuf_export_only_probe --init-only
+./tools/qnx_run.sh --virgl --kill-existing -- \
+  ./qnx_dmabuf_export_only_probe --skip-export
+./tools/qnx_run.sh --virgl --kill-existing -- \
+  ./qnx_dmabuf_export_only_probe --skip-destroy-image
+./tools/qnx_run.sh --virgl --kill-existing -- \
+  ./qnx_dmabuf_export_only_probe --skip-destroy-image --skip-egl-terminate
+```
+
+Use `--env EGL_LOG_LEVEL=fatal` to verify Mesa warning suppression without
+skipping normal EGLImage destruction or `eglTerminate`.
+
 ## Phase 1A build/run (reference)
 
 ```sh
@@ -101,6 +119,27 @@ source ../out/qnx_release/qnx_env.sh
 qcc -Vgcc_ntox86_64 -o ../out/qnx_release/qnx_egl_extension_probe \
   tools/qnx_probes/qnx_egl_extension_probe.c -lscreen -lEGL -lGLESv2
 ./tools/qnx_run.sh --virgl -- ./qnx_egl_extension_probe
+```
+
+## QNX Screen EGL platform comparison
+
+`qnx_screen_egl_window_probe` can initialize the same Screen window, EGL
+surface, GLES2 context, draw, swap, and cleanup sequence through either the
+legacy default-display path or the explicit QNX Screen platform path used by
+the qnx-ports Weston backend. Run the two modes in separate guest processes:
+
+```sh
+source ../out/qnx_release/qnx_env.sh
+export PATH="$QNX_HOST/usr/bin:$PATH"
+qcc -Wall -Wextra -Vgcc_ntox86_64 \
+  -o ../out/qnx_release/qnx_screen_egl_window_probe \
+  tools/qnx_probes/qnx_screen_egl_window_probe.c \
+  -lscreen -lEGL -lGLESv2
+
+./tools/qnx_run.sh --virgl --kill-existing -- \
+  ./qnx_screen_egl_window_probe
+./tools/qnx_run.sh --virgl --kill-existing -- \
+  ./qnx_screen_egl_window_probe --platform-screen
 ```
 
 ## Phase 1B SCM_RIGHTS build/run (reference; already validated)

@@ -30,8 +30,10 @@
  *       tools/qnx_probes/qnx_screen_egl_window_probe.c \
  *       -lscreen -lEGL -lGLESv2
  *
- * Run:
+ * Run (compare the legacy and explicit QNX Screen platform paths):
  *   ./tools/qnx_run.sh --virgl --kill-existing -- ./qnx_screen_egl_window_probe
+ *   ./tools/qnx_run.sh --virgl --kill-existing -- \
+ *       ./qnx_screen_egl_window_probe --platform-screen
  *
  * This probe is standalone — no Chromium, no GN, no Ozone backend.
  */
@@ -134,8 +136,16 @@ static const char *screen_err_str(int rc) {
 /* ============================================================================
  * Main
  * ============================================================================ */
-int main(void) {
+int main(int argc, char **argv) {
     int exit_code = 1;
+    int use_platform_screen = 0;
+
+    if (argc == 2 && strcmp(argv[1], "--platform-screen") == 0) {
+        use_platform_screen = 1;
+    } else if (argc != 1) {
+        fprintf(stderr, "Usage: %s [--platform-screen]\n", argv[0]);
+        return 2;
+    }
 
     printf("\n");
     printf("================================================================================\n");
@@ -145,12 +155,35 @@ int main(void) {
     printf("================================================================================\n\n");
 
     /* -------------------------------------------------------------------------
-     * Phase 1: EGL initialization (use EGL_DEFAULT_DISPLAY for portability)
+     * Phase 1: EGL initialization.  The explicit path mirrors the qnx-ports
+     * Weston backend: EGL_PLATFORM_SCREEN_QNX plus EGL_DEFAULT_DISPLAY as the
+     * native display.  Keep each path in a separate process when comparing.
      * -------------------------------------------------------------------------- */
     printf("=== Phase 1: EGL initialization ===\n");
-    EGLDisplay egl_dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    EGLDisplay egl_dpy = EGL_NO_DISPLAY;
+    const char *display_method = "eglGetDisplay(EGL_DEFAULT_DISPLAY)";
+
+    if (use_platform_screen) {
+        PFNEGLGETPLATFORMDISPLAYEXTPROC get_platform_display =
+            (PFNEGLGETPLATFORMDISPLAYEXTPROC)
+                eglGetProcAddress("eglGetPlatformDisplayEXT");
+        display_method =
+            "eglGetPlatformDisplayEXT(EGL_PLATFORM_SCREEN_QNX, "
+            "EGL_DEFAULT_DISPLAY)";
+        if (get_platform_display == NULL) {
+            fprintf(stderr,
+                    "[FATAL] eglGetPlatformDisplayEXT is not available\n");
+            return 2;
+        }
+        egl_dpy = get_platform_display(
+            EGL_PLATFORM_SCREEN_QNX, EGL_DEFAULT_DISPLAY, NULL);
+    } else {
+        egl_dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    }
     if (egl_dpy == EGL_NO_DISPLAY) {
-        fprintf(stderr, "[FATAL] Cannot get EGLDisplay\n");
+        EGLint err = eglGetError();
+        fprintf(stderr, "[FATAL] %s failed: 0x%x (%s)\n",
+                display_method, err, egl_err_name(err));
         return 2;
     }
 
@@ -160,6 +193,8 @@ int main(void) {
                 eglGetError(), egl_err_name(eglGetError()));
         return 2;
     }
+    printf("  Display method  = %s\n", display_method);
+    printf("  EGLDisplay      = %p\n", (void*)egl_dpy);
     printf("  EGL %d.%d initialized\n", maj, min);
     printf("  EGL_VENDOR      = %s\n",
            eglQueryString(egl_dpy, EGL_VENDOR)   ? : "(null)");

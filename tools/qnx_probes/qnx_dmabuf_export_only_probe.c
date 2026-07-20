@@ -147,6 +147,10 @@ static int s_has_khr_surfaceless_context          = 0;
 
 /* ---- Command-line flags ---- */
 static int s_allow_pbuffer_risk = 0;
+static int s_skip_destroy_image = 0;
+static int s_skip_egl_terminate = 0;
+static int s_init_only = 0;
+static int s_skip_export = 0;
 
 /* ---- Signal guard for eglCreateImageKHR crash detection ---- */
 static sigjmp_buf s_jump_buf;
@@ -563,9 +567,23 @@ int main(int argc, char *argv[]) {
             s_allow_pbuffer_risk = 1;
             printf("[SETUP] --allow-pbuffer-risk: Path B (pbuffer fallback) is ENABLED.\n");
             printf("[SETUP] WARNING: Path B is NOT authorized by the Phase 1B plan.\n");
+        } else if (strcmp(argv[i], "--skip-destroy-image") == 0) {
+            s_skip_destroy_image = 1;
+            printf("[SETUP] Diagnostic: eglDestroyImageKHR will be skipped.\n");
+        } else if (strcmp(argv[i], "--skip-egl-terminate") == 0) {
+            s_skip_egl_terminate = 1;
+            printf("[SETUP] Diagnostic: eglTerminate will be skipped.\n");
+        } else if (strcmp(argv[i], "--init-only") == 0) {
+            s_init_only = 1;
+            printf("[SETUP] Diagnostic: stop after EGL initialization.\n");
+        } else if (strcmp(argv[i], "--skip-export") == 0) {
+            s_skip_export = 1;
+            printf("[SETUP] Diagnostic: create the DRM image without exporting it.\n");
         } else if (strcmp(argv[i], "--help") == 0 ||
                    strcmp(argv[i], "-h") == 0) {
-            printf("Usage: %s [--allow-pbuffer-risk]\n", argv[0]);
+            printf("Usage: %s [--allow-pbuffer-risk] [--init-only] "
+                   "[--skip-export] [--skip-destroy-image] "
+                   "[--skip-egl-terminate]\n", argv[0]);
             printf("  --allow-pbuffer-risk  Enable Path B (EGL_GL_TEXTURE_2D_KHR)\n");
             printf("                        NOT authorized by Phase 1B plan.\n");
             return 0;
@@ -711,12 +729,23 @@ int main(int argc, char *argv[]) {
     const char *source_label = NULL;
     int export_succeeded = 0;
 
+    if (s_init_only) {
+        printf("[DIAGNOSTIC] init-only: skipping image creation and export.\n");
+        exit_code = 0;
+        goto cleanup_and_exit;
+    }
+
     /* ---- Path A: EGL_MESA_drm_image (preferred, no GL) ---- */
     if (s_has_egl_mesa_drm_image && s_eglCreateDRMImageMESA) {
         printf("--- Path A: EGL_MESA_drm_image ---\n");
         if (try_path_a(egl_dpy, &egl_img)) {
             source_label = "EGL_MESA_drm_image";
-            export_succeeded = do_export_and_report(egl_dpy, egl_img);
+            if (s_skip_export) {
+                printf("[DIAGNOSTIC] skip-export: DRM image created; export skipped.\n");
+                export_succeeded = 1;
+            } else {
+                export_succeeded = do_export_and_report(egl_dpy, egl_img);
+            }
         }
     }
 
@@ -740,7 +769,11 @@ int main(int argc, char *argv[]) {
      * Final report
      * -------------------------------------------------------------------------- */
     printf("\n=== Final report ===\n");
-    if (export_succeeded) {
+    if (export_succeeded && s_skip_export) {
+        printf("  RESULT: DRM EGLImage CREATION SUCCEEDED (export skipped)\n");
+        printf("  Image source: %s\n", source_label);
+        exit_code = 0;
+    } else if (export_succeeded) {
         printf("  RESULT: TRUE DMAbuf EXPORT SUCCEEDED\n");
         printf("  Export source: %s\n", source_label);
         printf("  Milestone: eglExportDMABUFImageMESA returned >= 1 valid DMAbuf fd.\n");
@@ -761,9 +794,18 @@ int main(int argc, char *argv[]) {
     printf("\n");
 
 cleanup_and_exit:
-    if (s_eglDestroyImageKHR && egl_img != EGL_NO_IMAGE_KHR)
+    printf("[CLEANUP] before eglDestroyImageKHR: image=%p skip=%d\n",
+           (void*)(uintptr_t)egl_img, s_skip_destroy_image);
+    fflush(stdout);
+    if (!s_skip_destroy_image && s_eglDestroyImageKHR &&
+        egl_img != EGL_NO_IMAGE_KHR)
         s_eglDestroyImageKHR(egl_dpy, egl_img);
-    eglTerminate(egl_dpy);
+    printf("[CLEANUP] after eglDestroyImageKHR\n");
+    fflush(stdout);
+    if (!s_skip_egl_terminate)
+        eglTerminate(egl_dpy);
+    printf("[CLEANUP] after eglTerminate: skip=%d\n", s_skip_egl_terminate);
+    fflush(stdout);
 
     printf("\n================================================================================\n");
     printf("  Phase 1B-exportonly probe complete. exit=%d\n", exit_code);
