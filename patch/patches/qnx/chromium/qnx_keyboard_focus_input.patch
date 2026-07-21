@@ -1,0 +1,317 @@
+diff --git ui/ozone/platform/qnx/qnx_platform_event_source.cc ui/ozone/platform/qnx/qnx_platform_event_source.cc
+index baea7e2e21e292f0722bca4b1a7b9dd4f66bce15..45d68d8b4c2e1ce2a0ad393bccb79f9d496f57c2 100644
+--- ui/ozone/platform/qnx/qnx_platform_event_source.cc
++++ ui/ozone/platform/qnx/qnx_platform_event_source.cc
+@@ -18,6 +18,7 @@
+ #include <errno.h>
+ #include <iomanip>
+ #include <string.h>
++#include <sys/keycodes.h>
+ 
+ #include "base/location.h"
+ #include "base/logging.h"
+@@ -27,6 +28,8 @@
+ #include "ui/events/event.h"
+ #include "ui/events/event_constants.h"
+ #include "ui/events/event_utils.h"
++#include "ui/events/keycodes/dom/keycode_converter.h"
++#include "ui/events/keycodes/keyboard_code_conversion.h"
+ #include "ui/events/ozone/events_ozone.h"
+ #include "ui/gfx/geometry/point_f.h"
+ #include "ui/gfx/geometry/rect.h"
+@@ -48,6 +51,25 @@ void LogScreenError(const char* operation, int error_number) {
+              << SafeStrError(error_number) << ")";
+ }
+ 
++int EventFlagsFromQnxModifiers(int modifiers) {
++  int flags = EF_NONE;
++  if (modifiers & (KEYMOD_SHIFT | KEYMOD_SHIFT_LOCK))
++    flags |= EF_SHIFT_DOWN;
++  if (modifiers & (KEYMOD_CTRL | KEYMOD_CTRL_LOCK))
++    flags |= EF_CONTROL_DOWN;
++  if (modifiers & (KEYMOD_ALT | KEYMOD_ALT_LOCK))
++    flags |= EF_ALT_DOWN;
++  if (modifiers & (KEYMOD_ALTGR | KEYMOD_ALTGR_LOCK))
++    flags |= EF_ALTGR_DOWN;
++  if (modifiers & KEYMOD_CAPS_LOCK)
++    flags |= EF_CAPS_LOCK_ON;
++  if (modifiers & KEYMOD_NUM_LOCK)
++    flags |= EF_NUM_LOCK_ON;
++  if (modifiers & KEYMOD_SCROLL_LOCK)
++    flags |= EF_SCROLL_LOCK_ON;
++  return flags;
++}
++
+ // Short timeout for screen_get_event() in nanoseconds.
+ // 16ms (~60 fps) balances responsiveness with CPU cost.
+ // This is the minimum polling granularity; events arriving between ticks
+@@ -208,6 +230,15 @@ bool QnxPlatformEventSource::IsRunning() const {
+   return weak_factory_.HasWeakPtrs();
+ }
+ 
++void QnxPlatformEventSource::SetCaptureWindow(QnxWindow* window) {
++  capture_window_ = window;
++}
++
++void QnxPlatformEventSource::ClearCaptureWindow(QnxWindow* window) {
++  if (capture_window_ == window)
++    capture_window_ = nullptr;
++}
++
+ void QnxPlatformEventSource::OnTimerTick() {
+   // QNX_INPUT: one-shot Release-visible marker. Confirms that the
+   // polling task is actually running on the UI thread without
+@@ -325,15 +356,63 @@ bool QnxPlatformEventSource::TranslateScreenEvent() {
+     }
+ 
+     case SCREEN_EVENT_KEYBOARD: {
+-      // Phase 4: keyboard events are logged but not yet dispatched.
+-      // Full keyboard translation requires KeyboardLayoutEngine and IME wiring.
+-      int flags = 0;
++      int screen_flags = 0;
++      int scan = 0;
+       int sym = 0;
+-      screen_get_event_property_iv(screen_event_, SCREEN_PROPERTY_FLAGS, &flags);
++      int modifiers = 0;
++      screen_get_event_property_iv(screen_event_, SCREEN_PROPERTY_FLAGS,
++                                   &screen_flags);
++      screen_get_event_property_iv(screen_event_, SCREEN_PROPERTY_SCAN, &scan);
+       screen_get_event_property_iv(screen_event_, SCREEN_PROPERTY_SYM, &sym);
+-      QNX_GPU_TRACE_LOG(INFO) << "QnxPlatformEventSource: KEYBOARD sym=0x" << std::hex << sym
+-                 << " flags=0x" << flags << std::dec;
+-      // TODO(qnx): Translate to ui::KeyEvent and dispatch.
++      screen_get_event_property_iv(screen_event_, SCREEN_PROPERTY_MODIFIERS,
++                                   &modifiers);
++      QNX_GPU_TRACE_LOG(INFO) << "QnxPlatformEventSource: KEYBOARD scan=0x"
++                 << std::hex << scan << " sym=0x" << sym << " flags=0x"
++                 << screen_flags << " modifiers=0x" << modifiers << std::dec;
++
++      if (!win || !window_manager_ ||
++          !(screen_flags & SCREEN_FLAG_SCAN_VALID)) {
++        break;
++      }
++      QnxWindow* window = window_manager_->LookupWindowByScreenWin(win);
++      if (!window) {
++        VLOG(1) << "QnxPlatformEventSource: KEYBOARD for unknown screen_win="
++                << win;
++        break;
++      }
++
++      DomCode dom_code = KeycodeConverter::NativeKeycodeToDomCode(scan);
++      if (dom_code == DomCode::NONE) {
++        VLOG(1) << "QnxPlatformEventSource: unmapped keyboard scan=0x"
++                << std::hex << scan << std::dec;
++        break;
++      }
++      int event_flags = EventFlagsFromQnxModifiers(modifiers);
++      if (screen_flags & SCREEN_FLAG_KEY_REPEAT)
++        event_flags |= EF_IS_REPEAT;
++      DomKey dom_key;
++      KeyboardCode key_code;
++      if (!DomCodeToUsLayoutDomKey(dom_code, event_flags, &dom_key,
++                                   &key_code)) {
++        VLOG(1) << "QnxPlatformEventSource: no US-layout mapping for scan=0x"
++                << std::hex << scan << std::dec;
++        break;
++      }
++
++      long long timestamp_ms = 0;
++      screen_get_event_property_llv(screen_event_, SCREEN_PROPERTY_TIMESTAMP,
++                                    &timestamp_ms);
++      base::TimeTicks timestamp =
++          timestamp_ms > 0
++              ? base::TimeTicks::UnixEpoch() +
++                    base::Milliseconds(static_cast<int64_t>(timestamp_ms))
++              : base::TimeTicks::Now();
++      KeyEvent key_event((screen_flags & SCREEN_FLAG_KEY_DOWN)
++                             ? EventType::kKeyPressed
++                             : EventType::kKeyReleased,
++                         key_code, dom_code, event_flags, dom_key, timestamp);
++      Event::DispatcherApi(&key_event).set_target(window);
++      DispatchEvent(&key_event);
+       break;
+     }
+ 
+@@ -417,13 +496,8 @@ bool QnxPlatformEventSource::DispatchPointerEvent(screen_window_t win) {
+     QNX_GPU_TRACE_LOG(INFO) << "QNX_INPUT: first pointer event win=" << win;
+   }
+ 
+-  if (!window_manager_ || !win) {
+-    // No source window recorded by Screen; cannot resolve a target. This
+-    // typically means the event came from a non-window context (e.g. a
+-    // virtual device) and needs screen-point hit testing, which is out of
+-    // scope for the pointer MVP.
+-    VLOG(1) << "QnxPlatformEventSource: POINTER skipped (no source window="
+-            << win << " or no window_manager)";
++  if (!window_manager_) {
++    VLOG(1) << "QnxPlatformEventSource: POINTER skipped (no window_manager)";
+     return false;
+   }
+ 
+@@ -455,13 +529,15 @@ bool QnxPlatformEventSource::DispatchPointerEvent(screen_window_t win) {
+   VLOG(1) << "QNX_INPUT: POINTER win=" << win << " pos=(" << pos[0] << ","
+           << pos[1] << ") buttons=0x" << std::hex << buttons << std::dec;
+ 
+-  // Resolve the target QnxWindow. The Screen event's source window is the
+-  // browser-owned QnxWindow under the cursor.
+-  QnxWindow* window = window_manager_->LookupWindowByScreenWin(win);
++  // Screen may omit or change SCREEN_PROPERTY_WINDOW for the release that
++  // terminates capture. Keep routing to Chromium's press owner so Blink sees
++  // a balanced down/up pair and can synthesize DOM click.
++  QnxWindow* window = capture_window_;
++  if (!window && win)
++    window = window_manager_->LookupWindowByScreenWin(win);
+   if (!window) {
+-    LOG(WARNING) << "QnxPlatformEventSource: POINTER for unknown "
+-                    "screen_win="
+-                 << win << " pos=(" << pos[0] << "," << pos[1] << ")";
++    VLOG(1) << "QnxPlatformEventSource: POINTER has no target screen_win="
++            << win << " pos=(" << pos[0] << "," << pos[1] << ")";
+     return false;
+   }
+ 
+@@ -495,12 +571,12 @@ bool QnxPlatformEventSource::DispatchPointerEvent(screen_window_t win) {
+ 
+   bool any_dispatched = false;
+ 
+-  // Emit a move event whenever the position changes or any button changed
+-  // state (a press/release always implies a position update worth
+-  // recording). On the very first POINTER sample we also emit a move so
+-  // downstream targets start with a coherent cursor position.
++  // Emit moves only for an actual coordinate change (and the first sample).
++  // A button-only Screen sample is an edge, not movement. Synthesizing a move
++  // before release changes Aura's capture/mouse handlers before the paired
++  // release is dispatched and can strand Blink with only mousedown.
+   if (!has_pointer_state_ || pos[0] != last_pointer_x_ ||
+-      pos[1] != last_pointer_y_ || buttons != last_pointer_buttons_) {
++      pos[1] != last_pointer_y_) {
+     MouseEvent move_event(EventType::kMouseMoved, location, root_location,
+                           timestamp, flags, /*changed_button_flags=*/0);
+     Event::DispatcherApi(&move_event).set_target(window);
+diff --git ui/ozone/platform/qnx/qnx_platform_event_source.h ui/ozone/platform/qnx/qnx_platform_event_source.h
+index 7e4bd22da44dd8d736662f0fbbc0d16943fa1df7..e0324c6b2e56ffb57f0d3cfaf47162ca2d0d337d 100644
+--- ui/ozone/platform/qnx/qnx_platform_event_source.h
++++ ui/ozone/platform/qnx/qnx_platform_event_source.h
+@@ -21,6 +21,7 @@
+ // and GPU producer input are deferred.
+ namespace ui {
+ 
++class QnxWindow;
+ class QnxWindowManager;
+ 
+ class COMPONENT_EXPORT(OZONE_BASE) QnxPlatformEventSource
+@@ -45,6 +46,9 @@ class COMPONENT_EXPORT(OZONE_BASE) QnxPlatformEventSource
+   // Returns true if polling is active.
+   bool IsRunning() const;
+ 
++  void SetCaptureWindow(QnxWindow* window);
++  void ClearCaptureWindow(QnxWindow* window);
++
+  protected:
+   // PlatformEventSource override: dispatch a native event to registered
+   // dispatchers. QNX Screen events are dispatched through this path.
+@@ -73,6 +77,7 @@ class COMPONENT_EXPORT(OZONE_BASE) QnxPlatformEventSource
+   // raw_ptr triggers a build error due to incomplete-type issues.
+   screen_context_t context_ = nullptr;
+   raw_ptr<QnxWindowManager> window_manager_;
++  raw_ptr<QnxWindow> capture_window_ = nullptr;
+ 
+   // Reused screen_event_t handle for polling. Allocated once at construction.
+   screen_event_t screen_event_ = nullptr;
+diff --git ui/ozone/platform/qnx/qnx_window.cc ui/ozone/platform/qnx/qnx_window.cc
+index 7ff0999ccb35af6aedc5aa3be5640ee0a007ac9b..e8fd50f6a1e53190d6e777fd3883b69d1e3dd8fe 100644
+--- ui/ozone/platform/qnx/qnx_window.cc
++++ ui/ozone/platform/qnx/qnx_window.cc
+@@ -20,6 +20,7 @@
+ #include "ui/events/event_target.h"
+ #include "ui/events/event_targeter.h"
+ #include "ui/events/event_target_iterator.h"
++#include "ui/events/ozone/events_ozone.h"
+ #include "ui/events/platform/platform_event_source.h"
+ #include "ui/ozone/platform/qnx/qnx_platform_event_source.h"
+ #include "ui/ozone/platform/qnx/qnx_screen_context.h"
+@@ -34,10 +35,11 @@ namespace {
+ constexpr int kScreenUsageFlags = SCREEN_USAGE_OPENGL_ES2;
+ 
+ // QNX Screen sensitivity values for input capture.
+-// SCREEN_SENSITIVITY_ALWAYS = 1 means the window receives input regardless
+-// of focus. SCREEN_SENSITIVITY_NO_FOCUS = 3 means no input.
++// SCREEN_SENSITIVITY_ALWAYS receives pointer input through transparent areas
++// while capture is active. Restore SCREEN_SENSITIVITY_TEST afterwards so a
++// pointer release can acquire focus and normal keyboard delivery can resume.
+ constexpr int kSensitivityCapture = SCREEN_SENSITIVITY_ALWAYS;
+-constexpr int kSensitivityRelease = SCREEN_SENSITIVITY_NO_FOCUS;
++constexpr int kSensitivityRelease = SCREEN_SENSITIVITY_TEST;
+ 
+ }  // namespace
+ 
+@@ -279,6 +281,8 @@ void QnxWindow::SetCapture() {
+     return;
+   }
+   capture_state_ = true;
++  if (QnxPlatformEventSource* source = QnxPlatformEventSource::GetInstance())
++    source->SetCaptureWindow(this);
+ }
+ 
+ void QnxWindow::ReleaseCapture() {
+@@ -291,6 +295,8 @@ void QnxWindow::ReleaseCapture() {
+     return;
+   }
+   capture_state_ = false;
++  if (QnxPlatformEventSource* source = QnxPlatformEventSource::GetInstance())
++    source->ClearCaptureWindow(this);
+ }
+ 
+ bool QnxWindow::HasCapture() const {
+@@ -411,7 +417,8 @@ bool QnxWindow::CanDispatchEvent(const PlatformEvent& event) {
+   can_dispatch_calls_++;
+   if (!event)
+     return false;
+-  if (!event->IsMouseEvent() || !CanAcceptEvent(*event)) {
++  if ((!event->IsMouseEvent() && !event->IsKeyEvent()) ||
++      !CanAcceptEvent(*event)) {
+     can_dispatch_reject_++;
+     if (can_dispatch_reject_marker_) {
+       can_dispatch_reject_marker_ = false;
+@@ -428,8 +435,9 @@ bool QnxWindow::CanDispatchEvent(const PlatformEvent& event) {
+     can_dispatch_accept_marker_ = false;
+     QNX_GPU_TRACE_LOG(INFO) << "QNX_INPUT: can_dispatch first accept widget=" << widget_;
+   }
+-  // Only pointer events go through this path in the pointer MVP. Touch /
+-  // wheel / keyboard / IME remain with their future handlers.
++  // Screen pointer and keyboard events are translated by the platform event
++  // source and targeted at the originating QnxWindow. Touch and IME remain
++  // with their future handlers.
+   return true;
+ }
+ 
+@@ -451,13 +459,18 @@ uint32_t QnxWindow::DispatchEvent(const PlatformEvent& event) {
+     }
+     return POST_DISPATCH_NONE;
+   }
+-  delegate_->DispatchEvent(e);
++  EventResult result = DispatchEventFromNativeUiEvent(
++      event, base::BindOnce(&PlatformWindowDelegate::DispatchEvent,
++                            base::Unretained(delegate_)));
+   delegate_dispatch_called_++;
+   if (delegate_dispatch_called_marker_) {
+     delegate_dispatch_called_marker_ = false;
+     QNX_GPU_TRACE_LOG(INFO) << "QNX_INPUT: delegate dispatched widget=" << widget_;
+   }
+-  return POST_DISPATCH_STOP_PROPAGATION;
++  if (result == ER_UNHANDLED)
++    return POST_DISPATCH_NONE;
++  return !!(result & ER_SKIPPED) ? POST_DISPATCH_PERFORM_DEFAULT
++                                : POST_DISPATCH_STOP_PROPAGATION;
+ }
+ 
+ // EventTarget:
+@@ -497,6 +510,7 @@ void QnxWindow::RegisterWithEventSource() {
+ 
+ void QnxWindow::UnregisterFromEventSource() {
+   if (QnxPlatformEventSource* source = QnxPlatformEventSource::GetInstance()) {
++    source->ClearCaptureWindow(this);
+     source->RemovePlatformEventDispatcher(this);
+   }
+ }
+

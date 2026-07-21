@@ -379,6 +379,11 @@ class QMPClient:
         up = {"type": "btn", "data": {"button": button, "down": False}}
         for index in range(2 if double else 1):
             self.input_send_event([down])
+            # Keep the button down long enough for the guest input stack to
+            # observe a distinct press before release. Sending two QMP
+            # commands back-to-back can be coalesced into a pointer move with
+            # the final (released) button mask and does not model a click.
+            time.sleep(delay)
             self.input_send_event([up])
             if double and index == 0:
                 time.sleep(delay)
