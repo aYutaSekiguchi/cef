@@ -1,0 +1,193 @@
+diff --git ui/ozone/platform/qnx/ozone_platform_qnx.cc ui/ozone/platform/qnx/ozone_platform_qnx.cc
+index 3b99e38ca5e4ec662e11bdcea048091ccea6e526..90216475e36c81216dc59d4dea4c91a108043d14 100644
+--- ui/ozone/platform/qnx/ozone_platform_qnx.cc
++++ ui/ozone/platform/qnx/ozone_platform_qnx.cc
+@@ -20,6 +20,7 @@
+ #include <utility>
+ 
+ #include "base/logging.h"
++#include "base/no_destructor.h"
+ #include "base/task/single_thread_task_runner.h"
+ #include "mojo/public/cpp/bindings/binder_map.h"
+ #include "ui/base/cursor/cursor_factory.h"
+@@ -108,6 +109,12 @@ class OzonePlatformQnxImpl : public OzonePlatform {
+     return nullptr;
+   }
+ 
++  const PlatformProperties& GetPlatformProperties() override {
++    static base::NoDestructor<OzonePlatform::PlatformProperties> properties;
++    properties->set_parent_for_non_top_level_windows = true;
++    return *properties;
++  }
++
+   std::unique_ptr<PlatformWindow> CreatePlatformWindow(
+       PlatformWindowDelegate* delegate,
+       PlatformWindowInitProperties properties) override {
+@@ -117,10 +124,13 @@ class OzonePlatformQnxImpl : public OzonePlatform {
+       return nullptr;
+     }
+     QNX_GPU_TRACE_LOG(INFO) << "[QNX-TRACE] OzonePlatformQnx::CreatePlatformWindow: "
+-              << "bounds=" << properties.bounds.ToString();
++              << "bounds=" << properties.bounds.ToString()
++              << " type=" << static_cast<int>(properties.type)
++              << " parent_widget=" << properties.parent_widget;
+     return std::make_unique<QnxWindow>(delegate, window_manager_.get(),
+                                        screen_context_.get(),
+-                                       properties.bounds);
++                                       properties.bounds,
++                                       properties.parent_widget);
+   }
+ 
+   std::unique_ptr<display::NativeDisplayDelegate> CreateNativeDisplayDelegate()
+diff --git ui/ozone/platform/qnx/qnx_window.cc ui/ozone/platform/qnx/qnx_window.cc
+index cda650921c952222aebe048a547485520e176947..83e910428ccaaba8f7a5f6f1821367a338721bfd 100644
+--- ui/ozone/platform/qnx/qnx_window.cc
++++ ui/ozone/platform/qnx/qnx_window.cc
+@@ -46,7 +46,8 @@ constexpr int kSensitivityRelease = SCREEN_SENSITIVITY_TEST;
+ QnxWindow::QnxWindow(PlatformWindowDelegate* delegate,
+                      QnxWindowManager* manager,
+                      QnxScreenContext* screen_context,
+-                     const gfx::Rect& bounds)
++                     const gfx::Rect& bounds,
++                     gfx::AcceleratedWidget parent_widget)
+     : delegate_(delegate),
+       manager_(manager),
+       screen_context_(screen_context),
+@@ -58,7 +59,8 @@ QnxWindow::QnxWindow(PlatformWindowDelegate* delegate,
+     return;
+   }
+ 
+-  if (!CreateScreenWindow(bounds)) {
++  QnxWindow* parent_window = manager_->GetWindow(parent_widget);
++  if (!CreateScreenWindow(bounds, parent_window)) {
+     LOG(ERROR) << "QnxWindow: CreateScreenWindow failed";
+     return;
+   }
+@@ -112,14 +114,29 @@ QnxWindow::~QnxWindow() {
+   }
+ }
+ 
+-bool QnxWindow::CreateScreenWindow(const gfx::Rect& bounds) {
++bool QnxWindow::CreateScreenWindow(const gfx::Rect& bounds,
++                                   QnxWindow* parent_window) {
+   // Step 1: Create the raw screen window.
+-  int rc = screen_create_window(&screen_win_, screen_context_->context());
++  const int screen_window_type =
++      parent_window ? SCREEN_CHILD_WINDOW : SCREEN_APPLICATION_WINDOW;
++  int rc = screen_create_window_type(&screen_win_, screen_context_->context(),
++                                     screen_window_type);
+   if (rc != 0) {
+-    PLOG(ERROR) << "QnxWindow: screen_create_window failed";
++    PLOG(ERROR) << "QnxWindow: screen_create_window_type failed";
+     return false;
+   }
+ 
++  if (parent_window) {
++    std::string group_name;
++    if (!parent_window->EnsureWindowGroup(&group_name) ||
++        screen_join_window_group(screen_win_, group_name.c_str()) != 0) {
++      PLOG(ERROR) << "QnxWindow: failed to join parent window group";
++      screen_destroy_window(screen_win_);
++      screen_win_ = nullptr;
++      return false;
++    }
++  }
++
+   // Step 2: Set window size (in pixels).
+   int size[2] = {bounds.width(), bounds.height()};
+   rc = screen_set_window_property_iv(screen_win_, SCREEN_PROPERTY_SIZE, size);
+@@ -131,7 +148,10 @@ bool QnxWindow::CreateScreenWindow(const gfx::Rect& bounds) {
+   }
+ 
+   // Step 3: Set window position.
+-  int pos[2] = {bounds.x(), bounds.y()};
++  gfx::Point position = bounds.origin();
++  if (parent_window)
++    position -= parent_window->bounds_.OffsetFromOrigin();
++  int pos[2] = {position.x(), position.y()};
+   rc = screen_set_window_property_iv(screen_win_, SCREEN_PROPERTY_POSITION, pos);
+   if (rc != 0) {
+     PLOG(WARNING) << "QnxWindow: screen_set SCREEN_PROPERTY_POSITION failed";
+@@ -186,6 +206,25 @@ bool QnxWindow::CreateScreenWindow(const gfx::Rect& bounds) {
+   return true;
+ }
+ 
++bool QnxWindow::EnsureWindowGroup(std::string* group_name) {
++  if (window_group_.empty()) {
++    if (screen_create_window_group(screen_win_, nullptr) != 0) {
++      PLOG(ERROR) << "QnxWindow: screen_create_window_group failed";
++      return false;
++    }
++    char generated_name[64] = {};
++    if (screen_get_window_property_cv(screen_win_, SCREEN_PROPERTY_GROUP,
++                                      sizeof(generated_name),
++                                      generated_name) != 0) {
++      PLOG(ERROR) << "QnxWindow: failed to read generated window group";
++      return false;
++    }
++    window_group_ = generated_name;
++  }
++  *group_name = window_group_;
++  return true;
++}
++
+ void QnxWindow::DestroyScreenWindow() {
+   if (screen_win_) {
+     screen_destroy_window(screen_win_);
+@@ -201,8 +240,10 @@ void QnxWindow::Show(bool inactive) {
+   int visible = 1;
+   screen_set_window_property_iv(screen_win_, SCREEN_PROPERTY_VISIBLE, &visible);
+   visible_ = true;
+-  // Notify delegate. Aura/WindowTreeHost uses OnActivationChanged.
+-  Activate();
++  // MenuHost uses ShowInactive() so opening a menu does not transfer
++  // activation away from its owner window.
++  if (!inactive)
++    Activate();
+ }
+ 
+ void QnxWindow::Hide() {
+diff --git ui/ozone/platform/qnx/qnx_window.h ui/ozone/platform/qnx/qnx_window.h
+index fc092078c7b4b0914f29d5d78ca8f0798116e4e4..1ec9f0b29c58e7a661157cf0b9d30b967d76f6a5 100644
+--- ui/ozone/platform/qnx/qnx_window.h
++++ ui/ozone/platform/qnx/qnx_window.h
+@@ -7,6 +7,7 @@
+ 
+ #include <optional>
+ #include <screen/screen.h>
++#include <string>
+ 
+ #include "base/memory/raw_ptr.h"
+ #include "ui/events/event_target.h"
+@@ -45,7 +46,8 @@ class QnxWindow : public PlatformWindow,
+   QnxWindow(PlatformWindowDelegate* delegate,
+             QnxWindowManager* manager,
+             QnxScreenContext* screen_context,
+-            const gfx::Rect& bounds);
++            const gfx::Rect& bounds,
++            gfx::AcceleratedWidget parent_widget);
+ 
+   QnxWindow(const QnxWindow&) = delete;
+   QnxWindow& operator=(const QnxWindow&) = delete;
+@@ -107,7 +109,12 @@ class QnxWindow : public PlatformWindow,
+   enum class ActivationState { kUnknown, kActive, kInactive };
+ 
+   // Create the underlying QNX Screen window.
+-  bool CreateScreenWindow(const gfx::Rect& bounds);
++  bool CreateScreenWindow(const gfx::Rect& bounds,
++                          QnxWindow* parent_window);
++
++  // Creates (once) the QNX Screen window group used by transient child
++  // windows and returns its generated name.
++  bool EnsureWindowGroup(std::string* group_name);
+ 
+   // Restore window bounds from saved restored_bounds_.
+   void RestoreWindowBounds();
+@@ -136,6 +143,7 @@ class QnxWindow : public PlatformWindow,
+ 
+   screen_window_t screen_win_ = nullptr;
+   gfx::AcceleratedWidget widget_ = gfx::kNullAcceleratedWidget;
++  std::string window_group_;
+ 
+   gfx::Rect bounds_;
+   bool visible_ = false;

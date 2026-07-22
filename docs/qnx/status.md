@@ -63,7 +63,7 @@ A fresh session should normally work in this order:
    - known follow-up area: `FrameHandlerTest` cross-origin ordering on QNX/OOP renderer paths
 4. **Continue sample/runtime validation as needed**
    - use the physical-input probe after QNX Screen, window-state, GPU-buffer, or input-routing changes
-   - investigate the remaining right-click/context-menu stop independently of the resolved display-coordinate issue
+   - right-click/context-menu windows are now parented QNX Screen child windows; retain repeated open/dismiss coverage when changing window or input routing
 5. **Keep durable ownership intact**
    - any fix must be captured in `cef/patch/...` or `cef/patch/qnx/chromium/new_files/...`
    - every patch file that should apply during bootstrap must be registered in `cef/patch/patch.cfg`

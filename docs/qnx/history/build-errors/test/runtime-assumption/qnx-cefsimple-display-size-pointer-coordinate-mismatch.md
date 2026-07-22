@@ -80,9 +80,10 @@ target hits using the `[QNX_DOM_PROBE]` prefix. It includes 48x48, 16x16, 8x8,
 and 4x4 targets, four edge targets, and 2-pixel strips for later regression
 checks.
 
-Right-click/context-menu handling can still stop or crash the process and was
-explicitly deferred. The probe prevents the default context menu so that this
-separate issue does not invalidate coordinate testing.
+The coordinate probe continues to prevent the default context menu so its
+small-target measurements remain isolated. The separate context-menu SIGSTOP
+was subsequently resolved by parenting menu windows through a QNX Screen
+window group; see the related context-menu note below.
 
 ## Files touched
 
@@ -100,3 +101,4 @@ separate issue does not invalidate coordinate testing.
 - `qnx-clean-build-pointer-events-stop-before-native-view-host.md`
 - `qnx-clean-build-black-uninitialized-test-frame.md`
 - `qnx-cefsimple-search-hascapture-trap.md`
+- `qnx-cefsimple-context-menu-unparented-window-sigstop.md`
