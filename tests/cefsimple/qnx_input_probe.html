@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QNX CEF Input Coordinate Probe</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      --major-grid: rgba(78, 166, 255, 0.28);
+      --minor-grid: rgba(78, 166, 255, 0.10);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background-color: #101419;
+      background-image:
+        linear-gradient(to right, var(--major-grid) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--major-grid) 1px, transparent 1px),
+        linear-gradient(to right, var(--minor-grid) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--minor-grid) 1px, transparent 1px);
+      background-size: 50px 50px, 50px 50px, 10px 10px, 10px 10px;
+      color: #e8f0f8;
+    }
+
+    #header {
+      position: fixed;
+      z-index: 20;
+      top: 8px;
+      left: 50%;
+      width: min(720px, calc(100vw - 120px));
+      transform: translateX(-50%);
+      padding: 8px 12px;
+      border: 1px solid #56738c;
+      border-radius: 6px;
+      background: rgba(10, 16, 22, 0.92);
+      text-align: center;
+      pointer-events: none;
+    }
+
+    #header h1 {
+      margin: 0 0 4px;
+      color: #7ed7ff;
+      font-size: 15px;
+    }
+
+    #metrics, #last-result {
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    #last-result {
+      min-height: 15px;
+      color: #ffe27a;
+      font-weight: 700;
+    }
+
+    .target {
+      position: fixed;
+      z-index: 10;
+      display: block;
+      margin: 0;
+      padding: 0;
+      border: 1px solid #fff;
+      border-radius: 0;
+      outline: 2px solid rgba(255, 209, 102, 0.65);
+      background: #ef476f;
+      box-shadow: 0 0 0 1px #000;
+      color: transparent;
+      cursor: crosshair;
+    }
+
+    .target:hover { background: #ffd166; }
+    .target:active { background: #06d6a0; }
+    .target.hit { animation: hit-flash 600ms ease-out; }
+
+    @keyframes hit-flash {
+      0% { box-shadow: 0 0 0 2px #fff, 0 0 18px 10px #06d6a0; }
+      100% { box-shadow: 0 0 0 1px #000; }
+    }
+
+    .target-label {
+      position: fixed;
+      z-index: 11;
+      padding: 1px 3px;
+      background: rgba(0, 0, 0, 0.82);
+      color: #fff;
+      font-size: 10px;
+      line-height: 12px;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    #large { left: 80px; top: 120px; width: 48px; height: 48px; }
+    #small16 { left: 300px; top: 360px; width: 16px; height: 16px; }
+    #small8 { left: 340px; top: 360px; width: 8px; height: 8px; }
+    #small4 { left: 370px; top: 360px; width: 4px; height: 4px; }
+    #center8 { left: calc(50vw - 4px); top: calc(50vh - 4px); width: 8px; height: 8px; }
+    #top-left { left: 1px; top: 72px; width: 8px; height: 8px; }
+    #top-right { right: 1px; top: 72px; width: 8px; height: 8px; }
+    #bottom-left { left: 1px; bottom: 1px; width: 8px; height: 8px; }
+    #bottom-right { right: 1px; bottom: 1px; width: 8px; height: 8px; }
+    #vertical-strip { left: 75%; top: 170px; width: 2px; height: 120px; outline-width: 1px; }
+    #horizontal-strip { left: calc(75% - 60px); top: 310px; width: 120px; height: 2px; outline-width: 1px; }
+
+    #crosshair-x, #crosshair-y, #pointer-dot {
+      position: fixed;
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    #crosshair-x {
+      left: 0;
+      width: 100vw;
+      height: 1px;
+      background: rgba(0, 255, 180, 0.7);
+    }
+
+    #crosshair-y {
+      top: 0;
+      width: 1px;
+      height: 100vh;
+      background: rgba(0, 255, 180, 0.7);
+    }
+
+    #pointer-dot {
+      width: 7px;
+      height: 7px;
+      transform: translate(-3px, -3px);
+      border: 1px solid #000;
+      border-radius: 50%;
+      background: #00ffb4;
+    }
+
+    #log {
+      position: fixed;
+      z-index: 30;
+      right: 12px;
+      bottom: 14px;
+      width: min(540px, calc(100vw - 160px));
+      height: 150px;
+      margin: 0;
+      padding: 7px;
+      overflow: hidden;
+      border: 1px solid #56738c;
+      background: rgba(4, 8, 12, 0.90);
+      color: #b7c9d8;
+      font-size: 10px;
+      line-height: 13px;
+      pointer-events: none;
+      white-space: pre-wrap;
+    }
+
+    #instructions {
+      position: fixed;
+      z-index: 20;
+      left: 16px;
+      bottom: 18px;
+      width: 290px;
+      padding: 7px;
+      border: 1px solid #56738c;
+      background: rgba(4, 8, 12, 0.88);
+      color: #b7c9d8;
+      font-size: 10px;
+      line-height: 1.35;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <section id="header">
+    <h1>QNX CEF physical-pointer / coordinate probe</h1>
+    <div id="metrics"></div>
+    <div id="last-result">Move the physical mouse, then click each red target.</div>
+  </section>
+
+  <button class="target" id="large" aria-label="48 by 48 baseline target"></button>
+  <button class="target" id="small16" aria-label="16 by 16 target"></button>
+  <button class="target" id="small8" aria-label="8 by 8 target"></button>
+  <button class="target" id="small4" aria-label="4 by 4 target"></button>
+  <button class="target" id="center8" aria-label="8 by 8 viewport center target"></button>
+  <button class="target" id="top-left" aria-label="8 by 8 top-left edge target"></button>
+  <button class="target" id="top-right" aria-label="8 by 8 top-right edge target"></button>
+  <button class="target" id="bottom-left" aria-label="8 by 8 bottom-left edge target"></button>
+  <button class="target" id="bottom-right" aria-label="8 by 8 bottom-right edge target"></button>
+  <button class="target" id="vertical-strip" aria-label="2 pixel vertical strip"></button>
+  <button class="target" id="horizontal-strip" aria-label="2 pixel horizontal strip"></button>
+
+  <div id="crosshair-x"></div>
+  <div id="crosshair-y"></div>
+  <div id="pointer-dot"></div>
+  <pre id="log"></pre>
+  <div id="instructions">
+    Red→yellow proves hover. Red→green plus a HIT line proves click.<br>
+    Sequence: 48px, 16px, 8px, 4px, center, four edges, then 2px strips.<br>
+    The 16/8/4px cluster is near the earlier physical-click coordinates.
+  </div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const prefix = '[QNX_DOM_PROBE]';
+      const logElement = document.querySelector('#log');
+      const metricsElement = document.querySelector('#metrics');
+      const resultElement = document.querySelector('#last-result');
+      const crosshairX = document.querySelector('#crosshair-x');
+      const crosshairY = document.querySelector('#crosshair-y');
+      const pointerDot = document.querySelector('#pointer-dot');
+      const targets = [...document.querySelectorAll('.target')];
+      const lines = [];
+      const hitCounts = new Map();
+      let sequence = 0;
+
+      function number(value) {
+        return Number.isFinite(value) ? value.toFixed(2) : 'n/a';
+      }
+
+      function rectText(rect) {
+        return `(${number(rect.left)},${number(rect.top)})-` +
+               `(${number(rect.right)},${number(rect.bottom)}) ` +
+               `${number(rect.width)}x${number(rect.height)}`;
+      }
+
+      function emit(kind, fields = {}) {
+        sequence += 1;
+        const detail = Object.entries(fields)
+          .map(([key, value]) => `${key}=${String(value).replaceAll(' ', '_')}`)
+          .join(' ');
+        const line = `${prefix} seq=${sequence} kind=${kind}${detail ? ` ${detail}` : ''}`;
+        console.log(line);
+        lines.push(line);
+        if (lines.length > 11) lines.shift();
+        logElement.textContent = lines.join('\n');
+      }
+
+      function updateMetrics() {
+        metricsElement.textContent =
+          `viewport=${innerWidth}x${innerHeight} screen=${screen.width}x${screen.height} ` +
+          `outer=${outerWidth}x${outerHeight} dpr=${devicePixelRatio} ` +
+          `scroll=(${scrollX},${scrollY})`;
+      }
+
+      function updatePointer(event) {
+        crosshairX.style.top = `${event.clientY}px`;
+        crosshairY.style.left = `${event.clientX}px`;
+        pointerDot.style.left = `${event.clientX}px`;
+        pointerDot.style.top = `${event.clientY}px`;
+      }
+
+      function eventFields(event) {
+        const element = document.elementFromPoint(event.clientX, event.clientY);
+        return {
+          type: event.type,
+          client: `${number(event.clientX)},${number(event.clientY)}`,
+          page: `${number(event.pageX)},${number(event.pageY)}`,
+          screen: `${number(event.screenX)},${number(event.screenY)}`,
+          buttons: event.buttons,
+          button: event.button,
+          target: event.target.id || event.target.tagName,
+          elementAtPoint: element ? (element.id || element.tagName) : 'null',
+          trusted: event.isTrusted,
+        };
+      }
+
+      function labelTargets() {
+        document.querySelectorAll('.target-label').forEach((label) => label.remove());
+        for (const target of targets) {
+          const rect = target.getBoundingClientRect();
+          const label = document.createElement('div');
+          label.className = 'target-label';
+          label.textContent = `${target.id} ${Math.round(rect.width)}x${Math.round(rect.height)} ` +
+                              `@${Math.round(rect.left)},${Math.round(rect.top)}`;
+          label.style.left = `${Math.max(2, Math.min(innerWidth - 190, rect.left))}px`;
+          label.style.top = `${Math.max(58, rect.top - 16)}px`;
+          document.body.appendChild(label);
+        }
+      }
+
+      for (const type of ['pointerdown', 'pointerup', 'click', 'contextmenu']) {
+        document.addEventListener(type, (event) => {
+          updatePointer(event);
+          emit('DOM_EVENT', eventFields(event));
+          if (type === 'contextmenu') event.preventDefault();
+        }, true);
+      }
+
+      document.addEventListener('pointermove', (event) => {
+        updatePointer(event);
+      }, true);
+
+      for (const target of targets) {
+        target.addEventListener('pointerenter', (event) => {
+          emit('TARGET_ENTER', {
+            id: target.id,
+            client: `${number(event.clientX)},${number(event.clientY)}`,
+            rect: rectText(target.getBoundingClientRect()),
+          });
+        });
+        target.addEventListener('pointerleave', (event) => {
+          emit('TARGET_LEAVE', {
+            id: target.id,
+            client: `${number(event.clientX)},${number(event.clientY)}`,
+          });
+        });
+        target.addEventListener('click', (event) => {
+          const rect = target.getBoundingClientRect();
+          const centerX = rect.left + rect.width / 2;
+          const centerY = rect.top + rect.height / 2;
+          const count = (hitCounts.get(target.id) || 0) + 1;
+          hitCounts.set(target.id, count);
+          target.classList.remove('hit');
+          void target.offsetWidth;
+          target.classList.add('hit');
+
+          const fields = {
+            id: target.id,
+            count,
+            client: `${number(event.clientX)},${number(event.clientY)}`,
+            center: `${number(centerX)},${number(centerY)}`,
+            centerDelta: `${number(event.clientX - centerX)},${number(event.clientY - centerY)}`,
+            rect: rectText(rect),
+          };
+          emit('TARGET_HIT', fields);
+          resultElement.textContent =
+            `HIT ${target.id} #${count} client=(${number(event.clientX)},${number(event.clientY)}) ` +
+            `center-delta=(${number(event.clientX - centerX)},${number(event.clientY - centerY)})`;
+        });
+      }
+
+      window.addEventListener('resize', () => {
+        updateMetrics();
+        labelTargets();
+        emit('RESIZE', {
+          viewport: `${innerWidth}x${innerHeight}`,
+          outer: `${outerWidth}x${outerHeight}`,
+          dpr: devicePixelRatio,
+        });
+      });
+
+      updateMetrics();
+      labelTargets();
+      emit('READY', {
+        viewport: `${innerWidth}x${innerHeight}`,
+        screen: `${screen.width}x${screen.height}`,
+        outer: `${outerWidth}x${outerHeight}`,
+        dpr: devicePixelRatio,
+        targetCount: targets.length,
+      });
+      for (const target of targets) {
+        emit('TARGET_RECT', {
+          id: target.id,
+          rect: rectText(target.getBoundingClientRect()),
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

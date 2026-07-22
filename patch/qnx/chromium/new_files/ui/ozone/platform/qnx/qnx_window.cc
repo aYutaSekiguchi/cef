@@ -165,6 +165,7 @@ bool QnxWindow::IsVisible() const {
 void QnxWindow::PrepareForShutdown() {}
 
 void QnxWindow::SetBoundsInPixels(const gfx::Rect& bounds) {
+  const gfx::Rect old_bounds = bounds_;
   bounds_ = bounds;
   if (!screen_win_)
     return;
@@ -181,7 +182,7 @@ void QnxWindow::SetBoundsInPixels(const gfx::Rect& bounds) {
     PLOG(WARNING) << "QnxWindow: reposition failed";
   }
 
-  bool origin_changed = bounds_.origin() != bounds.origin();
+  bool origin_changed = old_bounds.origin() != bounds.origin();
   delegate_->OnBoundsChanged({origin_changed});
 }
 
@@ -240,16 +241,13 @@ bool QnxWindow::HasCapture() const {
 }
 
 void QnxWindow::SetFullscreen(bool fullscreen, int64_t target_display_id) {
-  // QNX Screen does not have SCREEN_PROPERTY_FULLSCREEN.
-  // Simulate fullscreen by updating window state.
-  // Phase 5 may use SCREEN_PROPERTY_DISPLAY + display bounds for proper
-  // fullscreen implementation.
   if (fullscreen) {
     if (window_state_ != PlatformWindowState::kMaximized &&
         window_state_ != PlatformWindowState::kFullScreen) {
       restored_bounds_ = bounds_;
     }
-    // For now, just update state without actual fullscreen (Phase 5 fix).
+    SetBoundsInPixels(GetTargetDisplayBoundsInPixels(
+        target_display_id, /*use_work_area=*/false));
     UpdateWindowState(PlatformWindowState::kFullScreen);
   } else {
     if (window_state_ != PlatformWindowState::kFullScreen)
@@ -260,11 +258,11 @@ void QnxWindow::SetFullscreen(bool fullscreen, int64_t target_display_id) {
 }
 
 void QnxWindow::Maximize() {
-  // QNX Screen does not have a maximize property.
-  // Simulate by updating state. Full implementation in Phase 5+.
   if (window_state_ != PlatformWindowState::kMaximized &&
       window_state_ != PlatformWindowState::kFullScreen) {
     restored_bounds_ = bounds_;
+    SetBoundsInPixels(GetTargetDisplayBoundsInPixels(
+        display::kInvalidDisplayId, /*use_work_area=*/true));
     UpdateWindowState(PlatformWindowState::kMaximized);
   }
 }
@@ -338,6 +336,25 @@ void QnxWindow::RestoreWindowBounds() {
     restored_bounds_.reset();
     SetBoundsInPixels(restored);
   }
+}
+
+gfx::Rect QnxWindow::GetTargetDisplayBoundsInPixels(
+    int64_t target_display_id,
+    bool use_work_area) const {
+  display::Screen* screen = display::Screen::Get();
+  if (!screen)
+    return bounds_;
+
+  display::Display target = screen->GetDisplayMatching(bounds_);
+  if (target_display_id != display::kInvalidDisplayId) {
+    for (const display::Display& candidate : screen->GetAllDisplays()) {
+      if (candidate.id() == target_display_id) {
+        target = candidate;
+        break;
+      }
+    }
+  }
+  return use_work_area ? target.work_area() : target.bounds();
 }
 
 void QnxWindow::UpdateWindowState(PlatformWindowState new_window_state) {

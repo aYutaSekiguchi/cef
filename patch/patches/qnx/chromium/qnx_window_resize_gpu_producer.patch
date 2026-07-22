@@ -1,0 +1,82 @@
+diff --git ui/ozone/platform/qnx/qnx_gpu_platform_support_host.cc ui/ozone/platform/qnx/qnx_gpu_platform_support_host.cc
+index 4ff79c01630fa89df264c9b6271d4b3edd6ad5ab..4eb0ae94d502995566d506003cdd49458048adef 100644
+--- ui/ozone/platform/qnx/qnx_gpu_platform_support_host.cc
++++ ui/ozone/platform/qnx/qnx_gpu_platform_support_host.cc
+@@ -290,6 +290,25 @@ void QnxGpuPlatformSupportHost::AttachNewWidget(
+              << "x" << record->size.height() << ") sent to GPU";
+ }
+ 
++void QnxGpuPlatformSupportHost::ResizeWidget(
++    gfx::AcceleratedWidget widget,
++    const gfx::Size& size) {
++  DCHECK_CALLED_ON_VALID_THREAD(ui_thread_checker_);
++
++  if (!gpu_control_remote_ || !window_manager_ || size.IsEmpty())
++    return;
++
++  const QnxWidgetRecord* record = window_manager_->GetWidgetRecord(widget);
++  if (!record || !record->gpu_attached)
++    return;
++
++  gpu_control_remote_->ResizeWidget(widget, record->generation, size);
++  QNX_GPU_TRACE_LOG(INFO) << "ResizeWidget: widget=" << widget
++             << " generation=" << record->generation
++             << " size=" << size.width() << "x" << size.height()
++             << " sent to GPU";
++}
++
+ // ======================================================================
+ // Private helpers
+ // ======================================================================
+diff --git ui/ozone/platform/qnx/qnx_gpu_platform_support_host.h ui/ozone/platform/qnx/qnx_gpu_platform_support_host.h
+index e876b1a823cdaf5912a1d0789c4b69398b0c12e6..71e4ed418897317ea758052b96d18eeb7866f9a8 100644
+--- ui/ozone/platform/qnx/qnx_gpu_platform_support_host.h
++++ ui/ozone/platform/qnx/qnx_gpu_platform_support_host.h
+@@ -91,6 +91,11 @@ class QnxGpuPlatformSupportHost : public GpuPlatformSupportHost {
+   // yet (early-boot widget creation) or when the widget record is missing.
+   void AttachNewWidget(gfx::AcceleratedWidget widget);
+ 
++  // Called after the native Screen window size changes. Updates the
++  // GPU-side producer when this widget is already attached; otherwise the
++  // latest size remains in QnxWindowManager for the next AttachWidget.
++  void ResizeWidget(gfx::AcceleratedWidget widget, const gfx::Size& size);
++
+  private:
+   // Resets the GPU-side QnxGpuService remote. Called on channel destroyed.
+   // Also marks all widgets as GPU-detached and increments generation.
+diff --git ui/ozone/platform/qnx/qnx_window.cc ui/ozone/platform/qnx/qnx_window.cc
+index 1a570e23a514511178e647c2feaa344e6e9cb4a3..cda650921c952222aebe048a547485520e176947 100644
+--- ui/ozone/platform/qnx/qnx_window.cc
++++ ui/ozone/platform/qnx/qnx_window.cc
+@@ -242,6 +242,11 @@ void QnxWindow::SetBoundsInPixels(const gfx::Rect& bounds) {
+     PLOG(WARNING) << "QnxWindow: reposition failed";
+   }
+ 
++  if (old_bounds.size() != bounds.size() &&
++      widget_ != gfx::kNullAcceleratedWidget) {
++    manager_->UpdateWidgetSize(widget_, bounds.size());
++  }
++
+   bool origin_changed = old_bounds.origin() != bounds.origin();
+   delegate_->OnBoundsChanged({origin_changed});
+ }
+diff --git ui/ozone/platform/qnx/qnx_window_manager.cc ui/ozone/platform/qnx/qnx_window_manager.cc
+index 69948c41d00ed993d83cafc7f872bcca4c70ecbd..b252eb2864ea8aab0cc37e27dab82736f4f419f8 100644
+--- ui/ozone/platform/qnx/qnx_window_manager.cc
++++ ui/ozone/platform/qnx/qnx_window_manager.cc
+@@ -132,10 +132,15 @@ void QnxWindowManager::IncrementGeneration(gfx::AcceleratedWidget widget) {
+ 
+ void QnxWindowManager::UpdateWidgetSize(gfx::AcceleratedWidget widget,
+                                         const gfx::Size& size) {
++  DCHECK(thread_checker_.CalledOnValidThread());
+   auto it = records_.find(widget);
+   if (it == records_.end())
+     return;
++  if (it->second.size == size)
++    return;
+   it->second.size = size;
++  if (gpu_platform_support_host_)
++    gpu_platform_support_host_->ResizeWidget(widget, size);
+ }
+ 
+ void QnxWindowManager::SetScreenWindow(gfx::AcceleratedWidget widget,

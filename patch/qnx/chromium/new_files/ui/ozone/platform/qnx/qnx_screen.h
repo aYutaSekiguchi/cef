@@ -14,14 +14,13 @@
 
 namespace ui {
 
+class QnxScreenContext;
 class QnxWindowManager;
 
-// Minimal QNX PlatformScreen implementation.
-// Phase 4: provides basic display enumeration and widget-to-display mapping.
-// QNX Screen display enumeration is deferred to Phase 4 substep or Phase 5+.
+// QNX PlatformScreen implementation backed by QNX Screen display enumeration.
 class QnxScreen : public PlatformScreen {
  public:
-  explicit QnxScreen(QnxWindowManager* window_manager);
+  QnxScreen(QnxScreenContext* screen_context, QnxWindowManager* window_manager);
   ~QnxScreen() override;
 
   // Overridden from ui::PlatformScreen:
@@ -45,6 +44,7 @@ class QnxScreen : public PlatformScreen {
  private:
   void CreateDisplayList();
 
+  const raw_ref<QnxScreenContext> screen_context_;
   const raw_ref<QnxWindowManager> window_manager_;
   display::DisplayList display_list_;
 };

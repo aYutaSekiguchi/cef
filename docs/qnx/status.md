@@ -8,7 +8,7 @@ state that is useful for the next bootstrap/build/test session.
 
 | Item | Value |
 |---|---|
-| snapshot date | 2026-07-02 |
+| snapshot date | 2026-07-22 |
 | compatibility tag | `147.0.7727.147` |
 | checkout model | clean Chromium checkout plus CEF-managed QNX patches/new files |
 | source sync | `cef/tools/qnx_sync_sources.sh -f -R` |
@@ -26,7 +26,7 @@ state that is useful for the next bootstrap/build/test session.
 | `base_unittests` | Validated as the stable broad baseline with the standard QNX exclusion filter. | Use this as the first regression check after bootstrap/toolchain changes. |
 | `ceftests` build | `./out/qnx_release/ninja_qnx.sh ceftests` succeeds from a clean bootstrap after the CEF resource glue, fontconfig, and V8 registration fixes. | This is the active CEF API validation target. |
 | `ceftests` runtime | Focused headless QNX runs now pass for the recently fixed areas: `DownloadTest.*`, `AxViewportCollapseTest.*`, `FindHandlerTest.*`, `DraggableRegionsTest.*`, and the repaired CORS groups. | Full-suite broad status is still a bring-up track; do not describe the whole `ceftests` suite as fully passing yet. |
-| `cefsimple` / `cefsimple_capi` | Build graph and link blockers have been reduced substantially with QNX sample entrypoints, Views/UI stubs, Crashpad stubs, and source-list fixes. | Treat as a build/runtime bring-up target; check the link notes in `history/build-errors/link/` before assuming full runtime validation. |
+| `cefsimple` / `cefsimple_capi` | `cefsimple` builds and displays compositor output across the full 1280x768 QEMU Screen display when launched with `--start-maximized`; physical-mouse input reaches web content. | Use `tests/cefsimple/qnx_input_probe.html` for coordinate regressions. Right-click/context-menu stability remains a separate follow-up. |
 | `v8_unittests` | Uses the QNX per-test runner and status-file skips for the managed residual set. | Run via `cef/tools/qnx_run_test.sh --v8`; do not run the whole suite in one process. |
 | ANGLE | `angle_unittests` reached `5989 PASS / 0 FAIL`; `angle_end2end_tests` is blocked by missing Vulkan-capable GPU/surface support in the QEMU environment. | Resume end-to-end work only when the guest graphics environment changes. |
 
@@ -61,8 +61,9 @@ A fresh session should normally work in this order:
    - build `ceftests`
    - run focused headless groups before attempting a full broad run
    - known follow-up area: `FrameHandlerTest` cross-origin ordering on QNX/OOP renderer paths
-4. **Finish sample/runtime validation as needed**
-   - continue `cefsimple` / `cefsimple_capi` build and runtime bring-up from the latest link notes
+4. **Continue sample/runtime validation as needed**
+   - use the physical-input probe after QNX Screen, window-state, GPU-buffer, or input-routing changes
+   - investigate the remaining right-click/context-menu stop independently of the resolved display-coordinate issue
 5. **Keep durable ownership intact**
    - any fix must be captured in `cef/patch/...` or `cef/patch/qnx/chromium/new_files/...`
    - every patch file that should apply during bootstrap must be registered in `cef/patch/patch.cfg`

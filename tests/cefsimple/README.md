@@ -81,3 +81,29 @@ This is the primary CEF sample application. Changes to CEF features, API updates
 - [CEF General Usage](https://chromiumembedded.github.io/cef/general_usage) - Complete API documentation
 - [CEF C++ API Documentation](https://chromiumembedded.github.io/cef/)
 - [C API Version](../cefsimple_capi/) - Pure C implementation of this example
+
+## QNX physical input probe
+
+`qnx_input_probe.html` is a self-contained mouse-coordinate test page. The
+`cefsimple` HTTP payload manifest includes it automatically at
+`/data/qnx_payload/payload/qnx_input_probe.html`.
+
+Launch it with the normal QNX runner and a fresh profile:
+
+```bash
+./cef/tools/qnx_run.sh \
+  --virgl --preload-system-egl --with-input --kill-existing \
+  --dns-server 8.8.8.8 --gui -- \
+  ./cefsimple \
+    --ozone-platform=qnx --use-gl=egl --use-native --no-sandbox \
+    --start-maximized --enable-logging=stderr --ozone-qnx-gpu-trace \
+    --v=1 --vmodule=qnx_platform_event_source=2 \
+    --user-data-dir=/tmp/cefsimple-input-probe \
+    --url=file:///data/qnx_payload/payload/qnx_input_probe.html
+```
+
+Every pointer transition is written both on the page and to stderr with the
+`[QNX_DOM_PROBE]` prefix. The page includes 48, 16, 8, and 4 pixel square
+targets, 2 pixel strips, edge targets, a coordinate grid, and a live crosshair.
+For a successful target click, compare `client`, `center`, `centerDelta`, and
+`rect` in the `TARGET_HIT` line.

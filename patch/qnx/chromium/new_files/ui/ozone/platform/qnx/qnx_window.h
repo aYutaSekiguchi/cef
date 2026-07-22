@@ -93,6 +93,11 @@ class QnxWindow : public PlatformWindow {
   // Restore window bounds from saved restored_bounds_.
   void RestoreWindowBounds();
 
+  // Return the target QNX display bounds. QNX currently reports a device
+  // scale factor of 1, so display DIP bounds and Screen pixel bounds match.
+  gfx::Rect GetTargetDisplayBoundsInPixels(int64_t target_display_id,
+                                           bool use_work_area) const;
+
   // Update the window_state_ and notify the delegate.
   void UpdateWindowState(PlatformWindowState new_window_state);
 

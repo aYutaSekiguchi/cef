@@ -68,6 +68,7 @@ declare -a EXTRA_PATHS=()
 manifest_cefsimple() {
   local src="$1"
   printf '%s\n' \
+    "$SCRIPT_DIR/../tests/cefsimple/qnx_input_probe.html" \
     "$src/cefsimple" \
     "$src/libcef.so" \
     "$src/libEGL.so" \

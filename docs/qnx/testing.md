@@ -201,6 +201,31 @@ Notes:
 - A plain GUI window without `virtio-vga-gl` is not enough for the current QEMU
   image's Screen EGL path; `egl-configs` may fail with an invalid EGL display.
 
+### cefsimple display and physical-input regression probe
+
+Use the self-contained probe after changing QNX display enumeration, native
+window bounds, GPU producer sizing, or pointer routing:
+
+```bash
+./cef/tools/qnx_run.sh \
+  --virgl --preload-system-egl --with-input --kill-existing \
+  --dns-server 8.8.8.8 --gui -- \
+  ./cefsimple \
+    --ozone-platform=qnx --use-gl=egl --use-native --no-sandbox \
+    --start-maximized --enable-logging=stderr --ozone-qnx-gpu-trace \
+    --v=1 --vmodule=qnx_platform_event_source=2 \
+    --user-data-dir=/tmp/cefsimple-input-probe \
+    --url=file:///data/qnx_payload/payload/qnx_input_probe.html
+```
+
+The payload packager includes the HTML file automatically. A healthy 1280x768
+QEMU run reports the QNX display and compositor/export buffers at 1280x768,
+paints to the right edge without a black strip, and emits `[QNX_DOM_PROBE]`
+`DOM_EVENT` / `TARGET_HIT` lines for the physical mouse. The page contains
+targets down to 4x4 pixels and 2-pixel strips so small coordinate offsets are
+visible. Right-click is suppressed by the page because native context-menu
+stability is tracked separately.
+
 ## Manual QEMU launch
 
 If needed, QEMU can also be started manually:

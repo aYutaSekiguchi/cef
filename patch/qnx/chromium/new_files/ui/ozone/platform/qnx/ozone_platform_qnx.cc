@@ -127,7 +127,8 @@ class OzonePlatformQnxImpl : public OzonePlatform {
   }
 
   std::unique_ptr<PlatformScreen> CreateScreen() override {
-    return std::make_unique<QnxScreen>(window_manager_.get());
+    return std::make_unique<QnxScreen>(screen_context_.get(),
+                                       window_manager_.get());
   }
 
   void InitScreen(PlatformScreen* screen) override {}
