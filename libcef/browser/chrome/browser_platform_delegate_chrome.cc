@@ -50,7 +50,20 @@ void CefBrowserPlatformDelegateChrome::BrowserDestroyed(
 void CefBrowserPlatformDelegateChrome::RenderViewReady() {
   CefBrowserPlatformDelegate::RenderViewReady();
 #if BUILDFLAG(IS_QNX)
+  // The native delegate installs the Aura root-window callback and provides a
+  // non-empty fallback size for truly headless browsers. Chrome-style windows
+  // are already laid out by BrowserWindow at this point, so restore the actual
+  // WebContents size after applying that fallback. Otherwise an empty
+  // CefWindowInfo permanently leaves the renderer viewport at 800x600 even
+  // when the QNX platform window is larger (for example, 1280x768).
   native_delegate_->RenderViewReady();
+  if (chrome_browser_ && chrome_browser_->window()) {
+    const gfx::Size contents_size =
+        chrome_browser_->window()->GetContentsSize();
+    if (!contents_size.IsEmpty()) {
+      native_delegate_->SizeTo(contents_size.width(), contents_size.height());
+    }
+  }
 #endif
 }
 

@@ -73,3 +73,31 @@ This does not weaken the upstream CEF feature tests. The expected AX nodes,
 child IDs, zoom behavior, and scroll workflow are still asserted. The fix makes
 QNX headless provide a real viewport and handles QNX's empty AX bounds for
 visible nodes.
+
+## Follow-up: Chrome window retained the 800x600 fallback
+
+On 2026-07-23, `cefsimple --use-native --start-maximized` exposed a second
+effect of the initial-size workaround. The QNX Screen window, root compositor,
+and Chrome UI were all 1280 pixels wide, but the web page layout stopped at
+800 pixels and the remaining 480 pixels showed the WebContents background.
+
+The Chrome-style delegate forwards `RenderViewReady()` to the native delegate
+after BrowserWindow has already laid out the maximized window. The native QNX
+delegate then replaced the correctly laid-out renderer viewport with the
+800x600 fallback derived from an empty `CefWindowInfo`. No subsequent window
+resize occurred to restore the actual content size.
+
+The Chrome delegate now keeps the native `RenderViewReady()` call so truly
+headless browsers still receive a non-empty fallback and the Aura root-window
+callback. It then reads `BrowserWindow::GetContentsSize()` and calls the native
+delegate's `SizeTo()` when that size is non-empty. This makes the Chrome window
+layout authoritative without removing the headless fallback.
+
+Verification:
+
+- `cefsimple` and `ceftests` built successfully with `ninja_qnx.sh`.
+- `AxViewportCollapseTest.*`: 12 tests ran and 12 passed on QNX headless.
+- The maximized input probe reported `viewport=1280x681`,
+  `screen=1280x768`, and `outer=1280x768`.
+- The 8-pixel right-edge target occupied `x=1271..1279`; a click at guest
+  coordinate `(1275,159)` reached the DOM at content coordinate `(1275,72)`.
