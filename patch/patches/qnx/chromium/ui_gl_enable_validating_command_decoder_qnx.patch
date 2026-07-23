@@ -1,0 +1,13 @@
+diff --git ui/gl/features.gni ui/gl/features.gni
+index e0bdd667233d5e96f70587a381e8f05590f95adf..fc46981550a7d2313184eb72464f649dd6adfe4a 100644
+--- ui/gl/features.gni
++++ ui/gl/features.gni
+@@ -20,7 +20,7 @@ declare_args() {
+   # Independent of use_dawn, which controls whether Dawn is used in Chromium.
+   build_dawn_tests = is_mac || is_win || is_linux || is_chromeos || is_android
+ 
+-  enable_validating_command_decoder = is_android
++  enable_validating_command_decoder = is_android || is_qnx
+ }
+ 
+ declare_args() {
