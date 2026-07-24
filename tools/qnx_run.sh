@@ -77,10 +77,36 @@ Examples:
   $0 --keep-qemu -- bash
   $0 --mount-only
   $0 --qemu-graphics virgl -- egl-configs
-  $0 --virgl --preload-system-egl -- ./cefsimple --use-native --use-gl=egl
-  $0 --gui --preload-system-egl --kill-existing \\
-      --detach --qconn-port 8000 -- ./cefsimple --use-gl=egl \\
-      --use-native --ozone-platform=qnx --no-sandbox
+  $0 --virgl --preload-system-egl --kill-existing --dns-server 8.8.8.8 -- \\
+      ./cefsimple --ozone-platform=qnx --use-gl=egl --use-native \\
+      --use-cmd-decoder=validating --no-sandbox --start-maximized \\
+      --url=https://www.youtube.com
+  $0 --gui --preload-system-egl --kill-existing --dns-server 8.8.8.8 \\
+      --detach --qconn-port 8000 -- ./cefsimple --ozone-platform=qnx \\
+      --use-gl=egl --use-native --use-cmd-decoder=validating \\
+      --no-sandbox --start-maximized --url=about:blank
+
+CEF runtime options (passed after "--"; not added automatically):
+  --ozone-platform=qnx --use-gl=egl --use-native --no-sandbox
+      Select the QNX native EGL path used by the validated configuration.
+  --use-cmd-decoder=validating
+      Explicitly select the validating GLES command decoder. It is the default
+      in the patched QNX build, but spelling it out protects launch commands
+      from an older build whose passthrough decoder can crash the GPU process.
+  --start-maximized
+      Match the browser window to the detected QNX Screen display. Recommended
+      for full-size rendering; it is not a TLS or GPU-crash workaround.
+  --disable-features=HeapProfilerReporting
+      Legacy workaround for QNX binaries built before the permanent TLS fix.
+      Current patched builds disable heap-profile collection on QNX internally,
+      so this switch is no longer required.
+
+Runner options commonly needed by cefsimple:
+  --virgl --preload-system-egl
+      Provide the virtio-vga-gl display and QNX system Mesa EGL implementation.
+  --dns-server 8.8.8.8
+      Use an explicit resolver when host DNS discovery selects an unreachable
+      server. This was required in the validated YouTube QEMU configuration.
 
 Behavior:
   - mounts /export/chromium-src at /mnt/nfs in the guest

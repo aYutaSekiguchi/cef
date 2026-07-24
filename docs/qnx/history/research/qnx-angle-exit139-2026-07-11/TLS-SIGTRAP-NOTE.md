@@ -1,11 +1,12 @@
-# TLS-SIGTRAP-NOTE (2026-07-12)
+# TLS-SIGTRAP-NOTE (2026-07-12, resolved 2026-07-24)
 
 ## Status
 
-Tracking paused. Recorded as observation only. **No further TLS
-experiments, reproduction attempts, or allocator/kernel analyses
-are authorized at this time** per user decision. Tracked when
-reproduction frequency increases.
+Resolved. The investigation was reopened on 2026-07-23 after the failure
+recurred. A deterministic reproducer, QNX core backtrace, durable managed
+patch, and post-fix QEMU validation are recorded in:
+
+`docs/qnx/history/build-errors/test/runtime-assumption/qnx-heap-profiler-pthread-tls-sigtrap.md`
 
 ## FACT
 
@@ -45,29 +46,26 @@ reproduction frequency increases.
    - bss globals only: `g_real_sigaction` (8B), `g_in_handler` (4B).
    - **The minimal DSO has no TLS dependencies.**
 
-## UNKNOWN
+## Resolution of the former unknowns
 
-- **Direct cause of the `tls.h@257` SetThreadSpecificData failure.**
-  Not determined. One observation (run2 of the previous session).
-- **Whether the failure is DSO-related, guest-state-related, or
-  transient allocator init noise.** A/B/C runs in the same session
-  did not reproduce. minimal DSO ELF has no TLS dependencies.
-- **Whether the failure correlates with guest boot state, tap0
-  reconnect timing, or some other environmental variable** not
-  currently instrumented.
-- **Reproducibility under what specific conditions.** The single
-  observation cannot be characterized as "always happens" or
-  "rarely happens".
+- The direct cause is allocator-shim reentry while QNX
+  `pthread_setspecific` lazily reallocates per-thread key storage.
+- The QNX `ENOMEM` return is produced by that recursive allocation path; it
+  is not evidence of system-wide OOM.
+- The minimal DSO was incidental and contains no TLS dependency.
+- `HeapProfilerReporting:stable-probability/1.0` made the old failure
+  deterministic. Its normal 1% stable-channel probability explained the
+  earlier intermittent observation.
+- QNX heap-profile collection is now disabled internally while preserving the
+  `HeapProfilerController` object required by child-process clients.
 
 ## Tracking policy
 
-- **Tracking is paused.** No further TLS experiments,
-  reproductions, or allocator/kernel analyses are authorized.
-- The observation is recorded here for future reference in case
-  reproduction frequency increases.
-- If a future run shows the same `tls.h@257 ... trace trap ...
-  __PI_QNX_EXIT__:133` pattern, this note should be reopened
-  and the new observation compared against this baseline.
+If a future run shows the same `tls.h@257 ... trace trap ...
+__PI_QNX_EXIT__:133` pattern, first verify that the deployed `libcef.so`
+contains the managed QNX heap-profiler fix. The old
+`--disable-features=HeapProfilerReporting` switch is only a workaround for
+pre-fix binaries.
 
 ## Cross-references
 
@@ -79,5 +77,5 @@ reproduction frequency increases.
 
 ## Tracked source state
 
-Unchanged. No CEF/Chromium tracked modifications.
-0 commit, 0 push.
+The resolution is carried by the CEF-managed patch named
+`qnx/chromium/components_heap_profiler_disable_collection_qnx`.

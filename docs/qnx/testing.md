@@ -212,11 +212,38 @@ window bounds, GPU producer sizing, or pointer routing:
   --dns-server 8.8.8.8 --gui -- \
   ./cefsimple \
     --ozone-platform=qnx --use-gl=egl --use-native --no-sandbox \
-    --start-maximized --enable-logging=stderr --ozone-qnx-gpu-trace \
+    --use-cmd-decoder=validating --start-maximized \
+    --enable-logging=stderr --ozone-qnx-gpu-trace \
     --v=1 --vmodule=qnx_platform_event_source=2 \
     --user-data-dir=/tmp/cefsimple-input-probe \
     --url=file:///data/qnx_payload/payload/qnx_input_probe.html
 ```
+
+For an external-page check, the validated YouTube launch is:
+
+```bash
+./cef/tools/qnx_run.sh \
+  --virgl --preload-system-egl --kill-existing \
+  --dns-server 8.8.8.8 -- \
+  ./cefsimple \
+    --ozone-platform=qnx --use-gl=egl --use-native --no-sandbox \
+    --use-cmd-decoder=validating --start-maximized \
+    --url=https://www.youtube.com
+```
+
+These options are intentionally explicit and are not injected by
+`qnx_run.sh`:
+
+- `--use-cmd-decoder=validating` avoids the QNX passthrough-decoder GPU
+  crash. The patched build selects it by default, but the explicit switch
+  also protects commands used with older builds.
+- `--start-maximized` gives the expected full-display geometry; it is not a
+  crash workaround.
+- `--dns-server 8.8.8.8` avoids a host-discovered resolver that may be
+  unreachable from the guest.
+- `--disable-features=HeapProfilerReporting` is only a legacy workaround for
+  binaries from before the QNX TLS fix. Current patched builds disable heap
+  profile collection internally, including when the feature is forced on.
 
 The payload packager includes the HTML file automatically. A healthy 1280x768
 QEMU run reports the QNX display and compositor/export buffers at 1280x768,

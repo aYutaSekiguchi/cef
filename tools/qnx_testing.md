@@ -61,12 +61,22 @@ with `--use-gl=egl`. Use the generic runner's convenience option to force the
 QNX system EGL implementation for a bounded runtime check:
 
 ```bash
-./cef/tools/qnx_run.sh --virgl --kill-existing --preload-system-egl -- \
-  ./cefsimple --ozone-platform=qnx --use-gl=egl --no-sandbox --use-native
+./cef/tools/qnx_run.sh --virgl --kill-existing --preload-system-egl \
+  --dns-server 8.8.8.8 -- \
+  ./cefsimple --ozone-platform=qnx --use-gl=egl --use-native \
+  --use-cmd-decoder=validating --no-sandbox --start-maximized \
+  --url=https://www.youtube.com
 ```
 
 This is equivalent to `--env LD_PRELOAD=/usr/lib/libEGL.so.1`. Do not combine
 the two forms; the runner rejects conflicting `LD_PRELOAD` configuration.
+
+The validating decoder is the default in a patched QNX build, but keeping
+`--use-cmd-decoder=validating` in portable launch commands prevents an older
+build from selecting the GPU-crashing passthrough decoder. `--start-maximized`
+is recommended for full-display geometry. The permanent QNX heap-profiler fix
+means `--disable-features=HeapProfilerReporting` is not required; use that
+switch only as a workaround with an older binary.
 
 `qnx_run.sh` sets `EGL_LOG_LEVEL=fatal` by default because the QNX Mesa EGL
 provider otherwise repeats its loader-private cleanup warning for every image.
@@ -227,8 +237,10 @@ guest job with `qconn` on port 8000 ready for gdb attach):
 ```bash
 ./tools/qnx_run.sh --virgl --preload-system-egl --with-input --kill-existing \
     --detach --qconn-port 8000 -- \
-    ./cefsimple --ozone-platform=qnx --use-gl=egl --use-native --no-sandbox \
-              --enable-logging=stderr --v=1 --vmodule=qnx_platform_event_source=2 \
+    ./cefsimple --ozone-platform=qnx --use-gl=egl --use-native \
+              --use-cmd-decoder=validating --no-sandbox --start-maximized \
+              --enable-logging=stderr --v=1 \
+              --vmodule=qnx_platform_event_source=2 \
               --ozone-qnx-gpu-trace --url=about:blank
 ```
 
