@@ -1,0 +1,30 @@
+diff --git chrome/app/chrome_main_delegate.cc chrome/app/chrome_main_delegate.cc
+index 449a06f4f384dd5d2f6f5d565b5001f675ff498d..9ca77c55eb43b2ced1b521c6e920c6d50291f1af 100644
+--- chrome/app/chrome_main_delegate.cc
++++ chrome/app/chrome_main_delegate.cc
+@@ -395,23 +395,23 @@ void HandleHelpSwitches(const base::CommandLine& command_line) {
+ }
+ #endif  // BUILDFLAG(IS_LINUX)
+ 
+-#if !BUILDFLAG(IS_MAC) && !BUILDFLAG(IS_ANDROID)
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
+ void SIGTERMProfilingShutdown(int signal) {
+   content::Profiling::Stop();
+   struct sigaction sigact;
+   UNSAFE_TODO(memset(&sigact, 0, sizeof(sigact)));
+   sigact.sa_handler = SIG_DFL;
+   CHECK_EQ(sigaction(SIGTERM, &sigact, nullptr), 0);
+   raise(signal);
+ }
+ 
+ void SetUpProfilingShutdownHandler() {
+   struct sigaction sigact;
+   sigact.sa_handler = SIGTERMProfilingShutdown;
+   sigact.sa_flags = SA_RESETHAND;
+   sigemptyset(&sigact.sa_mask);
+   CHECK_EQ(sigaction(SIGTERM, &sigact, nullptr), 0);
+ }
+-#endif  // !BUILDFLAG(IS_MAC) && !BUILDFLAG(IS_ANDROID)
++#endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
+ 
+ #endif  // BUILDFLAG(IS_POSIX)

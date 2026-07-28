@@ -1,8 +1,8 @@
 diff --git third_party/dav1d/BUILD.gn third_party/dav1d/BUILD.gn
-index c521fe2c68c4c..45246b7a02f93 100644
+index c521fe2c68c4c8204c59ad044eb0f2004a3dd8e2..c3c4290cbe8a7e88d232dfc7c15508010ed9d3ab 100644
 --- third_party/dav1d/BUILD.gn
 +++ third_party/dav1d/BUILD.gn
-@@ -83,6 +83,25 @@ config("dav1d_config") {
+@@ -83,13 +83,32 @@ config("dav1d_config") {
    if (is_win && !is_clang) {
      include_dirs += [ "libdav1d/include/compat/msvc" ]
    }
@@ -27,5 +27,16 @@ index c521fe2c68c4c..45246b7a02f93 100644
 +  }
  }
  
- dav1d_copts = [
-
+-dav1d_copts = [
+-  "-D_FILE_OFFSET_BITS=64",
+-  "-D_POSIX_C_SOURCE=200112L",
+-]
+-
++dav1d_copts = [ "-D_FILE_OFFSET_BITS=64" ]
++# The QNX toolchain already defines _POSIX_C_SOURCE=200809L.
++if (!is_qnx) {
++  dav1d_copts += [ "-D_POSIX_C_SOURCE=200112L" ]
++}
+ if (is_win) {
+   if (!is_clang) {
+     dav1d_copts += [ "/wd4028" ]

@@ -55,18 +55,6 @@ constexpr int64_t kPollingIntervalMs = 16;  // ~60 Hz
 // Maximum length for a SCREEN_PROPERTY_NAME string retrieved from events.
 constexpr size_t kMaxEventNameLen = 64;
 
-// Event types handled in this Phase 4 skeleton.
-constexpr int kHandledEventTypes[] = {
-    SCREEN_EVENT_CLOSE,
-    SCREEN_EVENT_KEYBOARD,
-    SCREEN_EVENT_POINTER,
-    SCREEN_EVENT_DISPLAY,
-    SCREEN_EVENT_IDLE,
-    SCREEN_EVENT_MTOUCH_TOUCH,
-    SCREEN_EVENT_MTOUCH_MOVE,
-    SCREEN_EVENT_MTOUCH_RELEASE,
-};
-
 // Returns a human-readable name for a SCREEN_EVENT_* type.
 const char* ScreenEventTypeName(int type) {
   switch (type) {

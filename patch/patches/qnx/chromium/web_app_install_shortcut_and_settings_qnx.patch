@@ -41,15 +41,32 @@ index 78cbb21ebc5d5e8052da408611459287da697f4b..151f8c6e5b2c5c4eac94690a9b3f211e
  void ShowWebAppSettings(Browser* browser,
                          const std::string& app_id,
 diff --git chrome/browser/web_applications/web_app_install_params.h chrome/browser/web_applications/web_app_install_params.h
-index 618952d89a3a1bd94c3323d0b0e55336b2323696..c25e7dd18422f66ef6e5def8e20e3edfa6fc2e8a 100644
+index 618952d89a3a1bd94c3323d0b0e55336b2323696..ee8637c9c617d0c94732325b25a22c5e0bc155f2 100644
 --- chrome/browser/web_applications/web_app_install_params.h
 +++ chrome/browser/web_applications/web_app_install_params.h
-@@ -120,7 +120,7 @@ enum class WebAppInstallFlow {
-   // TODO(crbug.com/40184819): This should be removed by adding all known flows
-   // to this enum.
-   kUnknown,
+@@ -123,2 +123,3 @@ enum class WebAppInstallFlow {
+-#if BUILDFLAG(IS_CHROMEOS)
+-  // Perform the `Create Shortcut` flow on CrOS that creates a DIY app.
++#if BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_QNX)
++  // Perform the `Create Shortcut` flow on ChromeOS or QNX that creates a DIY
++  // app.
+diff --git chrome/browser/ui/web_applications/web_app_dialog_utils.cc chrome/browser/ui/web_applications/web_app_dialog_utils.cc
+index 298f557e0e1743f21278f41ba4992e6486cf7d9d..c3e600679fc2475e31f90789769731e349164534 100644
+--- chrome/browser/ui/web_applications/web_app_dialog_utils.cc
++++ chrome/browser/ui/web_applications/web_app_dialog_utils.cc
+@@ -105 +105 @@ void OnWebAppInstallShowInstallDialog(
 -#if BUILDFLAG(IS_CHROMEOS)
 +#if BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_QNX)
-   // Perform the `Create Shortcut` flow on CrOS that creates a DIY app.
-   kCreateShortcut,
- #endif
+@@ -106,0 +107 @@ void OnWebAppInstallShowInstallDialog(
++#if BUILDFLAG(IS_CHROMEOS)
+@@ -111 +112 @@ void OnWebAppInstallShowInstallDialog(
+-    }
++#endif
+@@ -116,0 +118 @@ void OnWebAppInstallShowInstallDialog(
++    }
+@@ -201 +203 @@ void CreateWebAppFromCurrentWebContents(Browser* browser,
+-#if BUILDFLAG(IS_CHROMEOS)
++#if BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_QNX)
+@@ -216 +218 @@ void CreateWebAppFromCurrentWebContents(Browser* browser,
+-#if BUILDFLAG(IS_CHROMEOS)
++#if BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_QNX)

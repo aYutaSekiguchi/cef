@@ -1,0 +1,44 @@
+diff --git sandbox/policy/sandbox_type.cc sandbox/policy/sandbox_type.cc
+index c9dc201baa622f1f023f4bddff4eaea60627d567..1c763bc8868fa725a9d2f7a492b0972f0ed19d9f 100644
+--- sandbox/policy/sandbox_type.cc
++++ sandbox/policy/sandbox_type.cc
+@@ -36,6 +36,9 @@ constexpr char kSpeechRecognitionSandbox[] = "speech_recognition";
+ #if BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || \
+     BUILDFLAG(IS_WIN)
+ constexpr char kPrintBackendSandbox[] = "print_backend";
++#endif
++#if BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || \
++    BUILDFLAG(IS_QNX) || BUILDFLAG(IS_WIN)
+ constexpr char kScreenAISandbox[] = "screen_ai";
+ #endif
+ 
+@@ -158,6 +161,9 @@ void SetCommandLineFlagsForSandboxType(base::CommandLine* command_line,
+ #if BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || \
+     BUILDFLAG(IS_WIN)
+     case Sandbox::kPrintBackend:
++#endif
++#if BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || \
++    BUILDFLAG(IS_QNX) || BUILDFLAG(IS_WIN)
+     case Sandbox::kScreenAI:
+ #endif
+     case Sandbox::kSpeechRecognition:
+@@ -255,6 +261,9 @@ std::string StringFromUtilitySandboxType(Sandbox sandbox_type) {
+     BUILDFLAG(IS_WIN)
+     case Sandbox::kPrintBackend:
+       return kPrintBackendSandbox;
++#endif
++#if BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || \
++    BUILDFLAG(IS_QNX) || BUILDFLAG(IS_WIN)
+     case Sandbox::kScreenAI:
+       return kScreenAISandbox;
+ #endif
+@@ -383,6 +392,9 @@ sandbox::mojom::Sandbox UtilitySandboxTypeFromString(
+   if (sandbox_string == kPrintBackendSandbox) {
+     return Sandbox::kPrintBackend;
+   }
++#endif
++#if BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || \
++    BUILDFLAG(IS_QNX) || BUILDFLAG(IS_WIN)
+   if (sandbox_string == kScreenAISandbox) {
+     return Sandbox::kScreenAI;
+   }

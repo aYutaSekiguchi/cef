@@ -1,0 +1,13 @@
+diff --git gpu/command_buffer/service/shared_image/shared_image_factory.cc gpu/command_buffer/service/shared_image/shared_image_factory.cc
+index 4d4c1810ff932f297ec025a74baf17a67bf389b5..e06e795f01eb7a5d1b973757951ed3be506a1359 100644
+--- gpu/command_buffer/service/shared_image/shared_image_factory.cc
++++ gpu/command_buffer/service/shared_image/shared_image_factory.cc
+@@ -114,7 +114,7 @@ const char* GmbTypeToString(gfx::GpuMemoryBufferType type) {
+     case gfx::IO_SURFACE_BUFFER:
+       return "platform";
+ #endif
+-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_FUCHSIA)
++#if BUILDFLAG(IS_OZONE)
+     case gfx::NATIVE_PIXMAP:
+       return "platform";
+ #endif

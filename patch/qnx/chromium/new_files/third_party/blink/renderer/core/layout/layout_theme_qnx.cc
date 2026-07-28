@@ -16,8 +16,8 @@ class LayoutThemeQnx final : public LayoutThemeDefault {
 };
 
 LayoutTheme& LayoutTheme::NativeTheme() {
-  static scoped_refptr<LayoutTheme> theme = LayoutThemeQnx::Create();
-  return *theme;
+  DEFINE_STATIC_REF(LayoutTheme, layout_theme, (LayoutThemeQnx::Create()));
+  return *layout_theme;
 }
 
 }  // namespace blink

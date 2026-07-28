@@ -1,5 +1,5 @@
 diff --git src/libANGLE/Context.cpp src/libANGLE/Context.cpp
-index 44fb2a4bfe..45b8267f6e 100644
+index 44fb2a4bfe4dfc2319616441214a24b740d0f322..45b8267f6e3e54a68e7fb0ed33beea22f51ed4e2 100644
 --- src/libANGLE/Context.cpp
 +++ src/libANGLE/Context.cpp
 @@ -639,6 +639,29 @@ void SetCurrentValidContextTLS(Context *context)
@@ -43,7 +43,7 @@ index 44fb2a4bfe..45b8267f6e 100644
  #else
      gCurrentValidContext = context;
 diff --git src/libANGLE/Context.h src/libANGLE/Context.h
-index b18be15deb..2bca24bc5e 100644
+index b18be15deb54665b605d27ef93e52f41e320cd42..2bca24bc5ee40e257317e41f3c02210faf6a9762 100644
 --- src/libANGLE/Context.h
 +++ src/libANGLE/Context.h
 @@ -1186,7 +1186,8 @@ class [[nodiscard]] ScopedContextRef
@@ -57,7 +57,7 @@ index b18be15deb..2bca24bc5e 100644
  extern void SetCurrentValidContextTLS(Context *context);
  #else
 diff --git src/libANGLE/Display.cpp src/libANGLE/Display.cpp
-index 72fb02c02d..daf47bbe1b 100644
+index 72fb02c02de6db120c03b194fa47f01f9b4bfb49..daf47bbe1b47c5e5ae41f6da28c5b48441870391 100644
 --- src/libANGLE/Display.cpp
 +++ src/libANGLE/Display.cpp
 @@ -132,6 +132,29 @@ void SetDisplayTLS(TLSData *tlsData)
@@ -100,10 +100,20 @@ index 72fb02c02d..daf47bbe1b 100644
  #else
      gDisplayTLS = tlsData;
 diff --git src/libGLESv2/global_state.cpp src/libGLESv2/global_state.cpp
-index 0a248caa55..b673bbc772 100644
+index 0a248caa55accf8b493a596628cc105b11a9e53f..9e182cb1623c351b24b5f0074857ccada8485f31 100644
 --- src/libGLESv2/global_state.cpp
 +++ src/libGLESv2/global_state.cpp
-@@ -52,7 +52,8 @@ Thread *AllocateCurrentThread()
+@@ -11,6 +11,9 @@
+ #include "common/debug.h"
+ #include "common/platform.h"
+ #include "common/system_utils.h"
++#if defined(__QNXNTO__)
++#    include "common/terminate_capture_qnx.h"
++#endif
+ #include "libANGLE/ErrorStrings.h"
+ #include "libANGLE/Thread.h"
+ #include "libGLESv2/egl_stubs_autogen.h"
+@@ -52,7 +55,8 @@ Thread *AllocateCurrentThread()
          // Display TLS data is also intentionally leaked.
          ANGLE_SCOPED_DISABLE_LSAN();
          thread = new Thread();
@@ -113,7 +123,7 @@ index 0a248caa55..b673bbc772 100644
          SetCurrentThreadTLS(thread);
  #else
          gCurrentThread = thread;
-@@ -112,6 +113,29 @@ void SetCurrentThreadTLS(Thread *thread)
+@@ -112,6 +116,30 @@ void SetCurrentThreadTLS(Thread *thread)
      ASSERT(CurrentThreadIndex != TLS_INVALID_INDEX);
      angle::SetTLSValue(CurrentThreadIndex, thread);
  }
@@ -123,6 +133,7 @@ index 0a248caa55..b673bbc772 100644
 +    static pthread_once_t once = PTHREAD_ONCE_INIT;
 +    static angle::TLSIndex CurrentThreadIndex = TLS_INVALID_INDEX;
 +    pthread_once(&once, []() {
++      angle::qnx_terminate::Install();
 +      ASSERT(CurrentThreadIndex == TLS_INVALID_INDEX);
 +      CurrentThreadIndex = angle::CreateTLSIndex(nullptr);
 +    });
@@ -143,7 +154,7 @@ index 0a248caa55..b673bbc772 100644
  #elif defined(ANGLE_USE_STATIC_THREAD_LOCAL_VARIABLES)
  static thread_local Thread *gCurrentThread = nullptr;
  Thread *GetCurrentThreadTLS()
-@@ -140,7 +164,8 @@ void SetGlobalLastContext(gl::Context *context)
+@@ -140,7 +168,8 @@ void SetGlobalLastContext(gl::Context *context)
  // It also causes a flaky false positive in TSAN. http://crbug.com/1223970
  ANGLE_NO_SANITIZE_MEMORY ANGLE_NO_SANITIZE_THREAD Thread *GetCurrentThread()
  {
@@ -153,7 +164,7 @@ index 0a248caa55..b673bbc772 100644
      Thread *current = GetCurrentThreadTLS();
  #else
      Thread *current = gCurrentThread;
-@@ -150,7 +175,8 @@ ANGLE_NO_SANITIZE_MEMORY ANGLE_NO_SANITIZE_THREAD Thread *GetCurrentThread()
+@@ -150,7 +179,8 @@ ANGLE_NO_SANITIZE_MEMORY ANGLE_NO_SANITIZE_THREAD Thread *GetCurrentThread()
  
  void SetContextCurrent(Thread *thread, gl::Context *context)
  {
@@ -164,7 +175,7 @@ index 0a248caa55..b673bbc772 100644
  #else
      Thread *currentThread = gCurrentThread;
 diff --git src/libGLESv2/global_state.h src/libGLESv2/global_state.h
-index 32c9921d9b..2faca8c999 100644
+index 32c9921d9bb986e26a90172b3833b4c74b9e2a14..2faca8c99960ac94033c238d04c5f6d48f59b15e 100644
 --- src/libGLESv2/global_state.h
 +++ src/libGLESv2/global_state.h
 @@ -21,7 +21,8 @@

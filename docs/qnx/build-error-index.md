@@ -80,6 +80,11 @@ rg -n "qnx_compiler_builtins|floatundidf.S|unable to make temporary file|expecte
 rg -n "boringssl_asm|OPENSSL_NO_ASM|aes-gcm-avx512|aes-gcm-avx2" docs/qnx/history/build-errors
 rg -n "corrupt patch at line|hunk body shorter than header|trailing empty line" docs/qnx/history/build-errors/bootstrap
 rg -n "overlapping QNX patches|reverse detection|qnx_mesa_fallback_gate|qnx_compositor_frame_capture" docs/qnx/history/build-errors/bootstrap
+rg -n "pseudonymization_salt|expected unqualified-id|zero-context|unidiff-zero" docs/qnx/history/build-errors/bootstrap
+rg -n "heap_profiler_controller|disable_collection_qnx|expected unqualified-id|zero-context" docs/qnx/history/build-errors/bootstrap
+rg -n "metrics_internals_utils|PLATFORM_QNX|not handled in switch|zero-context" docs/qnx/history/build-errors/bootstrap
+rg -n "chrome_web_ui_controller_factory|ReadIsolatedWebAppFaviconsFromDisk|unused function|iwa_guard" docs/qnx/history/build-errors/bootstrap
+rg -n "chrome_main_delegate|SetUpProfilingShutdownHandler|SIGTERMProfilingShutdown|unused function" docs/qnx/history/build-errors/bootstrap
 rg -n "mojo_webui_version_ts_qnx|is_qnx.*mojo|version.mojom-webui" docs/qnx/history/build-errors/bootstrap
 rg -n "FontCache::DeviceScaleFactor|font_platform_data.cc" docs/qnx/history/build-errors/compile
 rg -n "ImportCompatibilityReport|ValidateIncomingFrameForBridge|qnx_frame_importer" docs/qnx/history/build-errors/compile
@@ -94,6 +99,7 @@ rg -n "value_or\(\{\}\)|couldn't infer template argument '_Up'|full_card_request
 rg -n "std::from_range|flat_hash_set<std::string>|deduced conflicting types for parameter 'InputIter'" docs/qnx/history/build-errors/compile
 rg -n "Unsupported target architecture|LaunchDateAndTimeSettings|security_interstitials/content/utils.cc" docs/qnx/history/build-errors/compile
 rg -n "ZygoteStarting|ZygoteForked|USE_ZYGOTE|use_zygote|content_main_runner_impl" docs/qnx/history/build-errors/compile
+rg -n "treat_warnings_as_errors|-Werror|pessimizing|missing braces|exit-time destructor|kCreateShortcut|filter_set" docs/qnx/history/build-errors/compile
 rg -n "Unsupported platform|navigator_base|GetReducedNavigatorPlatform" docs/qnx/history/build-errors/compile
 rg -n "Unsupported platform|extensions/common/command|CommandPlatform" docs/qnx/history/build-errors/compile
 rg -n "DIR_USER_NATIVE_MESSAGING|DIR_NATIVE_MESSAGING|launch_context_posix|chrome_paths_linux" docs/qnx/history/build-errors/compile

@@ -1,3 +1,18 @@
+diff --git include/perfetto/ext/base/unix_socket.h include/perfetto/ext/base/unix_socket.h
+index 28551ca2bb5d645283db33a0d3bfa0c3e5be719a..d5fc21fd8c0471ac97e8e93691f0536439f9e614 100644
+--- include/perfetto/ext/base/unix_socket.h
++++ include/perfetto/ext/base/unix_socket.h
+@@ -470,7 +470,7 @@ class PERFETTO_EXPORT_COMPONENT UnixSocket {
+     !PERFETTO_BUILDFLAG(PERFETTO_OS_FUCHSIA)
+   uid_t peer_uid_ = kInvalidUid;
+ #endif
+-#if PERFETTO_BUILDFLAG(PERFETTO_OS_LINUX) || \
++#if PERFETTO_BUILDFLAG(PERFETTO_OS_LINUX_BUT_NOT_QNX) || \
+     PERFETTO_BUILDFLAG(PERFETTO_OS_ANDROID)
+   pid_t peer_pid_ = kInvalidPid;
+ #endif
+diff --git src/base/unix_socket.cc src/base/unix_socket.cc
+index 448f2cf1ae74b277fa6090c3ffdd984433508938..3bcff7022dc7ca5ff761af06d14fa9bb757fc733 100644
 --- src/base/unix_socket.cc
 +++ src/base/unix_socket.cc
 @@ -62,7 +62,7 @@
@@ -9,7 +24,7 @@
      PERFETTO_BUILDFLAG(PERFETTO_OS_ANDROID)
  // Use a local stripped copy of vm_sockets.h from UAPI.
  #include "src/base/vm_sockets.h"
-@@ -91,7 +91,7 @@
+@@ -91,7 +91,7 @@ using CBufLenType = size_t;
  using CBufLenType = socklen_t;
  #endif
  
@@ -18,21 +33,8 @@
      PERFETTO_BUILDFLAG(PERFETTO_OS_ANDROID)
  constexpr char kVsockNamePrefix[] = "vsock://";
  #endif
-@@ -207,7 +207,7 @@
-       SockaddrAny res(addr_info->ai_addr,
-                       static_cast<socklen_t>(addr_info->ai_addrlen));
-       freeaddrinfo(addr_info);
--      return res;
-+      return std::move(res);
-     }
-     case SockFamily::kInet6: {
-       auto parts = SplitString(socket_name, "]");
-@@ -225,10 +225,10 @@
-       SockaddrAny res(addr_info->ai_addr,
-                       static_cast<socklen_t>(addr_info->ai_addrlen));
-       freeaddrinfo(addr_info);
--      return res;
-+      return std::move(res);
+@@ -228,7 +228,7 @@ SockaddrAny MakeSockAddr(SockFamily family, const std::string& socket_name) {
+       return res;
      }
      case SockFamily::kVsock: {
 -#if PERFETTO_BUILDFLAG(PERFETTO_OS_LINUX) || \
@@ -40,7 +42,7 @@
      PERFETTO_BUILDFLAG(PERFETTO_OS_ANDROID)
        PERFETTO_CHECK(StartsWith(socket_name, kVsockNamePrefix));
        auto address_port = StripPrefix(socket_name, kVsockNamePrefix);
-@@ -246,8 +246,7 @@
+@@ -246,8 +246,7 @@ SockaddrAny MakeSockAddr(SockFamily family, const std::string& socket_name) {
          addr.svm_flags = VMADDR_FLAG_TO_HOST;
        }
  #endif
@@ -50,7 +52,7 @@
  #else
        errno = ENOTSOCK;
        return SockaddrAny();
-@@ -328,7 +327,7 @@
+@@ -328,7 +327,7 @@ SockFamily GetSockFamily(const char* addr) {
    if (addr[0] == '@')
      return SockFamily::kUnix;  // Abstract AF_UNIX sockets.
  
@@ -59,7 +61,7 @@
      PERFETTO_BUILDFLAG(PERFETTO_OS_ANDROID)
    // Vsock address starts with vsock://.
    if (strncmp(addr, kVsockNamePrefix, strlen(kVsockNamePrefix)) == 0)
-@@ -690,7 +689,9 @@
+@@ -690,7 +689,9 @@ ssize_t UnixSocketRaw::Send(const void* msg,
                              size_t num_fds) {
    PERFETTO_DCHECK(fd_);
    msghdr msg_hdr = {};
@@ -70,7 +72,7 @@
    msg_hdr.msg_iov = &iov;
    msg_hdr.msg_iovlen = 1;
    alignas(cmsghdr) char control_buf[256];
-@@ -721,7 +722,9 @@
+@@ -721,7 +722,9 @@ ssize_t UnixSocketRaw::Receive(void* msg,
                                 size_t max_files) {
    PERFETTO_DCHECK(fd_);
    msghdr msg_hdr = {};
@@ -81,6 +83,8 @@
    msg_hdr.msg_iov = &iov;
    msg_hdr.msg_iovlen = 1;
    alignas(cmsghdr) char control_buf[256];
+diff --git src/base/vm_sockets.h src/base/vm_sockets.h
+index ad59b5d91adc7626ac150ba09a0fa1a105dc964b..c8d4864c14e3a2c5a845b1f134b742d8e843475d 100644
 --- src/base/vm_sockets.h
 +++ src/base/vm_sockets.h
 @@ -19,18 +19,15 @@
@@ -105,7 +109,7 @@
  // Fallback and use the stripped copy from the UAPI vm_sockets.h.
  
  #include <stdint.h>  // For uint8_t.
-@@ -48,9 +45,9 @@
+@@ -48,9 +45,9 @@ struct sockaddr_vm {
                           sizeof(unsigned int) - sizeof(uint8_t)];
  };
  
@@ -117,14 +121,3 @@
          // PERFETTO_BUILDFLAG(PERFETTO_OS_ANDROID)
  
  #endif  // SRC_BASE_VM_SOCKETS_H_
---- include/perfetto/ext/base/unix_socket.h
-+++ include/perfetto/ext/base/unix_socket.h
-@@ -470,7 +470,7 @@
-     !PERFETTO_BUILDFLAG(PERFETTO_OS_FUCHSIA)
-   uid_t peer_uid_ = kInvalidUid;
- #endif
--#if PERFETTO_BUILDFLAG(PERFETTO_OS_LINUX) || \
-+#if PERFETTO_BUILDFLAG(PERFETTO_OS_LINUX_BUT_NOT_QNX) || \
-     PERFETTO_BUILDFLAG(PERFETTO_OS_ANDROID)
-   pid_t peer_pid_ = kInvalidPid;
- #endif

@@ -1,0 +1,8 @@
+diff --git cef/libcef/browser/osr/video_consumer_osr.cc cef/libcef/browser/osr/video_consumer_osr.cc
+index 321bf9e51bd15bd527bdcd594b06cb8dcf6f8f33..2017e662166571b93a0417a5c8e2936989e0420c 100644
+--- cef/libcef/browser/osr/video_consumer_osr.cc
++++ cef/libcef/browser/osr/video_consumer_osr.cc
+@@ -127,0 +128 @@
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_LINUX)
+@@ -207,0 +209 @@
++#endif

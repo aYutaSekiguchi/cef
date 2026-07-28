@@ -470,53 +470,39 @@ diff --git base/allocator/partition_allocator/src/partition_alloc/shim/allocator
 index 1ba4cca8db9eeb891ab28ac321be6b79baaf7458..53cd6e330b6400b3166885f3dbc81909ac6df4ec 100644
 --- base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_override_cpp_symbols.h
 +++ base/allocator/partition_allocator/src/partition_alloc/shim/allocator_shim_override_cpp_symbols.h
-@@ -34,6 +34,13 @@
- #define SHIM_CPP_SYMBOLS_EXPORT PA_NOINLINE
- #endif
- 
-+// On QNX, some operator new variants need noexcept explicitly.
-+#if defined(__QNX__)
-+#define __CXX_THROW noexcept
-+#else
-+#define __CXX_THROW
-+#endif
-+
- SHIM_CPP_SYMBOLS_EXPORT void* operator new(size_t size) {
- #if PA_BUILDFLAG(FORWARD_THROUGH_MALLOC)
-   return malloc(size);
-@@ -67,7 +74,7 @@ SHIM_CPP_SYMBOLS_EXPORT void operator delete[](void* p) __THROW {
+@@ -67,7 +67,7 @@ SHIM_CPP_SYMBOLS_EXPORT void operator delete[](void* p) __THROW {
  }
  
  SHIM_CPP_SYMBOLS_EXPORT void* operator new(size_t size,
 -                                           const std::nothrow_t&) __THROW {
-+                                           const std::nothrow_t&) __CXX_THROW {
++                                           const std::nothrow_t&) noexcept {
  #if PA_BUILDFLAG(FORWARD_THROUGH_MALLOC)
    return malloc(size);
  #else
-@@ -76,7 +83,7 @@ SHIM_CPP_SYMBOLS_EXPORT void* operator new(size_t size,
+@@ -76,7 +76,7 @@ SHIM_CPP_SYMBOLS_EXPORT void* operator new(size_t size,
  }
  
  SHIM_CPP_SYMBOLS_EXPORT void* operator new[](size_t size,
 -                                             const std::nothrow_t&) __THROW {
-+                                             const std::nothrow_t&) __CXX_THROW {
++                                             const std::nothrow_t&) noexcept {
  #if PA_BUILDFLAG(FORWARD_THROUGH_MALLOC)
    return malloc(size);
  #else
-@@ -133,7 +140,7 @@ SHIM_CPP_SYMBOLS_EXPORT void* operator new(std::size_t size,
+@@ -133,7 +133,7 @@ SHIM_CPP_SYMBOLS_EXPORT void* operator new(std::size_t size,
  
  SHIM_CPP_SYMBOLS_EXPORT void* operator new(std::size_t size,
                                             std::align_val_t alignment,
 -                                           const std::nothrow_t&) __THROW {
-+                                           const std::nothrow_t&) __CXX_THROW {
++                                           const std::nothrow_t&) noexcept {
  #if PA_BUILDFLAG(FORWARD_THROUGH_MALLOC)
    return aligned_alloc(static_cast<size_t>(alignment), size);
  #else
-@@ -187,7 +194,7 @@ SHIM_CPP_SYMBOLS_EXPORT void* operator new[](std::size_t size,
+@@ -187,7 +187,7 @@ SHIM_CPP_SYMBOLS_EXPORT void* operator new[](std::size_t size,
  
  SHIM_CPP_SYMBOLS_EXPORT void* operator new[](std::size_t size,
                                               std::align_val_t alignment,
 -                                             const std::nothrow_t&) __THROW {
-+                                             const std::nothrow_t&) __CXX_THROW {
++                                             const std::nothrow_t&) noexcept {
  #if PA_BUILDFLAG(FORWARD_THROUGH_MALLOC)
    return aligned_alloc(static_cast<size_t>(alignment), size);
  #else

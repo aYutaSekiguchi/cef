@@ -1,0 +1,16 @@
+diff --git mojo/core/channel_posix.cc mojo/core/channel_posix.cc
+index 43df1bf2fb40e5025e169d787884296e1291c6cd..62f07d294e4bf1a9dc1edb7f9950cb2275f75a11 100644
+--- mojo/core/channel_posix.cc
++++ mojo/core/channel_posix.cc
+@@ -351,8 +351,9 @@ bool ChannelPosix::WriteNoLock(MessageView message_view) {
+ 
+     ssize_t result;
+     if (handles_written < num_handles) {
+-      iovec iov = {const_cast<void*>(message_view.data()),
+-                   message_view.data_num_bytes()};
++      iovec iov = {};
++      iov.iov_base = const_cast<void*>(message_view.data());
++      iov.iov_len = message_view.data_num_bytes();
+       size_t num_handles_to_send =
+           std::min(num_handles - handles_written, kMaxSendmsgHandles);
+       // TODO(crbug.com/439305148): Sending a large number of handles without

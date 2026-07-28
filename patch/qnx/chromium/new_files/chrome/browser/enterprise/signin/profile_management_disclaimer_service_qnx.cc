@@ -4,6 +4,7 @@
 
 #include "chrome/browser/enterprise/signin/profile_management_disclaimer_service.h"
 
+#include "base/no_destructor.h"
 #include "chrome/browser/profiles/profile.h"
 #include "components/signin/public/base/signin_prefs.h"
 
@@ -21,8 +22,8 @@ void ProfileManagementDisclaimerService::EnsureManagedProfileForAccount(
 const CoreAccountId&
 ProfileManagementDisclaimerService::GetAccountBeingConsideredForManagementIfAny()
     const {
-  static const CoreAccountId empty;
-  return empty;
+  static const base::NoDestructor<CoreAccountId> empty;
+  return *empty;
 }
 bool ProfileManagementDisclaimerService::StopCurrentProcessIfPossible() {
   return false;

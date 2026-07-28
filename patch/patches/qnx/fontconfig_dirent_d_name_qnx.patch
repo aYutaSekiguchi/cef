@@ -1,0 +1,16 @@
+diff --git src/fcdir.c src/fcdir.c
+index c17875fc5661d3d5dfd0488aa97d52d60d4da10b..c9d256f6b039451f7e9e1c00afa7338e94385eca 100644
+--- src/fcdir.c
++++ src/fcdir.c
+@@ -260,9 +260,8 @@ FcDirScanConfig (FcFontSet     *set,
+     }
+     while ((e = readdir (d))) {
+ 	/* Ignore . and .. */
+-	if (e->d_name[0] == '.' &&
+-	    (e->d_name[1] == 0 ||
+-	     (e->d_name[1] == '.' && e->d_name[2] == 0)))
++	if (strcmp (e->d_name, ".") == 0 ||
++	    strcmp (e->d_name, "..") == 0)
+ 	    continue;
+ 	if (strlen (e->d_name) < FC_MAX_FILE_LEN) {
+ 	    strcpy ((char *)base, (char *)e->d_name);

@@ -134,6 +134,12 @@
  
  namespace {
  #if DEBUG
+--- v8/src/base/debug/stack_trace_posix.cc
++++ v8/src/base/debug/stack_trace_posix.cc
+@@ -66,0 +67 @@
++#if HAVE_EXECINFO_H
+@@ -76 +76,0 @@
+-#if HAVE_EXECINFO_H
 --- v8/src/base/platform/platform-qnx.cc
 +++ v8/src/base/platform/platform-qnx.cc
 @@ -11,6 +11,7 @@
@@ -144,6 +150,12 @@
  #include <sys/time.h>
  #include <sys/types.h>
  #include <ucontext.h>
+@@ -41,5 +41,0 @@
+-// 0 is never a valid thread id on Qnx since tids and pids share a
+-// name space and pid 0 is reserved (see man 2 kill).
+-static const pthread_t kNoThread = (pthread_t) 0;
+-
+-
 @@ -154,5 +155,12 @@
    return std::nullopt;
  }
@@ -195,3 +207,18 @@ index 9419d7fedfeddfc870ad20170fa2af4c2f267ba8..ee032ffba30dd67e4aa7075140e689ed
  constexpr size_t kMinExpectedOSPageSize = 4 * KB;  // OS page.
  #else
  constexpr size_t kMaximalCodeRangeSize = 128 * MB;
+diff --git v8/src/libsampler/sampler.cc v8/src/libsampler/sampler.cc
+index 5b4b520b202dc0b0dcd1ea5ec04a65e0dd2f477b..27f2e298c4563828aeb743320ca72add3b6288f7 100644
+--- v8/src/libsampler/sampler.cc
++++ v8/src/libsampler/sampler.cc
+@@ -556,6 +556,10 @@ void SignalHandler::FillRegisterState(void* context, RegisterState* state) {
+   state->pc = reinterpret_cast<void*>(mcontext.cpu.eip);
+   state->sp = reinterpret_cast<void*>(mcontext.cpu.esp);
+   state->fp = reinterpret_cast<void*>(mcontext.cpu.ebp);
++#elif V8_HOST_ARCH_X64
++  state->pc = reinterpret_cast<void*>(mcontext.cpu.rip);
++  state->sp = reinterpret_cast<void*>(mcontext.cpu.rsp);
++  state->fp = reinterpret_cast<void*>(mcontext.cpu.rbp);
+ #elif V8_HOST_ARCH_ARM
+   state->pc = reinterpret_cast<void*>(mcontext.cpu.gpr[ARM_REG_PC]);
+   state->sp = reinterpret_cast<void*>(mcontext.cpu.gpr[ARM_REG_SP]);

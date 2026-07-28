@@ -21,6 +21,8 @@
 //
 #if defined(__QNXNTO__)
 
+#include "common/terminate_capture_qnx.h"
+
 #if defined(__QNXNTO__)
 #    if !defined(_QNX_SOURCE)
 #        define _QNX_SOURCE 1
@@ -216,10 +218,5 @@ void Install()
 
 }  // namespace qnx_terminate
 }  // namespace angle
-
-extern "C" __attribute__((constructor)) void angle_qnx_install_terminate_capture(void)
-{
-    ::angle::qnx_terminate::Install();
-}
 
 #endif  // defined(__QNXNTO__)

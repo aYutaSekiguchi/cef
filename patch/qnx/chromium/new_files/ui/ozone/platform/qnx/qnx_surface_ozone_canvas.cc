@@ -22,16 +22,6 @@
 
 namespace ui {
 
-namespace {
-
-// QNX Screen pixel format that matches Skia's kN32_SkColorType (BGRA/RGBA).
-// QNX Screen uses SCREEN_FORMAT_RGBA8888 where R is the MSB of each 32-bit
-// pixel, which on a little-endian x86_64 QEMU guest matches SkColor's
-// BGRA ordering in memory (0xAABBGGRR).
-constexpr int kScreenFormat = SCREEN_FORMAT_RGBA8888;
-
-}  // namespace
-
 QnxSurfaceOzoneCanvas::QnxSurfaceOzoneCanvas(gfx::AcceleratedWidget widget)
     : widget_(widget) {
   // Look up the screen_window_t from QnxWindowManager. This works because

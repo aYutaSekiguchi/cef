@@ -1,17 +1,18 @@
-diff --git components/variations/proto/study.proto components/variations/proto/study.proto
-index 7a5b63ee8cc83..57c5c63ccce04 100644
---- components/variations/proto/study.proto
-+++ components/variations/proto/study.proto
-@@ -246,6 +246,7 @@ message Study {
-     PLATFORM_FUCHSIA = 7;
-     PLATFORM_ANDROID_WEBLAYER = 8;
-     PLATFORM_CHROMEOS_LACROS = 9;
-+    PLATFORM_QNX = 10;
-   }
- 
-   // Possible form factors Chrome is running on.
+diff --git components/metrics/debug/metrics_internals_utils.cc components/metrics/debug/metrics_internals_utils.cc
+index 2a758fb37828d56d995b9135b50827d79f4cef18..bb46521ba1903cf3c02b4a5cb5ade5f6c5160256 100644
+--- components/metrics/debug/metrics_internals_utils.cc
++++ components/metrics/debug/metrics_internals_utils.cc
+@@ -45,6 +45,8 @@ std::string PlatformToString(variations::Study::Platform platform) {
+       return "Mac";
+     case variations::Study::PLATFORM_LINUX:
+       return "Linux";
++    case variations::Study::PLATFORM_QNX:
++      return "QNX";
+     case variations::Study::PLATFORM_CHROMEOS:
+       return "ChromeOS";
+     case variations::Study::PLATFORM_ANDROID:
 diff --git components/variations/client_filterable_state.cc components/variations/client_filterable_state.cc
-index 621634d55eb5f..160c386c73c22 100644
+index 621634d55eb5f3dfb5f99f45439e46b9797f426b..160c386c73c22e4e9dd3fd9ae1f61c73fe4285e0 100644
 --- components/variations/client_filterable_state.cc
 +++ components/variations/client_filterable_state.cc
 @@ -57,6 +57,8 @@ Study::Platform ClientFilterableState::GetCurrentPlatform() {
@@ -23,3 +24,15 @@ index 621634d55eb5f..160c386c73c22 100644
  #else
  #error Unknown platform
  #endif
+diff --git components/variations/proto/study.proto components/variations/proto/study.proto
+index 7a5b63ee8cc839ed0b1129a361578918380bad64..57c5c63ccce0459895065ea96276d081f99e4448 100644
+--- components/variations/proto/study.proto
++++ components/variations/proto/study.proto
+@@ -246,6 +246,7 @@ message Study {
+     PLATFORM_FUCHSIA = 7;
+     PLATFORM_ANDROID_WEBLAYER = 8;
+     PLATFORM_CHROMEOS_LACROS = 9;
++    PLATFORM_QNX = 10;
+   }
+ 
+   // Possible form factors Chrome is running on.

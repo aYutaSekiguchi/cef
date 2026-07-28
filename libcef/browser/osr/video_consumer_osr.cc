@@ -125,6 +125,7 @@ void CefVideoConsumerOSR::OnFrameCaptured(
           (info->pixel_format == media::PIXEL_FORMAT_ARGB ||
            info->pixel_format == media::PIXEL_FORMAT_ABGR));
 
+#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_LINUX)
     // The info->pixel_format will tell if the texture is RGBA or BGRA
     // On Linux, X11 lacks support for RGBA_8888 so it might be BGRA.
     // On Windows and macOS, it should always be RGBA.
@@ -205,6 +206,7 @@ void CefVideoConsumerOSR::OnFrameCaptured(
       paint_info.planes[cef_plain_index++] = cef_plane;
     }
     view_->OnAcceleratedPaint(damage_rect, info->coded_size, paint_info);
+#endif
 #endif
     return;
   }

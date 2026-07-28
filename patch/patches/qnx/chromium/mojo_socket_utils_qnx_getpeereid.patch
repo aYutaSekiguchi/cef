@@ -1,5 +1,5 @@
 diff --git mojo/public/cpp/platform/socket_utils_posix.cc mojo/public/cpp/platform/socket_utils_posix.cc
-index 8cebec59fddd58165c5f323017245b45bedced46..08b0e8e7368b4e6ffba80c353372334ac3a0733e 100644
+index 8cebec59fddd58165c5f323017245b45bedced46..7c5f5290414b9179f455a1cc6723b715d741fd5b 100644
 --- mojo/public/cpp/platform/socket_utils_posix.cc
 +++ mojo/public/cpp/platform/socket_utils_posix.cc
 @@ -26,7 +26,8 @@ bool IsRecoverableError() {
@@ -12,3 +12,14 @@ index 8cebec59fddd58165c5f323017245b45bedced46..08b0e8e7368b4e6ffba80c353372334a
    uid_t socket_euid;
    gid_t socket_gid;
    if (getpeereid(fd, &socket_euid, &socket_gid) < 0) {
+@@ -102,7 +103,9 @@ ssize_t SocketRecvmsg(base::PlatformFile socket,
+                       size_t num_bytes,
+                       std::vector<base::ScopedFD>* descriptors,
+                       bool block) {
+-  struct iovec iov = {buf, num_bytes};
++  struct iovec iov = {};
++  iov.iov_base = buf;
++  iov.iov_len = num_bytes;
+   char cmsg_buf[CMSG_SPACE(kMaxSendmsgHandles * sizeof(int))];
+   struct msghdr msg = {};
+   msg.msg_iov = &iov;

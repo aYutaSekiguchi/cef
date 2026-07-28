@@ -1,0 +1,20 @@
+diff --git src/qnx/api.c src/qnx/api.c
+index 9a7b553cd0c0d388c524494dcb2c21360f12af2f..b7b5db3e401c946a52a29943ebd920759629a83f 100644
+--- src/qnx/api.c
++++ src/qnx/api.c
+@@ -185,15 +185,6 @@ int cpuinfo_qnx_fill_processors_info(struct cpuinfo_processor * processor_list){
+     cpuinfo_clusters_count = 1;
+     cpuinfo_packages_count = 1;
+ 
+-    int l1i_index = SYSPAGE_ARRAY_IDX(cpuinfo,0)->ins_cache;
+-    if ( l1i_index != 0 || l1i_index != 1 ){
+-        l1i_index = 0;
+-    }
+-    int l1d_index = SYSPAGE_ARRAY_IDX(cpuinfo,0)->data_cache;
+-    if ( l1d_index != 0 || l1d_index != 1 ){
+-        l1d_index = 1;
+-    }
+-
+ #if CPUINFO_ARCH_ARM || CPUINFO_ARCH_ARM64
+         uint32_t midr=0;
+         #if CPUINFO_ARCH_ARM64

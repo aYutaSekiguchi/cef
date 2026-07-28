@@ -57,7 +57,7 @@ namespace std::ranges {
 template <class R, class T, class Proj = identity>
 [[nodiscard]] constexpr bool contains(R&& r, const T& value, Proj proj = {}) {
   for (auto&& element : r) {
-    if (std::invoke(proj, element) == value) {
+    if (std::ranges::equal_to{}(std::invoke(proj, element), value)) {
       return true;
     }
   }
