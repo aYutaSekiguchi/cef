@@ -4,6 +4,7 @@
 
 #include "cef/libcef/browser/chrome/views/chrome_browser_widget.h"
 
+#include "base/functional/bind.h"
 #include "cef/libcef/browser/chrome/chrome_browser_host_impl.h"
 #include "cef/libcef/browser/chrome/views/chrome_browser_frame_view.h"
 #include "cef/libcef/browser/thread_util.h"
@@ -45,6 +46,13 @@ void ChromeBrowserWidget::Init(BrowserView* browser_view, Browser* browser) {
 
   // Initialize BrowserView state.
   browser_view->InitBrowser(browser);
+
+  // Browser closure and native window destruction may occur in either order.
+  // Close owned widgets before Browser deletion when the Browser lifecycle
+  // completes first. OnNativeWidgetDestroying handles the reverse ordering.
+  browser_close_subscription_ = browser->RegisterBrowserDidClose(
+      base::BindRepeating(&ChromeBrowserWidget::OnBrowserDidClose,
+                          weak_ptr_factory_.GetWeakPtr()));
 
 #if BUILDFLAG(IS_MAC)
   // Initialize native window state.
@@ -193,14 +201,29 @@ void ChromeBrowserWidget::Activate() {
 }
 
 void ChromeBrowserWidget::OnNativeWidgetDestroying() {
+  CloseOwnedWidgets();
+
+  BrowserWidget::OnNativeWidgetDestroying();
+}
+
+void ChromeBrowserWidget::OnBrowserDidClose(
+    BrowserWindowInterface* browser) {
+  DCHECK(browser_view());
+  DCHECK_EQ(browser_view()->browser(), browser);
+  CloseOwnedWidgets();
+}
+
+void ChromeBrowserWidget::CloseOwnedWidgets() {
+  if (!GetNativeView()) {
+    return;
+  }
+
   views::Widget::ForEachOwnedWidget(GetNativeView(),
                                     [this](views::Widget* widget) {
                                       if (widget != this) {
                                         widget->CloseNow();
                                       }
                                     });
-
-  BrowserWidget::OnNativeWidgetDestroying();
 }
 
 void ChromeBrowserWidget::OnNativeWidgetDestroyed() {
