@@ -33,6 +33,7 @@
 #include "ui/base/ime/text_input_client.h"
 #include "ui/compositor/compositor.h"
 #include "ui/compositor/layer.h"
+#include "ui/compositor/layer_surface.h"
 #include "ui/events/base_event_utils.h"
 #include "ui/events/gesture_detection/filtered_gesture_provider.h"
 #include "ui/events/gesture_detection/gesture_configuration.h"
@@ -299,7 +300,7 @@ class CefRenderWidgetHostViewOSR
   content::RenderWidgetHostImpl* render_widget_host() const {
     return render_widget_host_;
   }
-  ui::Layer* GetRootLayer() const;
+  ui::LayerSurface* GetRootLayer() const;
 
   void OnPresentCompositorFrame();
 
@@ -397,7 +398,7 @@ class CefRenderWidgetHostViewOSR
   std::unique_ptr<content::DelegatedFrameHost> delegated_frame_host_;
   std::unique_ptr<content::DelegatedFrameHostClient>
       delegated_frame_host_client_;
-  std::unique_ptr<ui::LayerSolidColor> root_layer_;
+  std::unique_ptr<ui::LayerSurface> root_layer_;
 
   // Used to allocate LocalSurfaceIds when this is embedding external content.
   std::unique_ptr<viz::ParentLocalSurfaceIdAllocator>

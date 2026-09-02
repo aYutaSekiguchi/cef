@@ -1,8 +1,8 @@
 diff --git chrome/browser/policy/BUILD.gn chrome/browser/policy/BUILD.gn
-index d6bafa4aa26b306b09a2a43138b39721d48e1e52..51f6d08e3aaa245c3201f87d8e3d727e9841f993 100644
+index 14a3dd2b3bafcb7bc932b39b48202fefd7d752f5..08485bfe16f49f4615c50982f6a6ec98009bbbad 100644
 --- chrome/browser/policy/BUILD.gn
 +++ chrome/browser/policy/BUILD.gn
-@@ -27,6 +27,7 @@ source_set("path_parser") {
+@@ -28,6 +28,7 @@ source_set("path_parser") {
      "//base",
      "//chrome/common:constants",
      "//components/policy:generated",
@@ -114,7 +114,7 @@ index 41bb311b3399af2014bf416eb65e99cae9b8df6b..df1b1e2514990a5d5c091cae2bd9ab30
    }
  
 diff --git chrome/browser/policy/chrome_browser_policy_connector.cc chrome/browser/policy/chrome_browser_policy_connector.cc
-index c475e2858878bd22323098ea6612123968e505e7..618aae9eb3b0928a64370085ef0e26bf0cb359e9 100644
+index 1761f93bfefa85685fe87f6ee2c8dcb3e54b9bf0..361b640b4b05b7c77cd73a60de007f1b0d7c09fd 100644
 --- chrome/browser/policy/chrome_browser_policy_connector.cc
 +++ chrome/browser/policy/chrome_browser_policy_connector.cc
 @@ -12,10 +12,13 @@
@@ -131,7 +131,7 @@ index c475e2858878bd22323098ea6612123968e505e7..618aae9eb3b0928a64370085ef0e26bf
  #include "chrome/browser/browser_process.h"
  #include "chrome/browser/enterprise/browser_management/management_service_factory.h"
  #include "chrome/browser/policy/configuration_policy_handler_list_factory.h"
-@@ -71,6 +74,11 @@
+@@ -70,6 +73,11 @@
  namespace policy {
  namespace {
  bool g_command_line_enabled_for_testing = false;
@@ -143,7 +143,7 @@ index c475e2858878bd22323098ea6612123968e505e7..618aae9eb3b0928a64370085ef0e26bf
  }  // namespace
  
  ChromeBrowserPolicyConnector::ChromeBrowserPolicyConnector()
-@@ -253,6 +261,73 @@ void ChromeBrowserPolicyConnector::EnableCommandLineSupportForTesting() {
+@@ -251,6 +259,73 @@ void ChromeBrowserPolicyConnector::EnableCommandLineSupportForTesting() {
    g_command_line_enabled_for_testing = true;
  }
  
@@ -217,7 +217,7 @@ index c475e2858878bd22323098ea6612123968e505e7..618aae9eb3b0928a64370085ef0e26bf
  base::flat_set<std::string>
  ChromeBrowserPolicyConnector::device_affiliation_ids() const {
    if (!device_affiliation_ids_for_testing_.empty()) {
-@@ -316,25 +391,22 @@ ChromeBrowserPolicyConnector::CreatePolicyProviders() {
+@@ -314,25 +389,22 @@ ChromeBrowserPolicyConnector::CreatePolicyProviders() {
  std::unique_ptr<ConfigurationPolicyProvider>
  ChromeBrowserPolicyConnector::CreatePlatformProvider() {
  #if BUILDFLAG(IS_WIN)
@@ -252,7 +252,7 @@ index c475e2858878bd22323098ea6612123968e505e7..618aae9eb3b0928a64370085ef0e26bf
    auto loader = std::make_unique<PolicyLoaderMac>(
        base::ThreadPool::CreateSequencedTaskRunner(
            {base::MayBlock(), base::TaskPriority::BEST_EFFORT}),
-@@ -345,7 +417,7 @@ ChromeBrowserPolicyConnector::CreatePlatformProvider() {
+@@ -343,7 +415,7 @@ ChromeBrowserPolicyConnector::CreatePlatformProvider() {
                                                 std::move(loader));
  #elif BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_CHROMEOS)
    base::FilePath config_dir_path;
@@ -400,10 +400,10 @@ index e36249713bfd5c254a322c3c55fd31d129937fab..8e60ff056d2bf996e6fb84b924379f2f
                       // policy files that allow sys-admins
                       // to set policies for chrome. This directory
 diff --git components/policy/BUILD.gn components/policy/BUILD.gn
-index 640d16727dbbab2c518545b1d9c78916de4a8df8..691ef9968d8a3702935f2ca3f9f21e9397b7e7b0 100644
+index 5f345583e6c6f2bfdc486ebcc0a0112c2b953a3f..55f024e969a2c8828eb98a6521c8bf0af8b85b6f 100644
 --- components/policy/BUILD.gn
 +++ components/policy/BUILD.gn
-@@ -267,6 +267,7 @@ static_library("generated") {
+@@ -305,6 +305,7 @@ static_library("generated") {
      ":cloud_policy_proto_generated_compile",
      ":policy_code_generate",
      "//base",

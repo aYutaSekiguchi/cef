@@ -357,7 +357,6 @@ if (is_win) {
       # Otherwise we need to copy this array into CEF, which would be difficult
       # to maintain.
       "//chrome/common/crash_keys.cc",
-      "//chrome/common/chrome_switches.cc",
       "//components/webui/flags/flags_ui_switches.cc",
       "//content/public/common/content_switches.cc",
     ]
@@ -1049,7 +1048,7 @@ source_set("libcef_static") {
     ]
 
     deps += [
-      "//chrome/browser/win:isolated_browser_support",
+      "//chrome/browser/win/isolated_browser:isolated_browser_support",
       "//chrome/install_static:secondary_module",
       "//chrome/chrome_elf",
     ]
@@ -1800,11 +1799,11 @@ if (is_mac) {
     if (v8_use_external_startup_data) {
       public_deps += [ "//v8" ]
       if (use_v8_context_snapshot) {
-        sources += [ "$root_build_dir/$v8_context_snapshot_filename" ]
+        sources += [ "$root_out_dir/$v8_context_snapshot_filename" ]
         public_deps += [ "//tools/v8_context_snapshot" ]
       }
       if (!use_v8_context_snapshot || include_both_v8_snapshots) {
-        sources += [ "$root_build_dir/snapshot_blob.bin" ]
+        sources += [ "$root_out_dir/snapshot_blob.bin" ]
       }
     }
 

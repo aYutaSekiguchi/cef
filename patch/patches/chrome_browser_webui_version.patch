@@ -124,7 +124,7 @@ index 7d1beedfffbfdd34323cfb749bec83187b54778e..d4c79e26e51deb9a32fb9649a1c21a18
    // Factory for the creating refs in callbacks.
    base::WeakPtrFactory<VersionHandler> weak_ptr_factory_{this};
 diff --git chrome/browser/ui/webui/version/version_ui.cc chrome/browser/ui/webui/version/version_ui.cc
-index 6f1f293bacaefada3d5be117f67cac69fe1f973b..e5d5a777ebe681d17f69feffeebe798a12ba2e0c 100644
+index 4c523d48d8f8537042a9483e4fd0c6d163c8de52..35a8e8de47893687e3a11a762c7101a358b252e0 100644
 --- chrome/browser/ui/webui/version/version_ui.cc
 +++ chrome/browser/ui/webui/version/version_ui.cc
 @@ -19,6 +19,7 @@
@@ -221,10 +221,10 @@ index 2193019afd18eac09e7812737dc2de3533c2f404..42ec99b0a4673f9ba7c8bbd568a18fa8
 +  }
  }
 diff --git components/webui/version/resources/about_version.css components/webui/version/resources/about_version.css
-index 33e926a18ce3c9356a3af5c96e406f720fba31f5..618242cefacb98fa2f00e337c1927f051794a6af 100644
+index 5b7c6b03bf496988401e0b0d961f5beed5067563..b0f9216b789590395edeeba396c552e884cb7812 100644
 --- components/webui/version/resources/about_version.css
 +++ components/webui/version/resources/about_version.css
-@@ -131,3 +131,7 @@ body {
+@@ -135,3 +135,7 @@ html[webui-rounded-icons] #copy-to-clipboard-icon {
    position: fixed;
    width: 1px;
  }
@@ -233,7 +233,7 @@ index 33e926a18ce3c9356a3af5c96e406f720fba31f5..618242cefacb98fa2f00e337c1927f05
 +  font-size: 0.8em;
 +}
 diff --git components/webui/version/resources/about_version.html components/webui/version/resources/about_version.html
-index 664cb15bf7ee51115457b8bac2f3dc257b78e304..a4babdffd71b66162abc7a7f2ce972387e54babf 100644
+index 950b0a5c4895e81eb5c7b3e5736a5d5610b32bd9..840c4baf591a40f7b4845a63ae72e5f1bb811ea1 100644
 --- components/webui/version/resources/about_version.html
 +++ components/webui/version/resources/about_version.html
 @@ -49,9 +49,21 @@ about:version template page

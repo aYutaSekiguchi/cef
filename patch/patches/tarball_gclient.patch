@@ -1,8 +1,8 @@
 diff --git gclient.py gclient.py
-index 9f19223375a6e7beff929bafdf10c72dc6c434fb..07cc34a73a67481d6485d06e337a2fb1ac63bd12 100755
+index c9bf69dac6b34a3c1e7e6ff49817832905c0bede..738503efef69316023ec466d645e4784388b5ad1 100755
 --- gclient.py
 +++ gclient.py
-@@ -1123,7 +1123,8 @@ class Dependency(gclient_utils.WorkItem, DependencySettings):
+@@ -1116,7 +1116,8 @@ class Dependency(gclient_utils.WorkItem, DependencySettings):
          if self.git_dependencies_state == gclient_eval.SUBMODULES:
              deps.update(self.ParseGitSubmodules())
  
@@ -12,7 +12,7 @@ index 9f19223375a6e7beff929bafdf10c72dc6c434fb..07cc34a73a67481d6485d06e337a2fb1
              # Git submodules are used - get their state.
              self._known_dependency_diff = self.CreateSCM().GetSubmoduleDiff()
              self._dependency_index_state = (
-@@ -1363,7 +1364,7 @@ class Dependency(gclient_utils.WorkItem, DependencySettings):
+@@ -1355,7 +1356,7 @@ class Dependency(gclient_utils.WorkItem, DependencySettings):
          )
          if not revision_override and not self.managed:
              revision_override = "unmanaged"
@@ -21,7 +21,7 @@ index 9f19223375a6e7beff929bafdf10c72dc6c434fb..07cc34a73a67481d6485d06e337a2fb1
              # Create a shallow copy to mutate revision.
              options = copy.copy(options)
              options.revision = revision_override
-@@ -3330,7 +3331,12 @@ class CipdDependency(Dependency):
+@@ -3337,7 +3338,12 @@ class CipdDependency(Dependency):
              fp = os.path.join(
                  parent.root.root_dir, parent.name, dep_value["version_file"]
              )

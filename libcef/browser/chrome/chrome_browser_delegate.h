@@ -55,7 +55,7 @@ class ChromeBrowserDelegate : public cef::BrowserDelegate {
 
   static Browser* CreateDevToolsBrowser(
       Profile* profile,
-      Browser* opener,
+      BrowserWindowInterface* opener,
       content::WebContents* inspected_web_contents,
       std::unique_ptr<content::WebContents>& devtools_contents);
 

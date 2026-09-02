@@ -1,5 +1,5 @@
 diff --git chrome/browser/ui/views/frame/browser_window_property_manager_win.cc chrome/browser/ui/views/frame/browser_window_property_manager_win.cc
-index a2b4f28e7ec965c95c7e52972bdeb22330f4e0a1..f1fac633b4dcd2e43aaca30b9043e228d9087453 100644
+index 00445dbee1a207264eb601d25ed8852171fb197e..ee3dda17123579f5abfe6a1f840a8247018c046d 100644
 --- chrome/browser/ui/views/frame/browser_window_property_manager_win.cc
 +++ chrome/browser/ui/views/frame/browser_window_property_manager_win.cc
 @@ -8,6 +8,7 @@
@@ -10,15 +10,16 @@ index a2b4f28e7ec965c95c7e52972bdeb22330f4e0a1..f1fac633b4dcd2e43aaca30b9043e228
  #include "chrome/browser/browser_process.h"
  #include "chrome/browser/profiles/profile.h"
  #include "chrome/browser/profiles/profile_manager.h"
-@@ -50,6 +51,16 @@ void BrowserWindowPropertyManager::UpdateWindowProperties() {
-   const Browser* browser = view_->browser();
+@@ -52,6 +53,17 @@ void BrowserWindowPropertyManager::UpdateWindowProperties() {
+   const BrowserWindowInterface* browser = view_->browser();
    Profile* profile = const_cast<Profile*>(browser->GetProfile());
  
 +#if BUILDFLAG(ENABLE_CEF)
 +  if (browser->cef_delegate() &&
-+        (browser->is_type_picture_in_picture() ||
-+         browser->is_type_devtools()) &&
-+        browser->cef_delegate()->HasViewsHostedOpener()) {
++      (browser->GetType() ==
++           BrowserWindowInterface::Type::TYPE_PICTURE_IN_PICTURE ||
++       browser->GetType() == BrowserWindowInterface::Type::TYPE_DEVTOOLS) &&
++      browser->cef_delegate()->HasViewsHostedOpener()) {
 +    // Don't create a separate taskbar group.
 +    return;
 +  }

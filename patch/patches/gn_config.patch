@@ -1,5 +1,5 @@
 diff --git .gn .gn
-index 66bd4aa035340330e8238bcb5dd946f538b6a973..2d5ecf3f904d44168f470c92d780c45e0fba68e4 100644
+index 488189e60c708880693387b6db385611c44f5fd5..4a1b6e9e450fcf0e1e48013e2ae33a7cd135c2ab 100644
 --- .gn
 +++ .gn
 @@ -157,6 +157,8 @@ exec_script_allowlist =
@@ -12,7 +12,7 @@ index 66bd4aa035340330e8238bcb5dd946f538b6a973..2d5ecf3f904d44168f470c92d780c45e
  
        "//google_apis/BUILD.gn",
 diff --git BUILD.gn BUILD.gn
-index 0bd5d40ff7086c14f4e74a573d7b9d4ab89f2c8e..f9d7276b62483dc85b5b5ffcd9baabf8ed2b365f 100644
+index d55402aaad0d7abdb4f9cddfd775ae348e621f0c..1dab4ca47ad76c2141b01290f619bfe9802a825d 100644
 --- BUILD.gn
 +++ BUILD.gn
 @@ -22,6 +22,7 @@ import("//build/config/ui.gni")
@@ -21,9 +21,9 @@ index 0bd5d40ff7086c14f4e74a573d7b9d4ab89f2c8e..f9d7276b62483dc85b5b5ffcd9baabf8
  import("//build/util/generate_wrapper.gni")
 +import("//cef/libcef/features/features.gni")
  import("//chrome/browser/buildflags.gni")
- import("//chrome/enterprise_companion/buildflags.gni")
+ import("//chrome/enterprise_companion/config.gni")
  import("//components/enterprise/buildflags/buildflags.gni")
-@@ -283,6 +284,10 @@ group("gn_all") {
+@@ -288,6 +289,10 @@ group("gn_all") {
  
      deps += root_extra_deps
  
@@ -78,7 +78,7 @@ index bd411669389525e8f03eb329a4cf700ad89b62f3..fba7843d79796b903b592b69e2e1f2c7
  
  visual_studio_version_logs = [ "windows_sdk_version=${windows_sdk_version}" ]
 diff --git chrome/chrome_paks.gni chrome/chrome_paks.gni
-index e18c99499d08fd9984e1885aa7c2cbb39b583dc4..45adfcf3292590ef39089272b8a8a5f7dbc40179 100644
+index 6008e03a8997c9d9bde410bb82b12dca89313e13..0b5cea8b7a296ba4565078f3f24c621d5699e447 100644
 --- chrome/chrome_paks.gni
 +++ chrome/chrome_paks.gni
 @@ -5,6 +5,7 @@
@@ -89,8 +89,8 @@ index e18c99499d08fd9984e1885aa7c2cbb39b583dc4..45adfcf3292590ef39089272b8a8a5f7
  import("//chrome/browser/buildflags.gni")
  import("//chrome/common/features.gni")
  import("//components/compose/features.gni")
-@@ -530,6 +531,11 @@ template("chrome_extra_paks") {
-       ]
+@@ -516,6 +517,11 @@ template("chrome_extra_paks") {
+       deps += [ "//chrome/browser/resources/skills:resources" ]
      }
  
 +    if (enable_cef) {
@@ -102,7 +102,7 @@ index e18c99499d08fd9984e1885aa7c2cbb39b583dc4..45adfcf3292590ef39089272b8a8a5f7
        sources += [
          "$root_gen_dir/chrome/aim_eligibility_extension_resources.pak",
 diff --git chrome/chrome_repack_locales.gni chrome/chrome_repack_locales.gni
-index 19be5865dc73b3410378b4650a28930cd95b9ccb..00cfdbf71ea2de29e1af26b30ff07c6b4b79c87b 100644
+index 226c91dd847f533d800407fb95cf2d7b56917e6e..ad2d86dfd8a04e4a67eee7533a7289d5210c45eb 100644
 --- chrome/chrome_repack_locales.gni
 +++ chrome/chrome_repack_locales.gni
 @@ -4,6 +4,7 @@
@@ -113,7 +113,7 @@ index 19be5865dc73b3410378b4650a28930cd95b9ccb..00cfdbf71ea2de29e1af26b30ff07c6b
  import("//extensions/buildflags/buildflags.gni")
  import("//tools/grit/repack.gni")
  
-@@ -114,6 +115,10 @@ template("chrome_repack_locales") {
+@@ -112,6 +113,10 @@ template("chrome_repack_locales") {
          "//third_party/search_engines_data:search_engine_descriptions_strings",
        ]
      }

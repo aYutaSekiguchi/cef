@@ -5,6 +5,7 @@
 #include "cef/libcef/browser/chrome/views/chrome_browser_widget.h"
 
 #include "base/functional/bind.h"
+#include "cef/libcef/browser/chrome/browser_util.h"
 #include "cef/libcef/browser/chrome/chrome_browser_host_impl.h"
 #include "cef/libcef/browser/chrome/views/chrome_browser_frame_view.h"
 #include "cef/libcef/browser/thread_util.h"
@@ -181,7 +182,8 @@ std::unique_ptr<views::FrameView> ChromeBrowserWidget::CreateFrameView() {
 
 void ChromeBrowserWidget::Activate() {
   if (browser_view() && browser_view()->browser() &&
-      browser_view()->browser()->is_type_devtools()) {
+      browser_view()->browser()->GetType() ==
+          BrowserWindowInterface::TYPE_DEVTOOLS) {
     if (auto browser_host = ChromeBrowserHostImpl::GetBrowserForBrowser(
             browser_view()->browser())) {
       if (browser_host->platform_delegate()->HasExternalParent()) {
@@ -206,8 +208,7 @@ void ChromeBrowserWidget::OnNativeWidgetDestroying() {
   BrowserWidget::OnNativeWidgetDestroying();
 }
 
-void ChromeBrowserWidget::OnBrowserDidClose(
-    BrowserWindowInterface* browser) {
+void ChromeBrowserWidget::OnBrowserDidClose(BrowserWindowInterface* browser) {
   DCHECK(browser_view());
   DCHECK_EQ(browser_view()->browser(), browser);
   CloseOwnedWidgets();
@@ -241,7 +242,7 @@ void ChromeBrowserWidget::OnNativeWidgetDestroyed() {
     browser_view()->DeleteBrowserWindow();
 
     // Destruction logic from BrowserWidget::OnNativeWidgetDestroyed.
-    Browser* const browser = browser_view()->browser();
+    Browser* const browser = cef::BrowserForBWI(browser_view()->browser());
     auto* unload_controller = UnloadController::From(browser);
     unload_controller->set_force_skip_warning_user_on_close(true);
     unload_controller->OnWindowClosing();

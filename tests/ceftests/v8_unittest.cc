@@ -5,6 +5,7 @@
 #include <sstream>
 
 #include "include/base/cef_callback.h"
+#include "include/cef_api_hash.h"
 #include "include/cef_task.h"
 #include "include/cef_v8.h"
 #include "include/wrapper/cef_closure_task.h"
@@ -104,7 +105,9 @@ enum V8TestMode {
   V8TEST_STACK_TRACE,
   V8TEST_ON_UNCAUGHT_EXCEPTION,
   V8TEST_ON_UNCAUGHT_EXCEPTION_DEV_TOOLS,
+#if CEF_API_REMOVED(CEF_NEXT)
   V8TEST_EXTENSION,
+#endif
   V8TEST_HANDLER_CALL_ON_RELEASED_CONTEXT,
 };
 
@@ -297,9 +300,11 @@ class V8RendererTest : public ClientAppRenderer::Delegate,
   // Run a test on render process startup.
   void RunStartupTest() {
     switch (test_mode_) {
+#if CEF_API_REMOVED(CEF_NEXT)
       case V8TEST_EXTENSION:
         RunExtensionTest();
         break;
+#endif
       default:
         break;
     }
@@ -2923,6 +2928,7 @@ class V8RendererTest : public ClientAppRenderer::Delegate,
         "window.setTimeout(test, 0)", browser_->GetMainFrame()->GetURL(), 0);
   }
 
+#if CEF_API_REMOVED(CEF_NEXT)
   // Test execution of a native function when the extension is loaded.
   void RunExtensionTest() {
     std::string code =
@@ -2951,6 +2957,7 @@ class V8RendererTest : public ClientAppRenderer::Delegate,
     CefRegisterExtension("v8/test-extension", code,
                          new Handler(&startup_test_success_));
   }
+#endif  // CEF_API_REMOVED(CEF_NEXT)
 
   void OnBrowserCreated(CefRefPtr<ClientAppRenderer> app,
                         CefRefPtr<CefBrowser> browser,
@@ -3578,7 +3585,9 @@ V8_TEST_EX(Binding, V8TEST_BINDING, kV8BindingTestUrl)
 V8_TEST(StackTrace, V8TEST_STACK_TRACE)
 V8_TEST(OnUncaughtException, V8TEST_ON_UNCAUGHT_EXCEPTION)
 V8_TEST(OnUncaughtExceptionDevTools, V8TEST_ON_UNCAUGHT_EXCEPTION_DEV_TOOLS)
+#if CEF_API_REMOVED(CEF_NEXT)
 V8_TEST(Extension, V8TEST_EXTENSION)
+#endif
 V8_TEST_EX(HandlerCallOnReleasedContext,
            V8TEST_HANDLER_CALL_ON_RELEASED_CONTEXT,
            kV8HandlerCallOnReleasedContextUrl)

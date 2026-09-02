@@ -34,10 +34,10 @@ index 2d73f4cf7e49380c9793751b24ceab848d753e6c..2e95396a5fd514d2953234ca6f57a3f4
  #endif
  
 diff --git chrome/browser/extensions/api/tabs/tabs_api.cc chrome/browser/extensions/api/tabs/tabs_api.cc
-index 0041a0cf811199a356ac09d7da02965b21d2fc05..03aedf0241ac85f09864fb65a494ce36da137d21 100644
+index d225b3926e66808ba3f78ed9b654517d9fec4b1d..6ccbe28a4765747c5bdf42a294a4b58b2f763705 100644
 --- chrome/browser/extensions/api/tabs/tabs_api.cc
 +++ chrome/browser/extensions/api/tabs/tabs_api.cc
-@@ -2537,31 +2537,31 @@ ExtensionFunction::ResponseAction TabsUpdateFunction::Run() {
+@@ -2593,31 +2593,31 @@ ExtensionFunction::ResponseAction TabsUpdateFunction::Run() {
    }
  
    // tabs_internal::GetTabById may return a null window for prerender tabs.
@@ -90,7 +90,7 @@ index 0041a0cf811199a356ac09d7da02965b21d2fc05..03aedf0241ac85f09864fb65a494ce36
  
    if (params->update_properties.muted &&
        !SetTabAudioMuted(contents, *params->update_properties.muted,
-@@ -2602,7 +2602,7 @@ ExtensionFunction::ResponseAction TabsUpdateFunction::Run() {
+@@ -2658,7 +2658,7 @@ ExtensionFunction::ResponseAction TabsUpdateFunction::Run() {
    }
  #endif
  
@@ -99,7 +99,7 @@ index 0041a0cf811199a356ac09d7da02965b21d2fc05..03aedf0241ac85f09864fb65a494ce36
      bool pinned = *params->update_properties.pinned;
  
      if (target_tab->IsPinned() != pinned) {
-@@ -2632,7 +2632,8 @@ ExtensionFunction::ResponseAction TabsUpdateFunction::Run() {
+@@ -2688,7 +2688,8 @@ ExtensionFunction::ResponseAction TabsUpdateFunction::Run() {
    // Navigate the tab to a new location if the url is different.
    if (params->update_properties.url) {
      std::string updated_url = *params->update_properties.url;
@@ -110,7 +110,7 @@ index 0041a0cf811199a356ac09d7da02965b21d2fc05..03aedf0241ac85f09864fb65a494ce36
        return RespondNow(Error(ErrorUtils::FormatErrorMessage(
            tabs_constants::kURLsNotAllowedInIncognitoError, updated_url)));
 diff --git chrome/browser/extensions/extension_tab_util.cc chrome/browser/extensions/extension_tab_util.cc
-index 6238051f9a21504d35957c0208da8e60f5dbb43f..312e80e4165bcd0d69b961cfd3aec14c08b23f1a 100644
+index 285481f45a49b82ba50e9b5b0df33519add40a7d..da312fc7869222d7e88963a02b51d0185cf6c9ad 100644
 --- chrome/browser/extensions/extension_tab_util.cc
 +++ chrome/browser/extensions/extension_tab_util.cc
 @@ -70,6 +70,7 @@
@@ -119,7 +119,7 @@ index 6238051f9a21504d35957c0208da8e60f5dbb43f..312e80e4165bcd0d69b961cfd3aec14c
  #else
 +#include "cef/libcef/features/features.h"
  #include "chrome/browser/resource_coordinator/tab_lifecycle_unit_external.h"
- #include "chrome/browser/ui/browser.h"                             // nogncheck
+ // nogncheck
  #include "chrome/browser/ui/navigator/browser_navigator_params.h"  // nogncheck
 @@ -86,6 +87,10 @@
  
@@ -132,7 +132,7 @@ index 6238051f9a21504d35957c0208da8e60f5dbb43f..312e80e4165bcd0d69b961cfd3aec14c
  using content::NavigationEntry;
  using content::WebContents;
  using extensions::mojom::APIPermissionID;
-@@ -665,6 +670,14 @@ bool ExtensionTabUtil::GetTabById(int tab_id,
+@@ -671,6 +676,14 @@ bool ExtensionTabUtil::GetTabById(int tab_id,
      }
    }
  
@@ -148,7 +148,7 @@ index 6238051f9a21504d35957c0208da8e60f5dbb43f..312e80e4165bcd0d69b961cfd3aec14c
    // tab id exists as a prerendering tab, and the API will returns
    // `api::tabs::TAB_INDEX_NONE` for `out_tab_index` and a valid `WebContents`.
 diff --git chrome/browser/ui/tab_helpers.h chrome/browser/ui/tab_helpers.h
-index de20a63945249dc004184359f91caf3a65feb945..e931443a1d6b39447de743ff82a21d2795b5a93d 100644
+index d80eafa666b384cf1ec16ebc638456b570ca4e79..bff4d77829ad5875518b8c9434e00fba69833cf8 100644
 --- chrome/browser/ui/tab_helpers.h
 +++ chrome/browser/ui/tab_helpers.h
 @@ -6,6 +6,7 @@

@@ -1,5 +1,5 @@
 diff --git chrome/browser/download/chrome_download_manager_delegate.cc chrome/browser/download/chrome_download_manager_delegate.cc
-index 27be7a3c72f69fe3167799ce0bbc3394989a1cec..b1d78cf7f20328d9fc61831da939e951cbf62011 100644
+index d0b653e5eaaf2f62f67039c9fd72e8297a1710c0..f5a090d9d558a34a25241b5da31c6885fde19794 100644
 --- chrome/browser/download/chrome_download_manager_delegate.cc
 +++ chrome/browser/download/chrome_download_manager_delegate.cc
 @@ -31,6 +31,7 @@
@@ -10,7 +10,7 @@ index 27be7a3c72f69fe3167799ce0bbc3394989a1cec..b1d78cf7f20328d9fc61831da939e951
  #include "chrome/browser/browser_process.h"
  #include "chrome/browser/download/download_core_service.h"
  #include "chrome/browser/download/download_core_service_factory.h"
-@@ -178,6 +179,10 @@
+@@ -182,6 +183,10 @@
  #endif  // BUILDFLAG(ENTERPRISE_CLOUD_CONTENT_ANALYSIS)
  #endif  // BUILDFLAG(SAFE_BROWSING_DOWNLOAD_PROTECTION)
  
@@ -21,7 +21,7 @@ index 27be7a3c72f69fe3167799ce0bbc3394989a1cec..b1d78cf7f20328d9fc61831da939e951
  using content::BrowserThread;
  using content::DownloadManager;
  using download::DownloadItem;
-@@ -639,6 +644,10 @@ ChromeDownloadManagerDelegate::ChromeDownloadManagerDelegate(Profile* profile)
+@@ -687,6 +692,10 @@ ChromeDownloadManagerDelegate::ChromeDownloadManagerDelegate(Profile* profile)
        download_message_bridge_(std::make_unique<DownloadMessageBridge>()),
  #endif
        download_prefs_(std::make_unique<DownloadPrefs>(profile)) {
@@ -32,7 +32,7 @@ index 27be7a3c72f69fe3167799ce0bbc3394989a1cec..b1d78cf7f20328d9fc61831da939e951
  }
  
  ChromeDownloadManagerDelegate::~ChromeDownloadManagerDelegate() {
-@@ -707,6 +716,9 @@ void ChromeDownloadManagerDelegate::Shutdown() {
+@@ -755,6 +764,9 @@ void ChromeDownloadManagerDelegate::Shutdown() {
      download_manager_->RemoveObserver(this);
      download_manager_ = nullptr;
    }
@@ -42,7 +42,7 @@ index 27be7a3c72f69fe3167799ce0bbc3394989a1cec..b1d78cf7f20328d9fc61831da939e951
  }
  
  void ChromeDownloadManagerDelegate::OnDownloadCanceledAtShutdown(
-@@ -787,6 +799,12 @@ bool ChromeDownloadManagerDelegate::DetermineDownloadTarget(
+@@ -835,6 +847,12 @@ bool ChromeDownloadManagerDelegate::DetermineDownloadTarget(
      ReportPDFLoadStatus(PDFLoadStatus::kTriggeredNoGestureDriveByDownload);
    }
  
@@ -55,7 +55,7 @@ index 27be7a3c72f69fe3167799ce0bbc3394989a1cec..b1d78cf7f20328d9fc61831da939e951
    DownloadTargetDeterminer::CompletionCallback target_determined_callback =
        base::BindOnce(&ChromeDownloadManagerDelegate::OnDownloadTargetDetermined,
                       weak_ptr_factory_.GetWeakPtr(), download->GetId(),
-@@ -1345,9 +1363,12 @@ void ChromeDownloadManagerDelegate::OpenDownload(DownloadItem* download) {
+@@ -1399,9 +1417,12 @@ void ChromeDownloadManagerDelegate::OpenDownload(DownloadItem* download) {
  
    BrowserWindowInterface* browser =
        chrome::ScopedTabbedBrowserDisplayer(profile_).browser_window_interface();
@@ -72,7 +72,7 @@ index 27be7a3c72f69fe3167799ce0bbc3394989a1cec..b1d78cf7f20328d9fc61831da939e951
        net::FilePathToFileURL(download->GetTargetFilePath()),
        content::Referrer(), WindowOpenDisposition::NEW_FOREGROUND_TAB,
 diff --git chrome/browser/download/chrome_download_manager_delegate.h chrome/browser/download/chrome_download_manager_delegate.h
-index dea3016425321ce6dbe77b7af17939995e43f926..6b4e96ec1a1eb8d3cf606a5705cfdb16c0b43e02 100644
+index e3cbfecee6776d76b97fa1acb1a66b5bedddb333..68c47ab3d5608fdbf546534191e91e37e5531b4b 100644
 --- chrome/browser/download/chrome_download_manager_delegate.h
 +++ chrome/browser/download/chrome_download_manager_delegate.h
 @@ -20,6 +20,7 @@
@@ -96,7 +96,7 @@ index dea3016425321ce6dbe77b7af17939995e43f926..6b4e96ec1a1eb8d3cf606a5705cfdb16
  // This is the Chrome side helper for the download system.
  class ChromeDownloadManagerDelegate
      : public content::DownloadManagerDelegate,
-@@ -435,6 +442,10 @@ class ChromeDownloadManagerDelegate
+@@ -450,6 +457,10 @@ class ChromeDownloadManagerDelegate
    // Whether a file picker dialog is showing.
    bool is_file_picker_showing_ = false;
  

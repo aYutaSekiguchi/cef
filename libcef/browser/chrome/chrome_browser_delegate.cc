@@ -10,6 +10,7 @@
 #include "cef/libcef/browser/browser_host_base.h"
 #include "cef/libcef/browser/browser_info_manager.h"
 #include "cef/libcef/browser/browser_platform_delegate.h"
+#include "cef/libcef/browser/chrome/browser_util.h"
 #include "cef/libcef/browser/chrome/chrome_browser_context.h"
 #include "cef/libcef/browser/chrome/chrome_browser_host_impl.h"
 #include "cef/libcef/browser/chrome/views/chrome_browser_view.h"
@@ -25,6 +26,8 @@
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_tabstrip.h"
+#include "chrome/browser/ui/browser_web_contents_delegate/browser_web_contents_delegate.h"
+#include "chrome/browser/ui/window_feature_controller/window_feature_controller.h"
 #include "components/input/native_web_keyboard_event.h"
 #include "content/public/browser/global_routing_id.h"
 #include "content/public/browser/keyboard_event_processing_result.h"
@@ -43,8 +46,9 @@ ChromeBrowserDelegate::ChromeBrowserDelegate(
   DCHECK(browser_);
 
   if (opener) {
-    DCHECK(browser->is_type_picture_in_picture() ||
-           browser->is_type_devtools());
+    DCHECK(browser->GetType() ==
+               BrowserWindowInterface::TYPE_PICTURE_IN_PICTURE ||
+           browser->GetType() == BrowserWindowInterface::TYPE_DEVTOOLS);
     auto opener_host = ChromeBrowserHostImpl::GetBrowserForBrowser(opener);
     DCHECK(opener_host);
     if (opener_host) {
@@ -58,7 +62,7 @@ ChromeBrowserDelegate::~ChromeBrowserDelegate() = default;
 // static
 Browser* ChromeBrowserDelegate::CreateDevToolsBrowser(
     Profile* profile,
-    Browser* opener,
+    BrowserWindowInterface* opener,
     content::WebContents* inspected_web_contents,
     std::unique_ptr<content::WebContents>& devtools_contents) {
   // |opener| is the same value that will be passed to the ChromeBrowserDelegate
@@ -183,7 +187,7 @@ Browser* ChromeBrowserDelegate::CreateDevToolsBrowser(
   //
 
   // Use Browser creation params specific to DevTools popups.
-  auto chrome_params = Browser::CreateParams::CreateForDevTools(profile);
+  auto chrome_params = BrowserWindowCreateParams::CreateForDevTools(profile);
 
   // Pass |opener| to the ChromeBrowserDelegate constructor for the new popup
   // Browser.
@@ -232,7 +236,7 @@ void ChromeBrowserDelegate::OnWebContentsCreated(
   // Necessary to receive LoadingStateChanged calls during initial navigation.
   // This will be called again in Browser::SetAsDelegate, which should be
   // fine.
-  new_contents->SetDelegate(browser_);
+  new_contents->SetDelegate(BrowserWebContentsDelegate::From(browser_.get()));
 
   SetAsDelegate(new_contents, /*set_delegate=*/true);
 }
@@ -252,7 +256,8 @@ void ChromeBrowserDelegate::SetAsDelegate(content::WebContents* web_contents,
     return;
   }
 
-  const bool is_devtools_popup = browser_->is_type_devtools();
+  const bool is_devtools_popup =
+      browser_->GetType() == BrowserWindowInterface::TYPE_DEVTOOLS;
 
   // We should never reach here for DevTools popups that have an opener, as
   // CreateDevToolsBrowser should have already created the browser host.
@@ -418,7 +423,7 @@ bool ChromeBrowserDelegate::RendererResponsiveEx(
 }
 
 bool ChromeBrowserDelegate::SupportsFramelessPictureInPicture() const {
-  if (!browser_->is_type_picture_in_picture()) {
+  if (browser_->GetType() != BrowserWindowInterface::TYPE_PICTURE_IN_PICTURE) {
     return false;
   }
 
@@ -444,9 +449,9 @@ std::optional<bool> ChromeBrowserDelegate::SupportsWindowFeature(
     int feature) const {
   // Override the default value from
   // Browser::PictureInPictureBrowserSupportsWindowFeature.
-  if (static_cast<Browser::WindowFeature>(feature) ==
-          Browser::WindowFeature::kFeatureTitleBar &&
-      browser_->is_type_picture_in_picture()) {
+  if (static_cast<WindowFeatureController::WindowFeature>(feature) ==
+          WindowFeatureController::WindowFeature::kFeatureTitleBar &&
+      browser_->GetType() == BrowserWindowInterface::TYPE_PICTURE_IN_PICTURE) {
     // Return false to hide titlebar and enable draggable regions.
     return !SupportsFramelessPictureInPicture();
   }
@@ -531,8 +536,9 @@ void ChromeBrowserDelegate::WindowFullscreenStateChanged() {
 }
 
 bool ChromeBrowserDelegate::HasViewsHostedOpener() const {
-  DCHECK(browser_->is_type_picture_in_picture() ||
-         browser_->is_type_devtools());
+  DCHECK(browser_->GetType() ==
+             BrowserWindowInterface::TYPE_PICTURE_IN_PICTURE ||
+         browser_->GetType() == BrowserWindowInterface::TYPE_DEVTOOLS);
   return opener_host_ && opener_host_->is_views_hosted();
 }
 
@@ -827,8 +833,8 @@ bool ChromeBrowserDelegate::IsViewsHosted() const {
 
 CefWindowImpl* ChromeBrowserDelegate::GetCefWindowImpl() const {
   if (IsViewsHosted()) {
-    if (auto chrome_browser_view =
-            static_cast<ChromeBrowserView*>(&browser_->GetBrowserView())) {
+    if (auto* chrome_browser_view = static_cast<ChromeBrowserView*>(
+            BrowserView::GetBrowserViewForBrowser(browser_))) {
       return chrome_browser_view->cef_browser_view()->cef_window_impl();
     }
   }
@@ -863,13 +869,9 @@ std::unique_ptr<BrowserDelegate> BrowserDelegate::Create(
     params->create_params_.browser_view = nullptr;
   }
 
-  // We could just `static_cast<Browser*>(opener)`, but we follow the
-  // recommended approach instead.
-  Browser* opener_browser = nullptr;
+  const Browser* opener_browser = nullptr;
   if (opener) {
-    auto* browser_view = BrowserView::GetBrowserViewForBrowser(opener);
-    CHECK(browser_view);
-    opener_browser = browser_view->browser();
+    opener_browser = cef::BrowserForBWI(opener);
   }
 
   return std::make_unique<ChromeBrowserDelegate>(browser, create_params,
@@ -879,7 +881,7 @@ std::unique_ptr<BrowserDelegate> BrowserDelegate::Create(
 // static
 Browser* BrowserDelegate::CreateDevToolsBrowser(
     Profile* profile,
-    Browser* opener,
+    BrowserWindowInterface* opener,
     content::WebContents* inspected_web_contents,
     std::unique_ptr<content::WebContents>& devtools_contents) {
   return ChromeBrowserDelegate::CreateDevToolsBrowser(

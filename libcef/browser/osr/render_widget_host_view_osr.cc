@@ -89,7 +89,7 @@ class CefDelegatedFrameHostClient : public content::DelegatedFrameHostClient {
   CefDelegatedFrameHostClient& operator=(const CefDelegatedFrameHostClient&) =
       delete;
 
-  ui::Layer* DelegatedFrameHostGetLayer() const override {
+  ui::LayerSurface* GetDelegatedFrameHostLayer() const override {
     return view_->GetRootLayer();
   }
 
@@ -240,10 +240,10 @@ CefRenderWidgetHostViewOSR::CefRenderWidgetHostViewOSR(
       AllocateFrameSinkId(), delegated_frame_host_client_.get(),
       false /* should_register_frame_sink_id */);
 
-  root_layer_ = std::make_unique<ui::LayerSolidColor>();
+  root_layer_ = std::make_unique<ui::LayerSurface>();
 
-  // Opacity of SOLID_COLOR layer is determined by the color's alpha channel.
-  root_layer_->SetColor(SkColor4f::FromColor(background_color_));
+  root_layer_->SetFallbackBackgroundColor(
+      SkColor4f::FromColor(background_color_));
 
   external_begin_frame_enabled_ = use_external_begin_frame;
 
@@ -1680,7 +1680,7 @@ void CefRenderWidgetHostViewOSR::OnAcceleratedPaint(
   }
 }
 
-ui::Layer* CefRenderWidgetHostViewOSR::GetRootLayer() const {
+ui::LayerSurface* CefRenderWidgetHostViewOSR::GetRootLayer() const {
   return root_layer_.get();
 }
 
@@ -1933,5 +1933,5 @@ void CefRenderWidgetHostViewOSR::UpdateBackgroundColorFromRenderer(
 
   bool opaque = SkColorGetA(color) == SK_AlphaOPAQUE;
   GetRootLayer()->SetFillsBoundsOpaquely(opaque);
-  root_layer_->SetColor(SkColor4f::FromColor(color));
+  root_layer_->SetFallbackBackgroundColor(SkColor4f::FromColor(color));
 }

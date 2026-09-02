@@ -1,8 +1,8 @@
 diff --git chrome/browser/ui/permission_bubble/permission_prompt.h chrome/browser/ui/permission_bubble/permission_prompt.h
-index fbce13c16ad10420f3f8e0df521e3be6979271d1..0512b2f09937ed0410f23d321b57f77d200cde74 100644
+index 6e9bba3c993b0c3c3ce71851b45e4316c5673d77..26f4c4771f9b7817fdd92e42b410c7abc6a0b4ea 100644
 --- chrome/browser/ui/permission_bubble/permission_prompt.h
 +++ chrome/browser/ui/permission_bubble/permission_prompt.h
-@@ -11,6 +11,13 @@ namespace content {
+@@ -12,6 +12,13 @@ namespace content {
  class WebContents;
  }
  
@@ -17,16 +17,21 @@ index fbce13c16ad10420f3f8e0df521e3be6979271d1..0512b2f09937ed0410f23d321b57f77d
  std::unique_ptr<permissions::PermissionPrompt> CreatePermissionPrompt(
      content::WebContents* web_contents,
 diff --git chrome/browser/ui/views/permissions/permission_prompt_factory.cc chrome/browser/ui/views/permissions/permission_prompt_factory.cc
-index 22b5079ce6aff0a111741d97398d723f173c8688..39bebf1f8826686afb2bc52a4819db25e41ef9be 100644
+index 0c03be841cac2008e2ec8d0610337ca3e39e8d37..f13e680a2828eb9de558df65ee122045c808703e 100644
 --- chrome/browser/ui/views/permissions/permission_prompt_factory.cc
 +++ chrome/browser/ui/views/permissions/permission_prompt_factory.cc
-@@ -266,11 +266,29 @@ std::unique_ptr<permissions::PermissionPrompt> CreateQuietPrompt(
+@@ -250,6 +250,8 @@ std::unique_ptr<permissions::PermissionPrompt> CreateQuietPrompt(
    }
  }
  
 +CreatePermissionPromptFunctionPtr g_create_permission_prompt_ptr = nullptr;
 +
  }  // namespace
+ 
+ bool ShouldShowPermissionPromptEvenIfOmniboxEditedOrEmpty(
+@@ -281,9 +283,25 @@ bool ShouldShowPermissionPromptEvenIfOmniboxEditedOrEmpty(
+   return false;
+ }
  
 +void SetCreatePermissionPromptFunction(CreatePermissionPromptFunctionPtr ptr) {
 +  g_create_permission_prompt_ptr = ptr;

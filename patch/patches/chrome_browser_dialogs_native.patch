@@ -1,5 +1,5 @@
 diff --git chrome/browser/file_select_helper.cc chrome/browser/file_select_helper.cc
-index e80e2a89ea241321193a9ea13fb26394344c89e0..85b96da434850548e9985a246f62a45aeb485876 100644
+index 9b7c30c3b2f7c3489d32a0e82a3ce0288d249f98..127b3250c766d173eeea24ee9c9f20c7a901e420 100644
 --- chrome/browser/file_select_helper.cc
 +++ chrome/browser/file_select_helper.cc
 @@ -262,6 +262,12 @@ void FileSelectHelper::OnListDone(int error) {
@@ -15,7 +15,7 @@ index e80e2a89ea241321193a9ea13fb26394344c89e0..85b96da434850548e9985a246f62a45a
      auto model = CreateConfirmationDialog(
          entry->display_name_, std::move(chooser_files),
          base::BindOnce(&FileSelectHelper::PerformContentAnalysisIfNeeded,
-@@ -521,31 +527,51 @@ FileSelectHelper::GetFileTypesFromAcceptType(
+@@ -524,31 +530,51 @@ FileSelectHelper::GetFileTypesFromAcceptType(
    std::vector<base::FilePath::StringType>* extensions =
        &file_type->extensions.back();
  
@@ -71,7 +71,7 @@ index e80e2a89ea241321193a9ea13fb26394344c89e0..85b96da434850548e9985a246f62a45a
      if (extensions->size() > old_extension_size)
        valid_type_count++;
    }
-@@ -561,13 +587,28 @@ FileSelectHelper::GetFileTypesFromAcceptType(
+@@ -564,13 +590,28 @@ FileSelectHelper::GetFileTypesFromAcceptType(
    //    "ehtml,shtml,htm,html" for "text/html". On Windows, the select file
    //    dialog uses the first extension in the list to form the description,
    //    like "EHTML Files". This is not what we want.
@@ -105,7 +105,7 @@ index e80e2a89ea241321193a9ea13fb26394344c89e0..85b96da434850548e9985a246f62a45a
    }
  
    return file_type;
-@@ -577,7 +618,8 @@ FileSelectHelper::GetFileTypesFromAcceptType(
+@@ -580,7 +621,8 @@ FileSelectHelper::GetFileTypesFromAcceptType(
  void FileSelectHelper::RunFileChooser(
      content::RenderFrameHost* render_frame_host,
      scoped_refptr<content::FileSelectListener> listener,
@@ -115,7 +115,7 @@ index e80e2a89ea241321193a9ea13fb26394344c89e0..85b96da434850548e9985a246f62a45a
    Profile* profile = Profile::FromBrowserContext(
        render_frame_host->GetProcess()->GetBrowserContext());
  
-@@ -585,6 +627,7 @@ void FileSelectHelper::RunFileChooser(
+@@ -588,6 +630,7 @@ void FileSelectHelper::RunFileChooser(
    // message.
    scoped_refptr<FileSelectHelper> file_select_helper(
        new FileSelectHelper(profile));
@@ -123,7 +123,7 @@ index e80e2a89ea241321193a9ea13fb26394344c89e0..85b96da434850548e9985a246f62a45a
    file_select_helper->RunFileChooser(render_frame_host, std::move(listener),
                                       params.Clone());
  }
-@@ -700,8 +743,11 @@ void FileSelectHelper::RunFileChooserOnUIThread(
+@@ -703,8 +746,11 @@ void FileSelectHelper::RunFileChooserOnUIThread(
        NOTREACHED();
    }
  

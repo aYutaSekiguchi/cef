@@ -3737,6 +3737,9 @@ typedef enum {
   CEF_CPAIT_PAYMENTS_CHURNED_USERS,
   CEF_CPAIT_FAKE_PAGE_ACTION_FOR_DEBUG,
 #endif
+#if CEF_API_ADDED(CEF_NEXT)
+  CEF_CPAIT_WALLET_REMINDER_NOTICE,
+#endif
   CEF_CPAIT_NUM_VALUES,
 } cef_chrome_page_action_icon_type_t;
 
