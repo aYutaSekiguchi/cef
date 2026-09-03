@@ -23,6 +23,8 @@
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/web_contents.h"
+#include "content/public/browser/web_ui.h"
+#include "content/public/browser/web_ui_controller.h"
 #include "content/public/common/url_constants.h"
 
 namespace {
@@ -625,6 +627,17 @@ bool CefBrowserInfoManager::IsExcludedFrameHost(content::RenderFrameHost* rfh) {
     // WebUIContentsPreloadManager creates non-tab contents for Chrome UI
     // (omnibox popups, side panels, etc). The marker is set before navigation,
     // including when the contents are created on demand rather than preloaded.
+    return true;
+  }
+
+  // Standalone Chrome UI windows (e.g. the profile picker) create their
+  // contents without the preload marker. Use the main frame's controller
+  // to also cover subframes, but keep WebUI pages owned by a CefBrowser.
+  auto* web_ui = rfh->GetMainFrame()->GetWebUI();
+  if (web_ui && web_ui->GetController() &&
+      web_ui->GetController()->GetDisplayDisposition() ==
+          content::WebUIController::DisplayDisposition::kUIElement &&
+      !CefBrowserHostBase::GetBrowserForHost(rfh)) {
     return true;
   }
 
