@@ -219,6 +219,12 @@ void ChromeBrowserWidget::CloseOwnedWidgets() {
     return;
   }
 
+  // Preserve overlay contents before CloseNow bypasses the normal overlay
+  // cleanup in CefWindowView::WindowClosing.
+  if (window_view_) {
+    window_view_->CloseOverlayViews();
+  }
+
   views::Widget::ForEachOwnedWidget(GetNativeView(),
                                     [this](views::Widget* widget) {
                                       if (widget != this) {
