@@ -994,10 +994,48 @@ index 2ed2551ecd268e624bd7b32769b46b8f90342662..89355560f1b21440adb9b6c5e0c0e9bc
  
  gfx::Size PictureInPictureBrowserFrameView::GetNonClientViewAreaSize() const {
 diff --git chrome/browser/ui/views/location_bar/location_bar_view.cc chrome/browser/ui/views/location_bar/location_bar_view.cc
-index f97b92504ba812fd6e5dc25f1974fc86b3bc1d52..c01b995d733b825bdb19e4cb1ac38a029e141065 100644
+index f97b92504ba812fd6e5dc25f1974fc86b3bc1d52..11180335c1aa44be7571bff95d4b1636071b49b2 100644
 --- chrome/browser/ui/views/location_bar/location_bar_view.cc
 +++ chrome/browser/ui/views/location_bar/location_bar_view.cc
-@@ -449,6 +449,18 @@ void LocationBarView::Init() {
+@@ -167,6 +167,10 @@
+ #include "chrome/browser/web_applications/web_app_tab_helper.h"
+ #endif
+ 
++#if BUILDFLAG(ENABLE_CEF)
++#include "cef/libcef/browser/chrome/browser_util.h"
++#endif
++
+ namespace {
+ 
+ int IncrementalMinimumWidth(const views::View* view) {
+@@ -338,7 +342,16 @@ void LocationBarView::Init() {
+   // since they're not supported there and will result in extra Omnibox
+   // processes being created (note that the address bar is not shown in web
+   // apps).
+-  if (!is_web_app && !is_devtools) {
++  bool supports_webui_popups = !is_web_app && !is_devtools;
++#if BUILDFLAG(ENABLE_CEF)
++  if (browser_ && browser_->cef_delegate() &&
++      browser_->cef_delegate()->IsViewsHosted()) {
++    // CEF initializes a fallback toolbar even when none is configured.
++    // Only create WebUI popups for a configured Chrome toolbar.
++    supports_webui_popups &= cef::BrowserForBWI(browser_)->toolbar_overridden();
++  }
++#endif
++  if (supports_webui_popups) {
+     if (omnibox::IsAimPopupFeatureEnabled()) {
+       omnibox_popup_aim_presenter_ = std::make_unique<OmniboxPopupAimPresenter>(
+           /*location_bar=*/this, omnibox_controller_.get(),
+@@ -366,7 +379,7 @@ void LocationBarView::Init() {
+     }
+   }
+ 
+-  // Default to the legacy popup view for web apps and devtools windows.
++  // Default to the legacy popup view when WebUI popups are not supported.
+   // When the legacy `OmniboxPopupViewViews` is deprecated we will need to
+   // ensure that a null `omnibox_popup_view_` doesn't cause any issues (or aim
+   // for a cleaner solution).
+@@ -449,6 +462,18 @@ void LocationBarView::Init() {
      page_action_items = page_actions::GetActivePageActionItems(*browser_);
    }
  
