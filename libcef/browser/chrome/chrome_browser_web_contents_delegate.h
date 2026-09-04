@@ -11,7 +11,8 @@
 
 // Adds CEF callbacks to Chrome's WebContentsDelegate implementation. Owned by
 // BrowserWindowFeatures, with the same lifetime as BrowserWebContentsDelegate.
-// ChromeBrowserDelegate continues to manage CEF browser and tab integration.
+// Handles WebContents callbacks directly, with ChromeBrowserDelegate providing
+// popup-host creation and shared browser/window state.
 class ChromeBrowserWebContentsDelegate : public BrowserWebContentsDelegate {
  public:
   ChromeBrowserWebContentsDelegate(

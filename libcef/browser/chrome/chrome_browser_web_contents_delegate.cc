@@ -7,13 +7,49 @@
 #include <utility>
 
 #include "base/check.h"
+#include "base/logging.h"
+#include "cef/libcef/browser/browser_contents_delegate.h"
 #include "cef/libcef/browser/chrome/browser_delegate.h"
+#include "cef/libcef/browser/chrome/chrome_browser_host_impl.h"
+#include "cef/libcef/browser/hang_monitor.h"
+#include "cef/libcef/browser/media_access_query.h"
 #include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "components/find_in_page/find_tab_helper.h"
 #include "components/tabs/public/split_tab_data.h"
 #include "components/tabs/public/tab_interface.h"
 #include "content/public/browser/keyboard_event_processing_result.h"
+#include "content/public/browser/render_widget_host.h"
+#include "content/public/browser/render_widget_host_view.h"
+#include "content/public/browser/web_contents.h"
+
+namespace {
+
+// Only route CEF callbacks for windows with a CEF BrowserDelegate. Resolve the
+// host from the supplied contents so background tabs keep their own callbacks.
+CefBrowserContentsDelegate* GetContentsDelegate(
+    BrowserWindowInterface& browser,
+    content::WebContents* web_contents) {
+  if (browser.cef_delegate()) {
+    if (auto host =
+            ChromeBrowserHostImpl::GetBrowserForContents(web_contents)) {
+      return host->contents_delegate();
+    }
+  }
+  return nullptr;
+}
+
+// Media permissions and the hang monitor have historically used the window's
+// active browser host, rather than the WebContents supplied to the callback.
+CefRefPtr<ChromeBrowserHostImpl> GetBrowserHost(
+    BrowserWindowInterface& browser) {
+  if (browser.cef_delegate()) {
+    return ChromeBrowserHostImpl::GetBrowserForBrowser(&browser);
+  }
+  return nullptr;
+}
+
+}  // namespace
 
 namespace cef {
 
@@ -61,9 +97,8 @@ content::KeyboardEventProcessingResult
 ChromeBrowserWebContentsDelegate::PreHandleKeyboardEvent(
     content::WebContents* source,
     const input::NativeWebKeyboardEvent& event) {
-  if (browser_->cef_delegate()) {
-    auto result =
-        browser_->cef_delegate()->PreHandleKeyboardEvent(source, event);
+  if (auto delegate = GetContentsDelegate(browser_.get(), source)) {
+    auto result = delegate->PreHandleKeyboardEvent(source, event);
     if (result != content::KeyboardEventProcessingResult::NOT_HANDLED) {
       return result;
     }
@@ -74,9 +109,10 @@ ChromeBrowserWebContentsDelegate::PreHandleKeyboardEvent(
 bool ChromeBrowserWebContentsDelegate::HandleKeyboardEvent(
     content::WebContents* source,
     const input::NativeWebKeyboardEvent& event) {
-  if (browser_->cef_delegate() &&
-      browser_->cef_delegate()->HandleKeyboardEvent(source, event)) {
-    return true;
+  if (auto delegate = GetContentsDelegate(browser_.get(), source)) {
+    if (delegate->HandleKeyboardEvent(source, event)) {
+      return true;
+    }
   }
   return BrowserWebContentsDelegate::HandleKeyboardEvent(source, event);
 }
@@ -121,10 +157,24 @@ content::WebContents* ChromeBrowserWebContentsDelegate::OpenURLFromTab(
     }
   }
 
-  if (browser_->cef_delegate() &&
-      !browser_->cef_delegate()->OpenURLFromTabEx(source, params,
-                                                  navigation_handle_callback)) {
-    return nullptr;
+  if (browser_->cef_delegate()) {
+    // Chrome UI navigations may not supply a source. Use the active contents
+    // for the CEF callback, but preserve the original source passed to Chrome.
+    auto* cef_source = source;
+    if (!cef_source) {
+      cef_source = browser_->GetTabStripModel()->GetActiveWebContents();
+    }
+    if (!cef_source) {
+      // A newly created browser may not have any tabs yet.
+      LOG(WARNING) << "Failed to identify target browser for "
+                   << params.url.spec();
+    } else if (auto delegate =
+                   GetContentsDelegate(browser_.get(), cef_source)) {
+      if (!delegate->OpenURLFromTabEx(cef_source, params,
+                                      navigation_handle_callback)) {
+        return nullptr;
+      }
+    }
   }
   return BrowserWebContentsDelegate::OpenURLFromTab(
       source, params, std::move(navigation_handle_callback));
@@ -135,18 +185,18 @@ void ChromeBrowserWebContentsDelegate::LoadingStateChanged(
     bool should_show_loading_ui) {
   BrowserWebContentsDelegate::LoadingStateChanged(source,
                                                   should_show_loading_ui);
-  if (browser_->cef_delegate()) {
-    browser_->cef_delegate()->LoadingStateChanged(source,
-                                                  should_show_loading_ui);
+  if (auto delegate = GetContentsDelegate(browser_.get(), source)) {
+    delegate->LoadingStateChanged(source, should_show_loading_ui);
   }
 }
 
 void ChromeBrowserWebContentsDelegate::SetContentsBounds(
     content::WebContents* source,
     const gfx::Rect& bounds) {
-  if (browser_->cef_delegate() &&
-      browser_->cef_delegate()->SetContentsBoundsEx(source, bounds)) {
-    return;
+  if (auto delegate = GetContentsDelegate(browser_.get(), source)) {
+    if (delegate->SetContentsBoundsEx(source, bounds)) {
+      return;
+    }
   }
   BrowserWebContentsDelegate::SetContentsBounds(source, bounds);
 }
@@ -154,8 +204,8 @@ void ChromeBrowserWebContentsDelegate::SetContentsBounds(
 void ChromeBrowserWebContentsDelegate::UpdateTargetURL(
     content::WebContents* source,
     const GURL& url) {
-  if (browser_->cef_delegate()) {
-    browser_->cef_delegate()->UpdateTargetURL(source, url);
+  if (auto delegate = GetContentsDelegate(browser_.get(), source)) {
+    delegate->UpdateTargetURL(source, url);
   }
   BrowserWebContentsDelegate::UpdateTargetURL(source, url);
 }
@@ -163,7 +213,10 @@ void ChromeBrowserWebContentsDelegate::UpdateTargetURL(
 bool ChromeBrowserWebContentsDelegate::TakeFocus(content::WebContents* source,
                                                  bool reverse) {
   if (browser_->cef_delegate()) {
-    return browser_->cef_delegate()->TakeFocus(source, reverse);
+    if (auto delegate = GetContentsDelegate(browser_.get(), source)) {
+      return delegate->TakeFocus(source, reverse);
+    }
+    return false;
   }
   return BrowserWebContentsDelegate::TakeFocus(source, reverse);
 }
@@ -175,8 +228,12 @@ bool ChromeBrowserWebContentsDelegate::DidAddMessageToConsole(
     int32_t line_no,
     const std::u16string& source_id) {
   if (browser_->cef_delegate()) {
-    return browser_->cef_delegate()->DidAddMessageToConsole(
-        source, log_level, message, line_no, source_id);
+    if (auto delegate = GetContentsDelegate(browser_.get(), source)) {
+      return delegate->DidAddMessageToConsole(source, log_level, message,
+                                              line_no, source_id);
+    }
+    // CEF bypasses Chrome's headless console logging even without a host.
+    return false;
   }
   return BrowserWebContentsDelegate::DidAddMessageToConsole(
       source, log_level, message, line_no, source_id);
@@ -188,7 +245,7 @@ void ChromeBrowserWebContentsDelegate::DraggableRegionsChanged(
   if (has_app_browser_controller_) {
     BrowserWebContentsDelegate::DraggableRegionsChanged(regions, contents);
   } else if (browser_->cef_delegate()) {
-    browser_->cef_delegate()->DraggableRegionsChanged(regions, contents);
+    browser_->cef_delegate()->UpdateDraggableRegions(regions, contents);
   }
 }
 
@@ -202,7 +259,7 @@ void ChromeBrowserWebContentsDelegate::WebContentsCreated(
   BrowserWebContentsDelegate::WebContentsCreated(
       source_contents, opener_id, frame_name, target_url, new_contents);
   if (browser_->cef_delegate()) {
-    browser_->cef_delegate()->WebContentsCreated(
+    browser_->cef_delegate()->OnPopupWebContentsCreated(
         source_contents, opener_id, frame_name, target_url, new_contents);
   }
 }
@@ -211,10 +268,11 @@ void ChromeBrowserWebContentsDelegate::RendererUnresponsive(
     content::WebContents* source,
     content::RenderWidgetHost* render_widget_host,
     base::RepeatingClosure hang_monitor_restarter) {
-  if (browser_->cef_delegate() &&
-      browser_->cef_delegate()->RendererUnresponsiveEx(
-          source, render_widget_host, hang_monitor_restarter)) {
-    return;
+  if (auto browser = GetBrowserHost(browser_.get())) {
+    if (hang_monitor::RendererUnresponsive(browser.get(), render_widget_host,
+                                           hang_monitor_restarter)) {
+      return;
+    }
   }
   BrowserWebContentsDelegate::RendererUnresponsive(
       source, render_widget_host, std::move(hang_monitor_restarter));
@@ -223,10 +281,10 @@ void ChromeBrowserWebContentsDelegate::RendererUnresponsive(
 void ChromeBrowserWebContentsDelegate::RendererResponsive(
     content::WebContents* source,
     content::RenderWidgetHost* render_widget_host) {
-  if (browser_->cef_delegate() &&
-      browser_->cef_delegate()->RendererResponsiveEx(source,
-                                                     render_widget_host)) {
-    return;
+  if (auto browser = GetBrowserHost(browser_.get())) {
+    if (hang_monitor::RendererResponsive(browser.get(), render_widget_host)) {
+      return;
+    }
   }
   BrowserWebContentsDelegate::RendererResponsive(source, render_widget_host);
 }
@@ -235,10 +293,11 @@ content::JavaScriptDialogManager*
 ChromeBrowserWebContentsDelegate::GetJavaScriptDialogManager(
     content::WebContents* source) {
   if (browser_->cef_delegate()) {
-    auto* cef_js_dialog_manager =
-        browser_->cef_delegate()->GetJavaScriptDialogManager(source);
-    if (cef_js_dialog_manager) {
-      return cef_js_dialog_manager;
+    if (auto browser_host =
+            ChromeBrowserHostImpl::GetBrowserForContents(source)) {
+      if (auto* manager = browser_host->GetJavaScriptDialogManager()) {
+        return manager;
+      }
     }
   }
   return BrowserWebContentsDelegate::GetJavaScriptDialogManager(source);
@@ -250,8 +309,13 @@ void ChromeBrowserWebContentsDelegate::EnterFullscreenModeForTab(
   BrowserWebContentsDelegate::EnterFullscreenModeForTab(requesting_frame,
                                                         options);
   if (browser_->cef_delegate()) {
-    browser_->cef_delegate()->EnterFullscreenModeForTab(requesting_frame,
-                                                        options);
+    auto* web_contents =
+        content::WebContents::FromRenderFrameHost(requesting_frame);
+    if (web_contents) {
+      if (auto delegate = GetContentsDelegate(browser_.get(), web_contents)) {
+        delegate->EnterFullscreenModeForTab(requesting_frame, options);
+      }
+    }
   }
 }
 
@@ -259,7 +323,17 @@ void ChromeBrowserWebContentsDelegate::ExitFullscreenModeForTab(
     content::WebContents* web_contents) {
   BrowserWebContentsDelegate::ExitFullscreenModeForTab(web_contents);
   if (browser_->cef_delegate()) {
-    browser_->cef_delegate()->ExitFullscreenModeForTab(web_contents);
+    if (auto delegate = GetContentsDelegate(browser_.get(), web_contents)) {
+      delegate->ExitFullscreenModeForTab(web_contents);
+    }
+
+    // Workaround for https://crbug.com/1500371. Ensure WebContents exits
+    // fullscreen state by explicitly sending a resize message.
+    if (auto* rwhv = web_contents->GetRenderWidgetHostView()) {
+      if (auto* render_widget_host = rwhv->GetRenderWidgetHost()) {
+        render_widget_host->SynchronizeVisualProperties();
+      }
+    }
   }
 }
 
@@ -278,26 +352,25 @@ void ChromeBrowserWebContentsDelegate::FindReply(
   BrowserWebContentsDelegate::FindReply(web_contents, request_id,
                                         number_of_matches, selection_rect,
                                         active_match_ordinal, final_update);
-  if (browser_->cef_delegate()) {
-    browser_->cef_delegate()->FindReply(web_contents, request_id,
-                                        number_of_matches, selection_rect,
-                                        active_match_ordinal, final_update);
+  if (auto delegate = GetContentsDelegate(browser_.get(), web_contents)) {
+    delegate->FindReply(web_contents, request_id, number_of_matches,
+                        selection_rect, active_match_ordinal, final_update);
   }
 }
 
 void ChromeBrowserWebContentsDelegate::UpdatePreferredSize(
     content::WebContents* source,
     const gfx::Size& pref_size) {
-  if (browser_->cef_delegate()) {
-    browser_->cef_delegate()->UpdatePreferredSize(source, pref_size);
+  if (auto delegate = GetContentsDelegate(browser_.get(), source)) {
+    delegate->UpdatePreferredSize(source, pref_size);
   }
 }
 
 void ChromeBrowserWebContentsDelegate::ResizeDueToAutoResize(
     content::WebContents* source,
     const gfx::Size& new_size) {
-  if (browser_->cef_delegate()) {
-    browser_->cef_delegate()->ResizeDueToAutoResize(source, new_size);
+  if (auto delegate = GetContentsDelegate(browser_.get(), source)) {
+    delegate->ResizeDueToAutoResize(source, new_size);
   }
 }
 
@@ -306,9 +379,12 @@ void ChromeBrowserWebContentsDelegate::CanDownload(
     const std::string& request_method,
     base::OnceCallback<void(bool)> callback) {
   if (browser_->cef_delegate()) {
-    browser_->cef_delegate()->CanDownload(url, request_method,
-                                          std::move(callback));
-    return;
+    auto* source = browser_->GetTabStripModel()->GetActiveWebContents();
+    DCHECK(source);
+    if (auto delegate = GetContentsDelegate(browser_.get(), source)) {
+      delegate->CanDownload(url, request_method, std::move(callback));
+      return;
+    }
   }
   BrowserWebContentsDelegate::CanDownload(url, request_method,
                                           std::move(callback));
@@ -318,9 +394,10 @@ void ChromeBrowserWebContentsDelegate::RequestMediaAccessPermission(
     content::WebContents* web_contents,
     const content::MediaStreamRequest& request,
     content::MediaResponseCallback callback) {
-  if (browser_->cef_delegate()) {
-    callback = browser_->cef_delegate()->RequestMediaAccessPermissionEx(
-        web_contents, request, std::move(callback));
+  if (auto browser = GetBrowserHost(browser_.get())) {
+    callback = media_access_query::RequestMediaAccessPermission(
+        browser.get(), request, std::move(callback),
+        /*default_disallow=*/false);
     if (callback.is_null()) {
       return;
     }
