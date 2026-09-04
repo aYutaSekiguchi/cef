@@ -17,11 +17,25 @@
 #include "ui/base/window_open_disposition.h"
 
 class Browser;
+class BrowserUiController;
+class BrowserWebContentsDelegate;
+class BrowserWindow;
 class BrowserWindowInterface;
+class DesktopBrowserWindowCapabilities;
+class ExclusiveAccessManager;
 class Profile;
+class UnloadController;
+
+namespace chrome {
+class BrowserCommandController;
+}
 
 namespace content {
 class NavigationHandle;
+}
+
+namespace web_app {
+class AppBrowserController;
 }
 
 namespace cef {
@@ -44,6 +58,19 @@ class BrowserDelegate : public content::WebContentsDelegate {
       Browser* browser,
       scoped_refptr<CreateParams> cef_params,
       const BrowserWindowInterface* opener);
+
+  // Called from BrowserWindowFeatures after the window and its controllers
+  // have been initialized. The returned delegate is owned by that features
+  // object and forwards CEF callbacks to the Browser's BrowserDelegate.
+  static std::unique_ptr<BrowserWebContentsDelegate> CreateWebContentsDelegate(
+      BrowserWindowInterface* browser,
+      ExclusiveAccessManager& exclusive_access_manager,
+      chrome::BrowserCommandController& command_controller,
+      UnloadController& unload_controller,
+      web_app::AppBrowserController* app_browser_controller,
+      BrowserWindow& window,
+      DesktopBrowserWindowCapabilities& capabilities,
+      BrowserUiController& browser_ui_controller);
 
   // Optionally override Browser creation in
   // DevToolsWindow::CreateDevToolsBrowser. The returned Browser, if any, will

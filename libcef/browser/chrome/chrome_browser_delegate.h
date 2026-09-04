@@ -30,15 +30,14 @@ class ChromeBrowserHostImpl;
 // dragging a tab out of an existing window. New or existing tabs can also be
 // added to an already existing Browser object.
 //
-// The Browser object acts as the WebContentsDelegate for all attached tabs. CEF
-// integration requires WebContentsDelegate callbacks and notification of tab
-// attach/detach. To support this integration a cef::BrowserDelegate
-// (ChromeBrowserDelegate) member is created in the Browser constructor and
-// receives delegation for the Browser callbacks. ChromeBrowserDelegate creates
-// a new ChromeBrowserHostImpl when a tab is added to a Browser for the first
-// time, and that ChromeBrowserHostImpl continues to exist until the tab's
-// WebContents is destroyed. The associated WebContents object does not change,
-// but the Browser object will change when the tab is dragged between windows.
+// ChromeBrowserWebContentsDelegate acts as the WebContentsDelegate for all
+// attached tabs and forwards CEF callbacks to this object. Browser also
+// forwards tab attach/detach notifications to this object, which is created
+// earlier in the Browser constructor. ChromeBrowserDelegate creates a new
+// ChromeBrowserHostImpl when a tab is added to a Browser for the first time,
+// and that ChromeBrowserHostImpl continues to exist until the tab's WebContents
+// is destroyed. The associated WebContents object does not change, but the
+// Browser object will change when the tab is dragged between windows.
 class ChromeBrowserDelegate : public cef::BrowserDelegate {
  public:
   // The |create_params| and |opener| values are specified via the

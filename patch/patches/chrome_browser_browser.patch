@@ -166,36 +166,10 @@ index 0ab25c63c9f39dc0e96f154eedd3b03ad14fa638..583a82ccda94585157e6f2a26f1651df
      allow_circular_includes_from += [ "//chrome/browser/printing:impl" ]
    }
 diff --git chrome/browser/ui/browser.cc chrome/browser/ui/browser.cc
-index 5fc408984834cd0feb0aee5fcda1e78eb209fb10..83586039d52e05479de1ef566b213a47edf86a88 100644
+index 5fc408984834cd0feb0aee5fcda1e78eb209fb10..5aa4a0e508f2e9f3d99027b5f0db96b80c345ddb 100644
 --- chrome/browser/ui/browser.cc
 +++ chrome/browser/ui/browser.cc
-@@ -189,6 +189,25 @@
- #include "components/captive_portal/content/captive_portal_tab_helper.h"
- #endif
- 
-+#if BUILDFLAG(ENABLE_CEF)
-+#define CALL_CEF_DELEGATE(name, ...)          \
-+  if (cef_browser_delegate_) {                \
-+    cef_browser_delegate_->name(__VA_ARGS__); \
-+  }
-+#define CALL_CEF_DELEGATE_RETURN(name, ...)          \
-+  if (cef_browser_delegate_) {                       \
-+    return cef_browser_delegate_->name(__VA_ARGS__); \
-+  }
-+#define CALL_CEF_DELEGATE_RESULT(name, result, ...)    \
-+  if (cef_browser_delegate_) {                         \
-+    result = cef_browser_delegate_->name(__VA_ARGS__); \
-+  }
-+#else  // !BUILDFLAG(ENABLE_CEF)
-+#define CALL_CEF_DELEGATE(name, ...)
-+#define CALL_CEF_DELEGATE_RETURN(name, ...)
-+#define CALL_CEF_DELEGATE_RESULT(name, result, ...)
-+#endif
-+
- using base::UserMetricsAction;
- using content::GlobalRenderFrameHostId;
- using content::NavigationController;
-@@ -261,6 +280,10 @@ Browser::Browser(BrowserWindowCreateParams params)
+@@ -261,6 +261,10 @@ Browser::Browser(BrowserWindowCreateParams params)
      : type_(params.type),
        profile_(&*params.profile),
        window_(nullptr),
@@ -206,7 +180,7 @@ index 5fc408984834cd0feb0aee5fcda1e78eb209fb10..83586039d52e05479de1ef566b213a47
        tab_strip_model_delegate_(
            std::make_unique<chrome::BrowserTabStripModelDelegate>(this)),
        tab_strip_model_(std::make_unique<TabStripModel>(
-@@ -299,9 +322,6 @@ Browser::Browser(BrowserWindowCreateParams params)
+@@ -299,9 +303,6 @@ Browser::Browser(BrowserWindowCreateParams params)
    features_ = std::make_unique<BrowserWindowFeatures>();
    features_->Init(this);
  
@@ -216,7 +190,7 @@ index 5fc408984834cd0feb0aee5fcda1e78eb209fb10..83586039d52e05479de1ef566b213a47
    window_ =
        custom_window
            ? std::unique_ptr<BrowserWindow, BrowserWindowDeleter>(custom_window)
-@@ -319,9 +339,19 @@ Browser::Browser(BrowserWindowCreateParams params)
+@@ -319,9 +320,19 @@ Browser::Browser(BrowserWindowCreateParams params)
      session_service->WindowOpened(this);
    }
  
@@ -239,7 +213,7 @@ index 5fc408984834cd0feb0aee5fcda1e78eb209fb10..83586039d52e05479de1ef566b213a47
  
    // All initialization is complete; after this point, the browser should be on
    // the browser list until it is marked for destruction.
-@@ -493,6 +523,10 @@ BrowserWindowInterface::Type Browser::GetType() const {
+@@ -493,6 +504,10 @@ BrowserWindowInterface::Type Browser::GetType() const {
    return type_;
  }
  
@@ -250,11 +224,15 @@ index 5fc408984834cd0feb0aee5fcda1e78eb209fb10..83586039d52e05479de1ef566b213a47
  std::vector<tabs::TabInterface*> Browser::GetAllTabInterfaces() {
    std::vector<tabs::TabInterface*> results;
    results.reserve(tab_strip_model_->count());
-@@ -864,6 +898,8 @@ void Browser::OnTabReplacedAt(WebContents* old_contents,
+@@ -864,6 +879,12 @@ void Browser::OnTabReplacedAt(WebContents* old_contents,
  // Browser, Assorted utility functions (private):
  
  void Browser::SetAsDelegate(WebContents* web_contents, bool set_delegate) {
-+  CALL_CEF_DELEGATE(SetAsDelegate, web_contents, set_delegate);
++#if BUILDFLAG(ENABLE_CEF)
++  if (cef_browser_delegate_) {
++    cef_browser_delegate_->SetAsDelegate(web_contents, set_delegate);
++  }
++#endif
 +
    content::WebContentsDelegate* delegate =
        set_delegate ? BrowserWebContentsDelegate::From(this) : nullptr;
@@ -474,396 +452,8 @@ index 60a3a7ebaa07d600ec4143736b5ceaaca01f74a9..8bd9a7eede20d81dab9bcf3fcef40c2e
      return {};
    }
  
-diff --git chrome/browser/ui/browser_web_contents_delegate/browser_web_contents_delegate.cc chrome/browser/ui/browser_web_contents_delegate/browser_web_contents_delegate.cc
-index 9e27bdcb53a5030b4226560272138debce274d56..b63c4fe81ad7080156949c7f6bdbfb39cc3d86f5 100644
---- chrome/browser/ui/browser_web_contents_delegate/browser_web_contents_delegate.cc
-+++ chrome/browser/ui/browser_web_contents_delegate/browser_web_contents_delegate.cc
-@@ -8,6 +8,7 @@
- #include "base/metrics/histogram_macros.h"
- #include "base/notimplemented.h"
- #include "base/trace_event/trace_event.h"
-+#include "cef/libcef/features/features.h"
- #include "chrome/app/chrome_command_ids.h"
- #include "chrome/browser/actor/actor_util.h"
- #include "chrome/browser/background/background_contents.h"
-@@ -28,6 +29,7 @@
- #include "chrome/browser/sessions/session_tab_helper_factory.h"
- #include "chrome/browser/ui/blocked_content/chrome_popup_navigation_delegate.h"
- #include "chrome/browser/ui/blocked_content/framebust_block_tab_helper.h"
-+#include "chrome/browser/ui/browser.h"
- #include "chrome/browser/ui/browser_command_controller.h"
- #include "chrome/browser/ui/browser_commands.h"
- #include "chrome/browser/ui/browser_tabstrip.h"
-@@ -309,6 +311,16 @@ content::KeyboardEventProcessingResult
- BrowserWebContentsDelegate::PreHandleKeyboardEvent(
-     content::WebContents* source,
-     const input::NativeWebKeyboardEvent& event) {
-+#if BUILDFLAG(ENABLE_CEF)
-+  if (browser_->cef_delegate()) {
-+    auto result =
-+        browser_->cef_delegate()->PreHandleKeyboardEvent(source, event);
-+    if (result != content::KeyboardEventProcessingResult::NOT_HANDLED) {
-+      return result;
-+    }
-+  }
-+#endif
-+
-   // Forward keyboard events to the manager for fullscreen / mouse lock. This
-   // may consume the event (e.g., Esc exits fullscreen mode).
-   // TODO(koz): Write a test for this http://crbug.com/40647724.
-@@ -322,6 +334,13 @@ BrowserWebContentsDelegate::PreHandleKeyboardEvent(
- bool BrowserWebContentsDelegate::HandleKeyboardEvent(
-     content::WebContents* source,
-     const input::NativeWebKeyboardEvent& event) {
-+#if BUILDFLAG(ENABLE_CEF)
-+  if (browser_->cef_delegate() &&
-+      browser_->cef_delegate()->HandleKeyboardEvent(source, event)) {
-+    return true;
-+  }
-+#endif
-+
-   DevToolsWindow* devtools_window =
-       DevToolsWindow::GetInstanceForInspectedWebContents(source);
-   return (devtools_window && devtools_window->ForwardKeyboardEvent(event)) ||
-@@ -511,9 +530,14 @@ content::PreloadingEligibility
- BrowserWebContentsDelegate::IsPrerender2Supported(
-     content::WebContents& web_contents,
-     content::PreloadingTriggerType trigger_type) {
-+#if BUILDFLAG(ENABLE_CEF)
-+  // Prerender is not supported in CEF. See issue #3664.
-+  return content::PreloadingEligibility::kPreloadingDisabled;
-+#else
-   Profile* profile =
-       Profile::FromBrowserContext(web_contents.GetBrowserContext());
-   return prefetch::IsSomePreloadingEnabled(*profile->GetPrefs());
-+#endif
- }
- 
- bool BrowserWebContentsDelegate::ShouldShowStaleContentOnEviction(
-@@ -563,7 +587,15 @@ content::WebContents* BrowserWebContentsDelegate::OpenURLFromTab(
-     }
-   }
- 
--  NavigateParams nav_params(&*browser_, params.url, params.transition);
-+#if BUILDFLAG(ENABLE_CEF)
-+  if (browser_->cef_delegate() &&
-+      !browser_->cef_delegate()->OpenURLFromTabEx(source, params,
-+                                                  navigation_handle_callback)) {
-+    return nullptr;
-+  }
-+#endif
-+
-+  NavigateParams nav_params(&browser_.get(), params.url, params.transition);
-   nav_params.FillNavigateParamsFromOpenURLParams(params);
-   nav_params.source_contents = source;
-   nav_params.tabstrip_add_types = AddTabTypes::ADD_NONE;
-@@ -713,9 +745,10 @@ content::WebContents* BrowserWebContentsDelegate::AddNewContents(
-     // progress. This works around a defect on Mac where separate displays
-     // cannot switch their independent spaces simultaneously
-     // (crbug.com/40221919)
--    auto web_contents_creation_callback = base::BindOnce(
--        &chrome::AddWebContents, &*browser_, source, std::move(new_contents),
--        target_url, disposition, window_features, window_action, user_gesture);
-+    auto web_contents_creation_callback =
-+        base::BindOnce(&chrome::AddWebContents, &browser_.get(), source,
-+                       std::move(new_contents), target_url, disposition,
-+                       window_features, window_action, user_gesture);
-     fullscreen_controller->RunOrDeferUntilTransitionIsComplete(base::BindOnce(
-         base::IgnoreResult(std::move(web_contents_creation_callback))));
-     return nullptr;
-@@ -733,9 +766,9 @@ content::WebContents* BrowserWebContentsDelegate::AddNewContents(
-     }
-   }
- 
--  return chrome::AddWebContents(&*browser_, source, std::move(new_contents),
--                                target_url, disposition, window_features,
--                                window_action, user_gesture);
-+  return chrome::AddWebContents(
-+      &browser_.get(), source, std::move(new_contents), target_url, disposition,
-+      window_features, window_action, user_gesture);
- }
- 
- void BrowserWebContentsDelegate::ActivateContents(
-@@ -762,6 +795,13 @@ void BrowserWebContentsDelegate::LoadingStateChanged(
-                                            content::INVALIDATE_TYPE_LOAD);
-   browser_ui_controller_->UpdateWindowForLoadingStateChanged(
-       source, should_show_loading_ui);
-+
-+#if BUILDFLAG(ENABLE_CEF)
-+  if (browser_->cef_delegate()) {
-+    browser_->cef_delegate()->LoadingStateChanged(source,
-+                                                  should_show_loading_ui);
-+  }
-+#endif
- }
- 
- void BrowserWebContentsDelegate::CloseContents(content::WebContents* source) {
-@@ -772,6 +812,13 @@ void BrowserWebContentsDelegate::CloseContents(content::WebContents* source) {
- 
- void BrowserWebContentsDelegate::SetContentsBounds(content::WebContents* source,
-                                                    const gfx::Rect& bounds) {
-+#if BUILDFLAG(ENABLE_CEF)
-+  if (browser_->cef_delegate() &&
-+      browser_->cef_delegate()->SetContentsBoundsEx(source, bounds)) {
-+    return;
-+  }
-+#endif
-+
-   if ((browser_->GetType() == BrowserWindowInterface::Type::TYPE_NORMAL)) {
-     return;
-   }
-@@ -793,6 +840,12 @@ void BrowserWebContentsDelegate::SetContentsBounds(content::WebContents* source,
- 
- void BrowserWebContentsDelegate::UpdateTargetURL(content::WebContents* source,
-                                                  const GURL& url) {
-+#if BUILDFLAG(ENABLE_CEF)
-+  if (browser_->cef_delegate()) {
-+    browser_->cef_delegate()->UpdateTargetURL(source, url);
-+  }
-+#endif
-+
-   std::vector<StatusBubble*> status_bubbles =
-       browser_ui_controller_->GetStatusBubbles();
-   for (StatusBubble* status_bubble : status_bubbles) {
-@@ -839,11 +892,17 @@ void BrowserWebContentsDelegate::ContentsMouseEvent(
- }
- 
- void BrowserWebContentsDelegate::ContentsZoomChange(bool zoom_in) {
--  chrome::ExecuteCommand(&*browser_, zoom_in ? IDC_ZOOM_PLUS : IDC_ZOOM_MINUS);
-+  chrome::ExecuteCommand(&browser_.get(),
-+                         zoom_in ? IDC_ZOOM_PLUS : IDC_ZOOM_MINUS);
- }
- 
- bool BrowserWebContentsDelegate::TakeFocus(content::WebContents* source,
-                                            bool reverse) {
-+#if BUILDFLAG(ENABLE_CEF)
-+  if (browser_->cef_delegate()) {
-+    return browser_->cef_delegate()->TakeFocus(source, reverse);
-+  }
-+#endif
-   return false;
- }
- 
-@@ -853,6 +912,12 @@ bool BrowserWebContentsDelegate::DidAddMessageToConsole(
-     const std::u16string& message,
-     int32_t line_no,
-     const std::u16string& source_id) {
-+#if BUILDFLAG(ENABLE_CEF)
-+  if (browser_->cef_delegate()) {
-+    return browser_->cef_delegate()->DidAddMessageToConsole(
-+        source, log_level, message, line_no, source_id);
-+  }
-+#endif
-   static bool is_headless_mode = headless::IsHeadlessMode();
-   if (is_headless_mode) {
-     const bool is_builtin_component = !!source->GetWebUI();
-@@ -941,6 +1006,11 @@ void BrowserWebContentsDelegate::DraggableRegionsChanged(
-   if (app_browser_controller_) {
-     app_browser_controller_->DraggableRegionsChanged(regions, contents);
-   }
-+#if BUILDFLAG(ENABLE_CEF)
-+  else if (browser_->cef_delegate()) {
-+    browser_->cef_delegate()->DraggableRegionsChanged(regions, contents);
-+  }
-+#endif
- }
- 
- std::vector<blink::mojom::RelatedApplicationPtr>
-@@ -1082,12 +1152,27 @@ void BrowserWebContentsDelegate::WebContentsCreated(
-   // to track `new_contents` after it is added to its TabModel this override can
-   // be removed.
-   CreateSessionServiceTabHelper(new_contents);
-+
-+#if BUILDFLAG(ENABLE_CEF)
-+  if (browser_->cef_delegate()) {
-+    browser_->cef_delegate()->WebContentsCreated(
-+        source_contents, opener_id, frame_name, target_url, new_contents);
-+  }
-+#endif
- }
- 
- void BrowserWebContentsDelegate::RendererUnresponsive(
-     content::WebContents* source,
-     content::RenderWidgetHost* render_widget_host,
-     base::RepeatingClosure hang_monitor_restarter) {
-+#if BUILDFLAG(ENABLE_CEF)
-+  if (browser_->cef_delegate() &&
-+      browser_->cef_delegate()->RendererUnresponsiveEx(
-+          source, render_widget_host, hang_monitor_restarter)) {
-+    return;
-+  }
-+#endif
-+
-   // Don't show the page hung dialog when a HTML popup hangs because
-   // the dialog will take the focus and immediately close the popup.
-   content::RenderWidgetHostView* view = render_widget_host->GetView();
-@@ -1100,6 +1185,14 @@ void BrowserWebContentsDelegate::RendererUnresponsive(
- void BrowserWebContentsDelegate::RendererResponsive(
-     content::WebContents* source,
-     content::RenderWidgetHost* render_widget_host) {
-+#if BUILDFLAG(ENABLE_CEF)
-+  if (browser_->cef_delegate() &&
-+      browser_->cef_delegate()->RendererResponsiveEx(source,
-+                                                     render_widget_host)) {
-+    return;
-+  }
-+#endif
-+
-   content::RenderWidgetHostView* view = render_widget_host->GetView();
-   if (view && !render_widget_host->GetView()->IsHTMLFormPopup()) {
-     TabDialogs::FromWebContents(source)->HideHungRendererDialog(
-@@ -1110,6 +1203,15 @@ void BrowserWebContentsDelegate::RendererResponsive(
- content::JavaScriptDialogManager*
- BrowserWebContentsDelegate::GetJavaScriptDialogManager(
-     content::WebContents* source) {
-+#if BUILDFLAG(ENABLE_CEF)
-+  if (browser_->cef_delegate()) {
-+    auto* cef_js_dialog_manager =
-+        browser_->cef_delegate()->GetJavaScriptDialogManager(source);
-+    if (cef_js_dialog_manager) {
-+      return cef_js_dialog_manager;
-+    }
-+  }
-+#endif
-   return javascript_dialogs::TabModalDialogManager::FromWebContents(source);
- }
- 
-@@ -1170,7 +1272,8 @@ void BrowserWebContentsDelegate::RestoreFromWebAPI() {
- 
- void BrowserWebContentsDelegate::SetResizableFromWebAPI(bool resizable) {
-   // TODO(crbug.com/355026937): Eliminate this BrowserView reference.
--  if (auto* browser_view = BrowserView::GetBrowserViewForBrowser(&*browser_)) {
-+  if (auto* browser_view =
-+          BrowserView::GetBrowserViewForBrowser(&browser_.get())) {
-     browser_view->SetResizableFromWebApi(resizable);
-   }
- }
-@@ -1197,12 +1300,25 @@ void BrowserWebContentsDelegate::EnterFullscreenModeForTab(
-     const blink::mojom::FullscreenOptions& options) {
-   exclusive_access_manager_->fullscreen_controller()->EnterFullscreenModeForTab(
-       requesting_frame, FullscreenTabParams{options.display_id});
-+
-+#if BUILDFLAG(ENABLE_CEF)
-+  if (browser_->cef_delegate()) {
-+    browser_->cef_delegate()->EnterFullscreenModeForTab(requesting_frame,
-+                                                        options);
-+  }
-+#endif
- }
- 
- void BrowserWebContentsDelegate::ExitFullscreenModeForTab(
-     content::WebContents* web_contents) {
-   exclusive_access_manager_->fullscreen_controller()->ExitFullscreenModeForTab(
-       web_contents);
-+
-+#if BUILDFLAG(ENABLE_CEF)
-+  if (browser_->cef_delegate()) {
-+    browser_->cef_delegate()->ExitFullscreenModeForTab(web_contents);
-+  }
-+#endif
- }
- 
- bool BrowserWebContentsDelegate::IsFullscreenForTabOrPending(
-@@ -1413,12 +1529,63 @@ void BrowserWebContentsDelegate::FindReply(content::WebContents* web_contents,
-   find_tab_helper->HandleFindReply(request_id, number_of_matches,
-                                    selection_rect, active_match_ordinal,
-                                    final_update);
-+#if BUILDFLAG(ENABLE_CEF)
-+  if (browser_->cef_delegate()) {
-+    browser_->cef_delegate()->FindReply(web_contents, request_id,
-+                                        number_of_matches, selection_rect,
-+                                        active_match_ordinal, final_update);
-+  }
-+#endif
-+}
-+
-+void BrowserWebContentsDelegate::UpdatePreferredSize(
-+    content::WebContents* source,
-+    const gfx::Size& pref_size) {
-+#if BUILDFLAG(ENABLE_CEF)
-+  if (browser_->cef_delegate()) {
-+    browser_->cef_delegate()->UpdatePreferredSize(source, pref_size);
-+  }
-+#endif
-+}
-+
-+void BrowserWebContentsDelegate::ResizeDueToAutoResize(
-+    content::WebContents* source,
-+    const gfx::Size& new_size) {
-+#if BUILDFLAG(ENABLE_CEF)
-+  if (browser_->cef_delegate()) {
-+    browser_->cef_delegate()->ResizeDueToAutoResize(source, new_size);
-+  }
-+#endif
-+}
-+
-+void BrowserWebContentsDelegate::CanDownload(
-+    const GURL& url,
-+    const std::string& request_method,
-+    base::OnceCallback<void(bool)> callback) {
-+#if BUILDFLAG(ENABLE_CEF)
-+  if (browser_->cef_delegate()) {
-+    browser_->cef_delegate()->CanDownload(url, request_method,
-+                                          std::move(callback));
-+    return;
-+  }
-+#endif
-+  std::move(callback).Run(true);
- }
- 
- void BrowserWebContentsDelegate::RequestMediaAccessPermission(
-     content::WebContents* web_contents,
-     const content::MediaStreamRequest& request,
-     content::MediaResponseCallback callback) {
-+#if BUILDFLAG(ENABLE_CEF)
-+  if (browser_->cef_delegate()) {
-+    callback = browser_->cef_delegate()->RequestMediaAccessPermissionEx(
-+        web_contents, request, std::move(callback));
-+    if (callback.is_null()) {
-+      return;
-+    }
-+  }
-+#endif
-+
-   const extensions::Extension* extension =
-       GetExtensionForOrigin(browser_->GetProfile(), request.security_origin);
-   MediaCaptureDevicesDispatcher::GetInstance()->ProcessMediaAccessRequest(
-@@ -1430,7 +1597,7 @@ void BrowserWebContentsDelegate::ProcessSelectAudioOutput(
-     content::SelectAudioOutputCallback callback) {
- #if defined(TOOLKIT_VIEWS)
-   MediaCaptureDevicesDispatcher::GetInstance()->ProcessSelectAudioOutputRequest(
--      &*browser_, request, std::move(callback));
-+      &browser_.get(), request, std::move(callback));
- #else
-   std::move(callback).Run(
-       base::unexpected(content::SelectAudioOutputError::kUnknown));
-diff --git chrome/browser/ui/browser_web_contents_delegate/browser_web_contents_delegate.h chrome/browser/ui/browser_web_contents_delegate/browser_web_contents_delegate.h
-index 05a9d7f7f21841412e0b2435e8d95a9c7598d8eb..a0258b90686f039c1dde83ccede3d2ec9b6dc772 100644
---- chrome/browser/ui/browser_web_contents_delegate/browser_web_contents_delegate.h
-+++ chrome/browser/ui/browser_web_contents_delegate/browser_web_contents_delegate.h
-@@ -136,6 +136,9 @@ class BrowserWebContentsDelegate : public content::WebContentsDelegate {
-                           const ui::Event& event) override;
-   void ContentsZoomChange(bool zoom_in) override;
-   bool TakeFocus(content::WebContents* source, bool reverse) override;
-+  void CanDownload(const GURL& url,
-+                   const std::string& request_method,
-+                   base::OnceCallback<void(bool)> callback) override;
-   bool DidAddMessageToConsole(content::WebContents* source,
-                               blink::mojom::ConsoleMessageLevel log_level,
-                               const std::u16string& message,
-@@ -235,6 +238,10 @@ class BrowserWebContentsDelegate : public content::WebContentsDelegate {
-                  const gfx::Rect& selection_rect,
-                  int active_match_ordinal,
-                  bool final_update) override;
-+  void UpdatePreferredSize(content::WebContents* source,
-+                           const gfx::Size& pref_size) override;
-+  void ResizeDueToAutoResize(content::WebContents* source,
-+                             const gfx::Size& new_size) override;
-   void RequestMediaAccessPermission(
-       content::WebContents* web_contents,
-       const content::MediaStreamRequest& request,
 diff --git chrome/browser/ui/browser_window/internal/browser_window_features.cc chrome/browser/ui/browser_window/internal/browser_window_features.cc
-index 89cd12a061a3136bf035f509403d453d018b0d78..034a41cf285b16d03b9544d5b5f7822dace35f48 100644
+index 89cd12a061a3136bf035f509403d453d018b0d78..c98db8aeaa05f5e6e60c0c15381db30a25bae4d6 100644
 --- chrome/browser/ui/browser_window/internal/browser_window_features.cc
 +++ chrome/browser/ui/browser_window/internal/browser_window_features.cc
 @@ -12,6 +12,7 @@
@@ -932,7 +522,20 @@ index 89cd12a061a3136bf035f509403d453d018b0d78..034a41cf285b16d03b9544d5b5f7822d
  #if BUILDFLAG(ENABLE_EXTENSIONS) && (BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC))
    if (browser_view) {
      if (!browser_->GetProfile()->IsOffTheRecord()) {
-@@ -926,7 +929,7 @@ void BrowserWindowFeatures::InitPostWindowConstruction(Browser* browser) {
+@@ -813,7 +816,12 @@ void BrowserWindowFeatures::InitPostWindowConstruction(Browser* browser) {
+ 
+   // Must be after exclusive_access_manager_,
+   // desktop_browser_window_capabilities_, and browser_ui_controller_.
++#if BUILDFLAG(ENABLE_CEF)
++  browser_web_contents_delegate_ =
++      cef::BrowserDelegate::CreateWebContentsDelegate(
++#else
+   browser_web_contents_delegate_ = std::make_unique<BrowserWebContentsDelegate>(
++#endif
+       browser, *exclusive_access_manager_, *browser_command_controller_,
+       *unload_controller_, app_browser_controller_.get(),
+       *BrowserWindow::FromBrowser(browser),
+@@ -926,7 +934,7 @@ void BrowserWindowFeatures::InitPostWindowConstruction(Browser* browser) {
        browser, browser->GetTabStripModel(), browser->GetSessionID(),
        browser->GetType());
  
@@ -941,7 +544,7 @@ index 89cd12a061a3136bf035f509403d453d018b0d78..034a41cf285b16d03b9544d5b5f7822d
        browser->GetType() == BrowserWindowInterface::Type::TYPE_APP) {
      toast_service_ =
          GetUserDataFactory().CreateInstance<ToastService>(*browser, browser);
-@@ -970,7 +973,7 @@ void BrowserWindowFeatures::InitPostWindowConstruction(Browser* browser) {
+@@ -970,7 +978,7 @@ void BrowserWindowFeatures::InitPostWindowConstruction(Browser* browser) {
    // omnibox and a tab strip). By default most new features should be
    // instantiated in this block (please keep this list ordered without taking
    // into consideration buildflags, repeating buildflags is ok):
@@ -950,7 +553,7 @@ index 89cd12a061a3136bf035f509403d453d018b0d78..034a41cf285b16d03b9544d5b5f7822d
      if (browser_view) {
        if (base::FeatureList::IsEnabled(features::kGlicActorUi)) {
          std::vector<std::pair<views::WebView*, ActorOverlayWebView*>>
-@@ -1135,6 +1138,38 @@ void BrowserWindowFeatures::InitPostBrowserViewConstruction(
+@@ -1135,6 +1143,38 @@ void BrowserWindowFeatures::InitPostBrowserViewConstruction(
        browser_view);
  }
  
