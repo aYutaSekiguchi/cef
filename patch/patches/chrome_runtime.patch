@@ -237,7 +237,7 @@ index 2b3ed5cf2e01569c71e7dd6872b630983956f419..059ffb20f277f8d18b7706f0a71e9fb5
  
    // Initialize features and field trials, either from command line or from
 diff --git chrome/browser/chrome_browser_main.cc chrome/browser/chrome_browser_main.cc
-index 00fe10f55ffb3e0e983812df4c6c99742e2d84bc..4b83420c1bccfafc493cf29f0f924c35611e8be0 100644
+index 00fe10f55ffb3e0e983812df4c6c99742e2d84bc..318dcc5211d9699748f0f65d439953d455c8ba71 100644
 --- chrome/browser/chrome_browser_main.cc
 +++ chrome/browser/chrome_browser_main.cc
 @@ -30,6 +30,7 @@
@@ -298,6 +298,15 @@ index 00fe10f55ffb3e0e983812df4c6c99742e2d84bc..4b83420c1bccfafc493cf29f0f924c35
  
  #if BUILDFLAG(ENABLE_EXTENSIONS_CORE) &&                                   \
      (BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || \
+@@ -1758,7 +1763,7 @@ int ChromeBrowserMainParts::PreMainMessageLoopRunImpl() {
+ #endif
+ 
+   // Should be done before starting metrics recording.
+-#if BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_LINUX) && !BUILDFLAG(ENABLE_CEF)
+   // On Linux, the EULA dialog requires Views, so it is shown here rather than
+   // when applying the first-run prefs.
+   if (first_run::IsChromeFirstRun() && master_prefs_->eula_required &&
 @@ -1775,6 +1780,7 @@ int ChromeBrowserMainParts::PreMainMessageLoopRunImpl() {
    browser_process_->PreMainMessageLoopRun();
  
