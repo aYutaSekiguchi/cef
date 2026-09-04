@@ -826,7 +826,7 @@ void CefV8SetWorkerAttributes(int worker_id, const GURL& worker_url) {
 bool CefRegisterExtension(const CefString& /*extension_name*/,
                           const CefString& /*javascript_code*/,
                           CefRefPtr<CefV8Handler> /*handler*/) {
-  CEF_API_REQUIRE_REMOVED(CEF_NEXT);
+  CEF_API_REQUIRE_REMOVED(15400);
   NOTIMPLEMENTED();
   return false;
 }
